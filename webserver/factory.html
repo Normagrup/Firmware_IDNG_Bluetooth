@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/factory.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-code-container">
+            <input type="text" id="codeReader">
+            <h2> Grabación ID Wireless </h2>
+
+            <div class="code-container" id="codeContainer">
+                <div class="label-code-container">
+                    <div class="tag-container">
+                        <label id="labelCode1"> </label>
+                    </div>
+                    <div class="tag-container">
+                        <label id="labelCode2"> </label>
+                    </div>
+                    <div class="tag-container">
+                        <label id="labelCode3"> </label>
+                    </div>
+                    <div class="tag-container">
+                        <label id="labelCode4"> </label>
+                    </div>
+                </div>
+
+                <div class="settings-container" id="settingsContainer">
+                    <div class="label-settings-container">
+                        <div class="loader" id="loader1"></div>
+                        <label> Grabando ID </label>
+                    </div>
+                    <div class="label-settings-container">
+                        <div class="loader" id="loader2"></div>
+                        <label> Comprobando DALI </label>
+                    </div>
+                    <div class="label-settings-container">
+                        <div class="loader" id="loader3"></div>
+                        <label> Comprobación dispositivo </label>
+                    </div>
+                </div>
+
+                <div class="confirmation-container" id="confirmationContainer">
+                    <label id="confirmationLabel"> Dispositivo grabado correctamente </label>
+                </div>
+            </div>
+
+            <div class="code-container" id="labelContainer">
+                <label> Escanea un dispositivo </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var timeout;
+
+        function onTextChanged() {
+            clearTimeout(timeout);
+
+            timeout = setTimeout(function() {
+                parent.codeReaderChanged();
+            }, 50);
+        }
+
+        window.onload = function() {
+            var codeReader = document.getElementById('codeReader');
+            codeReader.focus();
+            codeReader.addEventListener('input', onTextChanged);
+            document.addEventListener('click', function() {
+                codeReader.focus();
+            });
+
+            var codeContainer = document.getElementById('codeContainer');
+            codeContainer.style.display = 'none';
+        };
+    </script>
+</body>
+
+</html>

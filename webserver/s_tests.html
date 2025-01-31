@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_tests.css">
+</head>
+
+<body>
+    <div class="background-container">
+        <img src="images/background.png" alt="Background Image">
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-test-container">
+            <div class="test-container">
+                <div class="title-container">
+                    <h2> Functional Test </h2>
+                    <div class="enable-container">
+                        <label> Enable </label>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" id="toggleFunction">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-container">
+                    <div class="features-container" style="justify-content: space-between;">
+                        <div class="day">
+                            <label> Mon </label>
+                            <input type="checkbox" id="monday">
+                        </div>
+                        <div class="day">
+                            <label> Tue </label>
+                            <input type="checkbox" id="tuesday">
+                        </div>
+                        <div class="day">
+                            <label> Wed </label>
+                            <input type="checkbox" id="wednesday">
+                        </div>
+                        <div class="day">
+                            <label> Thu </label>
+                            <input type="checkbox" id="thursday">
+                        </div>
+                        <div class="day">
+                            <label> Fri </label>
+                            <input type="checkbox" id="friday">
+                        </div>
+                        <div class="day">
+                            <label> Sat </label>
+                            <input type="checkbox" id="saturday">
+                        </div>
+                        <div class="day">
+                            <label> Sun </label>
+                            <input type="checkbox" id="sunday">
+                        </div>
+                    </div>
+
+                    <div class="features-container" style="padding-bottom: 40px;">
+                        <img src="images/timePickerIcon.png" style="height: 45px; width: 45px; margin-top: 10px;">
+                        <div class="time">
+                            <label> Set the time </label>
+                            <input id="functionTimePicker" type="time">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-container">
+                <div class="title-container">
+                    <h2> Duration Test </h2>
+                    <div class="enable-container">
+                        <label> Enable </label>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" id="toggleDuration">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-container">
+                    <div class="features-container">
+                        <label> Periodicity: </label>
+                        <select id="periodicityList" style="height: 50%; width: 20%; margin-left: 15px; margin-right: 15%;">
+                            <option value="-"> ---- </option>
+                            <option value="1"> 1 month </option>
+                            <option value="3"> 3 month </option>
+                            <option value="6"> 6 month </option>
+                            <option value="12"> 1 year </option>
+                        </select>
+                    </div>
+
+                    <div class="features-container" style="justify-content: space-between; padding-bottom: 40px;">
+                        <div class="field-container">
+                            <img src="images/datePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
+                            <div class="time">
+                                <label> Set the date </label>
+                                <input id="durationDatePicker" type="date">
+                            </div>UART GROUP SEND
+                            UART GROUP SEND
+                            CONFIRM GROUP FRAME
+                            
+                        </div>
+                        <div class="field-container">
+                            <img src="images/timePickerIcon.png" style="height: 45px; width: 45px; margin-top: 10px;">
+                            <div class="time">
+                                <label> Set the time </label>
+                                <input id="durationTimePicker" type="time">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="test-button" onclick="parent.setTest()"> Set test </button>
+            <label id="testError" style="margin-top: 10px; color: #C30101; visibiUART GROUP SEND
+            UART GROUP SEND
+            CONFIRM GROUP FRAME
+            
+            <h2 style="width: 70%; margin-left: 0;"> Group Selection </h2>
+            <label> Pick some group </label>
+            <select id="groupList" style="width: 100%; margin-top: 20px;">
+                <option value="-"> ---- </option>
+                <option value="C010"> Group 1 </option>
+                <option value="C011"> Group 2 </option>
+                <option value="C012"> Group 3 </option>
+                <option value="C013"> Group 4 </option>
+                <option value="C014"> Group 5 </option>
+                <option value="C015"> Group 6 </option>
+                <option value="C016"> Group 7 </option>
+                <option value="C017"> Group 8 </option>
+                <option value="C018"> Group 9 </option>
+                <option value="C019"> Group 10 </option>
+                <option value="C01A"> Group 11 </option>
+                <option value="C01B"> Group 12 </option>
+                <option value="C01C"> Group 13 </option>
+                <option value="C01D"> Group 14 </option>
+                <option value="C01E"> Group 15 </option>
+                <option value="C01F"> Group 16 </option>
+                <option value="FFFF"> Broadcast </option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(function() {
+                parent.sendData("GET_DATE_TIME", "");
+            }, 10);
+        };
+    </script>
+</body>
+
+</html>

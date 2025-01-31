@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_update.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <div class="update-container">
+            <h2> Update Device </h2>
+            <input type="file" id="fileInput" style="display:none;" accept=".tar.gz"/>
+            <button onclick="document.getElementById('fileInput').click()"> Select file </button>
+            <label style="margin-top: 10px;"> Selected file: <span id="fileName"> None </span></label>
+            <button onclick="parent.updateDevice()" style="margin-top: 25px;"> Update </button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function() {
+            var fileName = event.target.files[0].name;
+            document.getElementById('fileName').innerHTML = fileName;
+        });
+    </script>
+</body>

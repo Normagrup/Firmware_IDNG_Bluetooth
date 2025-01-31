@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_time.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <h2> Time Configuration </h2>
+        
+        <div class="row-container">
+            <div class="field-container">
+                <img src="images/datePickerIcon.png" style="height: 60px; width: 60px; margin-top: 10px;">
+                <div class="input-container">
+                    <label> Set the date </label>
+                    <input id="datePicker" type="date">
+                </div>
+            </div>
+            <div class="field-container">
+                <img src="images/timePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
+                <div class="input-container">
+                    <label> Set the time </label>
+                    <input id="timePicker" type="time">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="parent.sendDateTime()"> Set Date & Time </button>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(function() {
+                parent.sendData("GET_DATE_TIME", "");
+            }, 10);
+        };
+    </script>
+</body>
+
+</html>

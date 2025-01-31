@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/settings.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <div class="box-container" onclick="loadPage('s_ipconfig.html')">
+            <img class="img-container" src="images/ipConfigIcon.png" style="height: 80px; width: 80px;"></img>
+            <div class="text-container">
+                <h2> IP Config </h2>
+                <p class="label"> Change the IP address of the device </p>
+            </div>
+        </div>
+
+        <div class="box-container" onclick="loadPage('s_time.html')">
+            <img class="img-container" src="images/timeIcon.png" style="height: 80px; width: 60px;"></img>
+            <div class="text-container">
+                <h2> Time </h2>
+                <p class="label"> Manage the general settings and set the system date and time </p>
+            </div>
+        </div>
+
+        <div class="box-container" onclick="loadPage('s_wireless.html')">
+            <img class="img-container" src="images/wirelessConfigurationIcon.png"></img>
+            <div class="text-container">
+                <h2> Wireless Configuration </h2>
+                <p class="label"> Change the wireless configuration </p>
+            </div>
+        </div>
+
+        <div class="box-container" onclick="loadPage('s_logs.html')">
+            <img class="img-container" src="images/logIcon.png"></img>
+            <div class="text-container">
+                <h2> Log Results </h2>
+                <p class="label"> Visualize the system events log </p>
+            </div>
+        </div>
+
+        <div class="box-container" onclick="loadPage('s_tests.html')">
+            <img class="img-container" src="images/testsIcon.png"></img>
+            <div class="text-container">
+                <h2> Tests </h2>
+                <p class="label"> Emergency lightings tests management </p>
+            </div>
+        </div>
+
+        <div class="box-container" onclick="loadPage('s_update.html')">
+            <img class="img-container" src="images/updateIcon.png"></img>
+            <div class="text-container">
+                <h2> Update Device </h2>
+                <p class="label"> Update the device to a certain version </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/index.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_logs.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <div class="log-container">
+            <h2> Log Results </h2>
+            
+            <div class="features-container">
+                <label> Report type: </label>
+                <select id="reportList" style="height: 50%; width: 40%; margin-left: 15px; margin-right: 18%;">
+                    <option value="-"> ---- </option>
+                    <option value="fail"> Fails report </option>
+                    <option value="test"> Tests report </option>
+                    <option value="all"> All </option>
+                </select>
+            </div>
+
+            <div class="features-container" style="justify-content: space-between; margin-top: 40px;">
+                <div class="field-container">
+                    <img src="images/datePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
+                    <div class="date">
+                        <label> Set initial date </label>
+                        <input id="initialDatePicker" type="date">
+                    </div>
+                </div>
+                <div class="field-container">
+                    <img src="images/datePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
+                    <div class="date">
+                        <label> Set final date </label>
+                        <input id="finalDatePicker" type="date">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="parent.getLogs()" style="margin-top: 40px;"> Get logs </button>
+            <label id="logError" style="margin-top: 10px; color: #C30101; visibility: hidden;"> Default </label>
+        </div>
+    </div>
+</body>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_wireless.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popup">
+        <h2></h2>
+        <div class="loader"></div>
+        <label style="margin-top: 4%;" id="labelCommissionNodes"></label>
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-list-container">
+            <div class="title-container">
+                <h2> Wireless Configuration </h2>
+                <div class="enable-container">
+                    <label style="font-size: 14px; margin-right: 10px;" id="automaticLabel"> Automatic </label>
+                    <div class="switch-container">
+                        <label class="switch">
+                            <input type="checkbox" onchange="parent.switchMode()" id="toggleMode">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <label style="font-size: 14px; margin-left: 10px;" id="manualLabel"> Manual </label>
+                </div>
+            </div>
+            <div class="list-container">
+                <div class="list">
+                    <label> Scanned devices</label>
+                    <ul id="scannedDevicesList"></ul>
+                </div>
+                <div class="list-button-container" id="manualContainer">
+                    <button onclick="parent.getScannedDevices()"> Scan devices </button>
+                    <button onclick="parent.addDevice()"> Add device </button>
+                    <button onclick="parent.delDevice()"> Remove device </button>
+                    <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
+                </div>
+                <div class="list-button-container" id="automaticContainer">
+                    <button onclick="parent.startCommission()"> Start commission </button>
+                </div>
+                <div class="list">
+                    <label> Network Nodes </label>
+                    <ul id="networkNodesList"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="wrap-group-container ">
+            <h2> Group Configuration </h2>
+            <div class="group-container">
+                <label> Pick group and node </label>
+
+                <div class="group-button-container">
+                    <button onclick="parent.addToGroup()"> Add </button>
+                    <button onclick="parent.delFromGroup()"> Delete </button>
+                </div>
+
+                <select class="selector" id="groupList">
+                    <option value="-"> ---- </option>
+    				<option value="C010"> Group 1 </option>
+  					<option value="C011"> Group 2 </option>
+  					<option value="C012"> Group 3 </option>
+  					<option value="C013"> Group 4 </option>
+  					<option value="C014"> Group 5 </option>
+  					<option value="C015"> Group 6 </option>
+  					<option value="C016"> Group 7 </option>
+  					<option value="C017"> Group 8 </option>
+  					<option value="C018"> Group 9 </option>
+  					<option value="C019"> Group 10 </option>
+  					<option value="C01A"> Group 11 </option>
+  					<option value="C01B"> Group 12 </option>
+  					<option value="C01C"> Group 13 </option>
+  					<option value="C01D"> Group 14 </option>
+  					<option value="C01E"> Group 15 </option>
+  					<option value="C01F"> Group 16 </option>
+				</select>
+
+                <label id="groupError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getNodesFromDatabase() {
+			setTimeout(function() {
+				parent.sendData("SET_LOAD_NODES", "");
+			}, 10);
+		}
+		
+		window.onload = function() {
+            getNodesFromDatabase();
+
+            var automaticLabel = document.getElementById("automaticLabel");
+            automaticLabel.style.color = "#4682b4";
+            automaticLabel.style.fontWeight = "bold";
+
+            var manualContainer = document.getElementById("manualContainer");
+            manualContainer.style.display = "none";
+        };
+
+        document.addEventListener('click', function(event) {
+            var scannedDevicesList = document.getElementById('scannedDevicesList');
+            var networkNodesList = document.getElementById('networkNodesList');
+
+            var scannedDevices = scannedDevicesList.getElementsByTagName('li');
+            var networkDevices = networkNodesList.getElementsByTagName('li');
+
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI') { return; }
+
+            for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
+            for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+        });
+
+    </script>
+</body>
+
+</html>

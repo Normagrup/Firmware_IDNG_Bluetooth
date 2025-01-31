@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/network.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popup">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <img id="deviceTypeIcon" src="images/normalLightIcon.png" style="width: 30%; height: 40%;">
+                <h3> HOLA </h3>
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.facSettingsButton()"> Factory settings </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer">
+                <div class="popup-polling-subcontainer">
+                    <button id="autonomyIcon" style="background-size: 90%; background-image: url('images/autonomyIcon.png');"></button>
+                    <button id="batteryIcon" style="background-size: 80%; background-image: url('images/batteryIcon.png');"></button>
+                    <button id="lampIcon" style="background-size: 90%; background-image: url('images/lampIcon.png');"></button>
+                </div>
+                
+                <div class="popup-polling-subcontainer">
+                    <button id="comIcon" style="background-size: 80%; background-image: url('images/comIcon.png');"></button>
+                    <button id="lvlIcon"></button>
+                    <button id="emergencyIcon" style="background-size: 80%; background-image: url('images/emergencyIcon.png');"></button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer">
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.maxButton()" style="width: 32%;"> MAX </button>
+                    <button onclick="parent.offButton()" style="width: 32%;"> OFF </button>
+                    <button onclick="parent.identifyButton()" style="width: 32%;"> IDTFY </button>
+                </div>
+                
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.minButton()" style="width: 32%;"> MIN </button>
+                    <button onclick="parent.resetButton()" style="width: 32%;"> RST </button>
+                    <button onclick="parent.rebootButton()" style="width: 32%;"> RBOOT </button>
+                </div>
+                
+                <div class="popup-button-subcontainer">
+                    <input type="range" min="0" max="100" value="50" id="lvlSlider" onchange="parent.sliderInput()" style="width: 100%;">
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer" style="border-right: none;">
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.funcTestButton()"> Functional Test </button>
+                </div>
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.durTestButton()"> Duration Test </button>
+                </div>
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.stopButton()"> Stop </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeNodeControl()"> &times; </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-network-container">
+            <h2> Network Nodes </h2>
+            <div class="wrap-node-container">
+                <div class="range-container">
+                    <label style="margin: 0px 20px;"> Select node address range: </label>
+                    <select id="addressList" title="Select range of address" onchange="parent.changeAddress()">
+                        <option value="1-100"> 1-100 </option>
+                        <option value="101-200"> 101-200 </option>
+                        <option value="201-300"> 201-300 </option>
+                        <option value="301-400"> 301-400 </option>
+                        <option value="401-500"> 401-500 </option>
+                        <option value="501-600"> 501-600 </option>
+                        <option value="601-700"> 601-700 </option>
+                        <option value="701-800"> 701-800 </option>
+                        <option value="801-900"> 801-900 </option>
+                        <option value="901-1000"> 901-1000 </option>
+                    </select>
+                </div>
+                <div class="node-container" id="node-container"></div>
+            </div>
+        </div>
+        <div class="wrap-group-container">
+            <h2> Network Groups </h2>
+            <div class="range-container" style="justify-content: center;">
+                <label> Pick some group </label>
+            </div>
+            <div class="group-container" id="group-container"></div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            parent.changeAddress();
+            parent.createGroupButtons();
+        };
+    </script>
+</body>
+
+</html>

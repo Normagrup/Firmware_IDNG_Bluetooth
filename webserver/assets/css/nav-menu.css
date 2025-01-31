@@ -1,0 +1,104 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+nav {
+    position: fixed;
+    z-index: 99;
+    width: 100%;
+    background: #4682b4;
+    flex-shrink: 0;
+}
+
+nav .wrapper {
+    position: relative;
+    max-width: 1300px;
+    padding: 0 30px;
+    height: 70px;
+    line-height: 70px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wrapper .logo a {
+    color: #f2f2f2;
+    font-size: 30px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.wrapper .logo img {
+    height: 70px;
+    width: 56px;
+    padding-top: 25px;
+}
+
+.wrapper .nav-links {
+    display: inline-flex;
+}
+
+.nav-links li {
+    list-style: none;
+    position: relative;
+}
+
+.nav-links li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 9px 15px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.nav-links li a:hover {
+    color: #63e8f0;
+}
+
+.nav-links .dot {
+    width: 7px;
+    height: 7px;
+    background: #63e8f0;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-links li:hover .dot {
+    transform: translateY(0);
+    transition: all 0.2s ease-in-out;
+    opacity: 1;
+}
+
+.nav-links .drop-menu{
+    position: absolute;
+    background: #4682b4;
+    width: 180px;
+    line-height: 45px;
+    top: 85px;
+    opacity: 0;
+    visibility: hidden;
+    box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
+
+.nav-links li:hover .drop-menu {
+    transition: all 0.3s ease;
+    top: 70px;
+    opacity: 1;
+    visibility: visible;
+}
+
+.drop-menu li a{
+    width: 100%;
+    display: block;
+    padding: 0 0 0 15px;
+    font-weight: 400;
+    border-radius: 0px;
+}

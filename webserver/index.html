@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+	<link rel="stylesheet" href="assets/css/nav-menu.css">
+	<link rel="stylesheet" href="assets/css/login.css">
+	<link rel="stylesheet" href="assets/css/own.css">
+</head>
+
+<body>
+	<nav>
+		<div class="wrapper">
+			<div class="logo">
+				<a href="http://www.normagrup.com/"><img src="images/normagrupWhite.png" alt="imageLogo"/></a>
+			</div>
+			
+			<ul class="nav-links" id="menuContainer">
+				<li id="summaryButton"><a onclick="loadPage('summary.html')"> Summary </a><div class="dot"></div></li>
+			</ul>
+			
+			<div class="nav-links" id="loginContainer">
+				<li id="loginButton"><a onclick="openLogin()"> Log in </a><div class="dot"></div></li>
+			</div>
+		</div>
+
+		<div class="login-overlay" id="loginOverlay"></div>
+		<div class="login" id="login">
+			<span class="closeWindow" onclick="closeLoginPopup()"> &times; </span>
+			<img src="images/normagrupNameBlue.png" alt="imageLogo"/>
+			<input type="text" id="usernameInput" placeholder="Username">
+			<input type="password" id="passwordInput" placeholder="Password">
+			<label id="signError" style="color: #C30101; visibility: hidden;"><b>Username or password are incorrect!</b></label>
+			<button onclick="sendLogin()"> Log in </button>
+		</div>
+	</nav>
+
+	<iframe id="mainframe" src="summary.html"></iframe>
+
+	<script src="assets/js/index.js"></script>
+	<script src="assets/js/websocket.js"></script>
+	<script src="assets/js/aux_functions.js"></script>
+	<script>
+		var submask = 0;
+	</script>
+</body>
+
+</html>
+
+

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_ipconfig.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <h2> IP Configuration </h2>
+        
+        <div class="form">
+            <h3> Network IP <input type="text" name="ipValue"></h3>
+
+            <h3> Network Submask <input type="text" name="submaskValue"></h3>
+
+            <h3> Network Gateway <input type="text" name="gatewayValue"></h3>
+
+            <h3> Building Name <input type="text" name="buildingName"></h3>
+
+            <h3> Line Name <input type="text" name="lineName"></h3>
+
+            <h3> Password <input type="password" name="adminPass"></h3>
+            
+            <div class="button-container">
+                <button onclick="parent.sendIPConfig()"> Apply </button>
+                <button onclick="parent.rebootDevice()"> Reboot </button>
+            </div>
+        </div>
+        <label id="ipConfigLabel" style="color: #C30101; visibility: hidden; margin-top: 10px;"><b>Username or password are incorrect!</b></label>
+        <p class="version"> [IDNG-Blue v1.0 09/04/2024] </p>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(function() {
+                parent.sendData("GET_IP_CONFIG", "");
+            }, 10);
+        };
+    </script>
+</body>
+
+</html>
