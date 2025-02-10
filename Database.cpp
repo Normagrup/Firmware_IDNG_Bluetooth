@@ -196,24 +196,24 @@ QStringList Database::getLoginParameters()
     return loginParametersList;
 }
 
-QString Database::getInterfaceParameters()
+QStringList Database::getInterfaceParameters()
 {
+    QStringList list;
     QSqlQuery query;
 
     query.prepare("SELECT * FROM General");
 
-    if (!query.exec()) { return ""; }
+    if (!query.exec()) { return list; }
 
-    QString ip, submask, gateway, buildingName, lineName;
     if (query.next()) {
-        ip = query.value("IP").toString();
-        submask = query.value("Submask").toString();
-        gateway = query.value("Gateway").toString();
-        buildingName = query.value("BuildingName").toString();
-        lineName = query.value("LineName").toString();
+        list.append(query.value("IP").toString());
+        list.append(query.value("Submask").toString());
+        list.append(query.value("Gateway").toString());
+        list.append(query.value("BuildingName").toString());
+        list.append(query.value("LineName").toString());
     }
 
-    return (ip + " " + submask + " " + gateway + " " + buildingName + " " + lineName);
+    return list;
 }
 
 void Database::setInterfaceParameters(QStringList interfaceParameters)

@@ -33,7 +33,7 @@ Wireless::Wireless(QObject *parent)
 
 void Wireless::runNetwork()
 {
-    setWebServerData();
+    setWebServerData(_database);
     getMacAddress();
 
     for (uint8_t i = 0; i < 20; i++) {

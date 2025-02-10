@@ -4,41 +4,37 @@
 #include "file_handler.h"
 #include "global_variables.h"
 
-void setWebServerData()
+void setWebServerData(Database* database)
 {
-    QFile file(WEB_SERVER_DATA_PATH);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) { }//qDebug() << "NO SE PUEDE ABRIR WEB SERVER"; }
-    else {
-        QTextStream fileInput(&file);
-        while (!fileInput.atEnd()) {
-            QString line = fileInput.readLine();
-            QStringList lineParts = line.split(":");
+    QStringList generalData = database->getInterfaceParameters();
 
-            if (lineParts.size() == 2) {
-                QString key = lineParts[0].trimmed();
-                QString value = lineParts[1].trimmed();
+    webServerData.networkIP = generalData[0];
+    webServerData.networkSubmask = generalData[1];
+    webServerData.gatewayAddress = generalData[2];
+    webServerData.buildingName = generalData[3];
+    webServerData.lineName = generalData[4];
 
-                if (key == "Network IP") { webServerData.networkIP = value; }
-                else if (key == "Network Submask") { webServerData.networkSubmask = value; }
-                else if (key == "Gateway Address") { webServerData.gatewayAddress = value; }
-                else if (key == "Building Name") { webServerData.buildingName = value; }
-                else if (key == "Line Name") { webServerData.lineName = value; }
-                else if (key == "Password") { webServerData.password = value; }
-                else if (key == "Mantenedor Password") { webServerData.mantenedorPassword = value; }
-            }
-        }
+    QStringList loginData = database->getLoginParameters();
 
-        QStringList networkIPParts = webServerData.networkIP.split(".");
-        for (uint8_t i = 0; i < 4; i++) { networkIP[i] = networkIPParts[i].trimmed(); }
+    for(QString userPass : loginData) {
+        QString user = userPass.split(" ")[0];
+        QString pass = userPass.split(" ")[1];
 
-        QStringList networkSubmaskParts = webServerData.networkSubmask.split(".");
-        for (uint8_t i = 0; i < 4; i++) { networkSubmask[i] = networkSubmaskParts[i].trimmed(); }
-
-        QStringList gatewayAddressParts = webServerData.gatewayAddress.split(".");
-        for (uint8_t i = 0; i < 4; i++) { gatewayAddress[i] = gatewayAddressParts[i].trimmed(); }
-
-        file.close();
+        if(user == "admin")
+            webServerData.password = pass;
+        else if(user == "fabrica")
+            webServerData.mantenedorPassword = pass;
     }
+
+    QStringList networkIPParts = webServerData.networkIP.split(".");
+    for (uint8_t i = 0; i < 4; i++) { networkIP[i] = networkIPParts[i].trimmed(); }
+
+    QStringList networkSubmaskParts = webServerData.networkSubmask.split(".");
+    for (uint8_t i = 0; i < 4; i++) { networkSubmask[i] = networkSubmaskParts[i].trimmed(); }
+
+    QStringList gatewayAddressParts = webServerData.gatewayAddress.split(".");
+    for (uint8_t i = 0; i < 4; i++) { gatewayAddress[i] = gatewayAddressParts[i].trimmed(); }
+
 }
 
 QString getInterfacesConfig(QString config)

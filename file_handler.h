@@ -4,12 +4,13 @@
 #include <QFile>
 #include <QTextStream>
 #include <QProcess>
+#include "Database.h"
 
 #define WEB_SERVER_DATA_PATH        "/normagrup/www/webserver.txt"
 #define MAC_ADDRESS_PATH            "/sys/class/net/eth0/address"
 #define INTERFACES_PATH             "/etc/network/interfaces"
 
-void setWebServerData(void);
+void setWebServerData(Database* database);
 
 QString getInterfacesConfig(QString config);
 void getMacAddress(void);

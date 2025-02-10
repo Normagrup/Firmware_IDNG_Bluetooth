@@ -27,7 +27,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartScannedDevices(uartPort);
     }
     else if (type == WS_GET_IP_CONFIG) {
-        QString message = database->getInterfaceParameters();
+        QStringList messages = database->getInterfaceParameters();
+        QString message = messages.join(" ");
         sendInterfaceInfo(webServer, message);
     }
     else if (type == WS_SET_IP_CONFIG) {

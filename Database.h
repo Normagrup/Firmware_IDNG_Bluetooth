@@ -17,7 +17,7 @@ public:
 
     uint8_t verifyLoginParameters(QString loginParameters);
     QStringList getLoginParameters(void);
-    QString getInterfaceParameters(void);
+    QStringList getInterfaceParameters(void);
     void setInterfaceParameters(QStringList interfaceParameters);
     void loadNodesFromDatabase(void);
     void loadTestsFromDatabase(void);
