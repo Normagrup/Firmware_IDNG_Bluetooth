@@ -280,6 +280,22 @@ function processNodeInfo(value)
     else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png"; }
 }
 
+function processDevicesCounter(value) {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var devicesCounter = iframeDocument.getElementById('devicesCounter');
+    devicesCounter.textContent = value;
+}
+
+function processFailuresCounter(value) {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var failureCounter = iframeDocument.getElementById('failureCounter');
+    failureCounter.textContent = value;
+}
+
 function processEndNodeConfiguration(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -377,6 +393,8 @@ function processReceivedData(data)
     else if (type == 'ADDED_DEVICE') { addDeviceToNetworkList(value); }
     else if (type == 'DEVICE_ERROR') { processDeviceError(value); }
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
+    else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
+    else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
     else if (type == 'END_AUTO_COMMISSION') { processEndAutoCommission(value); }
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }

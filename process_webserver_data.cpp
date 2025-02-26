@@ -285,10 +285,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendWriteIDCodeFrame(uartPort, deviceID);
     }
     else if (type == WS_GET_DEVICES_COUNT) {
-        qDebug() << "GET_DEVICES_COUNT";
+        // TODO
+        sendDevicesCount(webServer, 1);
     }
     else if (type == WS_GET_FAILURES_COUNT) {
-        qDebug() << "GET_FAILURES_COUNT";
+        // TODO
+        sendFailuresCount(webServer, 1);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -476,6 +478,18 @@ void sendNodeInfo(WebServer* webServer, QString nodeNetAddress)
     isOpenNodeControl = true;
 
     QString message = QString(WS_SEND_NODE_INFO) + "@" + controlGearStatus + "." + emergencyMode + "." + emergencyFailureStatus + "." + actualLvl + "." + communicationFailure + "." + deviceType;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendDevicesCount(WebServer* webServer, int counter) {
+    QString message = QString(WS_SEND_DEVICES_COUNTER) + "@" + QString::number(counter);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendFailuresCount(WebServer* webServer, int counter) {
+    QString message = QString(WS_SEND_FAILURES_COUNTER) + "@" + QString::number(counter);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

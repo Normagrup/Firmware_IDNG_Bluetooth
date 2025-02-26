@@ -53,6 +53,8 @@
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
+#define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
+#define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
 #define WS_SEND_END_NODE_CONFIG             "END_NODE_CONFIG"
 #define WS_SEND_END_AUTO_COMMISSION         "END_AUTO_COMMISSION"
 #define WS_SEND_FACTORY_ID_WROTE            "FACTORY_ID_WROTE"
@@ -73,6 +75,8 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
+void sendDevicesCount(WebServer* webServer, int count);
+void sendFailuresCount(WebServer* webServer, int count);
 void sendEndNodeConfiguration(WebServer* webServer);
 void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
