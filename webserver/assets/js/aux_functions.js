@@ -187,6 +187,8 @@ function loadAdminMenu()
     createAdminMenuButtons();
 
     loadPage('summary.html');
+
+    updateDevicesAndFailuresCounters();
 }
 
 function loadFactoryMenu()
@@ -368,4 +370,23 @@ function switchMode()
         manualLabel.style.fontWeight = "normal";
         manualContainer.style.display = "none";
     }
+}
+
+function updateDevicesAndFailuresCounters()
+{
+    var iframe = document.getElementById('mainframe');
+
+    iframe.onload = function() {
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var devicesCounter = iframeDocument.getElementById('devicesCounter');
+        var failureCounter = iframeDocument.getElementById('failureCounter');
+
+        if (devicesCounter && failureCounter) {
+            devicesCounter.textContent = "0";
+            failureCounter.textContent = "0";
+        } else {
+            console.error("No se encontraron los elementos en el iframe");
+        }
+    };
 }
