@@ -188,7 +188,7 @@ function loadAdminMenu()
 
     loadPage('summary.html');
 
-    updateDevicesAndFailuresCounters();
+    buildOnLoadMethodAdmin();
 }
 
 function loadFactoryMenu()
@@ -372,22 +372,21 @@ function switchMode()
     }
 }
 
-function updateDevicesAndFailuresCounters()
+function buildOnLoadMethodAdmin()
 {
     var iframe = document.getElementById('mainframe');
 
     iframe.onload = function() {
         var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+        // Ventana: SUMMARY
         var devicesCounter = iframeDocument.getElementById('devicesCounter');
         var failuresCounter = iframeDocument.getElementById('failuresCounter');
 
         if (devicesCounter && failuresCounter) {
-            devicesCounter.textContent = "0";
-            failuresCounter.textContent = "0";
             requestDevicesAndFailuresCount();
-        } else {
-            console.error("No se encontraron los elementos en el iframe");
         }
+
+        // TODO: Añadir el resto de componentes de otras ventanas y las consultas en función de la ventana
     };
 }
