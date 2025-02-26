@@ -284,6 +284,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QString deviceID = webServerParts[1];
         sendWriteIDCodeFrame(uartPort, deviceID);
     }
+    else if (type == WS_GET_DEVICES_COUNT) {
+        qDebug() << "GET_DEVICES_COUNT";
+    }
+    else if (type == WS_GET_FAILURES_COUNT) {
+        qDebug() << "GET_FAILURES_COUNT";
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);

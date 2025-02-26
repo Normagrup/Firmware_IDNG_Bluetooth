@@ -385,6 +385,7 @@ function updateDevicesAndFailuresCounters()
         if (devicesCounter && failureCounter) {
             devicesCounter.textContent = "0";
             failureCounter.textContent = "0";
+            requestDevicesAndFailuresCount();
         } else {
             console.error("No se encontraron los elementos en el iframe");
         }

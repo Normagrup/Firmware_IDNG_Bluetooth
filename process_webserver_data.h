@@ -26,6 +26,8 @@
 #define WS_GET_NODE_INFO                    "GET_NODE_INFO"
 #define WS_SET_CLOSE_CONTROL                "SET_CLOSE_CONTROL"
 #define WS_SET_READ_ID_CODE                 "SET_READ_ID_CODE"
+#define WS_GET_DEVICES_COUNT                "GET_DEVICES_COUNT"
+#define WS_GET_FAILURES_COUNT               "GET_FAILURES_COUNT"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"

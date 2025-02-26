@@ -822,3 +822,8 @@ function codeReaderChanged()
 
     codeReader.value = '';
 }
+
+function requestDevicesAndFailuresCount() {
+    sendData("GET_DEVICES_COUNT", "");
+    sendData("GET_FAILURES_COUNT", "");
+}
