@@ -292,8 +292,8 @@ function processFailuresCounter(value) {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var failureCounter = iframeDocument.getElementById('failureCounter');
-    failureCounter.textContent = value;
+    var failuresCounter = iframeDocument.getElementById('failuresCounter');
+    failuresCounter.textContent = value;
 }
 
 function processEndNodeConfiguration(value) 

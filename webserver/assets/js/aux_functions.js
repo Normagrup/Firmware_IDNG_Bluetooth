@@ -380,11 +380,11 @@ function updateDevicesAndFailuresCounters()
         var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
         var devicesCounter = iframeDocument.getElementById('devicesCounter');
-        var failureCounter = iframeDocument.getElementById('failureCounter');
+        var failuresCounter = iframeDocument.getElementById('failuresCounter');
 
-        if (devicesCounter && failureCounter) {
+        if (devicesCounter && failuresCounter) {
             devicesCounter.textContent = "0";
-            failureCounter.textContent = "0";
+            failuresCounter.textContent = "0";
             requestDevicesAndFailuresCount();
         } else {
             console.error("No se encontraron los elementos en el iframe");
