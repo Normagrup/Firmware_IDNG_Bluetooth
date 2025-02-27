@@ -2,6 +2,7 @@
 #define GLOBAL_VARIABLES_H
 
 #include <QTimer>
+#include <unordered_map>
 
 #include "structures.h"
 #include "Device.h"
@@ -19,6 +20,9 @@ extern QString gatewayAddress[4];
 extern QString macAddress[6];
 
 extern Device meshDevice[MAX_SUBNET][MAX_NODES_SUBNET];
+extern std::unordered_map<uint32_t, Device*> uuidToDeviceMap;
+
+
 //extern ScannedUUID scannedUUID[MAX_SUBNET * MAX_NODES_SUBNET];
 extern Pollings polling;
 extern Tests tests[MAX_TEST];

@@ -41,6 +41,14 @@ public:
     uint8_t getEmergencyMode(void);
     uint8_t getEmergencyFailureStatus(void);
 
+    uint32_t extractUUIDKey(const uint8_t uuid[16], uint8_t deviceID[4]);
+    void configureDevice(uint8_t subnet, uint8_t id, Device* sourceDevice,
+                         uint8_t uuid[16], uint8_t manufacturingID[4]);
+    bool isDeviceConfigured(uint8_t subnet, uint8_t id);
+    std::vector<Device*> getConfiguredDevices();
+    // dummy device setup
+    void dummyDeviceSet();
+
     void deleteDevice(void);
 
     bool isOnSubList(uint16_t groupAddress);
@@ -59,6 +67,7 @@ private:
     uint8_t _actualLvl;
     uint8_t _emergencyMode;
     uint8_t _emergencyFailureStatus;
+
 };
 
 #endif // DEVICE_H

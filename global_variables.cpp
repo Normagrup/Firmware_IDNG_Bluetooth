@@ -7,6 +7,8 @@ QString gatewayAddress[4] = {"", "", "", ""};
 QString macAddress[6] = {"", "", "", "", "", ""};
 
 Device meshDevice[MAX_SUBNET][MAX_NODES_SUBNET];
+std::unordered_map<uint32_t, Device*> uuidToDeviceMap;
+
 //ScannedUUID scannedUUID[MAX_SUBNET * MAX_NODES_SUBNET] = { {nullptr, 0} };
 Pollings polling;
 Tests tests[MAX_TEST];
