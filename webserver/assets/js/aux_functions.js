@@ -284,10 +284,9 @@ function changeAddress()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var select = iframeDocument.getElementById('addressList');
-    var selectedValue = select.value;
-    var range = selectedValue.split('-');
-    var start = parseInt(range[0], 10);
-    var end = parseInt(range[1], 10);
+    var subnet = select.value;
+    var start = parseInt(subnet, 10) * 64;
+    var end = parseInt(subnet, 10)* 64 + 63;
     var container = iframeDocument.getElementById('node-container');
     container.innerHTML = '';
 

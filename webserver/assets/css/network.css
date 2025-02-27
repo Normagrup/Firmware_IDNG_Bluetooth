@@ -102,7 +102,7 @@ label {
 
 .node-container {
     display: grid;
-    grid-template-columns: repeat(10, auto);
+    grid-template-columns: repeat(8, auto);
     height: 100%;
     width: 100%;
     gap: 5px;
