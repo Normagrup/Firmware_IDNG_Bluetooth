@@ -270,3 +270,19 @@ label {
     background-position: center;
     overflow: hidden;
 }
+
+.node-container button.blue {
+    background-color: #4682b4; /* Azul por defecto */
+}
+
+.node-container button.gray {
+    background-color: gray;
+}
+
+.node-container button.blue:hover {
+    background-color: #63e8f0;
+}
+
+.node-container button.gray:hover {
+    background-color: #999; /* Gris más claro para el hover */
+}

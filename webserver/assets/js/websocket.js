@@ -376,6 +376,29 @@ function processRecordedDevice(value)
     }, 7300);
 }
 
+function processIsConfig(value)
+{
+    var deviceAndConfig = value.split("_");
+    var device = deviceAndConfig[0];
+    var isConfig = deviceAndConfig[1];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var button = iframeDocument.querySelector('button[data-device="' + device + '"]');
+    if (button) {
+        if (isConfig) {
+            button.classList.remove("gray");
+            button.classList.add("blue");
+        } else {
+            button.classList.remove("blue");
+            button.classList.add("gray");
+        }
+    } else {
+        console.log("no");
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -400,6 +423,7 @@ function processReceivedData(data)
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
+    else if (type == 'IS_CONFIG') { processIsConfig(value); }
 }
 
 function sendData(type, value) 
@@ -844,4 +868,8 @@ function codeReaderChanged()
 function requestDevicesAndFailuresCount() {
     sendData("GET_DEVICES_COUNT", "");
     sendData("GET_FAILURES_COUNT", "");
+}
+
+function isAnExistingDevice(i) {
+    sendData("GET_IS_CONFIG", i);
 }

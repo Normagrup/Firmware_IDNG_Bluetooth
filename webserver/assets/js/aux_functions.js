@@ -285,6 +285,11 @@ function createNodeButtons(start, end)
         button.onclick = function() {
             openNodeControl(this.textContent);
         };
+
+        button.setAttribute('data-device', i); // para que el botón "sepa" a que dispositivo pertenece
+        button.classList.add("gray"); // clase por defecto que pinta el botón de gris
+        isAnExistingDevice(i);
+
         container.appendChild(button);
         count++;
         if (count >= 64) break;

@@ -28,6 +28,7 @@
 #define WS_SET_READ_ID_CODE                 "SET_READ_ID_CODE"
 #define WS_GET_DEVICES_COUNT                "GET_DEVICES_COUNT"
 #define WS_GET_FAILURES_COUNT               "GET_FAILURES_COUNT"
+#define WS_GET_IS_CONFIG                    "GET_IS_CONFIG"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -60,6 +61,7 @@
 #define WS_SEND_FACTORY_ID_WROTE            "FACTORY_ID_WROTE"
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
+#define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 
@@ -82,5 +84,6 @@ void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
+void sendIsConfig(WebServer* webServer, QString device, bool isConfig);
 
 #endif // PROCESS_WEBSERVER_DATA_H

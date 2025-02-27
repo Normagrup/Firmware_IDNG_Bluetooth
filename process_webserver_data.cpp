@@ -305,6 +305,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         sendFailuresCount(webServer, count);
     }
+    else if (type == WS_GET_IS_CONFIG) {
+        int subnet = value.toInt() / MAX_NODES_SUBNET;
+        int id = value.toInt() / MAX_NODES_SUBNET;
+
+        sendIsConfig(webServer, value, meshDevice[subnet][id].getIsConfigured());
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -538,6 +544,12 @@ void sendDaliTested(WebServer* webServer)
 void sendRecordedDevice(WebServer* webServer)
 {
     QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsConfig(WebServer* webServer, QString device, bool isConfig) {
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + (isConfig ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
