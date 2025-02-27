@@ -172,6 +172,32 @@ uint8_t Device::getEmergencyFailureStatus()
     return _emergencyFailureStatus;
 }
 
+int Device::getTotalFailures()
+{
+    int totalFailures = 0;
+
+    // Fallo de lámpara
+    uint8_t controlGearStatus = getControlGearStatus();
+    int lampFailureBit = 1;
+    if((controlGearStatus >> lampFailureBit) & 1)
+        totalFailures++;
+
+    // Fallos de duración y batería
+    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
+    int durationFailureBit = 1;
+    int batteryFailureBit = 2;
+    if((emergencyFailureStatus >> durationFailureBit) & 1)
+        totalFailures++;
+    if((emergencyFailureStatus >> batteryFailureBit) & 1)
+        totalFailures++;
+
+    // Fallo de comunicación
+    if(getComunicationFailure())
+        totalFailures++;
+
+    return totalFailures;
+}
+
 void Device::deleteDevice()
 {
     this->_isConfigured = false;

@@ -285,12 +285,25 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendWriteIDCodeFrame(uartPort, deviceID);
     }
     else if (type == WS_GET_DEVICES_COUNT) {
-        // TODO
-        sendDevicesCount(webServer, 1);
+        int count = 0;
+        for(int i = 0; i < MAX_SUBNET; i++){
+            for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                Device& device = meshDevice[i][j];
+                if(device.getIsConfigured())
+                    count++;
+            }
+        }
+        sendDevicesCount(webServer, count);
     }
     else if (type == WS_GET_FAILURES_COUNT) {
-        // TODO
-        sendFailuresCount(webServer, 1);
+        int count = 0;
+        for(int i = 0; i < MAX_SUBNET; i++){
+            for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                Device& device = meshDevice[i][j];
+                count += device.getTotalFailures();
+            }
+        }
+        sendFailuresCount(webServer, count);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {

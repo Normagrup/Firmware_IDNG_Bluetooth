@@ -41,6 +41,8 @@ public:
     uint8_t getEmergencyMode(void);
     uint8_t getEmergencyFailureStatus(void);
 
+    int getTotalFailures(void);
+
     void deleteDevice(void);
 
     bool isOnSubList(uint16_t groupAddress);
