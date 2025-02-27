@@ -50,6 +50,10 @@ function createLogoutButton(userName)
     var loginButton = document.getElementById("loginButton");
     if (loginButton) { loginButton.remove(); }
 
+    // To avoid unintentional repeated creations
+    var logoutButtonExisting = document.getElementById("logoutButton");
+    if (logoutButtonExisting) { return; }
+
     var logoutButton = document.createElement('li');
     logoutButton.id = "logoutButton";
     var logoutButtonLink = document.createElement('a');
@@ -87,6 +91,10 @@ function createLogoutButton(userName)
 
 function createSettingsButton() 
 {
+    // To avoid unintentional repeated creations
+    var settingsButtonExisting = document.getElementById("settingsButton");
+    if(settingsButtonExisting) { return; }
+
     var settingsButton = document.createElement('li');
     settingsButton.id = "settingsButton";
 
@@ -160,20 +168,25 @@ function createSettingsButton()
 
 function createAdminMenuButtons()
 {
-    var networkButton = document.createElement('li');
-    networkButton.id = "networkButton";
-    var networkButtonLink = document.createElement('a');
-    networkButtonLink.textContent = "Network";
-    networkButtonLink.onclick = function() { loadPage('network.html') };
+    // To avoid unintentional repeated creations
+    var networkButtonExisting = document.getElementById("networkButton");
+    if(!networkButtonExisting) 
+    {
+        var networkButton = document.createElement('li');
+        networkButton.id = "networkButton";
+        var networkButtonLink = document.createElement('a');
+        networkButtonLink.textContent = "Network";
+        networkButtonLink.onclick = function() { loadPage('network.html') };
 
-    var dot = document.createElement('div');
-    dot.className = "dot";
+        var dot = document.createElement('div');
+        dot.className = "dot";
 
-    networkButton.appendChild(networkButtonLink);
-    networkButton.appendChild(dot);
+        networkButton.appendChild(networkButtonLink);
+        networkButton.appendChild(dot);
 
-    var menuContainer = document.getElementById("menuContainer");
-    menuContainer.appendChild(networkButton);
+        var menuContainer = document.getElementById("menuContainer");
+        menuContainer.appendChild(networkButton);
+    }
 
     createSettingsButton();
 }
@@ -274,7 +287,7 @@ function createNodeButtons(start, end)
         };
         container.appendChild(button);
         count++;
-        if (count >= 100) break;
+        if (count >= 64) break;
     }
 }
 
