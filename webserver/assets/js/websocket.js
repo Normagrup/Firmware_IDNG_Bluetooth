@@ -381,21 +381,20 @@ function processIsConfig(value)
     var deviceAndConfig = value.split("_");
     var device = deviceAndConfig[0];
     var isConfig = deviceAndConfig[1];
+    var configured = (isConfig == "true") ? true : false;
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var button = iframeDocument.querySelector('button[data-device="' + device + '"]');
     if (button) {
-        if (isConfig) {
+        if (configured) {
             button.classList.remove("gray");
             button.classList.add("blue");
         } else {
             button.classList.remove("blue");
             button.classList.add("gray");
         }
-    } else {
-        console.log("no");
     }
 }
 
