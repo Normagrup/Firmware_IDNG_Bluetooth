@@ -530,25 +530,50 @@ function addDevice()
     // }
 }
 
-function delDevice() 
-{
+// function delDevice() 
+// {
+//     var iframe = document.getElementById('mainframe');
+//     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+//     var networkErrorLabel = iframeDocument.getElementById('networkError');
+//     sendData("SET_DELETE_DEVICE", "");
+//     // var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+//     // if (selectedNode) {
+//     //     networkErrorLabel.style.visibility = "hidden";
+
+//     //     var textNodeSelected = selectedNode.textContent.trim();
+//     //     sendData("SET_DELETE_DEVICE", textNodeSelected);
+//     //     selectedNode.remove();
+//     // }
+//     // else {
+//     //     networkErrorLabel.style.color = "#C30101";
+//     //     networkErrorLabel.innerHTML = "<b> Select a node from network nodes! </b>";
+//     //     networkErrorLabel.style.visibility = "visible";
+//     // }
+// }
+
+function delDevice() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     var networkErrorLabel = iframeDocument.getElementById('networkError');
-    sendData("SET_DELETE_DEVICE", "");
-    // var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-    // if (selectedNode) {
-    //     networkErrorLabel.style.visibility = "hidden";
-
-    //     var textNodeSelected = selectedNode.textContent.trim();
-    //     sendData("SET_DELETE_DEVICE", textNodeSelected);
-    //     selectedNode.remove();
-    // }
-    // else {
-    //     networkErrorLabel.style.color = "#C30101";
-    //     networkErrorLabel.innerHTML = "<b> Select a node from network nodes! </b>";
-    //     networkErrorLabel.style.visibility = "visible";
-    // }
+    
+    // Seleccionar el nodo marcado en la lista de Network Nodes
+    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    
+    if (selectedNode) {
+        var nodeId = selectedNode.textContent.trim(); // Obtener ID del nodo
+        console.log("📤 Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
+        // Enviar comando al embebido para eliminar el nodo
+        sendData("SET_DELETE_DEVICE", nodeId);
+        
+        // Esperar confirmación antes de eliminarlo de la interfaz
+        setTimeout(() => {
+            selectedNode.remove();
+            console.log("Nodo eliminado de la interfaz: " + nodeId);
+        }, 1000);
+    } else {
+        networkErrorLabel.style.visibility = "visible";
+        networkErrorLabel.innerText = "No device selected";
+    }
 }
 
 function addToGroup() 

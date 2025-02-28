@@ -118,7 +118,8 @@ uint8_t* Device::getSerialNumber()
 }
 
 uint16_t Device::getRealAddress()
-{
+{   
+    printf(" Obteniendo dirección real del nodo: %04X\n", this->_realAddress);
     return _realAddress;
 }
 

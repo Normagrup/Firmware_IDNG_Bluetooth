@@ -163,7 +163,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         //qDebug() << "PRUEBA UART";
                         qDebug() << "PARANDO TIMER START COMMISSION";
                         addDeviceTimer.start(ADD_DEVICE_TIMER_MS);
-                        sendConfirmStartCommission(webServer);
+                        sendConfirmStartCommission(webServer); 
                     break;
 
                     case CONFIRM_ADD_DEVICE:
@@ -562,20 +562,42 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
+// void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
+// {
+//     QByteArray frame;
+//     unsigned char length = 5;
+
+//     frame.append(UART_HEADER);
+//     frame.append(length);
+//     frame.append(UART_CONFIG_FRAME_TYPE);
+//     frame.append(DEL_DEVICE);
+//     frame.append((nodeAddress >> 8) & 0xFF);
+//     frame.append(nodeAddress & 0xFF);
+//     frame.append(UART_END);
+
+//     _uartPort->sendData(frame);
+// }
+
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    if (_uartPort == nullptr) {
+        printf("Error: _uartPort no está inicializado.\n");
+        return;
+    }
+    
     QByteArray frame;
     unsigned char length = 5;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(DEL_DEVICE);
+    frame.append(DEL_DEVICES);
     frame.append((nodeAddress >> 8) & 0xFF);
     frame.append(nodeAddress & 0xFF);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
+    printf("Comando de eliminación enviado al nodo: %04X\n", nodeAddress);
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)

@@ -91,7 +91,25 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         //uint16_t  nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
         //meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
         //database->deleteNode(nodeAddress);
-        sendUartDelDevice(uartPort, 0xFFFF);
+        //sendUartDelDevice(uartPort, 0xFFFF);
+        uint16_t nodeNetAddress = getNodeNetAddress(value);
+        uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+        printf(" Intentando eliminar nodo...\n");
+        printf(" Net Address: %04X\n", nodeNetAddress);
+        printf(" Dirección obtenida de meshDevice: %04X\n", nodeAddress);
+
+        // Notificar al microcontrolador maestro
+        sendUartDelDevice(uartPort, nodeAddress);
+
+        // Eliminar el nodo de la estructura interna
+        meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+        
+        // Eliminar el nodo de la base de datos
+        database->deleteNode(nodeAddress);
+        
+        
+        
+        printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
     }
     else if (type == WS_SET_ADD_GROUP) {
         /*

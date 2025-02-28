@@ -23,7 +23,7 @@
 #define CHANGE_RELAY                    0x07
 #define ADD_DEVICE                      0x09
 #define DEVICE_ERROR                    0x11
-#define DEL_DEVICE                      0x13
+#define DEL_DEVICES                     0x13
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
 #define FEATURES                        0x19
