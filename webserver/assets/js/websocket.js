@@ -576,6 +576,10 @@ function delDevice() {
     }
 }
 
+function delAllDevices() {
+    console.log("Botón pulsado");
+}
+
 function addToGroup() 
 {
     var iframe = document.getElementById('mainframe');
