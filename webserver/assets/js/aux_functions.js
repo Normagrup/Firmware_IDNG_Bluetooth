@@ -303,8 +303,8 @@ function changeAddress()
 
     var select = iframeDocument.getElementById('addressList');
     var subnet = select.value;
-    var start = parseInt(subnet, 10) * 64;
-    var end = parseInt(subnet, 10)* 64 + 63;
+    var start = (parseInt(subnet, 10) - 1) * 64 + 1;
+    var end = parseInt(subnet, 10) * 64;
     var container = iframeDocument.getElementById('node-container');
     container.innerHTML = '';
 

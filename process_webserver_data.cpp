@@ -306,8 +306,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendFailuresCount(webServer, count);
     }
     else if (type == WS_GET_IS_CONFIG) {
-        int subnet = value.toInt() / MAX_NODES_SUBNET;
-        int id = value.toInt() % MAX_NODES_SUBNET;
+        int subnet = (value.toInt() - 1) / MAX_NODES_SUBNET;
+        int id = (value.toInt() - 1) % MAX_NODES_SUBNET;
 
         sendIsConfig(webServer, value, meshDevice[subnet][id].getIsConfigured());
     }
