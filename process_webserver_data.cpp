@@ -111,6 +111,26 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         
         printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
     }
+    else if (type == WS_SET_DELETE_ALL_DEVICES) {
+        QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
+
+        for (uint16_t nodeNetAddress : nodeNetAddressList) {
+            uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+
+            qDebug() << "Eliminando Nodo (NodeNetAddress:" << nodeNetAddress << "--- NodeAddress:" << nodeAddress << ")";
+
+            // Notificar al microcontrolador maestro
+            sendUartDelDevice(uartPort, nodeAddress);
+
+            // Eliminar de la estructura interna
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+        }
+
+        // Eliminar todos los nodos de la base de datos
+        database->deleteAllNodes();
+
+        qDebug() << "Eliminación de nodos completada";
+    }
     else if (type == WS_SET_ADD_GROUP) {
         /*
         uint16_t* address = getGroupAddress(value);
@@ -303,6 +323,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendWriteIDCodeFrame(uartPort, deviceID);
     }
     else if (type == WS_GET_DEVICES_COUNT) {
+        // NOTA: Se podría sacar de la BBDD en lugar de recorrer toda la estructura
         int count = 0;
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {

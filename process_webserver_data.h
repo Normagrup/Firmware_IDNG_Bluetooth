@@ -17,6 +17,7 @@
 #define WS_SET_START_ACTION                 "SET_START_ACTION"
 #define WS_SET_NEW_COMMISSION_ITERATION     "SET_NEW_COMMISSION_ITERATION"
 #define WS_SET_DELETE_DEVICE                "SET_DELETE_DEVICE"
+#define WS_SET_DELETE_ALL_DEVICES           "SET_DELETE_ALL_DEVICES"
 #define WS_SET_ADD_GROUP                    "SET_ADD_GROUP"
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"

@@ -28,6 +28,7 @@ public:
     void setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value);
 
     void deleteNode(uint16_t nodeAddress);
+    void deleteAllNodes(void);
     void delGroup(uint16_t realAddress, uint16_t groupAddress);
 
     void setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable);

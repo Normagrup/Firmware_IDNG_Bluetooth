@@ -381,6 +381,14 @@ void Database::deleteNode(uint16_t nodeAddress)
     if (!query.exec()) { qDebug() << "Error executing DELETE query in deleteNode:" << query.lastError().text(); }
 }
 
+void Database::deleteAllNodes()
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM Nodes");
+
+    if (!query.exec()) { qDebug() << "Error executing DELETE query in deleteAllNodes:" << query.lastError().text(); }
+}
+
 void Database::delGroup(uint16_t realAddress, uint16_t groupAddress)
 {
     QSqlQuery query;

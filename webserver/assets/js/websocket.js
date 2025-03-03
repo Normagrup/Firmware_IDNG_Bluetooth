@@ -560,8 +560,10 @@ function delDevice() {
     var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
     
     if (selectedNode) {
+        networkErrorLabel.style.visibility = "hidden";
+
         var nodeId = selectedNode.textContent.trim(); // Obtener ID del nodo
-        console.log("📤 Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
+        console.log("Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
         // Enviar comando al embebido para eliminar el nodo
         sendData("SET_DELETE_DEVICE", nodeId);
         
@@ -577,7 +579,19 @@ function delDevice() {
 }
 
 function delAllDevices() {
-    console.log("Botón pulsado");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var networkErrorLabel = iframeDocument.getElementById('networkError');
+    
+    // Seleccionar la lista de nodos
+    var networkNodesList = iframeDocument.getElementById('networkNodesList');
+    
+    console.log("Enviando comando SET_DELETE_ALL_DEVICES");
+    // Enviar comando al embebido para eliminar los nodos
+    sendData("SET_DELETE_ALL_DEVICES", "");
+
+    networkErrorLabel.style.visibility = "hidden";
+    networkNodesList.innerHTML = "";
 }
 
 function addToGroup() 
