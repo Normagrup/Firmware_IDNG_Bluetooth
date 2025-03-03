@@ -796,6 +796,11 @@ function sendFile()
     reader.readAsArrayBuffer(file);
 }
 
+function clearAllData()
+{
+    sendData("SET_CLEAR_ALL_DATA", "");
+}
+
 function getLogs()
 {
     var iframe = document.getElementById('mainframe');

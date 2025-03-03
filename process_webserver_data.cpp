@@ -350,6 +350,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendIsConfig(webServer, value, meshDevice[subnet][id].getIsConfigured());
     }
+    else if (type == WS_SET_CLEAR_ALL_DATA) {
+        qDebug() << "CLEAR ALL DATA";
+        // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);

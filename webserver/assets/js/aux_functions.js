@@ -111,6 +111,7 @@ function createSettingsButton()
     var settingsLogs = document.createElement('li');
     var settingsTests = document.createElement('li');
     var settingsUpdateDevice = document.createElement('li');
+    var settingsManageData = document.createElement('li');
 
     var settingsIPConfigLink = document.createElement('a');
     settingsIPConfigLink.onclick = function() { loadPage('s_ipconfig.html'); };
@@ -135,6 +136,10 @@ function createSettingsButton()
     var settingsUpdateDeviceLink = document.createElement('a');
     settingsUpdateDeviceLink.onclick = function() { loadPage('s_update.html') };
     settingsUpdateDeviceLink.textContent = "Update Device";
+     
+    var settingsManageDataLink = document.createElement('a');
+    settingsManageDataLink.onclick = function() { loadPage('s_data.html') };
+    settingsManageDataLink.textContent = "Manage Data";
 
     settingsIPConfig.appendChild(settingsIPConfigLink);
     settingsTime.appendChild(settingsTimeLink);
@@ -142,6 +147,7 @@ function createSettingsButton()
     settingsLogs.appendChild(settingsLogsLink);
     settingsTests.appendChild(settingsTestsLink);
     settingsUpdateDevice.appendChild(settingsUpdateDeviceLink);
+    settingsManageData.appendChild(settingsManageDataLink);
 
     settingsButtonMenu.appendChild(settingsIPConfig);
     settingsButtonMenu.appendChild(settingsTime);
@@ -149,6 +155,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsLogs);
     settingsButtonMenu.appendChild(settingsTests);
     settingsButtonMenu.appendChild(settingsUpdateDevice);
+    settingsButtonMenu.appendChild(settingsManageData);
 
     settingsButtonLink.appendChild(settingsButtonMenu);
 
