@@ -855,8 +855,12 @@ function openNodeControl(button)
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
     var popupText = popup.querySelector('h3');
-    popupText.textContent = "A" + button.textContent + " [" + button.getAttribute('data-serial') + "]";
-    addressClicked = button.textContent;
+
+    var device = button.getAttribute('data-device');
+    var serial = button.getAttribute('data-serial');
+
+    popupText.textContent = "A" + device + " [" + serial + "]";
+    addressClicked = device;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
