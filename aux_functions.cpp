@@ -101,7 +101,7 @@ void convertUuidStringToByteArray(QString uuid, uint8_t* serialNumber)
         QString byteString = uuid.mid(i * 2, 2);
         bool ok;
         uint8_t byte = byteString.toUInt(&ok, 16);
-        if (ok) { serialNumber[15 - i] = byte; }
+        if (ok) { serialNumber[i] = byte; }
     }
 }
 
