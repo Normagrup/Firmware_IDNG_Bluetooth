@@ -517,10 +517,13 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
 
 void sendNodesFromDatabase(WebServer* webServer, Database* database)
 {
-    QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
+    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
 
-    for (uint16_t nodeNetAddress : nodeNetAddressList) {
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(nodeNetAddress);
+    for (const QPair<uint16_t, QString>& node : nodeNetAddressAndSNList) {
+        uint16_t netAddress = node.first;
+        QString serialNumber = node.second;
+
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber;
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }

@@ -470,4 +470,25 @@ QList<uint16_t> Database::getConfiguredNodes()
     return nodeNetAddressList;
 }
 
+QList<QPair<uint16_t, QString>> Database::getConfiguredNodesAndSerialNumbers()
+{
+    QSqlQuery query;
+    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList;
+    if (!query.exec("SELECT * FROM Nodes")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
+        uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
+
+        uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
+
+        QString UUID = query.value("UUID").toString();
+        QString nums = UUID.left(8);
+        QString serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
+
+        nodeNetAddressAndSNList.append(qMakePair(nodeNetAddress, serialNumber));
+    }
+
+    return nodeNetAddressAndSNList;
+}
 

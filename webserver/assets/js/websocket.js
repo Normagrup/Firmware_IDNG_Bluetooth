@@ -188,10 +188,14 @@ function addDeviceToNetworkList(value)
     var devices = scannedDevicesList.getElementsByTagName('li');
     var firstDevice = devices[0];
     if (firstDevice) { firstDevice.remove(); }
+
+    var parts = value.split("_");
+    var nodeNetAddress = parts[0];
+    var serialNumber = parts[1];
     
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
     var newNode = iframeDocument.createElement('li');
-    newNode.textContent = "Node " + value;
+    newNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
     newNode.setAttribute('class', 'deviceNetwork');
     newNode.setAttribute('onclick', 'parent.selectDevice(this)');
     networkNodesList.appendChild(newNode);
