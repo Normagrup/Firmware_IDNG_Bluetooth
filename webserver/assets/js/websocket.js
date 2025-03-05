@@ -394,6 +394,7 @@ function processIsConfig(value)
     var button = iframeDocument.querySelector('button[data-device="' + device + '"]');
     if (button) {
         button.setAttribute('data-serial', sn);
+        button.innerHTML = "<b>" + device + " </b> <br>" + sn;
 
         if (configured) {
             button.classList.remove("gray");
