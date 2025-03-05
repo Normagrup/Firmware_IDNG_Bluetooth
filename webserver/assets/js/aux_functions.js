@@ -290,7 +290,7 @@ function createNodeButtons(start, end)
         var address = i.toString(10);
         button.textContent = address;
         button.onclick = function() {
-            openNodeControl(this.textContent);
+            openNodeControl(this);
         };
 
         button.setAttribute('data-device', i); // para que el botón "sepa" a que dispositivo pertenece

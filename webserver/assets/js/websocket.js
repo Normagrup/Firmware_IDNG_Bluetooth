@@ -382,9 +382,10 @@ function processRecordedDevice(value)
 
 function processIsConfig(value)
 {
-    var deviceAndConfig = value.split("_");
-    var device = deviceAndConfig[0];
-    var isConfig = deviceAndConfig[1];
+    var parts = value.split("_");
+    var device = parts[0];
+    var sn = parts[1];
+    var isConfig = parts[2];
     var configured = (isConfig == "true") ? true : false;
 
     var iframe = document.getElementById('mainframe');
@@ -392,6 +393,8 @@ function processIsConfig(value)
 
     var button = iframeDocument.querySelector('button[data-device="' + device + '"]');
     if (button) {
+        button.setAttribute('data-serial', sn);
+
         if (configured) {
             button.classList.remove("gray");
             button.classList.add("blue");
@@ -842,7 +845,7 @@ function getLogs()
     }
 }
 
-function openNodeControl(buttonText)
+function openNodeControl(button)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -851,8 +854,8 @@ function openNodeControl(buttonText)
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
     var popupText = popup.querySelector('h3');
-    popupText.textContent = "A" + buttonText;
-    addressClicked = buttonText;
+    popupText.textContent = "A" + button.textContent + " [" + button.getAttribute('data-serial') + "]";
+    addressClicked = button.textContent;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";

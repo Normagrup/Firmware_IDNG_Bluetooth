@@ -103,12 +103,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         // Eliminar el nodo de la estructura interna
         meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-        
+
         // Eliminar el nodo de la base de datos
         database->deleteNode(nodeAddress);
-        
-        
-        
+
+
+
         printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
     }
     else if (type == WS_SET_DELETE_ALL_DEVICES) {
@@ -348,7 +348,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         int subnet = (value.toInt() - 1) / MAX_NODES_SUBNET;
         int id = (value.toInt() - 1) % MAX_NODES_SUBNET;
 
-        sendIsConfig(webServer, value, meshDevice[subnet][id].getIsConfigured());
+        uint8_t* UUID = meshDevice[subnet][id].getSerialNumber();
+        QString serialNumber = QString("%1.%2.%3.%4")
+                                    .arg(UUID[0], 2, 16, QLatin1Char('0'))
+                                    .arg(UUID[1], 2, 16, QLatin1Char('0'))
+                                    .arg(UUID[2], 2, 16, QLatin1Char('0'))
+                                    .arg(UUID[3], 2, 16, QLatin1Char('0'))
+                                    .toUpper();
+
+        sendIsConfig(webServer, value, serialNumber, meshDevice[subnet][id].getIsConfigured());
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
@@ -594,8 +602,8 @@ void sendRecordedDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsConfig(WebServer* webServer, QString device, bool isConfig) {
-    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + (isConfig ? "true" : "false");
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig) {
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
