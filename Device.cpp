@@ -4,7 +4,7 @@ Device::Device(QObject *parent)
     : QObject{parent}
 {
     this->_isConfigured = false;
-    for (uint8_t i = 0; i < 16; i++) { this->_serialNumber[i] = 0; }
+    for (uint8_t i = 0; i < 16; i++) { this->_UUID[i] = 0; }
     this->_realAddress = 0;
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) { this->_groupSubAddress[i] = 0; }
     this->_comunicationFailure = false;
@@ -28,9 +28,9 @@ void Device::setIsConfigured(bool isConfigured)
     _isConfigured = isConfigured;
 }
 
-void Device::setSerialNumber(uint8_t* serialNumber)
+void Device::setUUID(uint8_t* UUID)
 {
-    for (uint8_t i = 0; i < 16; i++) { _serialNumber[i] = serialNumber[i];}
+    for (uint8_t i = 0; i < 16; i++) { _UUID[i] = UUID[i];}
 }
 
 void Device::setRealAddress(uint16_t realAddress)
@@ -112,14 +112,14 @@ bool Device::getIsConfigured()
     return _isConfigured;
 }
 
-uint8_t* Device::getSerialNumber()
+uint8_t* Device::getUUID()
 {
-    return _serialNumber;
+    return _UUID;
 }
 
 uint8_t* Device::serialNumber()
 {
-    uint8_t* UUID = getSerialNumber();
+    uint8_t* UUID = getUUID();
     uint8_t* SN = new uint8_t[4];
 
     for(int i = 0; i < 4; i++)
@@ -240,7 +240,7 @@ int Device::getTotalFailures()
 void Device::deleteDevice()
 {
     this->_isConfigured = false;
-    for (uint8_t i = 0; i < 16; i++) { this->_serialNumber[i] = 0; }
+    for (uint8_t i = 0; i < 16; i++) { this->_UUID[i] = 0; }
     this->_realAddress = 0;
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) { this->_groupSubAddress[i] = 0; }
     this->_comunicationFailure = false;

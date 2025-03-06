@@ -85,7 +85,7 @@ void setFirstAddressAvailable(uint16_t nodeAddress, uint8_t* nodeUUID, Database*
             if (!meshDevice[i][j].getIsConfigured()) {
                 //meshDevice[i][j].setIsConfigured(true);
                 meshDevice[i][j].setRealAddress(nodeAddress);
-                meshDevice[i][j].setSerialNumber(nodeUUID);
+                meshDevice[i][j].setUUID(nodeUUID);
                 database->setNewNode(i, j, nodeAddress, nodeUUID);
                 netAddress[0] = i;
                 netAddress[1] = j;
@@ -95,13 +95,13 @@ void setFirstAddressAvailable(uint16_t nodeAddress, uint8_t* nodeUUID, Database*
     }
 }
 
-void convertUuidStringToByteArray(QString uuid, uint8_t* serialNumber)
+void convertUuidStringToByteArray(QString uuidString, uint8_t* UUID)
 {
     for (uint8_t i = 0; i < 16; i++) {
-        QString byteString = uuid.mid(i * 2, 2);
+        QString byteString = uuidString.mid(i * 2, 2);
         bool ok;
         uint8_t byte = byteString.toUInt(&ok, 16);
-        if (ok) { serialNumber[i] = byte; }
+        if (ok) { UUID[i] = byte; }
     }
 }
 

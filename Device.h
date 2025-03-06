@@ -13,7 +13,7 @@ public:
     ~Device();
 
     void setIsConfigured(bool isConfigured);
-    void setSerialNumber(uint8_t* serialNumber);
+    void setUUID(uint8_t* UUID);
     void setRealAddress(uint16_t realAddress);
     void setGroupSubAddress(uint16_t groupAddress);
     void delGroupSubAddress(uint16_t groupAddress);
@@ -28,7 +28,7 @@ public:
     void setEmergencyFailureStatus(uint8_t emergencyFailureStatus);
 
     bool getIsConfigured(void);
-    uint8_t* getSerialNumber(void); // devuelve el UUID (16 bytes)
+    uint8_t* getUUID(void); // devuelve el UUID (16 bytes)
     uint8_t* serialNumber(void); // devuelve el serialNumber (4 primeros bytes del UUID);
     QString serialNumberString(void); // devuelve el serialNumber como un String ("XX.XX.XX.XX")
     uint16_t getRealAddress(void);
@@ -55,7 +55,7 @@ public:
 
 private:
     bool _isConfigured;
-    uint8_t _serialNumber[16];
+    uint8_t _UUID[16];
     uint16_t _realAddress;
     uint16_t _groupSubAddress[MESH_GROUP_COUNT];
     bool _comunicationFailure;
