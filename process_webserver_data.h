@@ -86,6 +86,6 @@ void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool isFail);
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures);
 
 #endif // PROCESS_WEBSERVER_DATA_H

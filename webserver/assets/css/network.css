@@ -279,6 +279,10 @@ label {
     background-color: gray;
 }
 
+.node-container button.red {
+    background-color: #c12026;
+}
+
 .node-container button.blue:hover {
     background-color: #63e8f0;
 }
@@ -287,10 +291,6 @@ label {
     background-color: #999; /* Gris más claro para el hover */
 }
 
-.node-container button.red {
-    background-color: red;
-}
 .node-container button.red:hover {
     background-color: #ff7f7f;
 }
-

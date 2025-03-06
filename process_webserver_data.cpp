@@ -347,13 +347,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_IS_CONFIG) {
         int subnet = (value.toInt() - 1) / MAX_NODES_SUBNET;
         int id = (value.toInt() - 1) % MAX_NODES_SUBNET;
-        bool isFail = false;
-        int failCount = meshDevice[subnet][id].getTotalFailures();
-        if ( failCount > 0){
-            isFail = true;
-        } else {
-            isFail = false;
-        }
 
         uint8_t* UUID = meshDevice[subnet][id].getSerialNumber();
         QString serialNumber = QString("%1.%2.%3.%4")
@@ -363,7 +356,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                                     .arg(UUID[3], 2, 16, QLatin1Char('0'))
                                     .toUpper();
 
-        sendIsConfig(webServer, value, serialNumber, meshDevice[subnet][id].getIsConfigured(), isFail);
+        sendIsConfig(webServer, value, serialNumber, meshDevice[subnet][id].getIsConfigured(), meshDevice[subnet][id].getTotalFailures() > 0);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
@@ -609,8 +602,8 @@ void sendRecordedDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool isFail) {
-    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (isFail ? "true" : "false");
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures) {
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
