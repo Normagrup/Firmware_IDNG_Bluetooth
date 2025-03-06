@@ -173,28 +173,45 @@ uint8_t Device::getEmergencyFailureStatus()
     return _emergencyFailureStatus;
 }
 
+bool Device::hasLampFailure()
+{
+    uint8_t controlGearStatus = getControlGearStatus();
+    int lampFailureBit = 1;
+    return ((controlGearStatus >> lampFailureBit) & 1);
+}
+
+bool Device::hasCommunicationFailure()
+{
+    return getComunicationFailure();
+}
+
+bool Device::hasBatteryFailure()
+{
+    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
+    int batteryFailureBit = 2;
+    return ((emergencyFailureStatus >> batteryFailureBit) & 1);
+}
+
+bool Device::hasBatteryDurationFailure()
+{
+    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
+    int durationFailureBit = 1;
+    return ((emergencyFailureStatus >> durationFailureBit) & 1);
+}
+
 int Device::getTotalFailures()
 {
     int totalFailures = 0;
 
     // Fallo de lámpara
-    uint8_t controlGearStatus = getControlGearStatus();
-    int lampFailureBit = 1;
-    if((controlGearStatus >> lampFailureBit) & 1)
-        totalFailures++;
+    if(hasLampFailure()) { totalFailures++; }
 
     // Fallos de duración y batería
-    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
-    int durationFailureBit = 1;
-    int batteryFailureBit = 2;
-    if((emergencyFailureStatus >> durationFailureBit) & 1)
-        totalFailures++;
-    if((emergencyFailureStatus >> batteryFailureBit) & 1)
-        totalFailures++;
+    if(hasBatteryDurationFailure()) { totalFailures++; }
+    if(hasBatteryFailure()) { totalFailures++; }
 
     // Fallo de comunicación
-    if(getComunicationFailure())
-        totalFailures++;
+    if(hasCommunicationFailure()) { totalFailures++; }
 
     return totalFailures;
 }

@@ -41,6 +41,10 @@ public:
     uint8_t getEmergencyMode(void);
     uint8_t getEmergencyFailureStatus(void);
 
+    bool hasLampFailure(void);
+    bool hasCommunicationFailure(void);
+    bool hasBatteryFailure(void);
+    bool hasBatteryDurationFailure(void);
     int getTotalFailures(void);
 
     void deleteDevice(void);
