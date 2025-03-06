@@ -386,7 +386,9 @@ function processIsConfig(value)
     var device = parts[0];
     var sn = parts[1];
     var isConfig = parts[2];
+    var isFail = parts[3] || "false"; // Defalt to "false" if missing
     var configured = (isConfig == "true") ? true : false;
+    var failed = (isFail === "true");
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -396,13 +398,16 @@ function processIsConfig(value)
         button.setAttribute('data-serial', sn);
         button.innerHTML = "<b>" + device + " </b> <br>" + sn;
 
-        if (configured) {
-            button.classList.remove("gray");
+        if (failed) {
+            button.classList.remove("blue", "gray");
+            button.classList.add("red");
+        } else if (configured) {
+            button.classList.remove("red", "gray");
             button.classList.add("blue");
         } else {
-            button.classList.remove("blue");
+            button.classList.remove("red", "blue");
             button.classList.add("gray");
-        }
+        }    
     }
 }
 

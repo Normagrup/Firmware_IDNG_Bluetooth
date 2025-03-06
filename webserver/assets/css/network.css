@@ -286,3 +286,11 @@ label {
 .node-container button.gray:hover {
     background-color: #999; /* Gris más claro para el hover */
 }
+
+.node-container button.red {
+    background-color: red;
+}
+.node-container button.red:hover {
+    background-color: #ff7f7f;
+}
+
