@@ -117,6 +117,27 @@ uint8_t* Device::getSerialNumber()
     return _serialNumber;
 }
 
+uint8_t* Device::serialNumber()
+{
+    uint8_t* UUID = getSerialNumber();
+    uint8_t* SN = new uint8_t[4];
+
+    for(int i = 0; i < 4; i++)
+        SN[i] = UUID[i];
+
+    return SN;
+}
+
+QString Device::serialNumberString()
+{
+    uint8_t* SN = serialNumber();
+    return QString("%1.%2.%3.%4")
+        .arg(SN[0], 2, 16, QLatin1Char('0')).toUpper()
+        .arg(SN[1], 2, 16, QLatin1Char('0')).toUpper()
+        .arg(SN[2], 2, 16, QLatin1Char('0')).toUpper()
+        .arg(SN[3], 2, 16, QLatin1Char('0')).toUpper();
+}
+
 uint16_t Device::getRealAddress()
 {   
     printf(" Obteniendo dirección real del nodo: %04X\n", this->_realAddress);

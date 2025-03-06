@@ -348,15 +348,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         int subnet = (value.toInt() - 1) / MAX_NODES_SUBNET;
         int id = (value.toInt() - 1) % MAX_NODES_SUBNET;
 
-        uint8_t* UUID = meshDevice[subnet][id].getSerialNumber();
-        QString serialNumber = QString("%1.%2.%3.%4")
-                                    .arg(UUID[0], 2, 16, QLatin1Char('0'))
-                                    .arg(UUID[1], 2, 16, QLatin1Char('0'))
-                                    .arg(UUID[2], 2, 16, QLatin1Char('0'))
-                                    .arg(UUID[3], 2, 16, QLatin1Char('0'))
-                                    .toUpper();
+        QString serialNumber = meshDevice[subnet][id].serialNumberString();
+        bool isConfig = meshDevice[subnet][id].getIsConfigured();
+        bool hasFailures = meshDevice[subnet][id].getTotalFailures() > 0;
 
-        sendIsConfig(webServer, value, serialNumber, meshDevice[subnet][id].getIsConfigured(), meshDevice[subnet][id].getTotalFailures() > 0);
+        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
