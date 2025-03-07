@@ -80,7 +80,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendDevicesCount(WebServer* webServer, int count);
-void sendFailuresCount(WebServer* webServer, int count);
+void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
 void sendEndNodeConfiguration(WebServer* webServer);
 void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);

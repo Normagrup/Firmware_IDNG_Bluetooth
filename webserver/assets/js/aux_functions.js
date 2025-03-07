@@ -183,8 +183,10 @@ function createAdminMenuButtons()
         networkButton.id = "networkButton";
         var networkButtonLink = document.createElement('a');
         networkButtonLink.textContent = "Network";
-        networkButtonLink.onclick = function() { loadPage('network.html') };
-
+        networkButtonLink.onclick = function() { 
+            loadPage('network.html'); 
+        };
+        
         var dot = document.createElement('div');
         dot.className = "dot";
 

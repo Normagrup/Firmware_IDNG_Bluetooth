@@ -336,13 +336,22 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_GET_FAILURES_COUNT) {
         int count = 0;
+        int lampFailCount = 0;
+        int batFailCount = 0;
+        int durFailCount = 0;
+        int comFailCount = 0;
+
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                 Device& device = meshDevice[i][j];
                 count += device.getTotalFailures();
+                if(device.hasLampFailure()) { lampFailCount++; }
+                if(device.hasBatteryFailure()) { batFailCount++; }
+                if(device.hasBatteryDurationFailure()) { durFailCount++; }
+                if(device.hasCommunicationFailure()) { comFailCount++; }
             }
         }
-        sendFailuresCount(webServer, count);
+        sendFailuresCount(webServer, count, lampFailCount, batFailCount, durFailCount, comFailCount);
     }
     else if (type == WS_GET_IS_CONFIG) {
         int subnet = (value.toInt() - 1) / MAX_NODES_SUBNET;
@@ -561,8 +570,8 @@ void sendDevicesCount(WebServer* webServer, int counter) {
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendFailuresCount(WebServer* webServer, int counter) {
-    QString message = QString(WS_SEND_FAILURES_COUNTER) + "@" + QString::number(counter);
+void sendFailuresCount(WebServer* webServer, int counter, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter) {
+    QString message = QString(WS_SEND_FAILURES_COUNTER) + "@" + QString::number(counter)+ "." + QString::number(lampFailCounter)+ "." + QString::number(batFailCounter)+ "."+ QString::number(durFailCounter)+ "." + QString::number(comFailCounter);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

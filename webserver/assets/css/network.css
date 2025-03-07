@@ -70,6 +70,51 @@ label {
     text-align: center;
 }
 
+.network-summary-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 98%;
+    padding: 10px;
+    background-color: #4682b4;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.network-summary-left {
+    flex: 1;
+    text-align: left;
+    font-size: 16px;
+    color: #fff;
+    font-weight: bold;
+    padding-left: 10px;
+    padding: 10px 20px;
+}
+
+.network-summary-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 30px;
+    padding-right: 10px;
+    color: #fff;
+}
+
+.failure-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.failure-item img {
+    width: 40px;
+    height: auto;
+    max-height: 40px;
+    object-fit: contain;
+}
+
 .wrap-node-container {
     display: flex;
     flex-direction: column;
