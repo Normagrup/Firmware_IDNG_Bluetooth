@@ -500,7 +500,7 @@ QList<QPair<uint16_t, QString>> Database::getConfiguredNodesAndSerialNumbers()
         uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
 
         QString UUID = query.value("UUID").toString();
-        QString nums = UUID.left(8);
+        QString nums = UUID.right(8);
         QString serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
 
         nodeNetAddressAndSNList.append(qMakePair(nodeNetAddress, serialNumber));

@@ -29,7 +29,7 @@ public:
 
     bool getIsConfigured(void);
     uint8_t* getUUID(void); // devuelve el UUID (16 bytes)
-    uint8_t* serialNumber(void); // devuelve el serialNumber (4 primeros bytes del UUID);
+    uint8_t* serialNumber(void); // devuelve el serialNumber (4 últimos bytes del UUID);
     QString serialNumberString(void); // devuelve el serialNumber como un String ("XX.XX.XX.XX")
     uint16_t getRealAddress(void);
     uint16_t getGroupSubAddress(uint8_t position);

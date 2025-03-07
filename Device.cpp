@@ -122,8 +122,8 @@ uint8_t* Device::serialNumber()
     uint8_t* UUID = getUUID();
     uint8_t* SN = new uint8_t[4];
 
-    for(int i = 0; i < 4; i++)
-        SN[i] = UUID[i];
+    for(int i = 0; i <= 3; i++)
+        SN[i] = UUID[i + 12];
 
     return SN;
 }
