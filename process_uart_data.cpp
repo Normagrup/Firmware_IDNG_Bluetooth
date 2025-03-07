@@ -278,7 +278,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (!meshDevice[i][j].getIsConfigured()) {
                 meshDevice[i][j].setRealAddress(address);
-                meshDevice[i][j].setSerialNumber(nodeUUID);
+                meshDevice[i][j].setUUID(nodeUUID);
                 meshDevice[i][j].setDeviceType(deviceType);
                 meshDevice[i][j].setRatedDuration(ratedDuration);
                 meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);

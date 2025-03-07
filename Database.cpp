@@ -245,12 +245,12 @@ void Database::loadNodesFromDatabase()
     while (query.next()) {
         uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
         uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
-        QString uuid = query.value("UUID").toString();
+        QString UUIDString = query.value("UUID").toString();
         QString groupSub = query.value("GroupSub").toString();
 
-        uint8_t serialNumber[16];
-        convertUuidStringToByteArray(uuid, serialNumber);
-        meshDevice[subnetAddress][nodeSubnetAddress].setSerialNumber(serialNumber);
+        uint8_t UUID[16];
+        convertUuidStringToByteArray(UUIDString, UUID);
+        meshDevice[subnetAddress][nodeSubnetAddress].setUUID(UUID);
 
         uint16_t groupSubAddresses[MESH_GROUP_COUNT];
         uint8_t groupCount = convertGroupSubStringToArray(groupSub, groupSubAddresses);
