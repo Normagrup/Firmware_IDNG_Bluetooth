@@ -5,6 +5,7 @@
 #include "dali_headers.h"
 #include "time_functions.h"
 #include "file_handler.h"
+#include <QThread>
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database)
 {
@@ -122,8 +123,24 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             // Notificar al microcontrolador maestro
             sendUartDelDevice(uartPort, nodeAddress);
 
-            // Eliminar de la estructura interna
-            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+             // Esperar confirmación de eliminación verificando la base de datos
+            bool eliminado = false;
+            int intentos = 0;
+
+            while (!eliminado && intentos < 3) {  // Intentar hasta 3 veces
+                QThread::msleep(1000);  // Esperar 1 segundo para dar tiempo a la eliminación
+
+                // Comprobar si el nodo sigue en la base de datos
+                eliminado = !database->isNodeInDatabase(nodeAddress);
+                intentos++;
+            }
+
+            if (eliminado) {
+                qDebug() << "Nodo " << nodeAddress << " eliminado correctamente.";
+                meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+            } else {
+                qDebug() << "Error: Nodo " << nodeAddress << " no respondió a la eliminación.";
+            }
         }
 
         // Eliminar todos los nodos de la base de datos

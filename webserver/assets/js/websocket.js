@@ -562,7 +562,7 @@ function delDevice() {
     if (selectedNode) {
         networkErrorLabel.style.visibility = "hidden";
 
-        var nodeId = selectedNode.textContent.trim(); // Obtener ID del nodo
+        var nodeId = selectedNode.textContent.trim().split("-")[0]; // Obtener ID del nodo
         console.log("Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
         // Enviar comando al embebido para eliminar el nodo
         sendData("SET_DELETE_DEVICE", nodeId);

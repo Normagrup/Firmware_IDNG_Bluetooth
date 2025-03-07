@@ -470,4 +470,20 @@ QList<uint16_t> Database::getConfiguredNodes()
     return nodeNetAddressList;
 }
 
+bool Database::isNodeInDatabase(uint16_t nodeAddress) {
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM Nodes WHERE address = ?");
+    query.addBindValue(nodeAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando consulta en isNodeInDatabase:" << query.lastError().text();
+        return false;
+    }
+
+    if (query.next()) {
+        return query.value(0).toInt() > 0;  // Retorna true si el nodo aún está en la base de datos
+    }
+
+    return false;
+}
 
