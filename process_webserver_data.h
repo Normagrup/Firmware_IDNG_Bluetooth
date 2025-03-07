@@ -30,6 +30,7 @@
 #define WS_GET_DEVICES_COUNT                "GET_DEVICES_COUNT"
 #define WS_GET_FAILURES_COUNT               "GET_FAILURES_COUNT"
 #define WS_GET_IS_CONFIG                    "GET_IS_CONFIG"
+#define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -79,12 +80,12 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendDevicesCount(WebServer* webServer, int count);
-void sendFailuresCount(WebServer* webServer, int count);
+void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
 void sendEndNodeConfiguration(WebServer* webServer);
 void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
-void sendIsConfig(WebServer* webServer, QString device, bool isConfig);
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures);
 
 #endif // PROCESS_WEBSERVER_DATA_H

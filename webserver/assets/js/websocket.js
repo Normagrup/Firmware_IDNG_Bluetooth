@@ -188,10 +188,14 @@ function addDeviceToNetworkList(value)
     var devices = scannedDevicesList.getElementsByTagName('li');
     var firstDevice = devices[0];
     if (firstDevice) { firstDevice.remove(); }
+
+    var parts = value.split("_");
+    var nodeNetAddress = parts[0];
+    var serialNumber = parts[1];
     
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
     var newNode = iframeDocument.createElement('li');
-    newNode.textContent = "Node " + value;
+    newNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
     newNode.setAttribute('class', 'deviceNetwork');
     newNode.setAttribute('onclick', 'parent.selectDevice(this)');
     networkNodesList.appendChild(newNode);
@@ -285,15 +289,49 @@ function processDevicesCounter(value) {
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var devicesCounter = iframeDocument.getElementById('devicesCounter');
-    devicesCounter.textContent = value;
+    var devicesCounterNet = iframeDocument.getElementById('totalDevices');
+
+    if (devicesCounter) {devicesCounter.textContent = value;}
+    if (devicesCounterNet) {devicesCounterNet.textContent = value;}
 }
 
 function processFailuresCounter(value) {
+    var parts = value.split(".");
+    var totalFail = parts[0];
+    var lampFail = parts[1];
+    var batFail = parts[2];
+    var durFail = parts[3];
+    var comFail = parts[4];
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var failuresCounter = iframeDocument.getElementById('failuresCounter');
-    failuresCounter.textContent = value;
+    var failuresCounter = iframeDocument.getElementById('failuresCounter'); // counter for summery.html
+    var failuresCounterNet = iframeDocument.getElementById('totalFailures'); // counter for network.html
+
+    if (failuresCounter) {failuresCounter.textContent = totalFail;}
+    if (failuresCounterNet) {failuresCounterNet.textContent = totalFail;}
+    
+    // updating device count and fail count for network.html
+    var lamFailIcon = iframeDocument.getElementById('LamFailType');
+    var batFailIcon = iframeDocument.getElementById('BatFailType');
+    var durFailIcon = iframeDocument.getElementById('DurFailType');
+    var comFailIcon = iframeDocument.getElementById('comFailType');
+
+    if (lamFailIcon) {lamFailIcon.src = (lampFail > 0) ? "images/lampIconOnFail.png" : "images/lampIcon.png";}
+    if (batFailIcon) {batFailIcon.src = (batFail > 0) ? "images/batteryIconOnFail.png" : "images/batteryIcon.png";}
+    if (durFailIcon) {durFailIcon.src = (durFail > 0) ? "images/autonomyIconOnFail.png" : "images/autonomyIcon.png";}
+    if (comFailIcon) {comFailIcon.src = (comFail > 0) ? "images/comIconOnFail.png" : "images/comIcon.png";}
+
+    var lamFailCount = iframeDocument.getElementById('LamFailCount');
+    var batFailCount = iframeDocument.getElementById('BatFailCount');
+    var durFailCount = iframeDocument.getElementById('DurFailCount');
+    var comFailCount = iframeDocument.getElementById('comFailCount');
+    
+    if (lamFailCount) { lamFailCount.textContent = lampFail;}
+    if (batFailCount) {batFailCount.textContent = batFail;}
+    if (durFailCount) {durFailCount.textContent = durFail;}
+    if (comFailCount) {comFailCount.textContent = comFail;}
 }
 
 function processEndNodeConfiguration(value) 
@@ -378,21 +416,32 @@ function processRecordedDevice(value)
 
 function processIsConfig(value)
 {
-    var deviceAndConfig = value.split("_");
-    var device = deviceAndConfig[0];
-    var isConfig = deviceAndConfig[1];
-    var configured = (isConfig == "true") ? true : false;
+    var parts = value.split("_");
+    var device = parts[0];
+    var sn = parts[1];
+    var isConfig = parts[2];
+    var hasFailures = parts[3];
+    var configured = (isConfig === "true");
+    var failed = (hasFailures === "true");
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var button = iframeDocument.querySelector('button[data-device="' + device + '"]');
     if (button) {
-        if (configured) {
-            button.classList.remove("gray");
-            button.classList.add("blue");
+        button.setAttribute('data-serial', sn);
+        button.innerHTML = "<b>" + device + " </b> <br>" + sn;
+
+        if(configured) {
+            if(failed) {
+                button.classList.remove("blue", "gray");
+                button.classList.add("red");
+            } else {
+                button.classList.remove("red", "gray");
+                button.classList.add("blue");
+            }
         } else {
-            button.classList.remove("blue");
+            button.classList.remove("red", "blue");
             button.classList.add("gray");
         }
     }
@@ -796,6 +845,11 @@ function sendFile()
     reader.readAsArrayBuffer(file);
 }
 
+function clearAllData()
+{
+    sendData("SET_CLEAR_ALL_DATA", "");
+}
+
 function getLogs()
 {
     var iframe = document.getElementById('mainframe');
@@ -833,7 +887,7 @@ function getLogs()
     }
 }
 
-function openNodeControl(buttonText)
+function openNodeControl(button)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -842,8 +896,12 @@ function openNodeControl(buttonText)
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
     var popupText = popup.querySelector('h3');
-    popupText.textContent = "A" + buttonText;
-    addressClicked = buttonText;
+
+    var device = button.getAttribute('data-device');
+    var serial = button.getAttribute('data-serial');
+
+    popupText.textContent = "A" + device + " [" + serial + "]";
+    addressClicked = device;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";

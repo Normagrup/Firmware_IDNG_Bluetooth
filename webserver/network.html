@@ -77,6 +77,34 @@
     <div class="wrap-container">
         <div class="wrap-network-container">
             <h2> Network Nodes </h2>
+            <!-- Network Device Summary Section -->
+            <div class="network-summary-container">
+                <!-- Left Column (Total Devices & Failures) -->
+                <div class="network-summary-left">
+                    <p>Total Devices Configured: <span id="totalDevices">0</span></p>
+                    <p>Total Failures: <span id="totalFailures">0</span></p>
+                </div>
+
+                <!-- Right Column (Failure Categories) -->
+                <div class="network-summary-right">
+                    <div class="failure-item">
+                        <img id="comFailType" src="images/comIcon.png" alt="Communication Failure">
+                        <span id="comFailCount">0</span>
+                    </div>
+                    <div class="failure-item">
+                        <img id="DurFailType" src="images/autonomyIcon.png" alt="Battery Duration Failure">
+                        <span id="DurFailCount">0</span>
+                    </div>
+                    <div class="failure-item">
+                        <img id="BatFailType" src="images/batteryIcon.png" alt="Battery Failure">
+                        <span id="BatFailCount">0</span>
+                    </div>
+                    <div class="failure-item">
+                        <img id="LamFailType" src="images/lampIcon.png" alt="Lamp Failure">
+                        <span id="LamFailCount">0</span>
+                    </div>
+                </div>
+            </div>
             <div class="wrap-node-container">
                 <div class="range-container">
                     <label style="margin: 0px 20px;"> Select node address range: </label>

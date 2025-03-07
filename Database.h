@@ -37,6 +37,7 @@ public:
     void setDurationTest(QString groupAddress, QString durationPeriodicity, QString durationDate, QString durationTime);
 
     QList<uint16_t> getConfiguredNodes(void);
+    QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
 
 signals:
 

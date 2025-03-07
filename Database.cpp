@@ -245,12 +245,12 @@ void Database::loadNodesFromDatabase()
     while (query.next()) {
         uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
         uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
-        QString uuid = query.value("UUID").toString();
+        QString UUIDString = query.value("UUID").toString();
         QString groupSub = query.value("GroupSub").toString();
 
-        uint8_t serialNumber[16];
-        convertUuidStringToByteArray(uuid, serialNumber);
-        meshDevice[subnetAddress][nodeSubnetAddress].setSerialNumber(serialNumber);
+        uint8_t UUID[16];
+        convertUuidStringToByteArray(UUIDString, UUID);
+        meshDevice[subnetAddress][nodeSubnetAddress].setUUID(UUID);
 
         uint16_t groupSubAddresses[MESH_GROUP_COUNT];
         uint8_t groupCount = convertGroupSubStringToArray(groupSub, groupSubAddresses);
@@ -485,5 +485,27 @@ bool Database::isNodeInDatabase(uint16_t nodeAddress) {
     }
 
     return false;
+}
+
+QList<QPair<uint16_t, QString>> Database::getConfiguredNodesAndSerialNumbers()
+{
+    QSqlQuery query;
+    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList;
+    if (!query.exec("SELECT * FROM Nodes")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
+        uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
+
+        uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
+
+        QString UUID = query.value("UUID").toString();
+        QString nums = UUID.left(8);
+        QString serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
+
+        nodeNetAddressAndSNList.append(qMakePair(nodeNetAddress, serialNumber));
+    }
+
+    return nodeNetAddressAndSNList;
 }
 

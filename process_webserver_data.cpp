@@ -104,12 +104,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         // Eliminar el nodo de la estructura interna
         meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-        
+
         // Eliminar el nodo de la base de datos
         database->deleteNode(nodeAddress);
-        
-        
-        
+
+
+
         printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
     }
     else if (type == WS_SET_DELETE_ALL_DEVICES) {
@@ -353,19 +353,36 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_GET_FAILURES_COUNT) {
         int count = 0;
+        int lampFailCount = 0;
+        int batFailCount = 0;
+        int durFailCount = 0;
+        int comFailCount = 0;
+
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                 Device& device = meshDevice[i][j];
                 count += device.getTotalFailures();
+                if(device.hasLampFailure()) { lampFailCount++; }
+                if(device.hasBatteryFailure()) { batFailCount++; }
+                if(device.hasBatteryDurationFailure()) { durFailCount++; }
+                if(device.hasCommunicationFailure()) { comFailCount++; }
             }
         }
-        sendFailuresCount(webServer, count);
+        sendFailuresCount(webServer, count, lampFailCount, batFailCount, durFailCount, comFailCount);
     }
     else if (type == WS_GET_IS_CONFIG) {
         int subnet = (value.toInt() - 1) / MAX_NODES_SUBNET;
         int id = (value.toInt() - 1) % MAX_NODES_SUBNET;
 
-        sendIsConfig(webServer, value, meshDevice[subnet][id].getIsConfigured());
+        QString serialNumber = meshDevice[subnet][id].serialNumberString();
+        bool isConfig = meshDevice[subnet][id].getIsConfigured();
+        bool hasFailures = meshDevice[subnet][id].getTotalFailures() > 0;
+
+        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures);
+    }
+    else if (type == WS_SET_CLEAR_ALL_DATA) {
+        qDebug() << "CLEAR ALL DATA";
+        // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -530,10 +547,13 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
 
 void sendNodesFromDatabase(WebServer* webServer, Database* database)
 {
-    QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
+    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
 
-    for (uint16_t nodeNetAddress : nodeNetAddressList) {
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(nodeNetAddress);
+    for (const QPair<uint16_t, QString>& node : nodeNetAddressAndSNList) {
+        uint16_t netAddress = node.first;
+        QString serialNumber = node.second;
+
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber;
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
@@ -563,8 +583,8 @@ void sendDevicesCount(WebServer* webServer, int counter) {
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendFailuresCount(WebServer* webServer, int counter) {
-    QString message = QString(WS_SEND_FAILURES_COUNTER) + "@" + QString::number(counter);
+void sendFailuresCount(WebServer* webServer, int counter, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter) {
+    QString message = QString(WS_SEND_FAILURES_COUNTER) + "@" + QString::number(counter)+ "." + QString::number(lampFailCounter)+ "." + QString::number(batFailCounter)+ "."+ QString::number(durFailCounter)+ "." + QString::number(comFailCounter);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -604,8 +624,8 @@ void sendRecordedDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsConfig(WebServer* webServer, QString device, bool isConfig) {
-    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + (isConfig ? "true" : "false");
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures) {
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

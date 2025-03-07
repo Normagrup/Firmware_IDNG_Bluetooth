@@ -4,7 +4,7 @@ Device::Device(QObject *parent)
     : QObject{parent}
 {
     this->_isConfigured = false;
-    for (uint8_t i = 0; i < 16; i++) { this->_serialNumber[i] = 0; }
+    for (uint8_t i = 0; i < 16; i++) { this->_UUID[i] = 0; }
     this->_realAddress = 0;
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) { this->_groupSubAddress[i] = 0; }
     this->_comunicationFailure = false;
@@ -28,9 +28,9 @@ void Device::setIsConfigured(bool isConfigured)
     _isConfigured = isConfigured;
 }
 
-void Device::setSerialNumber(uint8_t* serialNumber)
+void Device::setUUID(uint8_t* UUID)
 {
-    for (uint8_t i = 0; i < 16; i++) { _serialNumber[i] = serialNumber[i];}
+    for (uint8_t i = 0; i < 16; i++) { _UUID[i] = UUID[i];}
 }
 
 void Device::setRealAddress(uint16_t realAddress)
@@ -112,9 +112,30 @@ bool Device::getIsConfigured()
     return _isConfigured;
 }
 
-uint8_t* Device::getSerialNumber()
+uint8_t* Device::getUUID()
 {
-    return _serialNumber;
+    return _UUID;
+}
+
+uint8_t* Device::serialNumber()
+{
+    uint8_t* UUID = getUUID();
+    uint8_t* SN = new uint8_t[4];
+
+    for(int i = 0; i < 4; i++)
+        SN[i] = UUID[i];
+
+    return SN;
+}
+
+QString Device::serialNumberString()
+{
+    uint8_t* SN = serialNumber();
+    return QString("%1.%2.%3.%4")
+        .arg(SN[0], 2, 16, QLatin1Char('0')).toUpper()
+        .arg(SN[1], 2, 16, QLatin1Char('0')).toUpper()
+        .arg(SN[2], 2, 16, QLatin1Char('0')).toUpper()
+        .arg(SN[3], 2, 16, QLatin1Char('0')).toUpper();
 }
 
 uint16_t Device::getRealAddress()
@@ -173,28 +194,45 @@ uint8_t Device::getEmergencyFailureStatus()
     return _emergencyFailureStatus;
 }
 
+bool Device::hasLampFailure()
+{
+    uint8_t controlGearStatus = getControlGearStatus();
+    int lampFailureBit = 1;
+    return ((controlGearStatus >> lampFailureBit) & 1);
+}
+
+bool Device::hasCommunicationFailure()
+{
+    return getComunicationFailure();
+}
+
+bool Device::hasBatteryFailure()
+{
+    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
+    int batteryFailureBit = 2;
+    return ((emergencyFailureStatus >> batteryFailureBit) & 1);
+}
+
+bool Device::hasBatteryDurationFailure()
+{
+    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
+    int durationFailureBit = 1;
+    return ((emergencyFailureStatus >> durationFailureBit) & 1);
+}
+
 int Device::getTotalFailures()
 {
     int totalFailures = 0;
 
     // Fallo de lámpara
-    uint8_t controlGearStatus = getControlGearStatus();
-    int lampFailureBit = 1;
-    if((controlGearStatus >> lampFailureBit) & 1)
-        totalFailures++;
+    if(hasLampFailure()) { totalFailures++; }
 
     // Fallos de duración y batería
-    uint8_t emergencyFailureStatus = getEmergencyFailureStatus();
-    int durationFailureBit = 1;
-    int batteryFailureBit = 2;
-    if((emergencyFailureStatus >> durationFailureBit) & 1)
-        totalFailures++;
-    if((emergencyFailureStatus >> batteryFailureBit) & 1)
-        totalFailures++;
+    if(hasBatteryDurationFailure()) { totalFailures++; }
+    if(hasBatteryFailure()) { totalFailures++; }
 
     // Fallo de comunicación
-    if(getComunicationFailure())
-        totalFailures++;
+    if(hasCommunicationFailure()) { totalFailures++; }
 
     return totalFailures;
 }
@@ -202,7 +240,7 @@ int Device::getTotalFailures()
 void Device::deleteDevice()
 {
     this->_isConfigured = false;
-    for (uint8_t i = 0; i < 16; i++) { this->_serialNumber[i] = 0; }
+    for (uint8_t i = 0; i < 16; i++) { this->_UUID[i] = 0; }
     this->_realAddress = 0;
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) { this->_groupSubAddress[i] = 0; }
     this->_comunicationFailure = false;
