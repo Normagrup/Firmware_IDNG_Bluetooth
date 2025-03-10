@@ -310,6 +310,17 @@ function processGroupBasicInfo(value) {
         groupButton.setAttribute('group-address', groupAddress);
         container.appendChild(groupButton);
     }
+
+    // Procesado si el mensaje se recibe en s_wireless.html o s_tests.html: Se crea el elemento en el selector
+    var groupSelector = iframeDocument.getElementById('groupList');
+    if(groupSelector)
+    {
+        var group = iframeDocument.createElement('option');
+        group.value = groupAddress;
+        group.textContent = groupName;
+
+        groupSelector.appendChild(group);
+    }
 }
 
 function processDevicesCounter(value) {

@@ -72,22 +72,6 @@
 
                 <select class="selector" id="groupList">
                     <option value="-"> ---- </option>
-    				<option value="C010"> Group 1 </option>
-  					<option value="C011"> Group 2 </option>
-  					<option value="C012"> Group 3 </option>
-  					<option value="C013"> Group 4 </option>
-  					<option value="C014"> Group 5 </option>
-  					<option value="C015"> Group 6 </option>
-  					<option value="C016"> Group 7 </option>
-  					<option value="C017"> Group 8 </option>
-  					<option value="C018"> Group 9 </option>
-  					<option value="C019"> Group 10 </option>
-  					<option value="C01A"> Group 11 </option>
-  					<option value="C01B"> Group 12 </option>
-  					<option value="C01C"> Group 13 </option>
-  					<option value="C01D"> Group 14 </option>
-  					<option value="C01E"> Group 15 </option>
-  					<option value="C01F"> Group 16 </option>
 				</select>
 
                 <label id="groupError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
@@ -101,9 +85,16 @@
 				parent.sendData("SET_LOAD_NODES", "");
 			}, 10);
 		}
+
+        function getGroupsFromDatabase() {
+			setTimeout(function() {
+				parent.sendData("GET_GROUPS", "");
+			}, 10);
+		}
 		
 		window.onload = function() {
             getNodesFromDatabase();
+            getGroupsFromDatabase();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";
