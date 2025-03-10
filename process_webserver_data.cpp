@@ -383,6 +383,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_GROUPS) {
         sendGroups(webServer, database);
     }
+    else if (type == WS_GET_GROUP_INFO) {
+        qDebug() << "si";
+    }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
         // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?

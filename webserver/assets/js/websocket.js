@@ -305,7 +305,7 @@ function processGroupBasicInfo(value) {
         var groupButton = iframeDocument.createElement('button');
         groupButton.textContent = groupName;
         groupButton.onclick = function() {
-            openGroupControl(this.textContent);
+            openGroupControl(this);
         };
         groupButton.setAttribute('group-address', groupAddress);
         container.appendChild(groupButton);
@@ -1007,4 +1007,8 @@ function isAnExistingDevice(i) {
 
 function loadGroups() {
     sendData("GET_GROUPS", "");
+}
+
+function loadGroupInfo(groupAddress) {
+    sendData("GET_GROUP_INFO", groupAddress);
 }

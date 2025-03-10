@@ -242,7 +242,7 @@ function selectDevice(device)
     device.classList.add('selectedDevice');
 }
 
-function openGroupControl(buttonText)
+function openGroupControl(button)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -252,29 +252,20 @@ function openGroupControl(buttonText)
 
     var popupText = popup.querySelector('h3');
     var groupTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
-    groupTypeIcon.src = "images/defaultLightIcon.png";
-			
-    if (buttonText === 'Lighting') { addressClicked = '65537'; groupTypeIcon.src = "images/normalLightIcon.png"; }
-    else if (buttonText === 'Emergency') { addressClicked = '65538'; groupTypeIcon.src = "images/emergencyLightIcon.png"; }
-    else if (buttonText === 'Even') { addressClicked = '65539'; }
-    else if (buttonText === 'Odd') { addressClicked = '65540'; }
-    else if (buttonText === 'Group 1') { addressClicked = '65541'; }
-    else if (buttonText === 'Group 2') { addressClicked = '65542'; }
-    else if (buttonText === 'Group 3') { addressClicked = '65543'; }
-    else if (buttonText === 'Group 4') { addressClicked = '65544'; }
-    else if (buttonText === 'Group 5') { addressClicked = '65545'; }
-    else if (buttonText === 'Group 6') { addressClicked = '65546'; }
-    else if (buttonText === 'Group 7') { addressClicked = '65547'; }
-    else if (buttonText === 'Group 8') { addressClicked = '65548'; }
-    else if (buttonText === 'Group 9') { addressClicked = '65549'; }
-    else if (buttonText === 'Group 10') { addressClicked = '65550'; }
-    else if (buttonText === 'Group 11') { addressClicked = '65551'; }
-    else if (buttonText === 'Group 12') { addressClicked = '65552'; }
-    
-    popupText.textContent = buttonText;
+	
+    var groupAddress = button.getAttribute('group-address');
+
+    // Carga de imágenes del grupo
+    if (groupAddress === 'C000') { groupTypeIcon.src = "images/normalLightIcon.png"; }
+    else if (groupAddress === 'C001') { groupTypeIcon.src = "images/emergencyLightIcon.png"; }
+    else { groupTypeIcon.src = "images/defaultLightIcon.png"; }
+
+    popupText.textContent = button.textContent;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+
+    loadGroupInfo(groupAddress);
 }
 
 function createNodeButtons(start, end) 
@@ -332,7 +323,7 @@ function createGroupButtons()
         else if (i === 3) { button.textContent = "Even"; button.setAttribute('group-address', "C002"); } 
         else if (i === 4) { button.textContent = "Odd"; button.setAttribute('group-address', "C003"); }
         button.onclick = function() {
-            openGroupControl(this.textContent);
+            openGroupControl(this);
         };
         container.appendChild(button);
     }

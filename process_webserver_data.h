@@ -31,6 +31,7 @@
 #define WS_GET_FAILURES_COUNT               "GET_FAILURES_COUNT"
 #define WS_GET_IS_CONFIG                    "GET_IS_CONFIG"
 #define WS_GET_GROUPS                       "GET_GROUPS"
+#define WS_GET_GROUP_INFO                   "GET_GROUP_INFO"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
 
 #define WS_SET_MAX                          "SET_MAX"
