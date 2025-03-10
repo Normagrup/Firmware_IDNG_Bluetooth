@@ -239,6 +239,7 @@ function processNodeInfo(value)
         console.warn("Invalid node info received.");
         return;
     }
+
     var nodeInfoArray = value.split('.');
     var controlGearStatus = nodeInfoArray[0];
     var emergencyMode = nodeInfoArray[1];
@@ -284,8 +285,8 @@ function processNodeInfo(value)
     if (communicationFailure != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 
-    if (deviceType == "1") { deviceTypeIcon.src = "images/emergencyLightIcon.png";}
-    else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png";}
+    if (deviceType == "1") { deviceTypeIcon.src = "images/emergencyLightIcon.png"; }
+    else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png"; }
 }
 
 function processDevicesCounter(value) {
@@ -444,12 +445,11 @@ function processIsConfig(value)
                 button.classList.remove("red", "gray");
                 button.classList.add("blue");
             }
-            button.classList.add("configured"); // Marked as configured device
-            button.disabled = false; // Enable device click
+            button.disabled = false;
         } else {
-            button.classList.remove("red", "blue", "configured"); 
+            button.classList.remove("red", "blue"); 
             button.classList.add("gray");
-            button.disabled = true; // Disable device click
+            button.disabled = true;
         }
     }
 }
@@ -901,6 +901,7 @@ function openNodeControl(button)
 
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    
     var popupText = popup.querySelector('h3');
 
     var device = button.getAttribute('data-device');

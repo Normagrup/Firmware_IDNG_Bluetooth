@@ -252,28 +252,23 @@ function openGroupControl(buttonText)
 
     var popupText = popup.querySelector('h3');
     var groupTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
-    groupTypeIcon.src = "images/allLightIcon.png";
 			
-    if (buttonText === 'Lighting') { addressClicked = '49152'; groupTypeIcon.src = "images/normalLightIcon.png"; }
-    else if (buttonText === 'Emergency') { addressClicked = '49153'; groupTypeIcon.src = "images/emergencyLightIcon.png"; }
-    else if (buttonText === 'Even') { addressClicked = '49154'; }
-    else if (buttonText === 'Odd') { addressClicked = '49155'; }
-    else if (buttonText === 'Group 1') { addressClicked = '49168'; }
-    else if (buttonText === 'Group 2') { addressClicked = '49169'; }
-    else if (buttonText === 'Group 3') { addressClicked = '49170'; }
-    else if (buttonText === 'Group 4') { addressClicked = '49171'; }
-    else if (buttonText === 'Group 5') { addressClicked = '49172'; }
-    else if (buttonText === 'Group 6') { addressClicked = '49173'; }
-    else if (buttonText === 'Group 7') { addressClicked = '49174'; }
-    else if (buttonText === 'Group 8') { addressClicked = '49175'; }
-    else if (buttonText === 'Group 9') { addressClicked = '49176'; }
-    else if (buttonText === 'Group 10') { addressClicked = '49177'; }
-    else if (buttonText === 'Group 11') { addressClicked = '49178'; }
-    else if (buttonText === 'Group 12') { addressClicked = '49179'; }
-    else if (buttonText === 'Group 13') { addressClicked = '49180'; }
-    else if (buttonText === 'Group 14') { addressClicked = '49181'; }
-    else if (buttonText === 'Group 15') { addressClicked = '49182'; }
-    else if (buttonText === 'Group 16') { addressClicked = '49183'; }
+    if (buttonText === 'Lighting') { addressClicked = '65537'; groupTypeIcon.src = "images/normalLightIcon.png"; }
+    else if (buttonText === 'Emergency') { addressClicked = '65538'; groupTypeIcon.src = "images/emergencyLightIcon.png"; }
+    else if (buttonText === 'Even') { addressClicked = '65539'; }
+    else if (buttonText === 'Odd') { addressClicked = '65540'; }
+    else if (buttonText === 'Group 1') { addressClicked = '65541'; }
+    else if (buttonText === 'Group 2') { addressClicked = '65542'; }
+    else if (buttonText === 'Group 3') { addressClicked = '65543'; }
+    else if (buttonText === 'Group 4') { addressClicked = '65544'; }
+    else if (buttonText === 'Group 5') { addressClicked = '65545'; }
+    else if (buttonText === 'Group 6') { addressClicked = '65546'; }
+    else if (buttonText === 'Group 7') { addressClicked = '65547'; }
+    else if (buttonText === 'Group 8') { addressClicked = '65548'; }
+    else if (buttonText === 'Group 9') { addressClicked = '65549'; }
+    else if (buttonText === 'Group 10') { addressClicked = '65550'; }
+    else if (buttonText === 'Group 11') { addressClicked = '65551'; }
+    else if (buttonText === 'Group 12') { addressClicked = '65552'; }
     
     popupText.textContent = buttonText;
     
@@ -293,19 +288,17 @@ function createNodeButtons(start, end)
         var button = iframeDocument.createElement('button');
         var address = i.toString(10);
         button.textContent = address;
+        button.onclick = function() {
+            openNodeControl(this);
+        };
+
         button.setAttribute('data-device', i); // para que el botón "sepa" a que dispositivo pertenece
         button.classList.add("gray"); // clase por defecto que pinta el botón de gris
-
-        button.addEventListener("click", function () {
-            if (!this.classList.contains("configured")) return;
-            openNodeControl(this);
-        });
+        isAnExistingDevice(i);
 
         container.appendChild(button);
         count++;
         if (count >= 64) break;
-
-        isAnExistingDevice(i);
     }
 }
 
