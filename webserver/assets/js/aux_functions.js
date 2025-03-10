@@ -251,9 +251,11 @@ function openGroupControl(buttonText)
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
     var popupText = popup.querySelector('h3');
+    var groupTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
+    groupTypeIcon.src = "images/allLightIcon.png";
 			
-    if (buttonText === 'Lighting') { addressClicked = '49152'; }
-    else if (buttonText === 'Emergency') { addressClicked = '49153'; }
+    if (buttonText === 'Lighting') { addressClicked = '49152'; groupTypeIcon.src = "images/normalLightIcon.png"; }
+    else if (buttonText === 'Emergency') { addressClicked = '49153'; groupTypeIcon.src = "images/emergencyLightIcon.png"; }
     else if (buttonText === 'Even') { addressClicked = '49154'; }
     else if (buttonText === 'Odd') { addressClicked = '49155'; }
     else if (buttonText === 'Group 1') { addressClicked = '49168'; }
@@ -291,17 +293,19 @@ function createNodeButtons(start, end)
         var button = iframeDocument.createElement('button');
         var address = i.toString(10);
         button.textContent = address;
-        button.onclick = function() {
-            openNodeControl(this);
-        };
-
         button.setAttribute('data-device', i); // para que el botón "sepa" a que dispositivo pertenece
         button.classList.add("gray"); // clase por defecto que pinta el botón de gris
-        isAnExistingDevice(i);
+
+        button.addEventListener("click", function () {
+            if (!this.classList.contains("configured")) return;
+            openNodeControl(this);
+        });
 
         container.appendChild(button);
         count++;
         if (count >= 64) break;
+
+        isAnExistingDevice(i);
     }
 }
 
