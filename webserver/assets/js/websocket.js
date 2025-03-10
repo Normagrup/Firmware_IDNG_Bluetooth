@@ -235,6 +235,11 @@ function processDeviceError(value)
 
 function processNodeInfo(value) 
 {
+    if (!value || value.trim() === "" || value.split('.').length < 6) {
+        console.warn("Invalid node info received.");
+        return;
+    }
+
     var nodeInfoArray = value.split('.');
     var controlGearStatus = nodeInfoArray[0];
     var emergencyMode = nodeInfoArray[1];
@@ -462,9 +467,11 @@ function processIsConfig(value)
                 button.classList.remove("red", "gray");
                 button.classList.add("blue");
             }
+            button.disabled = false;
         } else {
-            button.classList.remove("red", "blue");
+            button.classList.remove("red", "blue"); 
             button.classList.add("gray");
+            button.disabled = true;
         }
     }
 }
@@ -917,7 +924,7 @@ function openNodeControl(button)
 
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
+    
     var popupText = popup.querySelector('h3');
 
     var device = button.getAttribute('data-device');
@@ -925,7 +932,7 @@ function openNodeControl(button)
 
     popupText.textContent = "A" + device + " [" + serial + "]";
     addressClicked = device;
-    
+
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
 
