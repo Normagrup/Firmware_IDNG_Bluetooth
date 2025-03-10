@@ -284,14 +284,36 @@ function processNodeInfo(value)
     else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png"; }
 }
 
+function processGroupBasicInfo(value) {
+    var parts = value.split("_");
+    var groupAddress = parts[0];
+    var groupName = parts[1];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    // Procesado si el mensaje se recibe en network.html: Se crea el botón de ese grupo
+    var container = iframeDocument.getElementById('group-container');
+    if(container)
+    {
+        var groupButton = iframeDocument.createElement('button');
+        groupButton.textContent = groupName;
+        groupButton.onclick = function() {
+            openGroupControl(this.textContent);
+        };
+        groupButton.setAttribute('group-address', groupAddress);
+        container.appendChild(groupButton);
+    }
+}
+
 function processDevicesCounter(value) {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var devicesCounter = iframeDocument.getElementById('devicesCounter');
-    var devicesCounterNet = iframeDocument.getElementById('totalDevices');
-
     if (devicesCounter) {devicesCounter.textContent = value;}
+
+    var devicesCounterNet = iframeDocument.getElementById('totalDevices');
     if (devicesCounterNet) {devicesCounterNet.textContent = value;}
 }
 
@@ -307,9 +329,9 @@ function processFailuresCounter(value) {
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var failuresCounter = iframeDocument.getElementById('failuresCounter'); // counter for summery.html
-    var failuresCounterNet = iframeDocument.getElementById('totalFailures'); // counter for network.html
-
     if (failuresCounter) {failuresCounter.textContent = totalFail;}
+
+    var failuresCounterNet = iframeDocument.getElementById('totalFailures'); // counter for network.html
     if (failuresCounterNet) {failuresCounterNet.textContent = totalFail;}
     
     // updating device count and fail count for network.html
@@ -328,7 +350,7 @@ function processFailuresCounter(value) {
     var durFailCount = iframeDocument.getElementById('DurFailCount');
     var comFailCount = iframeDocument.getElementById('comFailCount');
     
-    if (lamFailCount) { lamFailCount.textContent = lampFail;}
+    if (lamFailCount) {lamFailCount.textContent = lampFail;}
     if (batFailCount) {batFailCount.textContent = batFail;}
     if (durFailCount) {durFailCount.textContent = durFail;}
     if (comFailCount) {comFailCount.textContent = comFail;}
@@ -464,6 +486,7 @@ function processReceivedData(data)
     else if (type == 'ADDED_DEVICE') { addDeviceToNetworkList(value); }
     else if (type == 'DEVICE_ERROR') { processDeviceError(value); }
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
+    else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
@@ -972,4 +995,8 @@ function requestDevicesAndFailuresCount() {
 
 function isAnExistingDevice(i) {
     sendData("GET_IS_CONFIG", i);
+}
+
+function loadGroups() {
+    sendData("GET_GROUPS", "");
 }

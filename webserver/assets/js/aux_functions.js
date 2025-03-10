@@ -328,24 +328,18 @@ function createGroupButtons()
 
     for (var i = 1; i <= 4; i++) {
         var button = iframeDocument.createElement('button');
-        if (i === 1) { button.textContent = "Lighting"; } 
-        else if (i === 2) { button.textContent = "Emergency"; } 
-        else if (i === 3) { button.textContent = "Even"; } 
-        else if (i === 4) { button.textContent = "Odd"; }
+
+        if (i === 1) { button.textContent = "Lighting"; button.setAttribute('group-address', "C000"); } 
+        else if (i === 2) { button.textContent = "Emergency"; button.setAttribute('group-address', "C001"); } 
+        else if (i === 3) { button.textContent = "Even"; button.setAttribute('group-address', "C002"); } 
+        else if (i === 4) { button.textContent = "Odd"; button.setAttribute('group-address', "C003"); }
         button.onclick = function() {
             openGroupControl(this.textContent);
         };
         container.appendChild(button);
     }
 
-    for (var j = 1; j <= 16; j++) {
-        var groupButton = iframeDocument.createElement('button');
-        groupButton.textContent = "Group " + j;
-        groupButton.onclick = function() {
-            openGroupControl(this.textContent);
-        };
-        container.appendChild(groupButton);
-    }
+    loadGroups();
 }
 
 function updateDevice()

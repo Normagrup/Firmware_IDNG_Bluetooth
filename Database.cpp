@@ -111,6 +111,38 @@ void Database::initDatabase()
 
     /* **************************************************
      *                                                  *
+     *                     GROUPS                       *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS Groups "
+               "(GroupAddress TEXT, "
+               "GroupName TEXT);");
+
+    query.prepare("SELECT * FROM Groups");
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query in Groups:" << query.lastError().text(); }
+    else {
+        if (!query.next()) {
+            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
+
+            query.prepare("INSERT INTO Groups (GroupAddress, GroupName) VALUES (:groupAddress, :groupName)");
+
+            int groupNumber = 1;
+            foreach (const QString &groupAddress, groupAddresses) {
+                query.bindValue(":groupAddress", groupAddress);
+                query.bindValue(":groupName", "Group " + QString::number(groupNumber));
+
+                if (!query.exec()) { qDebug() << "Error executing INSERT query in Groups:" << query.lastError().text(); }
+
+                groupNumber++;
+            }
+        }
+    }
+
+
+
+    /* **************************************************
+     *                                                  *
      *                      TEST                        *
      *                                                  *
      * **************************************************/
@@ -129,7 +161,7 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Test:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F", "FFFF"};
+            QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
 
             query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                           "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
@@ -509,3 +541,18 @@ QList<QPair<uint16_t, QString>> Database::getConfiguredNodesAndSerialNumbers()
     return nodeNetAddressAndSNList;
 }
 
+QList<QPair<QString, QString>> Database::getGroups()
+{
+    QSqlQuery query;
+    QList<QPair<QString, QString>> groupList;
+    if (!query.exec("SELECT * FROM Groups")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        QString groupAddress = query.value("GroupAddress").toString();
+        QString groupName = query.value("GroupName").toString();
+
+        groupList.append(qMakePair(groupAddress, groupName));
+    }
+
+    return groupList;
+}

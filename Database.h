@@ -39,6 +39,8 @@ public:
     QList<uint16_t> getConfiguredNodes(void);
     QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
 
+    QList<QPair<QString, QString>> getGroups(void);
+
 signals:
 
 private:

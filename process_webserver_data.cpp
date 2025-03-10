@@ -380,6 +380,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures);
     }
+    else if (type == WS_GET_GROUPS) {
+        sendGroups(webServer, database);
+    }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
         // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?
@@ -575,6 +578,19 @@ void sendNodeInfo(WebServer* webServer, QString nodeNetAddress)
     QString message = QString(WS_SEND_NODE_INFO) + "@" + controlGearStatus + "." + emergencyMode + "." + emergencyFailureStatus + "." + actualLvl + "." + communicationFailure + "." + deviceType;
 
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendGroups(WebServer* webServer, Database* database) {
+    QList<QPair<QString, QString>> groupList = database->getGroups();
+
+    for (const QPair<QString, QString>& group : groupList) {
+        QString groupAddress = group.first;
+        QString groupName = group.second;
+
+        QString message = QString(WS_SEND_GROUP) + "@" + groupAddress + "_" + groupName;
+        if (webServer != nullptr) { webServer->sendData(message); }
+        delay(WEBSERVER_SEND_TIME_MS);
+    }
 }
 
 void sendDevicesCount(WebServer* webServer, int counter) {
