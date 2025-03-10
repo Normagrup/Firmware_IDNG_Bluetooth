@@ -287,6 +287,7 @@ function processNodeInfo(value)
 
     if (deviceType == "1") { deviceTypeIcon.src = "images/emergencyLightIcon.png"; }
     else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png"; }
+    else { deviceTypeIcon.src = "images/defaultLightIcon.png"; }
 }
 
 function processGroupBasicInfo(value) {

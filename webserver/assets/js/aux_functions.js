@@ -252,6 +252,7 @@ function openGroupControl(buttonText)
 
     var popupText = popup.querySelector('h3');
     var groupTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
+    groupTypeIcon.src = "images/defaultLightIcon.png";
 			
     if (buttonText === 'Lighting') { addressClicked = '65537'; groupTypeIcon.src = "images/normalLightIcon.png"; }
     else if (buttonText === 'Emergency') { addressClicked = '65538'; groupTypeIcon.src = "images/emergencyLightIcon.png"; }
