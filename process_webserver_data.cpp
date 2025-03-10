@@ -384,7 +384,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroups(webServer, database);
     }
     else if (type == WS_GET_GROUP_INFO) {
-        qDebug() << "si";
+        sendGroupInfo(webServer, value);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
@@ -594,6 +594,30 @@ void sendGroups(WebServer* webServer, Database* database) {
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
+}
+
+void sendGroupInfo(WebServer* webServer, QString groupAddress)
+{
+    // Recorrer
+
+    /**
+    QString controlGearStatus, emergencyMode, emergencyFailureStatus, actualLvl, communicationFailure, deviceType;
+    controlGearStatus = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getControlGearStatus());
+    emergencyMode = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getEmergencyMode());
+    emergencyFailureStatus = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getEmergencyFailureStatus());
+    actualLvl = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getActualLvl());
+    communicationFailure = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getComunicationFailure());
+    deviceType = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getDeviceType());
+
+    lastNetAddressClicked = nodeNetAddress.toUInt();
+    isOpenNodeControl = true;
+
+    QString message = QString(WS_SEND_NODE_INFO) + "@" + controlGearStatus + "." + emergencyMode + "." + emergencyFailureStatus + "." + actualLvl + "." + communicationFailure + "." + deviceType;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+    **/
+
+    qDebug() << "SEND GROUP INFO:" << groupAddress << "- PENDING TODO";
 }
 
 void sendDevicesCount(WebServer* webServer, int counter) {

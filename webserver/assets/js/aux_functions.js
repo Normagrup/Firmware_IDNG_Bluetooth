@@ -261,6 +261,7 @@ function openGroupControl(button)
     else { groupTypeIcon.src = "images/defaultLightIcon.png"; }
 
     popupText.textContent = button.textContent;
+    addressClicked = parseInt(groupAddress, 16);
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
