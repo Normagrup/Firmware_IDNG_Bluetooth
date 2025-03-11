@@ -321,6 +321,16 @@ function processGroupBasicInfo(value) {
 
         groupSelector.appendChild(group);
     }
+
+    var groupSelector2 = iframeDocument.getElementById('groupList2');
+    if(groupSelector2)
+    {
+        var group2 = iframeDocument.createElement('option');
+        group2.value = groupAddress;
+        group2.textContent = groupName;
+
+        groupSelector2.appendChild(group2);
+    }
 }
 
 function processDevicesCounter(value) {
