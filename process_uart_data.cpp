@@ -618,7 +618,7 @@ void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
     frame.append((address[2] >> 8) & 0xFF);
     frame.append(address[2] & 0xFF);
 
-    qDebug() << address[0] << address[1] << address[1];
+    qDebug() << address[0] << address[1] << address[2];
 
     frame.append(UART_END);
 

@@ -149,17 +149,31 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "Eliminación de nodos completada";
     }
     else if (type == WS_SET_ADD_GROUP) {
-        /*
-        uint16_t* address = getGroupAddress(value);
+        QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
+        QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
+        QString parsedValue = parts0[0] + parts1[1]; // "Node 1 C010"
+
+        uint16_t* tmpAddress = getGroupAddress(parsedValue);
+
+        uint16_t* address = new uint16_t[3];
+        address[0] = tmpAddress[0];
+        address[1] = tmpAddress[1];
+        address[2] = 0x0000;
+
         timerGroupAddress[0] = address[0];
         timerGroupAddress[1] = address[1];
+        timerGroupAddress[2] = 0x0000;
         groupDataConfiguration.configSecondGroup = false;
         qDebug() << "GROUP ADD";
         sendUartAddGroup(uartPort, address);
-        */
     }
     else if (type == WS_SET_DEL_GROUP) {
-        uint16_t* address = getGroupAddress(value);
+        QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
+        QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
+        QString parsedValue = parts0[0] + parts1[1]; // "Node 1 C010"
+
+        uint16_t* address = getGroupAddress(parsedValue);
+        qDebug() << "GROUP DEL";
         sendUartDelGroup(uartPort, address, database);
     }
     else if (type == WS_SET_MAX) {
