@@ -741,6 +741,67 @@ function delFromGroup()
     }
 }
 
+function addGroup() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    var inputField = iframeDocument.getElementById("newGroupName");
+    var groupName = inputField.value.trim();
+
+    var groupList = iframeDocument.getElementById('groupList');
+
+    if (groupName !== "") {
+        var exists = false;
+        for (var i = 0; i < groupList.options.length; i++) {
+            var optionText = groupList.options[i].textContent.trim();
+            if(optionText.toLowerCase() === groupName.toLowerCase()) {
+                exists = true;
+                break;
+            }
+        }
+
+        if(!exists) {
+            groupErrorLabel2.style.visibility = "hidden";
+        
+            sendData("SET_ADD_A_GROUP", groupName);
+            // TODO actualizar listas
+        }
+        else {
+            groupErrorLabel2.style.color = "#C30101";
+            groupErrorLabel2.innerHTML = "<b> Group already exists! </b>";
+            groupErrorLabel2.style.visibility = "visible";
+        }
+    }
+    else {
+        groupErrorLabel2.style.color = "#C30101";
+        groupErrorLabel2.innerHTML = "<b> Write a name! </b>";
+        groupErrorLabel2.style.visibility = "visible";
+    }
+}
+
+function delGroup() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    var groupList = iframeDocument.getElementById('groupList2');
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if (groupSelected != '-') {
+        groupErrorLabel2.style.visibility = "hidden";
+        sendData("SET_DEL_A_GROUP", groupSelected);
+        // TODO actualizar listas
+    }
+    else {
+        groupErrorLabel2.style.color = "#C30101";
+        groupErrorLabel2.innerHTML = "<b> Pick a group! </b>";
+        groupErrorLabel2.style.visibility = "visible";
+    }
+}
+
 function maxButton() 
 {
     sendData("SET_MAX", addressClicked);

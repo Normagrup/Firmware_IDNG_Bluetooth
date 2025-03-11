@@ -176,6 +176,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "GROUP DEL";
         sendUartDelGroup(uartPort, address, database);
     }
+    else if (type == WS_SET_ADD_A_GROUP) {
+        qDebug() << value;
+    }
+    else if (type == WS_SET_DEL_A_GROUP) {
+        qDebug() << value;
+    }
     else if (type == WS_SET_MAX) {
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
