@@ -751,6 +751,7 @@ function addGroup()
     var groupName = inputField.value.trim();
 
     var groupList = iframeDocument.getElementById('groupList');
+    var groupList2 = iframeDocument.getElementById('groupList2');
 
     if (groupName !== "") {
         var exists = false;
@@ -765,8 +766,10 @@ function addGroup()
         if(!exists) {
             groupErrorLabel2.style.visibility = "hidden";
         
+            inputField.value = "";
+            groupList.innerHTML = '<option value="-"> ---- </option>';
+            groupList2.innerHTML = '<option value="-"> ---- </option>';
             sendData("SET_ADD_A_GROUP", groupName);
-            // TODO actualizar listas
         }
         else {
             groupErrorLabel2.style.color = "#C30101";
@@ -787,13 +790,16 @@ function delGroup()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
 
-    var groupList = iframeDocument.getElementById('groupList2');
-    var groupSelected = groupList.options[groupList.selectedIndex].value;
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupList2 = iframeDocument.getElementById('groupList2');
+    var groupSelected = groupList2.options[groupList.selectedIndex].value;
 
     if (groupSelected != '-') {
         groupErrorLabel2.style.visibility = "hidden";
+
+        groupList.innerHTML = '<option value="-"> ---- </option>';
+        groupList2.innerHTML = '<option value="-"> ---- </option>';
         sendData("SET_DEL_A_GROUP", groupSelected);
-        // TODO actualizar listas
     }
     else {
         groupErrorLabel2.style.color = "#C30101";
