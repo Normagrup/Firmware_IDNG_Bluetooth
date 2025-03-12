@@ -177,11 +177,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDelGroup(uartPort, address, database);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
-        qDebug() << value;
+        createGroup(value, database);
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_DEL_A_GROUP) {
-        qDebug() << value;
+        removeGroup(value, database);
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_MAX) {

@@ -23,4 +23,7 @@ void setFunctionalTest(QStringList webServerParts, Database* database);
 void setDurationTest(QStringList webServerParts, Database* database);
 void setAllTest(QStringList webServerParts, Database* database);
 
+void createGroup(QString name, Database *database);
+void removeGroup(QString address, Database *database);
+
 #endif // AUX_FUNCTIONS_H

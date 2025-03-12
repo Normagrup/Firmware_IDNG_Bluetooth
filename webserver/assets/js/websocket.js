@@ -792,7 +792,7 @@ function delGroup()
 
     var groupList = iframeDocument.getElementById('groupList');
     var groupList2 = iframeDocument.getElementById('groupList2');
-    var groupSelected = groupList2.options[groupList.selectedIndex].value;
+    var groupSelected = groupList2.options[groupList2.selectedIndex].value;
 
     if (groupSelected != '-') {
         groupErrorLabel2.style.visibility = "hidden";
