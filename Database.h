@@ -40,6 +40,10 @@ public:
     QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
 
     QList<QPair<QString, QString>> getGroups(void);
+    void createGroup(QString name);
+    void createTestEntry(QString address);
+    void removeGroup(QString address);
+    void removeTestEntry(QString address);
 
 signals:
 

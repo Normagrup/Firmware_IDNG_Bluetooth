@@ -16,7 +16,7 @@ public:
     void setUUID(uint8_t* UUID);
     void setRealAddress(uint16_t realAddress);
     void setGroupSubAddress(uint16_t groupAddress);
-    void delGroupSubAddress(uint16_t groupAddress);
+    bool delGroupSubAddress(uint16_t groupAddress);
     void setCommunicationFailure(bool comunicationFailure);
     void setDeviceType(uint8_t deviceType);
     void setRatedDuration(uint8_t ratedDuration);

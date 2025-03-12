@@ -618,7 +618,7 @@ void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
     frame.append((address[2] >> 8) & 0xFF);
     frame.append(address[2] & 0xFF);
 
-    qDebug() << address[0] << address[1] << address[1];
+    qDebug() << address[0] << address[1] << address[2];
 
     frame.append(UART_END);
 
@@ -648,6 +648,34 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
                 meshDevice[i][j].delGroupSubAddress(address[1]);
                 database->delGroup(address[0], address[1]);
                 return;
+            }
+        }
+    }
+}
+
+void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database)
+{
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getIsConfigured() && meshDevice[i][j].delGroupSubAddress(groupAddress)) {
+                uint16_t nodeRealAddress = meshDevice[i][j].getRealAddress();
+
+                database->delGroup(nodeRealAddress, groupAddress);
+
+                QByteArray frame;
+                unsigned char length = 7;
+
+                frame.append(UART_HEADER);
+                frame.append(length);
+                frame.append(UART_CONFIG_FRAME_TYPE);
+                frame.append(DEL_GROUP);
+                frame.append((nodeRealAddress >> 8) & 0xFF);
+                frame.append(nodeRealAddress & 0xFF);
+                frame.append((groupAddress >> 8) & 0xFF);
+                frame.append(groupAddress & 0xFF);
+                frame.append(UART_END);
+
+                _uartPort->sendData(frame);
             }
         }
     }

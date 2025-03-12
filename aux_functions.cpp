@@ -61,6 +61,15 @@ uint16_t* getGroupAddress(QString receivedData)
     }
 }
 
+uint16_t getOneGroupAddress(QString receivedData)
+{
+    receivedData = receivedData.trimmed();
+
+    uint16_t groupAddress = receivedData.toInt(nullptr, 16);
+
+    return groupAddress;
+}
+
 uint16_t* getActualLvl(QString receivedData)
 {
     QStringList parts = receivedData.split(" ");
@@ -218,4 +227,16 @@ void setAllTest(QStringList webServerParts, Database *database)
             database->setDurationTest(tests[i].getGroupAddress(), durationPeriodicity, durationDate, durationTime);
         }
     }
+}
+
+void createGroup(QString name, Database *database) {
+    if(name.isEmpty()) { return; }
+
+    database->createGroup(name);
+}
+
+void removeGroup(QString address, Database *database) {
+    if(address.isEmpty()) { return; }
+
+    database->removeGroup(address);
 }

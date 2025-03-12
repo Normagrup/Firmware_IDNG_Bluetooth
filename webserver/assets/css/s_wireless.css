@@ -52,7 +52,7 @@
 	border-radius: 10px;
 	box-shadow: 0 0 10px rgba(70, 130, 180, 0.5);
     padding: 25px;
-    height: 40%;
+    height: 100%;
     width: 25%;
 }
 
@@ -224,7 +224,6 @@ label {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-top: 10px;
 }
 
 .group-button-container button {
@@ -327,4 +326,37 @@ label {
 
 .remove-all-btn {
     margin-top: auto;
+}
+
+button {
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    text-transform: uppercase;
+    width: 40%;
+    border: 0;
+    margin-top: 15px;
+    padding: 10px 0;
+    border-radius: 5px;
+    background: #4682b4;
+}
+
+button:hover {
+    color: #63e8f0;
+}
+
+.group-container input[type="text"] {
+    height: 50px;
+    width: 100%;
+    margin-top: 20px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 16px;
+    color: #4682b4;
+    background-color: #fff;
+}
+
+.group-container input[type="text"]:focus {
+    outline: 2px solid #63e8f0;
 }

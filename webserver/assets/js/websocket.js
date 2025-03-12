@@ -324,6 +324,16 @@ function processGroupBasicInfo(value) {
 
         groupSelector.appendChild(group);
     }
+
+    var groupSelector2 = iframeDocument.getElementById('groupList2');
+    if(groupSelector2)
+    {
+        var group2 = iframeDocument.createElement('option');
+        group2.value = groupAddress;
+        group2.textContent = groupName;
+
+        groupSelector2.appendChild(group2);
+    }
 }
 
 function processDevicesCounter(value) {
@@ -734,6 +744,73 @@ function delFromGroup()
         groupErrorLabel.style.color = "#C30101";
         groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
         groupErrorLabel.style.visibility = "visible";
+    }
+}
+
+function addGroup() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    var inputField = iframeDocument.getElementById("newGroupName");
+    var groupName = inputField.value.trim();
+
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupList2 = iframeDocument.getElementById('groupList2');
+
+    if (groupName !== "") {
+        var exists = false;
+        for (var i = 0; i < groupList.options.length; i++) {
+            var optionText = groupList.options[i].textContent.trim();
+            if(optionText.toLowerCase() === groupName.toLowerCase()) {
+                exists = true;
+                break;
+            }
+        }
+
+        if(!exists) {
+            groupErrorLabel2.style.visibility = "hidden";
+        
+            inputField.value = "";
+            groupList.innerHTML = '<option value="-"> ---- </option>';
+            groupList2.innerHTML = '<option value="-"> ---- </option>';
+            sendData("SET_ADD_A_GROUP", groupName);
+        }
+        else {
+            groupErrorLabel2.style.color = "#C30101";
+            groupErrorLabel2.innerHTML = "<b> Group already exists! </b>";
+            groupErrorLabel2.style.visibility = "visible";
+        }
+    }
+    else {
+        groupErrorLabel2.style.color = "#C30101";
+        groupErrorLabel2.innerHTML = "<b> Write a name! </b>";
+        groupErrorLabel2.style.visibility = "visible";
+    }
+}
+
+function delGroup() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupList2 = iframeDocument.getElementById('groupList2');
+    var groupSelected = groupList2.options[groupList2.selectedIndex].value;
+
+    if (groupSelected != '-') {
+        groupErrorLabel2.style.visibility = "hidden";
+
+        groupList.innerHTML = '<option value="-"> ---- </option>';
+        groupList2.innerHTML = '<option value="-"> ---- </option>';
+        sendData("SET_DEL_A_GROUP", groupSelected);
+    }
+    else {
+        groupErrorLabel2.style.color = "#C30101";
+        groupErrorLabel2.innerHTML = "<b> Pick a group! </b>";
+        groupErrorLabel2.style.visibility = "visible";
     }
 }
 

@@ -65,17 +65,33 @@
             <div class="group-container">
                 <label> Pick group and node </label>
 
-                <div class="group-button-container">
-                    <button onclick="parent.addToGroup()"> Add </button>
-                    <button onclick="parent.delFromGroup()"> Delete </button>
-                </div>
-
                 <select class="selector" id="groupList">
                     <option value="-"> ---- </option>
 				</select>
 
+                <div class="group-button-container">
+                    <button onclick="parent.addToGroup()"> Add Node </button>
+                    <button onclick="parent.delFromGroup()"> Delete Node </button>
+                </div>
+
                 <label id="groupError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
             </div>
+
+            <div class="group-container">
+                <label> Creating and deleting groups </label>
+
+                <input type="text" id="newGroupName" placeholder="Group Name" />
+                <button onclick="parent.addGroup()"> Add Group </button>
+
+                <select class="selector" id="groupList2">
+                    <option value="-"> ---- </option>
+				</select>
+                <button onclick="parent.delGroup()"> Delete Group </button>
+
+                <label id="groupError2" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
+            </div>
+
+            <br>
         </div>
     </div>
 

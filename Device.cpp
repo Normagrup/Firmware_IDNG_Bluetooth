@@ -52,14 +52,15 @@ void Device::setGroupSubAddress(uint16_t groupAddress)
     }
 }
 
-void Device::delGroupSubAddress(uint16_t groupAddress)
+bool Device::delGroupSubAddress(uint16_t groupAddress)
 {
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) {
         if (_groupSubAddress[i] == groupAddress) {
             _groupSubAddress[i] = 0;
-            break;
+            return true; // el device pertenecía al grupo y se le elimina
         }
     }
+    return false; // el device no pertenecía al grupo
 }
 
 void Device::setCommunicationFailure(bool comunicationFailure)
