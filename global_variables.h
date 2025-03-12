@@ -2,7 +2,6 @@
 #define GLOBAL_VARIABLES_H
 
 #include <QTimer>
-#include <QQueue>
 
 #include "structures.h"
 #include "Device.h"
@@ -25,7 +24,6 @@ extern Pollings polling;
 extern Tests tests[MAX_TEST];
 
 extern bool isCommissioning; // logic to prevent new commands
-extern QQueue<QString> commandQueue; // Queue to store pending commands
 
 extern uint8_t subnetCount, nodeSubnetCount;
 extern uint16_t lastNetAddressClicked;
