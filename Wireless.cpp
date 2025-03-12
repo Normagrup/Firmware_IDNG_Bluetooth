@@ -229,6 +229,7 @@ void Wireless::addDeviceTimerHandler()
         }
         else {
             qDebug() << "FIN DEL AUTO COMMISSION";
+            isCommissioning = false;
             sendEndAutoCommission(_webServer);
             pollingTimer.start(POLLING_TIMER_MS);
         }

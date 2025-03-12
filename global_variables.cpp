@@ -10,6 +10,10 @@ Device meshDevice[MAX_SUBNET][MAX_NODES_SUBNET];
 //ScannedUUID scannedUUID[MAX_SUBNET * MAX_NODES_SUBNET] = { {nullptr, 0} };
 Pollings polling;
 Tests tests[MAX_TEST];
+
+bool isCommissioning = false ; // logic to prevent new commands
+QQueue<QString> commandQueue; // Queue to store pending commands
+
 QTimer pollingTimer;
 QTimer testTimer;
 QTimer groupFrameTimer;

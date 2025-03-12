@@ -69,6 +69,8 @@
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
+void processQueuedCommands(WebServer* webServer);
+void processRestOfWebServerData(QString type, QString value, WebServer* webServer, UartPort* uartPort, Database* database);
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);

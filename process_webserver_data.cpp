@@ -7,8 +7,8 @@
 #include "file_handler.h"
 #include <QThread>
 
-void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database)
-{
+
+void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database){
     QStringList dataParts = data.split("@");
     QString type = dataParts[0].trimmed();
     QString value = dataParts[1].trimmed();
@@ -17,6 +17,53 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     pollingTimer.stop();
 
+    if (isCommissioning && type != "WS_SET_START_ACTION") {
+        //qDebug() << "Commissioning in progress, adding to queue: " << type;
+        //commandQueue.enqueue(data);  // Store command in queue
+        qDebug() << "Ignoring command " << type << " because commissioning is in progress.";
+        return;
+    }
+
+    if (type == WS_SET_START_ACTION) {
+        if (value == "0") {
+            if (!isCommissioning) {
+                //qDebug() << "START COMMISSION";
+                isCommissioning = true;  // Lock server from accepting new commands
+                sendUartStartCommission(uartPort);
+
+                sendConfirmStartCommission(webServer);
+                // Unlock after commissioning completes (20s simulated delay)
+                /*QTimer::singleShot(20000, [webServer]() {
+                    isCommissioning = false;
+                    qDebug() << "Commissioning complete, processing queued commands...";
+                    processQueuedCommands(webServer);
+                    sendEndAutoCommission(webServer);
+                });*/
+
+            }
+        }
+        else {
+            sendUartDelDevice(uartPort, 0x0000);
+        }
+    }
+    else {
+        // Process other commands normally
+        processRestOfWebServerData(type, value, webServer, uartPort, database);
+    }
+
+}
+
+void processQueuedCommands(WebServer* webServer){
+    while (!commandQueue.isEmpty()) {
+        QString nextCommand = commandQueue.dequeue();
+        qDebug() << "Processing queued command: " << nextCommand;
+        processWebServerData(nextCommand, webServer, nullptr, nullptr);
+    }
+}
+
+
+void processRestOfWebServerData(QString type, QString value, WebServer* webServer, UartPort* uartPort, Database* database)
+{
     if (type == WS_SET_LOG_IN) {
         uint8_t loginInfo = database->verifyLoginParameters(value);
         sendLoginInfo(webServer, loginInfo);
@@ -62,20 +109,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_DATE_TIME) {
         QStringList webServerParts = value.split(" ");
         setLocalDateTime(webServerParts);
-    }
-    else if (type == WS_SET_START_ACTION) {
-        //qDebug() << "ADDING NEW NODE";
-        if (value != "0") {
-            sendUartDelDevice(uartPort, 0x0000);
-            //uuidScanned = compareDeviceUUID(value);
-            //delay(500);
-            //confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
-            //if (uuidScanned.UUID != nullptr) { sendUartAddDevice(uartPort, uuidScanned); }
-        }
-        else {
-            qDebug() << "START COMMISSION";
-            sendUartStartCommission(uartPort);
-        }
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
         /*

@@ -137,15 +137,21 @@ function confirmStartCommission(value)
 
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
     var popupHeader = popup.querySelector('h2');
+    var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
+
     popupHeader.textContent = "Automatic commission in progress...";
-
-    var labelCommissionNodes = popup.querySelector('label');
     labelCommissionNodes.textContent = "0 / 0";
+    popup.style.display = "flex";
+    popupOverlay.style.display = "block";
+    
+    //var labelCommissionNodes = popup.querySelector('label');
+    //popup.style.visibility = "visible";
+    //popupOverlay.style.visibility = "visible";
 
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
+    if (window.parent) {
+        window.parent.document.body.style.pointerEvents = "none"; // Disable clicks on the entire parent page
+    }
 }
 
 function startAddingDevices(value) 
@@ -407,8 +413,15 @@ function processEndAutoCommission(value)
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    //popup.style.visibility = "hidden";
+    //popupOverlay.style.visibility = "hidden";
+
+    popup.style.display = "none";
+    popupOverlay.style.display = "none";
+
+    if (window.parent) {
+        window.parent.document.body.style.pointerEvents = "auto"; // Enable clicks on the parent page again
+    }
 }
 
 function processFactoryIDWrote(value) 
