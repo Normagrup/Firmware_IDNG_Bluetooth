@@ -123,7 +123,9 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Groups:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
+            // Antes se creaban 16 grupos por defecto -> Ahora ninguno. Se conserva el código por si acaso.
+            //QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+            QStringList groupAddresses = {};
 
             query.prepare("INSERT INTO Groups (GroupAddress, GroupName) VALUES (:groupAddress, :groupName)");
 
@@ -161,7 +163,9 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Test:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
+            // Antes se creaba el test de broadcast y de los 16 grupos por defecto -> Ahora solo la entrada de broadcast. Se conserva el código por si acaso.
+            //QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+            QStringList groupAddresses = {"FFFF"};
 
             query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                           "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
@@ -621,6 +625,27 @@ void Database::createGroup(QString name)
     query.addBindValue(name);
     query.addBindValue(newGroupAddress);
     if (!query.exec()) { qDebug() << "Error inserting new group:" << query.lastError().text(); return; }
+
+    createTestEntry(newGroupAddress);
+}
+
+void Database::createTestEntry(QString address)
+{
+    QSqlQuery query;
+
+    query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                  "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
+
+    query.bindValue(":groupAddress", address);
+    query.bindValue(":functionalEnable", 0);
+    query.bindValue(":durationEnable", 0);
+    query.bindValue(":functionalDays", " ");
+    query.bindValue(":functionalTime", "00:00");
+    query.bindValue(":durationPeriodicity", "0");
+    query.bindValue(":durationDate", "0000-00-00");
+    query.bindValue(":durationTime", "00:00");
+
+    if (!query.exec()) { qDebug() << "Error executing INSERT query in Test:" << query.lastError().text(); }
 }
 
 void Database::removeGroup(QString address)
@@ -629,7 +654,16 @@ void Database::removeGroup(QString address)
     query.prepare("DELETE FROM Groups WHERE GroupAddress = ?");
     query.addBindValue(address);
 
-    if (!query.exec()) {
-        qDebug() << "Error deleting group with address" << address << ":" << query.lastError().text();
-    }
+    if (!query.exec()) { qDebug() << "Error deleting group with address" << address << ":" << query.lastError().text(); return; }
+
+    removeTestEntry(address);
+}
+
+void Database::removeTestEntry(QString address)
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM Test WHERE GroupAddress = ?");
+    query.addBindValue(address);
+
+    if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
 }

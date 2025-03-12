@@ -54,6 +54,7 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
+void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);

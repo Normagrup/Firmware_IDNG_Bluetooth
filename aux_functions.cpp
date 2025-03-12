@@ -61,6 +61,15 @@ uint16_t* getGroupAddress(QString receivedData)
     }
 }
 
+uint16_t getOneGroupAddress(QString receivedData)
+{
+    receivedData = receivedData.trimmed();
+
+    uint16_t groupAddress = receivedData.toInt(nullptr, 16);
+
+    return groupAddress;
+}
+
 uint16_t* getActualLvl(QString receivedData)
 {
     QStringList parts = receivedData.split(" ");

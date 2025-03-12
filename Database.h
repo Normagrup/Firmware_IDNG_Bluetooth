@@ -41,7 +41,9 @@ public:
 
     QList<QPair<QString, QString>> getGroups(void);
     void createGroup(QString name);
+    void createTestEntry(QString address);
     void removeGroup(QString address);
+    void removeTestEntry(QString address);
 
 signals:
 

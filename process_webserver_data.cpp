@@ -182,6 +182,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_DEL_A_GROUP) {
         removeGroup(value, database);
+        uint16_t groupAddress = getOneGroupAddress(value);
+        sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_MAX) {
