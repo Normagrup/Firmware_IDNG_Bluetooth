@@ -262,6 +262,12 @@ function processNodeInfo(value)
     var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
     var deviceTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
 
+    autonomyIcon.innerHTML = "";
+    batteryIcon.innerHTML = "";
+    lampIcon.innerHTML = "";
+    comIcon.innerHTML = "";
+    emergencyIcon.innerHTML = "";
+
     if ((controlGearStatus >> 1) & 1) { lampIcon.style.backgroundImage = "url('images/lampIconOnFail.png')"; }
     else { lampIcon.style.backgroundImage = "url('images/lampIcon.png')"; }
 
@@ -358,22 +364,54 @@ function processGroupInfo(value)
     var lvlIcon = iframeDocument.getElementById('lvlIcon');
     var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
 
-    if (lampFailures > 0) { lampIcon.style.backgroundImage = "url('images/lampIconOnFail.png')"; }
+    autonomyIcon.innerHTML = "";
+    batteryIcon.innerHTML = "";
+    lampIcon.innerHTML = "";
+    comIcon.innerHTML = "";
+    emergencyIcon.innerHTML = "";
+
+    if (lampFailures > 0) { 
+        lampIcon.style.backgroundImage = "url('images/lampIconOnFail.png')";
+        
+        var lampFailuresCountSpan = iframeDocument.createElement("span");
+        lampFailuresCountSpan.classList.add("fail-count-badge");
+        lampFailuresCountSpan.textContent = lampFailures;
+        lampIcon.appendChild(lampFailuresCountSpan);
+    }
     else { lampIcon.style.backgroundImage = "url('images/lampIcon.png')"; }
 
     if (emergencyModeCount > 0) { 
         emergencyIcon.style.backgroundImage = "url('images/emergencyIconOnFail.png')";
         emergencyIcon.style.backgroundColor = "#fdfab2";
+
+        var emergencyModeCountSpan = iframeDocument.createElement("span");
+        emergencyModeCountSpan.classList.add("emergency-count-badge");
+        emergencyModeCountSpan.textContent = emergencyModeCount;
+        emergencyIcon.appendChild(emergencyModeCountSpan);
     }
     else { 
         emergencyIcon.style.backgroundImage = "url('images/emergencyIcon.png')";
         emergencyIcon.style.backgroundColor = "#fff";
     }
 
-    if (durFailures > 0) { autonomyIcon.style.backgroundImage = "url('images/autonomyIconOnFail.png')"; }
+    if (durFailures > 0) { 
+        autonomyIcon.style.backgroundImage = "url('images/autonomyIconOnFail.png')";
+
+        var durFailuresCountSpan = iframeDocument.createElement("span");
+        durFailuresCountSpan.classList.add("fail-count-badge");
+        durFailuresCountSpan.textContent = durFailures;
+        autonomyIcon.appendChild(durFailuresCountSpan);
+    } 
     else { autonomyIcon.style.backgroundImage = "url('images/autonomyIcon.png')"; }
 
-    if (batFailures > 0) { batteryIcon.style.backgroundImage = "url('images/batteryIconOnFail.png')"; }
+    if (batFailures > 0) { 
+        batteryIcon.style.backgroundImage = "url('images/batteryIconOnFail.png')"; 
+
+        var batFailuresCountSpan = iframeDocument.createElement("span");
+        batFailuresCountSpan.classList.add("fail-count-badge");
+        batFailuresCountSpan.textContent = batFailures;
+        batteryIcon.appendChild(batFailuresCountSpan);
+    }
     else { batteryIcon.style.backgroundImage = "url('images/batteryIcon.png')"; }
 
     averageLvl = averageLvl / 254 * 100;
@@ -383,7 +421,14 @@ function processGroupInfo(value)
     lvlIcon.innerHTML = "<b>" + averageLvlFormatted + "</b>";
     lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlFormatted + "%, #fff " + averageLvlFormatted + "%)";
 
-    if (comFailures != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
+    if (comFailures != 0) { 
+        comIcon.style.backgroundImage = "url('images/comIconOnFail.png')";
+
+        var comFailuresCountSpan = iframeDocument.createElement("span");
+        comFailuresCountSpan.classList.add("fail-count-badge");
+        comFailuresCountSpan.textContent = comFailures;
+        comIcon.appendChild(comFailuresCountSpan);
+    }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 }
 
