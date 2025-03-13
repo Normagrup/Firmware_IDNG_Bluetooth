@@ -16,6 +16,7 @@ public:
     void setUUID(uint8_t* UUID);
     void setRealAddress(uint16_t realAddress);
     void setGroupSubAddress(uint16_t groupAddress);
+    bool isOnGroupSubAddress(uint16_t groupAddress);
     bool delGroupSubAddress(uint16_t groupAddress);
     void setCommunicationFailure(bool comunicationFailure);
     void setDeviceType(uint8_t deviceType);
@@ -48,6 +49,7 @@ public:
     bool hasBatteryFailure(void);
     bool hasBatteryDurationFailure(void);
     int getTotalFailures(void);
+    bool isEmergencyModeActive(void);
 
     void deleteDevice(void);
 

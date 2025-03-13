@@ -52,6 +52,14 @@ void Device::setGroupSubAddress(uint16_t groupAddress)
     }
 }
 
+bool Device::isOnGroupSubAddress(uint16_t groupAddress)
+{
+    for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++)
+        if (_groupSubAddress[i] == groupAddress)
+            return true;
+    return false;
+}
+
 bool Device::delGroupSubAddress(uint16_t groupAddress)
 {
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) {
@@ -236,6 +244,13 @@ int Device::getTotalFailures()
     if(hasCommunicationFailure()) { totalFailures++; }
 
     return totalFailures;
+}
+
+bool Device::isEmergencyModeActive()
+{
+    uint8_t emergencyMode = getEmergencyMode();
+    int emergencyModeActiveBit = 2;
+    return ((emergencyMode >> emergencyModeActiveBit) & 1);
 }
 
 void Device::deleteDevice()

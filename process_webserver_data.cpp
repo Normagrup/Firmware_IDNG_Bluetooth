@@ -373,7 +373,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendWriteIDCodeFrame(uartPort, deviceID);
     }
     else if (type == WS_GET_DEVICES_COUNT) {
-        // NOTA: Se podría sacar de la BBDD en lugar de recorrer toda la estructura
         int count = 0;
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -631,26 +630,43 @@ void sendGroups(WebServer* webServer, Database* database) {
 
 void sendGroupInfo(WebServer* webServer, QString groupAddress)
 {
-    // Recorrer
+    int lampFailCount = 0, batFailCount = 0, durFailCount = 0, comFailCount = 0, emerModeCount = 0;
+    int totalLvl = 0, configDevs = 0;
 
-    /**
-    QString controlGearStatus, emergencyMode, emergencyFailureStatus, actualLvl, communicationFailure, deviceType;
-    controlGearStatus = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getControlGearStatus());
-    emergencyMode = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getEmergencyMode());
-    emergencyFailureStatus = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getEmergencyFailureStatus());
-    actualLvl = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getActualLvl());
-    communicationFailure = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getComunicationFailure());
-    deviceType = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getDeviceType());
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured()) {
+                configDevs++;
+                uint16_t groupSubAddress[1];
+                convertGroupSubStringToArray(groupAddress, groupSubAddress);
+                if(device.isOnGroupSubAddress(groupSubAddress[0])) {
+                    if(device.hasLampFailure()) { lampFailCount++; }
+                    if(device.hasBatteryFailure()) { batFailCount++; }
+                    if(device.hasBatteryDurationFailure()) { durFailCount++; }
+                    if(device.hasCommunicationFailure()) { comFailCount++; }
+                    if(device.isEmergencyModeActive()) { emerModeCount++; }
+                    totalLvl += device.getActualLvl();
+                }
+            }
+        }
+    }
 
-    lastNetAddressClicked = nodeNetAddress.toUInt();
-    isOpenNodeControl = true;
+    int average = (configDevs == 0) ? 0 : totalLvl / configDevs;
+    uint8_t averageLvl = average > 254 ? 254 : average; // Comprobación para asegurar que no produzca overflow
 
-    QString message = QString(WS_SEND_NODE_INFO) + "@" + controlGearStatus + "." + emergencyMode + "." + emergencyFailureStatus + "." + actualLvl + "." + communicationFailure + "." + deviceType;
+    // Conversión a cadena para pasar el mensaje
+    QString lampFailCountS, batFailCountS, durFailCountS, comFailCountS, emerModeCountS, averageLvlS;
+    lampFailCountS = QString::number(lampFailCount);
+    batFailCountS = QString::number(batFailCount);
+    durFailCountS = QString::number(durFailCount);
+    comFailCountS = QString::number(comFailCount);
+    emerModeCountS = QString::number(emerModeCount);
+    averageLvlS = QString::number(averageLvl);
+
+    QString message = QString(WS_SEND_GROUP_INFO) + "@" + lampFailCountS + "." + emerModeCountS + "." + batFailCountS + "." + durFailCountS + "." + averageLvlS + "." + comFailCountS;
 
     if (webServer != nullptr) { webServer->sendData(message); }
-    **/
-
-    qDebug() << "SEND GROUP INFO:" << groupAddress << "- PENDING TODO";
 }
 
 void sendDevicesCount(WebServer* webServer, int counter) {

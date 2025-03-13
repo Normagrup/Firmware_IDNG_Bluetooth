@@ -61,6 +61,7 @@
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
 #define WS_SEND_GROUP                       "GROUP_NAME_AND_ADDRESS"
+#define WS_SEND_GROUP_INFO                  "GROUP_INFO"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
 #define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
 #define WS_SEND_END_NODE_CONFIG             "END_NODE_CONFIG"

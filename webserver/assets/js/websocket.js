@@ -282,8 +282,10 @@ function processNodeInfo(value)
 
     actualLvl = actualLvl / 254 * 100;
     if (actualLvl > 100) { actualLvl = 100; }
-    lvlIcon.innerHTML = "<b>" + actualLvl + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvl + "%, #fff " + actualLvl + "%)";
+    var actualLvlNum = parseFloat(actualLvl);
+    var actualLvlFormatted = (actualLvlNum % 1 === 0) ? actualLvlNum.toString() : actualLvlNum.toFixed(2);
+    lvlIcon.innerHTML = "<b>" + actualLvlFormatted + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvlFormatted + "%, #fff " + actualLvlFormatted + "%)";
 
     if (communicationFailure != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
@@ -334,6 +336,55 @@ function processGroupBasicInfo(value) {
 
         groupSelector2.appendChild(group2);
     }
+}
+
+function processGroupInfo(value) 
+{
+    var groupInfoArray = value.split('.');
+    var lampFailures = groupInfoArray[0];
+    var emergencyModeCount = groupInfoArray[1];
+    var batFailures = groupInfoArray[2];
+    var durFailures = groupInfoArray[3];
+    var averageLvl = groupInfoArray[4];
+    var comFailures = groupInfoArray[5];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var autonomyIcon = iframeDocument.getElementById('autonomyIcon');
+    var batteryIcon = iframeDocument.getElementById('batteryIcon');
+    var lampIcon = iframeDocument.getElementById('lampIcon');
+    var comIcon = iframeDocument.getElementById('comIcon');
+    var lvlIcon = iframeDocument.getElementById('lvlIcon');
+    var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
+
+    if (lampFailures > 0) { lampIcon.style.backgroundImage = "url('images/lampIconOnFail.png')"; }
+    else { lampIcon.style.backgroundImage = "url('images/lampIcon.png')"; }
+
+    if (emergencyModeCount > 0) { 
+        emergencyIcon.style.backgroundImage = "url('images/emergencyIconOnFail.png')";
+        emergencyIcon.style.backgroundColor = "#fdfab2";
+    }
+    else { 
+        emergencyIcon.style.backgroundImage = "url('images/emergencyIcon.png')";
+        emergencyIcon.style.backgroundColor = "#fff";
+    }
+
+    if (durFailures > 0) { autonomyIcon.style.backgroundImage = "url('images/autonomyIconOnFail.png')"; }
+    else { autonomyIcon.style.backgroundImage = "url('images/autonomyIcon.png')"; }
+
+    if (batFailures > 0) { batteryIcon.style.backgroundImage = "url('images/batteryIconOnFail.png')"; }
+    else { batteryIcon.style.backgroundImage = "url('images/batteryIcon.png')"; }
+
+    averageLvl = averageLvl / 254 * 100;
+    if (averageLvl > 100) { averageLvl = 100; }
+    var averageLvlNum = parseFloat(averageLvl);
+    var averageLvlFormatted = (averageLvlNum % 1 === 0) ? averageLvlNum.toString() : averageLvlNum.toFixed(2);
+    lvlIcon.innerHTML = "<b>" + averageLvlFormatted + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlFormatted + "%, #fff " + averageLvlFormatted + "%)";
+
+    if (comFailures != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
+    else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 }
 
 function processDevicesCounter(value) {
@@ -522,6 +573,7 @@ function processReceivedData(data)
     else if (type == 'DEVICE_ERROR') { processDeviceError(value); }
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
+    else if (type == "GROUP_INFO") { processGroupInfo(value); }
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
