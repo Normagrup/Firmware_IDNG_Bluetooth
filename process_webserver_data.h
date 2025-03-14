@@ -34,6 +34,7 @@
 #define WS_GET_IS_CONFIG                    "GET_IS_CONFIG"
 #define WS_GET_GROUPS                       "GET_GROUPS"
 #define WS_GET_GROUP_INFO                   "GET_GROUP_INFO"
+#define WS_GET_TEST                         "GET_TEST"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
 
 #define WS_SET_MAX                          "SET_MAX"
@@ -62,6 +63,7 @@
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
 #define WS_SEND_GROUP                       "GROUP_NAME_AND_ADDRESS"
 #define WS_SEND_GROUP_INFO                  "GROUP_INFO"
+#define WS_SEND_TEST                        "TEST_DATA"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
 #define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
 #define WS_SEND_END_NODE_CONFIG             "END_NODE_CONFIG"
@@ -87,6 +89,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
+void sendTest(WebServer* webServer, Database* database, QString groupAddress);
 void sendDevicesCount(WebServer* webServer, int count);
 void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
 void sendEndNodeConfiguration(WebServer* webServer);

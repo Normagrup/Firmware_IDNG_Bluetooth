@@ -452,6 +452,30 @@ void Database::delGroup(uint16_t realAddress, uint16_t groupAddress)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
+QString Database::getTests(QString groupAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT * FROM Test WHERE GroupAddress = :groupAddress");
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return ""; }
+
+    if(query.next())
+    {
+        QString testString = query.value("FunctionalEnable").toString();
+        testString = testString + "#" + query.value("DurationEnable").toString();
+        testString = testString + "#" + query.value("FunctionalDays").toString();
+        testString = testString + "#" + query.value("FunctionalTime").toString();
+        testString = testString + "#" + query.value("DurationPeriodicity").toString();
+        testString = testString + "#" + query.value("DurationDate").toString();
+        testString = testString + "#" + query.value("DurationTime").toString();
+        return testString;
+    }
+
+    return "";
+}
+
 void Database::setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable)
 {
     QSqlQuery query;

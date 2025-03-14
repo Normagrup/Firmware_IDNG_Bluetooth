@@ -418,6 +418,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_GROUP_INFO) {
         sendGroupInfo(webServer, value);
     }
+    else if (type == WS_GET_TEST) {
+        sendTest(webServer, database, value);
+    }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         qDebug() << "CLEAR ALL DATA";
         // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?
@@ -665,6 +668,17 @@ void sendGroupInfo(WebServer* webServer, QString groupAddress)
     averageLvlS = QString::number(averageLvl);
 
     QString message = QString(WS_SEND_GROUP_INFO) + "@" + lampFailCountS + "." + emerModeCountS + "." + batFailCountS + "." + durFailCountS + "." + averageLvlS + "." + comFailCountS;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendTest(WebServer* webServer, Database* database, QString groupAddress)
+{
+    QString testData = database->getTests(groupAddress);
+
+    if(testData.isEmpty()) { return; }
+
+    QString message = QString(WS_SEND_TEST) + "@" + testData;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

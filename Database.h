@@ -32,6 +32,7 @@ public:
     void deleteAllNodes(void);
     void delGroup(uint16_t realAddress, uint16_t groupAddress);
 
+    QString getTests(QString groupAddress);
     void setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable);
     void setFunctionalTest(QString groupAddress, QString functionalDays, QString functionalTime);
     void setDurationTest(QString groupAddress, QString durationPeriodicity, QString durationDate, QString durationTime);

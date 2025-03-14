@@ -432,6 +432,63 @@ function processGroupInfo(value)
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 }
 
+function processTestData(value) {
+    var testArray = value.split('#');
+    var functionalEnable = testArray[0];
+    var durationEnable = testArray[1];
+    var functionalDays = testArray[2];
+    var functionalTime = testArray[3];
+    var durationPeriodicity = testArray[4];
+    var durationDate = testArray[5];
+    var durationTime = testArray[6]
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var toggleFunction = iframeDocument.getElementById('toggleFunction');
+    toggleFunction.checked = (functionalEnable === "1") ? true : false;
+
+    var toggleDuration = iframeDocument.getElementById('toggleDuration');
+    toggleDuration.checked = (durationEnable === "1") ? true : false;
+
+    var monday = iframeDocument.getElementById('monday'); monday.checked = false;
+    var tuesday = iframeDocument.getElementById('tuesday'); tuesday.checked = false;
+    var wednesday = iframeDocument.getElementById('wednesday'); wednesday.checked = false;
+    var thursday = iframeDocument.getElementById('thursday'); thursday.checked = false;
+    var friday = iframeDocument.getElementById('friday'); friday.checked = false;
+    var saturday = iframeDocument.getElementById('saturday'); saturday.checked = false;
+    var sunday = iframeDocument.getElementById('sunday'); sunday.checked = false;
+
+    var days = functionalDays.split(' ');
+    for (var day of days) {
+        if(day === "Mon") { monday.checked = true; }
+        else if(day === "Tue") { tuesday.checked = true; }
+        else if(day === "Wed") { wednesday.checked = true; }
+        else if(day === "Thu") { thursday.checked = true; }
+        else if(day === "Fri") { friday.checked = true; }
+        else if(day === "Sat") { saturday.checked = true; }
+        else if(day === "Sun") { sunday.checked = true; }
+    }
+
+    var functionTime = iframeDocument.getElementById('functionTimePicker');
+    functionTime.value = functionalTime;
+
+    var periodicityList = iframeDocument.getElementById('periodicityList');
+    if(durationPeriodicity === "0") { periodicityList.selectedIndex = 0; }
+    else if(durationPeriodicity === "1") { periodicityList.selectedIndex = 1; }
+    else if(durationPeriodicity === "3") { periodicityList.selectedIndex = 2; }
+    else if(durationPeriodicity === "6") { periodicityList.selectedIndex = 3; }
+    else if(durationPeriodicity === "12") { periodicityList.selectedIndex = 4; }
+
+    var durationDateElem = iframeDocument.getElementById('durationDatePicker');
+    durationDateElem.value = durationDate;
+
+    var durationTimeElem = iframeDocument.getElementById('durationTimePicker');
+    durationTimeElem.value = durationTime;
+
+    testErrorLabel.innerHTML = " ‎ ";
+}
+
 function processDevicesCounter(value) {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -619,6 +676,7 @@ function processReceivedData(data)
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "GROUP_INFO") { processGroupInfo(value); }
+    else if (type == "TEST_DATA") { processTestData(value); }
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
@@ -976,33 +1034,26 @@ function setTest()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var toggleFunction = iframeDocument.getElementById('toggleFunction');
-    var toggleDuration = iframeDocument.getElementById('toggleDuration');
-
-    var monday = iframeDocument.getElementById('monday');
-    var tuesday = iframeDocument.getElementById('tuesday');
-    var wednesday = iframeDocument.getElementById('wednesday');
-    var thursday = iframeDocument.getElementById('thursday');
-    var friday = iframeDocument.getElementById('friday');
-    var saturday = iframeDocument.getElementById('saturday');
-    var sunday = iframeDocument.getElementById('sunday');
-
-    var testErrorLabel = iframeDocument.getElementById('testError');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
-    var periodicityList = iframeDocument.getElementById('periodicityList');
-    var periodicitySelected = periodicityList.options[periodicityList.selectedIndex].value;
+    var testErrorLabel = iframeDocument.getElementById('testError');
 
     if (groupSelected != '-') {
-        testErrorLabel.style.visibility = "hidden";
+        var message = groupSelected;
 
-        var message = groupSelected + ' ';
+        var toggleFunction = iframeDocument.getElementById('toggleFunction');
         if (toggleFunction.checked) {
+            var monday = iframeDocument.getElementById('monday');      
+            var tuesday = iframeDocument.getElementById('tuesday');    
+            var wednesday = iframeDocument.getElementById('wednesday');
+            var thursday = iframeDocument.getElementById('thursday');  
+            var friday = iframeDocument.getElementById('friday');      
+            var saturday = iframeDocument.getElementById('saturday');  
+            var sunday = iframeDocument.getElementById('sunday');      
             var functionTime = iframeDocument.getElementById('functionTimePicker').value;
 
             if (monday.checked || tuesday.checked || wednesday.checked || thursday.checked || friday.checked || saturday.checked || sunday.checked) {
-                testErrorLabel.style.visibility = "hidden";
-
+                message += ' ';
                 if (monday.checked) { message += 'Mon-'; }
                 if (tuesday.checked) { message += 'Tue-'; }
                 if (wednesday.checked) { message += 'Wed-'; }
@@ -1010,8 +1061,7 @@ function setTest()
                 if (friday.checked) { message += 'Fri-'; }
                 if (saturday.checked) { message += 'Sat-'; }
                 if (sunday.checked) { message += 'Sun-'; }
-
-                message += ' ' + functionTime + ' ';
+                message += ' ' + functionTime;
             }
             else {
                 testErrorLabel.style.color = "#C30101";
@@ -1021,12 +1071,16 @@ function setTest()
                 return;
             }
         }
+
+        var toggleDuration = iframeDocument.getElementById('toggleDuration');
         if (toggleDuration.checked) {
+            var periodicityList = iframeDocument.getElementById('periodicityList');
+            var periodicitySelected = periodicityList.options[periodicityList.selectedIndex].value;
             var durationDate = iframeDocument.getElementById('durationDatePicker').value;
             var durationTime = iframeDocument.getElementById('durationTimePicker').value;
 
             if (periodicitySelected != '-') {
-                message += periodicitySelected + ' ' + durationDate + ' ' + durationTime;
+                message +=  ' ' + periodicitySelected + ' ' + durationDate + ' ' + durationTime;
             }
             else {
                 testErrorLabel.style.color = "#C30101";
@@ -1047,6 +1101,37 @@ function setTest()
         testErrorLabel.innerHTML = "<b> Pick a group! </b>";
         testErrorLabel.style.visibility = "visible";
     }
+}
+
+function loadTests()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var select = iframeDocument.getElementById('groupList');
+    var group = select.value;
+    
+    if(group !== "-")
+        sendData("GET_TEST", group);
+    else
+    {
+        var toggleFunction = iframeDocument.getElementById('toggleFunction'); toggleFunction.checked = false;
+        var toggleDuration = iframeDocument.getElementById('toggleDuration'); toggleDuration.checked = false;
+
+        var monday = iframeDocument.getElementById('monday'); monday.checked = false;
+        var tuesday = iframeDocument.getElementById('tuesday'); tuesday.checked = false;
+        var wednesday = iframeDocument.getElementById('wednesday'); wednesday.checked = false;
+        var thursday = iframeDocument.getElementById('thursday'); thursday.checked = false;
+        var friday = iframeDocument.getElementById('friday'); friday.checked = false;
+        var saturday = iframeDocument.getElementById('saturday'); saturday.checked = false;
+        var sunday = iframeDocument.getElementById('sunday'); sunday.checked = false;
+
+        var periodicityList = iframeDocument.getElementById('periodicityList'); periodicityList.selectedIndex = 0;
+
+        parent.sendData("GET_DATE_TIME", "");
+    }
+
+    var testErrorLabel = iframeDocument.getElementById('testError'); testErrorLabel.innerHTML = " ‎ ";
 }
 
 function sendFile()
