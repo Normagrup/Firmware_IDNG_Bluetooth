@@ -481,11 +481,13 @@ function processTestData(value) {
     else if(durationPeriodicity === "12") { periodicityList.selectedIndex = 4; }
 
     var durationDateElem = iframeDocument.getElementById('durationDatePicker');
-    durationDateElem.value = durationDate;
+    if(durationDate !== "0000-00-00") { durationDateElem.value = durationDate; }
+    else { durationDateElem.value = "2000-01-01"}
 
     var durationTimeElem = iframeDocument.getElementById('durationTimePicker');
     durationTimeElem.value = durationTime;
 
+    var testErrorLabel = iframeDocument.getElementById('testError');
     testErrorLabel.innerHTML = " ‎ ";
 }
 
