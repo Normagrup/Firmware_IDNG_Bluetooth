@@ -339,21 +339,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);
     }
-    else if (type == WS_SET_TEST  ) {
+    else if (type == WS_SET_TEST) {
         QStringList webServerParts = value.split(" ");
-
-        if (webServerParts.size() == 1) {                   // TODO DESHABILITADO
-            disableAllTest(webServerParts, database);
-        }
-        else if (webServerParts.size() == 3) {              // FUNCTIONAL HABILITADO
-            setFunctionalTest(webServerParts, database);
-        }
-        else if (webServerParts.size() == 4) {              // DURATION HABILITADO
-            setDurationTest(webServerParts, database);
-        }
-        else if (webServerParts.size() == 6) {              // TODO HABILITADO
-            setAllTest(webServerParts, database);
-        }
+        setTests(webServerParts, database);
     }
     else if (type == WS_SET_UPDATE_FILE) {
         qDebug() << "UPDATE FILE";

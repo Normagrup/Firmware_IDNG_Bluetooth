@@ -1040,68 +1040,67 @@ function setTest()
     var groupSelected = groupList.options[groupList.selectedIndex].value;
     var testErrorLabel = iframeDocument.getElementById('testError');
 
-    if (groupSelected != '-') {
-        var message = groupSelected;
+    if (groupSelected == '-') 
+    {
+        testErrorLabel.style.color = "#C30101";
+        testErrorLabel.innerHTML = "<b> Pick a group! </b>";
+        testErrorLabel.style.visibility = "visible";
+    } 
+    else 
+    {
+        var message = groupSelected + ' ';
 
         var toggleFunction = iframeDocument.getElementById('toggleFunction');
-        if (toggleFunction.checked) {
-            var monday = iframeDocument.getElementById('monday');      
-            var tuesday = iframeDocument.getElementById('tuesday');    
-            var wednesday = iframeDocument.getElementById('wednesday');
-            var thursday = iframeDocument.getElementById('thursday');  
-            var friday = iframeDocument.getElementById('friday');      
-            var saturday = iframeDocument.getElementById('saturday');  
-            var sunday = iframeDocument.getElementById('sunday');      
-            var functionTime = iframeDocument.getElementById('functionTimePicker').value;
+        message += (toggleFunction.checked ? "1" : "0") + ' ';
 
-            if (monday.checked || tuesday.checked || wednesday.checked || thursday.checked || friday.checked || saturday.checked || sunday.checked) {
-                message += ' ';
-                if (monday.checked) { message += 'Mon-'; }
-                if (tuesday.checked) { message += 'Tue-'; }
-                if (wednesday.checked) { message += 'Wed-'; }
-                if (thursday.checked) { message += 'Thu-'; }
-                if (friday.checked) { message += 'Fri-'; }
-                if (saturday.checked) { message += 'Sat-'; }
-                if (sunday.checked) { message += 'Sun-'; }
-                message += ' ' + functionTime;
-            }
-            else {
-                testErrorLabel.style.color = "#C30101";
-                testErrorLabel.innerHTML = "<b> Select one or more days! </b>";
-                testErrorLabel.style.visibility = "visible";
+        var monday = iframeDocument.getElementById('monday');      
+        var tuesday = iframeDocument.getElementById('tuesday');    
+        var wednesday = iframeDocument.getElementById('wednesday');
+        var thursday = iframeDocument.getElementById('thursday');  
+        var friday = iframeDocument.getElementById('friday');      
+        var saturday = iframeDocument.getElementById('saturday');  
+        var sunday = iframeDocument.getElementById('sunday');      
+        var functionTime = iframeDocument.getElementById('functionTimePicker').value;
 
-                return;
-            }
+        if (!toggleFunction.checked || monday.checked || tuesday.checked || wednesday.checked || thursday.checked || friday.checked || saturday.checked || sunday.checked) {
+            if (monday.checked) { message += 'Mon-'; }
+            if (tuesday.checked) { message += 'Tue-'; }
+            if (wednesday.checked) { message += 'Wed-'; }
+            if (thursday.checked) { message += 'Thu-'; }
+            if (friday.checked) { message += 'Fri-'; }
+            if (saturday.checked) { message += 'Sat-'; }
+            if (sunday.checked) { message += 'Sun-'; }
+            message += ' ' + functionTime + ' ';
+        }
+        else {
+            testErrorLabel.style.color = "#C30101";
+            testErrorLabel.innerHTML = "<b> Select one or more days! </b>";
+            testErrorLabel.style.visibility = "visible";
+            return;
         }
 
         var toggleDuration = iframeDocument.getElementById('toggleDuration');
-        if (toggleDuration.checked) {
-            var periodicityList = iframeDocument.getElementById('periodicityList');
-            var periodicitySelected = periodicityList.options[periodicityList.selectedIndex].value;
-            var durationDate = iframeDocument.getElementById('durationDatePicker').value;
-            var durationTime = iframeDocument.getElementById('durationTimePicker').value;
+        message += (toggleDuration.checked ? "1" : "0") + ' ';
 
-            if (periodicitySelected != '-') {
-                message +=  ' ' + periodicitySelected + ' ' + durationDate + ' ' + durationTime;
-            }
-            else {
-                testErrorLabel.style.color = "#C30101";
-                testErrorLabel.innerHTML = "<b> Select periodicity! </b>";
-                testErrorLabel.style.visibility = "visible";
+        var periodicityList = iframeDocument.getElementById('periodicityList');
+        var periodicitySelected = periodicityList.options[periodicityList.selectedIndex].value;
+        var durationDate = iframeDocument.getElementById('durationDatePicker').value;
+        var durationTime = iframeDocument.getElementById('durationTimePicker').value;
 
-                return;
-            }
+        if (periodicitySelected != '-') {
+            message += periodicitySelected + ' ' + durationDate + ' ' + durationTime;
+        }
+        else {
+            testErrorLabel.style.color = "#C30101";
+            testErrorLabel.innerHTML = "<b> Select periodicity! </b>";
+            testErrorLabel.style.visibility = "visible";
+            return;
         }
 
         testErrorLabel.style.color = "#4682b4";
         testErrorLabel.innerHTML = "<b> Test changed! </b>";
         testErrorLabel.style.visibility = "visible";
         sendData("SET_TEST", message);
-    }
-    else {
-        testErrorLabel.style.color = "#C30101";
-        testErrorLabel.innerHTML = "<b> Pick a group! </b>";
-        testErrorLabel.style.visibility = "visible";
     }
 }
 

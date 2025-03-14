@@ -143,86 +143,32 @@ void setIPConfigInfo(QStringList webServerParts, Database* database)
     database->setInterfaceParameters(webServerParts);
 }
 
-void disableAllTest(QStringList webServerParts, Database* database)
+void setTests(QStringList webServerParts, Database *database)
 {
     QString groupAddress = webServerParts[0];
+    QString functionalEnable = webServerParts[1];
+    QString functionalDaysWebserver = webServerParts[2];
+    QString functionalTime = webServerParts[3];
+    QString durationEnable = webServerParts[4];
+    QString durationPeriodicity = webServerParts[5];
+    QString durationDate = webServerParts[6];
+    QString durationTime = webServerParts[7];
 
-    for (uint8_t i = 0; i < MAX_TEST; i++) {
-        if (tests[i].getGroupAddress() == groupAddress) {
-            tests[i].setFunctionalEnable(false);
-            tests[i].setDurationEnable(false);
-
-            database->setTestEnable(tests[i].getGroupAddress(), false, false);
-        }
-    }
-}
-
-void setFunctionalTest(QStringList webServerParts, Database *database)
-{
-    QString groupAddress = webServerParts[0];
-    QString functionalTime = webServerParts[2];
-    QString functionalDaysWebserver = webServerParts[1];
     QStringList functionalDaysWebserverParts = functionalDaysWebserver.split("-");
     QString functionalDays;
     for (uint8_t i = 0; i < functionalDaysWebserverParts.size(); i++) { functionalDays += functionalDaysWebserverParts[i] + " "; }
 
     for (uint8_t i = 0; i < MAX_TEST; i++) {
         if (tests[i].getGroupAddress() == groupAddress) {
-            tests[i].setFunctionalEnable(true);
-            tests[i].setDurationEnable(false);
-            tests[i].setFunctionalDays(functionalDays);
-            tests[i].setFunctionalTime(functionalTime);
-
-            database->setTestEnable(tests[i].getGroupAddress(), true, false);
-            database->setFunctionalTest(tests[i].getGroupAddress(), functionalDays, functionalTime);
-        }
-    }
-}
-
-void setDurationTest(QStringList webServerParts, Database *database)
-{
-    QString groupAddress = webServerParts[0];
-    QString durationPeriodicity = webServerParts[1];
-    QString durationDate = webServerParts[2];
-    QString durationTime = webServerParts[3];
-
-    for (uint8_t i = 0; i < MAX_TEST; i++) {
-        if (tests[i].getGroupAddress() == groupAddress) {
-            tests[i].setFunctionalEnable(false);
-            tests[i].setDurationEnable(true);
-            tests[i].setDurationPeriodicity(durationPeriodicity);
-            tests[i].setDurationDate(durationDate);
-            tests[i].setDurationTime(durationTime);
-
-            database->setTestEnable(tests[i].getGroupAddress(), false, true);
-            database->setDurationTest(tests[i].getGroupAddress(), durationPeriodicity, durationDate, durationTime);
-        }
-    }
-}
-
-void setAllTest(QStringList webServerParts, Database *database)
-{
-    QString groupAddress = webServerParts[0];
-    QString functionalTime = webServerParts[2];
-    QString durationPeriodicity = webServerParts[3];
-    QString durationDate = webServerParts[4];
-    QString durationTime = webServerParts[5];
-    QString functionalDaysWebserver = webServerParts[1];
-    QStringList functionalDaysWebserverParts = functionalDaysWebserver.split("-");
-    QString functionalDays;
-    for (uint8_t i = 0; i < functionalDaysWebserverParts.size(); i++) { functionalDays += functionalDaysWebserverParts[i] + " "; }
-
-    for (uint8_t i = 0; i < MAX_TEST; i++) {
-        if (tests[i].getGroupAddress() == groupAddress) {
-            tests[i].setFunctionalEnable(true);
-            tests[i].setDurationEnable(true);
+            tests[i].setFunctionalEnable(functionalEnable == "1");
+            tests[i].setDurationEnable(durationEnable == "1");
             tests[i].setFunctionalDays(functionalDays);
             tests[i].setFunctionalTime(functionalTime);
             tests[i].setDurationPeriodicity(durationPeriodicity);
             tests[i].setDurationDate(durationDate);
             tests[i].setDurationTime(durationTime);
 
-            database->setTestEnable(tests[i].getGroupAddress(), true, true);
+            database->setTestEnable(tests[i].getGroupAddress(), functionalEnable == "1", durationEnable == "1");
             database->setFunctionalTest(tests[i].getGroupAddress(), functionalDays, functionalTime);
             database->setDurationTest(tests[i].getGroupAddress(), durationPeriodicity, durationDate, durationTime);
         }
