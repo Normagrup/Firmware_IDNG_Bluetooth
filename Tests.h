@@ -27,6 +27,8 @@ public:
     QString getDurationDate(void);
     QString getDurationTime(void);
 
+    void deleteTest(void);
+
 signals:
 
 private:

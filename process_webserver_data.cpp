@@ -381,11 +381,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                 Device& device = meshDevice[i][j];
-                count += device.getTotalFailures();
-                if(device.hasLampFailure()) { lampFailCount++; }
-                if(device.hasBatteryFailure()) { batFailCount++; }
-                if(device.hasBatteryDurationFailure()) { durFailCount++; }
-                if(device.hasCommunicationFailure()) { comFailCount++; }
+                if(device.getIsConfigured()) {
+                    count += device.getTotalFailures();
+                    if(device.hasLampFailure()) { lampFailCount++; }
+                    if(device.hasBatteryFailure()) { batFailCount++; }
+                    if(device.hasBatteryDurationFailure()) { durFailCount++; }
+                    if(device.hasCommunicationFailure()) { comFailCount++; }
+                }
             }
         }
         sendFailuresCount(webServer, count, lampFailCount, batFailCount, durFailCount, comFailCount);
@@ -410,8 +412,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendTest(webServer, database, value);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
-        qDebug() << "CLEAR ALL DATA";
-        // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?
+        clearSystemData(database);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -722,4 +723,21 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
     QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void clearSystemData(Database* database)
+{
+    // Borrado de la BBDD del embebido
+    database->clearAllData();
+
+    // Borrado del modelo del embebido
+    for(int i = 0; i < MAX_SUBNET; i++)
+        for(int j = 0; j < MAX_NODES_SUBNET; j++)
+            meshDevice[i][j].deleteDevice();
+
+    for(int i = 0; i < MAX_TEST; i++)
+        tests[i].deleteTest();
+
+    // Borrado del micro
+    // TODO
 }

@@ -1087,8 +1087,11 @@ function setTest()
         var durationDate = iframeDocument.getElementById('durationDatePicker').value;
         var durationTime = iframeDocument.getElementById('durationTimePicker').value;
 
-        if (periodicitySelected != '-') {
-            message += periodicitySelected + ' ' + durationDate + ' ' + durationTime;
+        if (!toggleDuration.checked || periodicitySelected != '-') {
+            if (periodicitySelected === '-')
+                message += '0' + ' ' + durationDate + ' ' + durationTime;
+            else
+                message += periodicitySelected + ' ' + durationDate + ' ' + durationTime;
         }
         else {
             testErrorLabel.style.color = "#C30101";

@@ -691,3 +691,14 @@ void Database::removeTestEntry(QString address)
 
     if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
 }
+
+void Database::clearAllData()
+{
+    QSqlQuery query;
+
+    if (!query.exec("DELETE FROM Nodes")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+    if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+    if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+    if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                    "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
+}

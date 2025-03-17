@@ -46,6 +46,8 @@ public:
     void removeGroup(QString address);
     void removeTestEntry(QString address);
 
+    void clearAllData(void);
+
 signals:
 
 private:
