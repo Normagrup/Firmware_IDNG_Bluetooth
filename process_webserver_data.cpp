@@ -360,6 +360,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_GET_LOGS) {
         qDebug() << "GETTING LOGS " << value;
+        QStringList webServerParts = value.split(" ");
+        QString reportType = webServerParts[0];
+        QString startDate = webServerParts[1];
+        QString endDate = webServerParts[2];
+        QString downloadPath;
+
+        downloadPath = generateLogReport(reportType, startDate, endDate);
+
+        QString serverIP = "http://192.168.1.52";
+        QString fileUrl = serverIP + "/logs/" + downloadPath;
+        sendLogFile(webServer, fileUrl);
     }
     else if (type == WS_GET_NODE_INFO) {
         sendNodeInfo(webServer, value);
@@ -702,6 +713,13 @@ void sendRecordedDevice(WebServer* webServer)
 
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures) {
     QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendLogFile(WebServer *webServer, QString fileDir)
+{
+    QString message = QString(WS_SEND_LOG_DATA) + "@" + fileDir;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

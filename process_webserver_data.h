@@ -69,6 +69,7 @@
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
+#define WS_SEND_LOG_DATA                    "LOG_DATA"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 
@@ -94,5 +95,6 @@ void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures);
+void sendLogFile(WebServer* webServer, QString fileDir);
 
 #endif // PROCESS_WEBSERVER_DATA_H

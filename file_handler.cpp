@@ -1,5 +1,10 @@
 #include <QDebug>
 #include <QRegularExpression>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDir>
+#include <QDate>
+
 
 #include "file_handler.h"
 #include "global_variables.h"
@@ -374,3 +379,172 @@ void setMantenedorPasswordFile(QString mantenedorPassword)
         webServerFile.close();
     }
 }
+
+void saveFailureLog(const QVector<Device *> &devices)
+{
+    QString folderPath = "fail";
+    QDir dir;
+    if (!dir.exists(folderPath)) { dir.mkpath(folderPath); } // make dir if missing
+
+    QString currentDate = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    QString filePath = folderPath + "/" + currentDate + ".csv";
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open fail log file: " << filePath;
+        return;
+    }
+
+    QTextStream out(&file);
+    out << "SubnetAddress;NodeSubnetAddress;RealAddress;SerialNumber;DeviceType;LampFail;CommunicationFail;DurationFail;BatteryFail;\n";
+
+    for (const auto& device : devices) {
+        if (!device->getIsConfigured()) continue;
+
+        uint16_t realAddress = device->getRealAddress();
+        int subnet = (realAddress - 1) / 64;
+        int nodeSubnet =(realAddress - 1) % 64;
+
+        QString uuidStr = device->serialNumberString();
+        uint8_t deviceType = device->getDeviceType();
+        bool lampFail = device->hasLampFailure();
+        bool communicationFail = device->hasCommunicationFailure();
+        bool durationFail = device->hasBatteryDurationFailure();
+        bool batteryFail = device->hasBatteryFailure();
+
+        out << subnet << ";" << nodeSubnet << ";" << realAddress << ";" << uuidStr << ";"
+            << deviceType << ";" << lampFail << ";" << communicationFail << ";"
+            << durationFail << ";" << batteryFail << ";\n";
+    }
+    qDebug() << "Failure log saved: " << filePath;
+    file.close();
+}
+
+void saveTestLog(Database *database)
+{
+    QString folderPath = "test";
+    QDir dir;
+    if (!dir.exists(folderPath)) { dir.mkpath(folderPath); }// make dir if missing
+
+    QString currentDate = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    QString filePath = folderPath + "/" + currentDate + ".csv";
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open test log file: " << filePath;
+        return;
+    }
+
+    QTextStream out(&file);
+    out << "GroupAddress;FunctionalEnable;DurationEnable;FunctionalDays;FunctionalTime;DurationPeriodicity;DurationDate;DurationTime\n";
+
+    QSqlQuery query;
+    query.prepare("SELECT GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime FROM Test");
+
+    if (!query.exec()) {
+        qDebug() << "Error executing SELECT query:" << query.lastError().text();
+        file.close();
+        return;
+    }
+
+    while (query.next()) {
+        QString groupAddress = query.value(0).toString();
+        bool functionalEnable = query.value(1).toBool();
+        bool durationEnable = query.value(2).toBool();
+        QString functionalDays = query.value(3).toString();
+        QString functionalTime = query.value(4).toString();
+        QString durationPeriodicity = query.value(5).toString();
+        QString durationDate = query.value(6).toString();
+        QString durationTime = query.value(7).toString();
+
+        out << groupAddress << ";" << functionalEnable << ";" << durationEnable << ";"
+            << functionalDays << ";" << functionalTime << ";"
+            << durationPeriodicity << ";" << durationDate << ";" << durationTime << ";\n";
+    }
+
+    file.close();
+    qDebug() << "Test log saved: " << filePath;
+}
+
+QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream &out, QString headerTitle)
+{
+    bool isFirstFile = true;
+
+    for (QDate date = start; date <= end; date = date.addDays(1)) {
+        QString filePath = folderPath + "/" + date.toString("yyyy-MM-dd") + ".csv";
+        QFile inputFile(filePath);
+
+        if (!inputFile.exists()) { continue; } // skip missing dates
+        if (!inputFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qDebug() << "Failed to open file: " << filePath;
+            continue;
+        }
+
+        QTextStream in(&inputFile);
+        bool isFirstLine = true;
+
+        if (isFirstFile) {
+            out << "\n# " << headerTitle << "\n";
+            isFirstFile = false;
+        }
+
+        out << "Date: " << date.toString("yyyy-MM-dd") << "\n";
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            if ((!line.startsWith("SubnetAddress") && !line.startsWith("GroupAddress")) || isFirstLine) {
+                out << line << "\n";
+            }
+            isFirstLine = false;
+        }
+        out << "\n";
+        inputFile.close();
+    }
+    return "";
+}
+
+QString generateLogReport(QString reportType, QString startDate, QString endDate)
+{
+    QString folderPath;
+    folderPath = (reportType == "fail") ? "fail" : "test";
+
+    QString outputFileName = folderPath + "_report_" + startDate + "_to_" + endDate + ".csv";
+    if (reportType == "all") {
+        outputFileName = "all_report_" + startDate + "_to_" + endDate + ".csv"; // for "all" reports
+    }
+
+    QString logsDirPath = "/normagrup/www/logs/";
+    QString outputFilePath = logsDirPath + outputFileName;
+
+    QDir dir;
+    if (!dir.exists(logsDirPath)) {
+        if (!dir.mkpath(logsDirPath)) {
+            qDebug() << "Failed to create logs directory: " << logsDirPath;
+            return "";
+        }
+    }
+
+    QFile outputFile(outputFilePath);
+    if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Failed to create report file: " << outputFilePath;
+        return "";
+    }
+
+    QTextStream out(&outputFile);
+    out << "# Report Type: " << reportType.toUpper() << "\n";
+    out << "# Date Range: " << startDate << " to " << endDate << "\n\n";
+
+    QDate start = QDate::fromString(startDate, "yyyy-MM-dd");
+    QDate end = QDate::fromString(endDate, "yyyy-MM-dd");
+
+    if (reportType == "fail" || reportType == "all") {
+        processLogFiles("fail", start, end, out, "Failure Reports");
+    }
+
+    if (reportType == "test" || reportType == "all") {
+        processLogFiles("test", start, end, out, "Test Reports");
+    }
+
+    outputFile.close();
+    return outputFileName; // return file name for webpage
+}
+

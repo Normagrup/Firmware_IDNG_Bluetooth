@@ -503,6 +503,17 @@ function processIsConfig(value)
         }
     }
 }
+function processLogData(value){
+    var parts = value.split("@");
+    let fileUrl = parts[0];
+
+    let link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = fileUrl.split('/').pop();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
 function processReceivedData(data) 
 {
@@ -530,6 +541,7 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
+    else if (type == 'LOG_DATA') { processLogData(value); }
 }
 
 function sendData(type, value) 

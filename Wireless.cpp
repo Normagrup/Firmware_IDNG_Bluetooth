@@ -8,6 +8,7 @@
 #include "dali_headers.h"
 #include <QSqlQuery>
 
+#include "file_handler.h"
 
 Wireless::Wireless(QObject *parent)
     : QObject{parent}
@@ -118,6 +119,15 @@ sendNewPolling:
             if (meshDevice[subnetCount][nodeSubnetCount].getIsConfigured()) {
                 sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
                 pollingData.pollingInProgress = true;
+
+                QVector<Device*> devices;
+                for (int i = 0; i < MAX_SUBNET; i++) {
+                    for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                        devices.append(&meshDevice[i][j]);
+                    }
+                }
+                saveFailureLog(devices);
+                saveTestLog(_database);
                 return;
             }
             nodeSubnetCount++;

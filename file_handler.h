@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QProcess>
+#include "Device.h"
 #include "Database.h"
 
 #define WEB_SERVER_DATA_PATH        "/normagrup/www/webserver.txt"
@@ -36,5 +37,9 @@ void setRtcTime(QString time);
 void setLocalDateTime(QStringList dateTime);
 void setAdminPasswordFile(QString adminPassword);
 void setMantenedorPasswordFile(QString mantenedorPassword);
+void saveFailureLog(const QVector<Device *> &devices);
+void saveTestLog(Database *database);
+QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream &out, QString headerTitle);
+QString generateLogReport(QString reportType, QString startDate, QString endDate);
 
 #endif // FILE_HANDLER_H
