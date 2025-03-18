@@ -741,7 +741,7 @@ void clearSystemData(Database* database,  UartPort* uartPort)
     for(int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
 
-        qDebug() << "[Embebido] Enviando CLEAR_MICRO_DATA al micro por UART...";
+    qDebug() << "[Embebido] Enviando CLEAR_ALL_DATA al micro por UART...";
     sendUartClearAllData(uartPort); 
 
     // Borrado del micro

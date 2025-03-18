@@ -26,7 +26,7 @@
 #define DEL_DEVICES                     0x13
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
-#define CLEAR_MICRO_DATA                0X18
+#define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
 #define WRITE_ID_CODE                   0x33
 #define FACTORY_ID_WROTE                0x35

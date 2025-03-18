@@ -688,13 +688,13 @@ void sendUartClearAllData(UartPort* _uartPort)
 
     qDebug() << "UART CLEAR ALL DATA SEND";
     qDebug() << "[Embebido] Preparando frame de CLEAR_ALL_DATA para el micro...";
-    unsigned char length = 1;
+    unsigned char length = 3;
 
     // Armar el frame en el mismo orden que tu protocolo
     frame.append(UART_HEADER);               
     frame.append(length);                   
     frame.append(UART_CONFIG_FRAME_TYPE);   
-    frame.append(CLEAR_MICRO_DATA);    
+    frame.append(CLEAR_ALL_DATA);    
 
     frame.append(UART_END);                  // Fin de frame
 
