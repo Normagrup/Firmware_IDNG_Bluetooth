@@ -393,9 +393,15 @@ function buildOnLoadMethodAdmin()
         var devicesCounter = iframeDocument.getElementById('devicesCounter');
         var failuresCounter = iframeDocument.getElementById('failuresCounter');
 
-        if (devicesCounter && failuresCounter) {
+        if (devicesCounter && failuresCounter)
             requestDevicesAndFailuresCount();
-        }
+
+        // Ventana: NETWORK
+        var totalDevices = iframeDocument.getElementById('totalDevices');
+        var totalFailures = iframeDocument.getElementById('totalFailures');
+
+        if (totalDevices && totalFailures)
+            requestDevicesAndFailuresCount();
 
         // TODO: Añadir el resto de componentes de otras ventanas y las consultas en función de la ventana
     };
