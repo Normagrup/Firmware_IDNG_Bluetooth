@@ -26,6 +26,7 @@
 #define DEL_DEVICES                     0x13
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
+#define CLEAR_MICRO_DATA                0X18
 #define FEATURES                        0x19
 #define WRITE_ID_CODE                   0x33
 #define FACTORY_ID_WROTE                0x35
@@ -58,5 +59,5 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
-
+void sendUartClearAllData(UartPort* _uartPort);
 #endif // PROCESS_UART_DATA_H

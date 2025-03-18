@@ -98,6 +98,6 @@ void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures);
-void clearSystemData(Database* database);
+void clearSystemData(Database* database,UartPort* uartPort);
 
 #endif // PROCESS_WEBSERVER_DATA_H

@@ -211,6 +211,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)dataChecked[3], 2, 16, QChar('0')).toUpper();
                     break;
 
+                    
                     default:
                     break;
                 }
@@ -681,6 +682,29 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
     }
 }
 
+void sendUartClearAllData(UartPort* _uartPort)
+{
+    QByteArray frame;
+
+    qDebug() << "UART CLEAR ALL DATA SEND";
+    qDebug() << "[Embebido] Preparando frame de CLEAR_ALL_DATA para el micro...";
+    unsigned char length = 1;
+
+    // Armar el frame en el mismo orden que tu protocolo
+    frame.append(UART_HEADER);               
+    frame.append(length);                   
+    frame.append(UART_CONFIG_FRAME_TYPE);   
+    frame.append(CLEAR_MICRO_DATA);    
+
+    frame.append(UART_END);                  // Fin de frame
+
+    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
+
+    // Enviar por la UART
+    _uartPort->sendData(frame);
+    qDebug() << "[Embebido] Frame de CLEAR_ALL_DATA enviado correctamente.";
+}
+
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)
 {
     QByteArray frame;
@@ -698,6 +722,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
     _uartPort->sendData(frame);
 }
+
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {

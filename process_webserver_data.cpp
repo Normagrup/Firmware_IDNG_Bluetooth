@@ -412,7 +412,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendTest(webServer, database, value);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
-        clearSystemData(database);
+        clearSystemData(database, uartPort);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -725,18 +725,24 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void clearSystemData(Database* database)
+void clearSystemData(Database* database,  UartPort* uartPort)
 {
     // Borrado de la BBDD del embebido
+    qDebug() << "[Embebido] Borrando datos de la BBDD...";
     database->clearAllData();
 
     // Borrado del modelo del embebido
+    qDebug() << "[Embebido] Borrando datos de meshDevice...";
     for(int i = 0; i < MAX_SUBNET; i++)
         for(int j = 0; j < MAX_NODES_SUBNET; j++)
             meshDevice[i][j].deleteDevice();
 
+    qDebug() << "[Embebido] Borrando datos de tests...";
     for(int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
+
+        qDebug() << "[Embebido] Enviando CLEAR_MICRO_DATA al micro por UART...";
+    sendUartClearAllData(uartPort); 
 
     // Borrado del micro
     // TODO
