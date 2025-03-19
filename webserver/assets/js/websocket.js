@@ -1295,3 +1295,7 @@ function loadGroups() {
 function loadGroupInfo(groupAddress) {
     sendData("GET_GROUP_INFO", groupAddress);
 }
+
+function lineScanningFunction() {
+    // TODO
+}
