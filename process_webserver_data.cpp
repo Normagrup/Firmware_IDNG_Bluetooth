@@ -208,9 +208,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(254); // 254 / 254 = 100%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, RECALL_MAX_LVL, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(254); // 254 / 254 = 100%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, RECALL_MAX_LVL, IS_NORMAL);
         }
     }
@@ -220,9 +228,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(0); // 0 / 254 = 0%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, OFF, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(0); // 0 / 254 = 0%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, OFF, IS_NORMAL);
         }
     }
@@ -232,9 +248,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(3); // 3 / 254 = 1%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, RECALL_MIN_LVL, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(3); // 3 / 254 = 1%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, RECALL_MIN_LVL, IS_NORMAL);
         }
     }
@@ -252,6 +276,20 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_ACTUAL_LVL) {
         uint16_t* values = getActualLvl(value);
+
+        if(values[0] < 0xC000) {
+            meshDevice[(values[0] - 1) / 64][(values[0] - 1) % 64].setActualLvl(values[1]);
+        }
+        else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(values[0]))
+                        device.setActualLvl(values[1]);
+                }
+            }
+        }
+
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
     else if (type == WS_SET_IDENTIFY) {

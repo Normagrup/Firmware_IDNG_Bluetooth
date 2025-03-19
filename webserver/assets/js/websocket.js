@@ -290,10 +290,16 @@ function processNodeInfo(value)
 
     actualLvl = actualLvl / 254 * 100;
     if (actualLvl > 100) { actualLvl = 100; }
-    var actualLvlNum = parseFloat(actualLvl);
-    var actualLvlFormatted = (actualLvlNum % 1 === 0) ? actualLvlNum.toString() : actualLvlNum.toFixed(2);
-    lvlIcon.innerHTML = "<b>" + actualLvlFormatted + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvlFormatted + "%, #fff " + actualLvlFormatted + "%)";
+    var actualLvlNum = parseFloat(actualLvl).toFixed(0);
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider")
+    lvlSlider.value = actualLvlNum;
+
+    lvlIcon.innerHTML = "<b>" + actualLvlNum + "%" + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvlNum + "%, #fff " + actualLvlNum + "%)";
+
+    updateAllDisplayedButtons();
+    requestDevicesAndFailuresCount();
 
     if (communicationFailure != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
@@ -418,10 +424,16 @@ function processGroupInfo(value)
 
     averageLvl = averageLvl / 254 * 100;
     if (averageLvl > 100) { averageLvl = 100; }
-    var averageLvlNum = parseFloat(averageLvl);
-    var averageLvlFormatted = (averageLvlNum % 1 === 0) ? averageLvlNum.toString() : averageLvlNum.toFixed(2);
-    lvlIcon.innerHTML = "<b>" + averageLvlFormatted + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlFormatted + "%, #fff " + averageLvlFormatted + "%)";
+    var averageLvlNum = parseFloat(averageLvl).toFixed(0);
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider")
+    lvlSlider.value = averageLvlNum;
+
+    lvlIcon.innerHTML = "<b>" + averageLvlNum + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlNum + "%, #fff " + averageLvlNum + "%)";
+
+    updateAllDisplayedButtons();
+    requestDevicesAndFailuresCount();
 
     if (comFailures != 0) { 
         comIcon.style.backgroundImage = "url('images/comIconOnFail.png')";
@@ -977,16 +989,35 @@ function delGroup()
 function maxButton() 
 {
     sendData("SET_MAX", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function minButton() 
 {
     sendData("SET_MIN", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    }
+    else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }  
 }
 
 function offButton() 
 {
     sendData("SET_OFF", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function identifyButton() 
@@ -1006,12 +1037,14 @@ function rebootButton()
 
 function sliderInput() 
 {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var sliderValue = iframeDocument.getElementById("lvlSlider").value;
     var message = addressClicked + ' ' + sliderValue;
     sendData("SET_ACTUAL_LVL", message);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function facSettingsButton() 
@@ -1294,4 +1327,16 @@ function loadGroups() {
 
 function loadGroupInfo(groupAddress) {
     sendData("GET_GROUP_INFO", groupAddress);
+}
+
+function updateAllDisplayedButtons() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    const container = iframeDocument.getElementById("node-container");
+    const buttons = container.querySelectorAll('button[data-device]');
+    buttons.forEach(button => {
+        const device = button.getAttribute('data-device');
+        isAnExistingDevice(device);
+    });
 }

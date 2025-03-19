@@ -406,3 +406,10 @@ function buildOnLoadMethodAdmin()
         // TODO: Añadir el resto de componentes de otras ventanas y las consultas en función de la ventana
     };
 }
+
+function transformDecimalGroupAddressIntoHexGroupAddress(value) {
+    // Ejemplo: Recibe 49153 (la dirección del grupo de emergencia) y devuelve "C001" (la dirección en hexadecimal)
+    let hex = value .toString(16);
+    hex = hex.toUpperCase();
+    return hex;
+}

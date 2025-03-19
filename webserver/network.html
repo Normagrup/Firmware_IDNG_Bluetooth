@@ -33,8 +33,8 @@
                 
                 <div class="popup-polling-subcontainer">
                     <button id="comIcon" style="background-size: 80%; background-image: url('images/comIcon.png');"></button>
-                    <button id="lvlIcon"></button>
                     <button id="emergencyIcon" style="background-size: 80%; background-image: url('images/emergencyIcon.png');"></button>
+                    <button id="lvlIcon"></button>
                 </div>
             </div>
             
@@ -159,6 +159,18 @@
         window.onload = function() {
             parent.changeAddress();
             parent.createGroupButtons();
+
+            function handleButtonClick(e) {
+                var button = e.currentTarget;
+                button.classList.add("clicked");
+                setTimeout(function() {
+                    button.classList.remove("clicked");
+                }, 400);
+            }
+
+            document.querySelectorAll("button").forEach(function(btn) {
+                btn.addEventListener("click", handleButtonClick);
+            });
         };
     </script>
 </body>
