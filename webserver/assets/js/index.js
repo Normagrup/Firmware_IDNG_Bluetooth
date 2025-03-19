@@ -22,13 +22,4 @@ function loadPage(page)
 {
 	var frame = window.top.document.getElementById("mainframe");
 	frame.src = page;
-
-	frame.onload = function () {
-        var iframeDocument = frame.contentDocument || frame.contentWindow.document;
-
-        // Check which page is loaded and request data accordingly
-        if (page === 'summary.html' || page === 'network.html') {
-            requestDevicesAndFailuresCount();
-        }
-    };
 }

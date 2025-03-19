@@ -49,6 +49,7 @@
 #define WS_SET_DURATION_TEST                "SET_DURATION_TEST"
 #define WS_SET_STOP                         "SET_STOP"
 
+#define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -74,6 +75,7 @@
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
+bool isCommissionInProgress(WebServer* webServer);
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
@@ -97,7 +99,8 @@ void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures);
 void clearSystemData(Database* database,UartPort* uartPort);
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
+
 
 #endif // PROCESS_WEBSERVER_DATA_H

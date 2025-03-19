@@ -11,6 +11,11 @@ socket.onmessage = function(event) {
     processReceivedData(event.data);
 }
 
+function processAlertCommission(value)
+{
+    alert(value);
+}
+
 function processLoginInfo(value) 
 {
     var signErrorLabel = document.getElementById('signError');
@@ -146,9 +151,6 @@ function confirmStartCommission(value)
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
-
-    if (window.parent)
-        window.parent.document.body.style.pointerEvents = "none"; // Disable clicks on the entire parent page
 }
 
 function startAddingDevices(value) 
@@ -577,9 +579,6 @@ function processEndAutoCommission(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
-
-    if (window.parent)
-        window.parent.document.body.style.pointerEvents = "auto"; // Enable clicks on the parent page again
 }
 
 function processFactoryIDWrote(value) 
@@ -631,8 +630,10 @@ function processIsConfig(value)
     var sn = parts[1];
     var isConfig = parts[2];
     var hasFailures = parts[3];
+    var onOffStatus = parts[4];
     var configured = (isConfig === "true");
     var failed = (hasFailures === "true");
+    var onOff = (onOffStatus === "on");
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -651,6 +652,7 @@ function processIsConfig(value)
                 button.classList.add("blue");
             }
             button.disabled = false;
+            button.innerHTML += '<span class="status-indicator ' + (onOff ? 'on-state' : 'off-state') + '"></span>';
         } else {
             button.classList.remove("red", "blue"); 
             button.classList.add("gray");
@@ -665,7 +667,8 @@ function processReceivedData(data)
     var type = dataArray[0];
     var value = dataArray[1];
     
-    if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
+    if(type == 'ALERT_COMMISSION') { processAlertCommission(value); }
+    else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
@@ -976,19 +979,29 @@ function maxButton()
     sendData("SET_MAX", addressClicked);
 }
 
-function offButton() 
-{
-    sendData("SET_OFF", addressClicked);
-}
-
 function minButton() 
 {
     sendData("SET_MIN", addressClicked);
 }
 
+function offButton() 
+{
+    sendData("SET_OFF", addressClicked);
+}
+
+function identifyButton() 
+{
+    sendData("SET_IDENTIFY", addressClicked);
+}
+
 function resetButton() 
 {
     sendData("SET_RESET", addressClicked);
+}
+
+function rebootButton() 
+{
+    sendData("SET_REBOOT", addressClicked);
 }
 
 function sliderInput() 
@@ -1001,19 +1014,9 @@ function sliderInput()
     sendData("SET_ACTUAL_LVL", message);
 }
 
-function identifyButton() 
-{
-    sendData("SET_IDENTIFY", addressClicked);
-}
-
 function facSettingsButton() 
 {
     sendData("SET_FACTORY_SETTINGS", addressClicked);
-}
-
-function rebootButton() 
-{
-    sendData("SET_REBOOT", addressClicked);
 }
 
 function funcTestButton()
