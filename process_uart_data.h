@@ -39,6 +39,8 @@
 #define CONFIRM_NEW_ITERATION           0x29
 #define CONFIRM_CHANGE_RELAY            0x31
 #define DEBUG                           0x90
+#define LINE_SCAN                       0x20
+#define LINE_SCAN_SEND                  0x22
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -60,4 +62,5 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
+void requestMicroDatabase(UartPort* _uartPort);
 #endif // PROCESS_UART_DATA_H

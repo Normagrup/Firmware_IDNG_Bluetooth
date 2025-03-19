@@ -1297,5 +1297,5 @@ function loadGroupInfo(groupAddress) {
 }
 
 function lineScanningFunction() {
-    // TODO
+    sendData("SET_LINE_SCAN", "");
 }

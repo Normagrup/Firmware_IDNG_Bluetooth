@@ -47,6 +47,18 @@ public:
     void removeTestEntry(QString address);
 
     void clearAllData(void);
+    void addNode(uint16_t nodeAddress);
+    void addOrUpdateNode(
+        uint8_t subnetAddress,
+        uint8_t nodeSubnetAddress,
+        uint16_t realAddress,
+        const QString &uuid,
+        const QString &groupSub,
+        uint8_t deviceType,
+        uint8_t ratedDuration,
+        uint8_t emergencyFeatures,
+        uint8_t physicalMinLvl
+    );
 
 signals:
 
