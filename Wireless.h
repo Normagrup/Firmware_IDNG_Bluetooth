@@ -28,6 +28,7 @@ private slots:
     void addDeviceTimerHandler(void);
     void confirmAddDeviceTimerHandler(void);
     void newIterationTimerHandler(void);
+    void scheduleDailyLogSave();
 
 signals:
 

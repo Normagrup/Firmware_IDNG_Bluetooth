@@ -7,6 +7,7 @@
 #include "aux_functions.h"
 #include "dali_headers.h"
 #include <QSqlQuery>
+#include <QDateTime>
 
 #include "file_handler.h"
 
@@ -17,6 +18,12 @@ Wireless::Wireless(QObject *parent)
     _uartPort = new UartPort(this);
     _webServer = new WebServer(this);
     _database = new Database(this);
+
+    QTimer *dailyLogTimer = new QTimer(this);
+    connect(dailyLogTimer, &QTimer::timeout, this, &Wireless::scheduleDailyLogSave);
+    dailyLogTimer->start(LOG_DATA_TIME_MS); //checks every 5 min
+    qDebug() << "Daily log_saver timer started...";
+
     pollingTimer.setInterval(POLLING_TIMER_MS);
     pollingTimer.stop();
     testTimer.setInterval(TEST_TIMER_MS);
@@ -119,15 +126,6 @@ sendNewPolling:
             if (meshDevice[subnetCount][nodeSubnetCount].getIsConfigured()) {
                 sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
                 pollingData.pollingInProgress = true;
-
-                QVector<Device*> devices;
-                for (int i = 0; i < MAX_SUBNET; i++) {
-                    for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-                        devices.append(&meshDevice[i][j]);
-                    }
-                }
-                saveFailureLog(devices);
-                saveTestLog(_database);
                 return;
             }
             nodeSubnetCount++;
@@ -264,3 +262,25 @@ void Wireless::newIterationTimerHandler()
     qDebug() << "NEW ITERATION TIMER";
     sendUartNewIteration(_uartPort);
 }
+
+void Wireless::scheduleDailyLogSave()
+{
+    QTime now = QTime::currentTime();
+    qDebug() << " Checking Time: " << now.toString("hh:mm:ss");
+
+    if(now.hour() == 5 && now.minute() == 0 && !logsSavedToday){
+        QVector<Device*> devices;
+        for (int i = 0; i < MAX_SUBNET; i++) {
+            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                devices.append(&meshDevice[i][j]);
+            }
+        }
+        saveFailureLog(devices);
+        saveTestLog(_database);
+        logsSavedToday = true;
+    }
+    if (now.hour() == 0 && now.minute() == 0) {
+        logsSavedToday = false;
+    }
+}
+

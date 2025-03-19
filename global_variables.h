@@ -24,6 +24,7 @@ extern Pollings polling;
 extern Tests tests[MAX_TEST];
 
 extern bool isCommissioning; // logic to prevent new commands
+extern bool logsSavedToday; // to check if today´s log is saved
 
 extern uint8_t subnetCount, nodeSubnetCount;
 extern uint16_t lastNetAddressClicked;

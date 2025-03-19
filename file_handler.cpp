@@ -8,6 +8,7 @@
 
 #include "file_handler.h"
 #include "global_variables.h"
+#include "Device.h"
 
 void setWebServerData(Database* database)
 {
@@ -382,7 +383,7 @@ void setMantenedorPasswordFile(QString mantenedorPassword)
 
 void saveFailureLog(const QVector<Device *> &devices)
 {
-    QString folderPath = "fail";
+    QString folderPath = QString(LOG_DATA_PATH) + "fail";
     QDir dir;
     if (!dir.exists(folderPath)) { dir.mkpath(folderPath); } // make dir if missing
 
@@ -422,7 +423,7 @@ void saveFailureLog(const QVector<Device *> &devices)
 
 void saveTestLog(Database *database)
 {
-    QString folderPath = "test";
+    QString folderPath = QString(LOG_DATA_PATH) + "test";
     QDir dir;
     if (!dir.exists(folderPath)) { dir.mkpath(folderPath); }// make dir if missing
 
@@ -468,7 +469,8 @@ void saveTestLog(Database *database)
 
 QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream &out, QString headerTitle)
 {
-    bool isFirstFile = true;
+    bool isFirstFile = true; // to control main header
+    bool isHeaderWritten = false; // to control adding header data once
 
     for (QDate date = start; date <= end; date = date.addDays(1)) {
         QString filePath = folderPath + "/" + date.toString("yyyy-MM-dd") + ".csv";
@@ -481,20 +483,23 @@ QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream 
         }
 
         QTextStream in(&inputFile);
-        bool isFirstLine = true;
 
         if (isFirstFile) {
-            out << "\n# " << headerTitle << "\n";
+            out << "\n# " << headerTitle << "\n"; //add main header once
             isFirstFile = false;
         }
 
         out << "Date: " << date.toString("yyyy-MM-dd") << "\n";
+
+        QString firstLine = in.readLine();
+        if (!isHeaderWritten) {
+            out << firstLine << "\n"; //  add header data once
+            isHeaderWritten = true;
+        }
+
         while (!in.atEnd()) {
             QString line = in.readLine();
-            if ((!line.startsWith("SubnetAddress") && !line.startsWith("GroupAddress")) || isFirstLine) {
-                out << line << "\n";
-            }
-            isFirstLine = false;
+            out << line << "\n";
         }
         out << "\n";
         inputFile.close();
@@ -512,7 +517,7 @@ QString generateLogReport(QString reportType, QString startDate, QString endDate
         outputFileName = "all_report_" + startDate + "_to_" + endDate + ".csv"; // for "all" reports
     }
 
-    QString logsDirPath = "/normagrup/www/logs/";
+    QString logsDirPath = LOG_DATA_PATH;
     QString outputFilePath = logsDirPath + outputFileName;
 
     QDir dir;
@@ -537,14 +542,33 @@ QString generateLogReport(QString reportType, QString startDate, QString endDate
     QDate end = QDate::fromString(endDate, "yyyy-MM-dd");
 
     if (reportType == "fail" || reportType == "all") {
-        processLogFiles("fail", start, end, out, "Failure Reports");
+        processLogFiles(logsDirPath + "fail", start, end, out, "Failure Reports");
     }
 
     if (reportType == "test" || reportType == "all") {
-        processLogFiles("test", start, end, out, "Test Reports");
+        processLogFiles(logsDirPath + "test", start, end, out, "Test Reports");
     }
 
     outputFile.close();
     return outputFileName; // return file name for webpage
 }
 
+void LogSaveNow(QString reportType, Database *database)
+{
+    QVector<Device*> devices;
+    for (int i = 0; i < MAX_SUBNET; i++) {
+        for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+            devices.append(&meshDevice[i][j]);
+        }
+    }
+    if(reportType == "fail"){
+        saveFailureLog(devices);
+    }
+    else if(reportType == "test"){
+        saveTestLog(database);
+    }
+    else {
+        saveFailureLog(devices);
+        saveTestLog(database);
+    }
+}

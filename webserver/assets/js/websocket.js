@@ -504,12 +504,9 @@ function processIsConfig(value)
     }
 }
 function processLogData(value){
-    var parts = value.split("@");
-    let fileUrl = parts[0];
-
     let link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = fileUrl.split('/').pop();
+    link.href = value;
+    link.download = value.split('/').pop();
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

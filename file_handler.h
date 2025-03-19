@@ -10,6 +10,7 @@
 #define WEB_SERVER_DATA_PATH        "/normagrup/www/webserver.txt"
 #define MAC_ADDRESS_PATH            "/sys/class/net/eth0/address"
 #define INTERFACES_PATH             "/etc/network/interfaces"
+#define LOG_DATA_PATH               "/normagrup/logs/"
 
 void setWebServerData(Database* database);
 
@@ -41,5 +42,6 @@ void saveFailureLog(const QVector<Device *> &devices);
 void saveTestLog(Database *database);
 QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream &out, QString headerTitle);
 QString generateLogReport(QString reportType, QString startDate, QString endDate);
+void LogSaveNow(QString reportType, Database *database);
 
 #endif // FILE_HANDLER_H

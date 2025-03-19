@@ -12,6 +12,7 @@ Pollings polling;
 Tests tests[MAX_TEST];
 
 bool isCommissioning = false; // logic to prevent new commands
+bool logsSavedToday = false;
 
 QTimer pollingTimer;
 QTimer testTimer;
