@@ -394,3 +394,29 @@ label {
 .status-indicator.off-state {
     background-color: #000;
 }
+
+#lineScanningButton {
+    margin-left: auto;
+    margin-right: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    background-color: #4682b4;
+    color: #fff;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  #lineScanningButton:hover {
+    background-color: #63e8f0;
+  }
+  
+  .button-icon {
+    width: 20px;   /* Ajusta según lo necesites */
+    height: 20px;
+  }
+  

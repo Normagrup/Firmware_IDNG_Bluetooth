@@ -37,6 +37,7 @@
 #define WS_GET_TEST                         "GET_TEST"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
 
+#define WS_SET_LINE_SCAN                        "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
 #define WS_SET_MIN                          "SET_MIN"

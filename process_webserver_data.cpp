@@ -29,6 +29,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartScannedDevices(uartPort);
     }
+    else if (type == WS_SET_LINE_SCAN) {
+        if(isCommissionInProgress(webServer)) { return; }
+        requestMicroDatabase(uartPort);
+        
+    }
     else if (type == WS_GET_IP_CONFIG) {
         QStringList messages = database->getInterfaceParameters();
         QString message = messages.join(" ");
@@ -98,11 +103,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_DELETE_DEVICE) {
         if(isCommissionInProgress(webServer)) { return; }
 
-        //uint16_t nodeNetAddress = getNodeNetAddress(value);
-        //uint16_t  nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-        //meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-        //database->deleteNode(nodeAddress);
-        //sendUartDelDevice(uartPort, 0xFFFF);
         uint16_t nodeNetAddress = getNodeNetAddress(value);
         uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
         printf(" Intentando eliminar nodo...\n");
@@ -823,6 +823,5 @@ void clearSystemData(Database* database,  UartPort* uartPort)
     qDebug() << "[Embebido] Enviando CLEAR_ALL_DATA al micro por UART...";
     sendUartClearAllData(uartPort); 
 
-    // Borrado del micro
-    // TODO
 }
+

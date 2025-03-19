@@ -1340,3 +1340,7 @@ function updateAllDisplayedButtons() {
         isAnExistingDevice(device);
     });
 }
+
+function lineScanningFunction() {
+    sendData("SET_LINE_SCAN", "");
+}
