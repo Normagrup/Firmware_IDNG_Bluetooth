@@ -145,6 +145,10 @@ label {
     outline: 2px solid #63e8f0;
 }
 
+.range-container button {
+    height: 60%;
+}
+
 .node-container {
     display: grid;
     grid-template-columns: repeat(8, auto);
@@ -395,9 +399,12 @@ label {
     background-color: #000;
 }
 
-#lineScanningButton {
+.line-scanning-container {
     margin-left: auto;
     margin-right: 20px;
+}
+
+.line-scanning-container button {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -409,14 +416,22 @@ label {
     color: #fff;
     border-radius: 5px;
     transition: background-color 0.3s ease;
-  }
+}
   
-  #lineScanningButton:hover {
+.line-scanning-container button:hover {
     background-color: #63e8f0;
-  }
-  
-  .button-icon {
+}
+
+#feedbackLineScanning {
+    color: #4682b4;
+    visibility: hidden;
+    opacity: 0;
+    margin-right: 10px;
+    transition: opacity 2s ease-out;
+}
+
+.button-icon {
     width: 20px;   /* Ajusta según lo necesites */
     height: 20px;
-  }
+}
   

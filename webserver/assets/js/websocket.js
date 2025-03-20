@@ -330,7 +330,7 @@ function processGroupBasicInfo(value) {
         container.appendChild(groupButton);
     }
 
-    // Procesado si el mensaje se recibe en s_wireless.html o s_tests.html: Se crea el elemento en el selector
+    // Procesado si el mensaje se recibe en s_tests.html: Se crea el elemento en el selector
     var groupSelector = iframeDocument.getElementById('groupList');
     if(groupSelector)
     {
@@ -339,16 +339,6 @@ function processGroupBasicInfo(value) {
         group.textContent = groupName;
 
         groupSelector.appendChild(group);
-    }
-
-    var groupSelector2 = iframeDocument.getElementById('groupList2');
-    if(groupSelector2)
-    {
-        var group2 = iframeDocument.createElement('option');
-        group2.value = groupAddress;
-        group2.textContent = groupName;
-
-        groupSelector2.appendChild(group2);
     }
 }
 
@@ -1352,4 +1342,20 @@ function updateAllDisplayedButtons() {
 
 function lineScanningFunction() {
     sendData("SET_LINE_SCAN", "");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var feedbackLabel = iframeDocument.getElementById("feedbackLineScanning");
+    
+    feedbackLabel.style.visibility = "visible";
+    feedbackLabel.style.opacity = "1";
+    
+    setTimeout(function(){
+        feedbackLabel.style.opacity = "0";
+        
+        setTimeout(function(){
+            feedbackLabel.style.visibility = "hidden";
+        }, 2000);
+    }, 2000);
 }
