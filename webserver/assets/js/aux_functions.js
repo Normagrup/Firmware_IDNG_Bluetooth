@@ -108,6 +108,7 @@ function createSettingsButton()
     var settingsIPConfig = document.createElement('li');
     var settingsTime = document.createElement('li');
     var settingsWirelessConfig = document.createElement('li');
+    var settingsGroupsConfig = document.createElement('li');
     var settingsLogs = document.createElement('li');
     var settingsTests = document.createElement('li');
     var settingsUpdateDevice = document.createElement('li');
@@ -124,6 +125,10 @@ function createSettingsButton()
     var settingsWirelessConfigLink = document.createElement('a');
     settingsWirelessConfigLink.onclick = function() { loadPage('s_wireless.html') };
     settingsWirelessConfigLink.textContent = "Wireless Config";
+
+    var settingsGroupsConfigLink = document.createElement('a');
+    settingsGroupsConfigLink.onclick = function() { loadPage('s_groups.html') };
+    settingsGroupsConfigLink.textContent = "Groups Config";
 
     var settingsLogsLink = document.createElement('a');
     settingsLogsLink.onclick = function() { loadPage('s_logs.html') };
@@ -144,6 +149,7 @@ function createSettingsButton()
     settingsIPConfig.appendChild(settingsIPConfigLink);
     settingsTime.appendChild(settingsTimeLink);
     settingsWirelessConfig.appendChild(settingsWirelessConfigLink);
+    settingsGroupsConfig.appendChild(settingsGroupsConfigLink);
     settingsLogs.appendChild(settingsLogsLink);
     settingsTests.appendChild(settingsTestsLink);
     settingsUpdateDevice.appendChild(settingsUpdateDeviceLink);
@@ -152,6 +158,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsIPConfig);
     settingsButtonMenu.appendChild(settingsTime);
     settingsButtonMenu.appendChild(settingsWirelessConfig);
+    settingsButtonMenu.appendChild(settingsGroupsConfig);
     settingsButtonMenu.appendChild(settingsLogs);
     settingsButtonMenu.appendChild(settingsTests);
     settingsButtonMenu.appendChild(settingsUpdateDevice);
