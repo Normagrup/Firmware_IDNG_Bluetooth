@@ -765,6 +765,9 @@ function sendDateTime()
 
     var message = date + ' ' + time;
     sendData("SET_DATE_TIME", message);
+
+    var timeLabel = iframeDocument.getElementById('timeLabel');
+    timeLabel.style.visibility = "visible";
 }
 
 function rebootDevice()
@@ -1194,7 +1197,13 @@ function sendFile()
 
 function clearAllData()
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
     sendData("SET_CLEAR_ALL_DATA", "");
+
+    var clearDataLabel = iframeDocument.getElementById('clearDataLabel');
+    clearDataLabel.style.visibility = "visible";
 }
 
 function getLogs()
