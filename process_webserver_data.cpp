@@ -768,7 +768,7 @@ void sendGroupNodes(WebServer* webServer, QString groupAddress) {
                 else
                     message = messageNotIncludedNodeInit;
 
-                message += QString::number(device.getRealAddress()) + "_" + device.serialNumberString();
+                message += QString::number(i * 64 + j + 1) + "_" + device.serialNumberString();
 
                 if (webServer != nullptr) { webServer->sendData(message); }
             }
