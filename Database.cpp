@@ -667,3 +667,26 @@ void Database::removeTestEntry(QString address)
 
     if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
 }
+
+QList<QStringList> Database::getAllTestLogs()
+{
+    QList<QStringList> results;
+
+    QSqlQuery query;
+    query.prepare("SELECT GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime FROM Test");
+
+    if (!query.exec()) {
+        qDebug() << "Error in getAllTestLogs:" << query.lastError().text();
+        return results;
+    }
+
+    while (query.next()) {
+        QStringList row;
+        for (int i = 0; i < 8; ++i) {
+            row << query.value(i).toString();
+        }
+        results.append(row);
+    }
+
+    return results;
+}

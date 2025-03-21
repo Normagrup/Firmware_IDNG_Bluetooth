@@ -21,7 +21,7 @@ Wireless::Wireless(QObject *parent)
 
     QTimer *dailyLogTimer = new QTimer(this);
     connect(dailyLogTimer, &QTimer::timeout, this, &Wireless::scheduleDailyLogSave);
-    dailyLogTimer->start(LOG_DATA_TIME_MS); //checks every 5 min
+    dailyLogTimer->start(LOG_DATA_TIME_MS); //checks every min
     qDebug() << "Daily log_saver timer started...";
 
     pollingTimer.setInterval(POLLING_TIMER_MS);
@@ -265,22 +265,19 @@ void Wireless::newIterationTimerHandler()
 
 void Wireless::scheduleDailyLogSave()
 {
-    QTime now = QTime::currentTime();
-    qDebug() << " Checking Time: " << now.toString("hh:mm:ss");
+    QString timeString = getLocalTime();
+    QTime antennaTime = QTime::fromString(timeString, "hh:mm:ss");
 
-    if(now.hour() == 5 && now.minute() == 0 && !logsSavedToday){
-        QVector<Device*> devices;
-        for (int i = 0; i < MAX_SUBNET; i++) {
-            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-                devices.append(&meshDevice[i][j]);
-            }
+    if(antennaTime.isValid()){
+        if(antennaTime.hour() == 5 && antennaTime.minute() == 0 && !logsSavedToday){
+            saveFailureLog();
+            saveTestLog(_database);
+            logsSavedToday = true;
+            qDebug()<< "Daily Loged data saved...";
         }
-        saveFailureLog(devices);
-        saveTestLog(_database);
-        logsSavedToday = true;
-    }
-    if (now.hour() == 0 && now.minute() == 0) {
-        logsSavedToday = false;
+        if (antennaTime.hour() == 0 && antennaTime.minute() == 0) {
+            logsSavedToday = false;
+        }
     }
 }
 

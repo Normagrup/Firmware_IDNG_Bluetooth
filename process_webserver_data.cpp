@@ -365,15 +365,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QString startDate = webServerParts[1];
         QString endDate = webServerParts[2];
         QString downloadPath;
-        QDate dateNow = QDate::currentDate();
+        QDate dateNow = QDate::fromString(getLocalDate(), "yyyy-MM-dd");
         QDate endDateConverted = QDate::fromString(endDate, "yyyy-MM-dd");
 
-        if(dateNow == endDateConverted){
-            LogSaveNow(reportType, database);
-
+        if (dateNow == endDateConverted) {
+            logSaveNow(reportType, database);
         }
+
         downloadPath = generateLogReport(reportType, startDate, endDate);
-        QStringList ConfigInfo = database->getInterfaceParameters();
+        QStringList ConfigInfo = database -> getInterfaceParameters();
         QString serverIP = ConfigInfo.first();
         QString fileUrl = "http://" + serverIP + "/logs/" + downloadPath;
         sendLogFile(webServer, fileUrl);

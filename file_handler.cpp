@@ -381,88 +381,68 @@ void setMantenedorPasswordFile(QString mantenedorPassword)
     }
 }
 
-void saveFailureLog(const QVector<Device *> &devices)
+void saveFailureLog() 
 {
     QString folderPath = QString(LOG_DATA_PATH) + "fail";
     QDir dir;
-    if (!dir.exists(folderPath)) { dir.mkpath(folderPath); } // make dir if missing
-
-    QString currentDate = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    if (!dir.exists(folderPath)) {
+      dir.mkpath(folderPath);
+    } // make dir if missing
+  
+    QString currentDate = getLocalDate();
     QString filePath = folderPath + "/" + currentDate + ".csv";
-
+  
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "Failed to open fail log file: " << filePath;
-        return;
+      qDebug() << "Failed to open fail log file: " << filePath;
+      return;
     }
-
-    QTextStream out(&file);
+  
+    QTextStream out( & file);
     out << "SubnetAddress;NodeSubnetAddress;RealAddress;SerialNumber;DeviceType;LampFail;CommunicationFail;DurationFail;BatteryFail;\n";
-
-    for (const auto& device : devices) {
-        if (!device->getIsConfigured()) continue;
-
-        uint16_t realAddress = device->getRealAddress();
-        int subnet = (realAddress - 1) / 64;
-        int nodeSubnet =(realAddress - 1) % 64;
-
-        QString uuidStr = device->serialNumberString();
-        uint8_t deviceType = device->getDeviceType();
-        bool lampFail = device->hasLampFailure();
-        bool communicationFail = device->hasCommunicationFailure();
-        bool durationFail = device->hasBatteryDurationFailure();
-        bool batteryFail = device->hasBatteryFailure();
-
-        out << subnet << ";" << nodeSubnet << ";" << realAddress << ";" << uuidStr << ";"
-            << deviceType << ";" << lampFail << ";" << communicationFail << ";"
-            << durationFail << ";" << batteryFail << ";\n";
+  
+    for (int subnet = 0; subnet < MAX_SUBNET; ++subnet) {
+      for (int node = 0; node < MAX_NODES_SUBNET; ++node) {
+        Device * device = & meshDevice[subnet][node];
+        if (!device -> getIsConfigured()) continue;
+  
+        out << subnet << ";" << node << ";" << device -> getRealAddress() << ";" <<
+          device -> serialNumberString() << ";" << device -> getDeviceType() << ";" <<
+          device -> hasLampFailure() << ";" << device -> hasCommunicationFailure() << ";" <<
+          device -> hasBatteryDurationFailure() << ";" << device -> hasBatteryFailure() << ";\n";
+      }
     }
+  
     qDebug() << "Failure log saved: " << filePath;
     file.close();
 }
 
-void saveTestLog(Database *database)
+void saveTestLog(Database * database) 
 {
     QString folderPath = QString(LOG_DATA_PATH) + "test";
     QDir dir;
-    if (!dir.exists(folderPath)) { dir.mkpath(folderPath); }// make dir if missing
-
-    QString currentDate = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    if (!dir.exists(folderPath)) {
+      dir.mkpath(folderPath);
+    } // make dir if missing
+  
+    QString currentDate = getLocalDate();
     QString filePath = folderPath + "/" + currentDate + ".csv";
-
+  
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "Failed to open test log file: " << filePath;
-        return;
+      qDebug() << "Failed to open test log file: " << filePath;
+      return;
     }
-
-    QTextStream out(&file);
+  
+    QTextStream out( & file);
     out << "GroupAddress;FunctionalEnable;DurationEnable;FunctionalDays;FunctionalTime;DurationPeriodicity;DurationDate;DurationTime\n";
-
-    QSqlQuery query;
-    query.prepare("SELECT GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime FROM Test");
-
-    if (!query.exec()) {
-        qDebug() << "Error executing SELECT query:" << query.lastError().text();
-        file.close();
-        return;
+  
+    QList < QStringList > testLogData = database -> getAllTestLogs();
+  
+    for (const QStringList & row: testLogData) {
+      out << row.join(";") << ";\n";
     }
-
-    while (query.next()) {
-        QString groupAddress = query.value(0).toString();
-        bool functionalEnable = query.value(1).toBool();
-        bool durationEnable = query.value(2).toBool();
-        QString functionalDays = query.value(3).toString();
-        QString functionalTime = query.value(4).toString();
-        QString durationPeriodicity = query.value(5).toString();
-        QString durationDate = query.value(6).toString();
-        QString durationTime = query.value(7).toString();
-
-        out << groupAddress << ";" << functionalEnable << ";" << durationEnable << ";"
-            << functionalDays << ";" << functionalTime << ";"
-            << durationPeriodicity << ";" << durationDate << ";" << durationTime << ";\n";
-    }
-
+  
     file.close();
     qDebug() << "Test log saved: " << filePath;
 }
@@ -553,22 +533,16 @@ QString generateLogReport(QString reportType, QString startDate, QString endDate
     return outputFileName; // return file name for webpage
 }
 
-void LogSaveNow(QString reportType, Database *database)
+void logSaveNow(QString reportType, Database *database)
 {
-    QVector<Device*> devices;
-    for (int i = 0; i < MAX_SUBNET; i++) {
-        for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-            devices.append(&meshDevice[i][j]);
-        }
-    }
     if(reportType == "fail"){
-        saveFailureLog(devices);
+        saveFailureLog();
     }
     else if(reportType == "test"){
         saveTestLog(database);
     }
     else {
-        saveFailureLog(devices);
+        saveFailureLog();
         saveTestLog(database);
     }
 }

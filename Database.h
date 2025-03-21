@@ -44,6 +44,7 @@ public:
     void createTestEntry(QString address);
     void removeGroup(QString address);
     void removeTestEntry(QString address);
+    QList<QStringList> getAllTestLogs();
 
 signals:
 

@@ -11,7 +11,7 @@
 #define GROUP_FRAME_TIMER_MS            2000
 #define COM_TIMER_MS                    2000
 #define WEBSERVER_SEND_TIME_MS          50
-#define LOG_DATA_TIME_MS                300000
+#define LOG_DATA_TIME_MS                60000
 
 void delay(uint16_t deadTimeMs);
 
