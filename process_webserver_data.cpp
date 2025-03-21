@@ -193,13 +193,21 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDelGroup(uartPort, address, database);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
-        createGroup(value, database);
+        database->createGroup();
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_DEL_A_GROUP) {
-        removeGroup(value, database);
+        database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
+        sendGroups(webServer, database);
+    }
+    else if (type == WS_SET_EDIT_A_GROUP) {
+        QStringList parts = value.split("#");
+        QString address = parts[0];
+        QString newName = parts[1];
+
+        database->editGroup(address, newName);
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_MAX) {

@@ -174,15 +174,3 @@ void setTests(QStringList webServerParts, Database *database)
         }
     }
 }
-
-void createGroup(QString name, Database *database) {
-    if(name.isEmpty()) { return; }
-
-    database->createGroup(name);
-}
-
-void removeGroup(QString address, Database *database) {
-    if(address.isEmpty()) { return; }
-
-    database->removeGroup(address);
-}

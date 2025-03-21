@@ -22,6 +22,7 @@
 #define WS_SET_ADD_A_GROUP                  "SET_ADD_A_GROUP"   // añadir un grupo
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"     // eliminar nodo de grupo)
 #define WS_SET_DEL_A_GROUP                  "SET_DEL_A_GROUP"   // eliminar un grupo
+#define WS_SET_EDIT_A_GROUP                 "SET_EDIT_A_GROUP"  // cambiar nombre de grupo
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"

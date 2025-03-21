@@ -420,3 +420,50 @@ function transformDecimalGroupAddressIntoHexGroupAddress(value) {
     hex = hex.toUpperCase();
     return hex;
 }
+
+function delGroupPrev() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectElem = iframeDocument.getElementById("groupList");
+    if(selectElem.options[selectElem.selectedIndex].value == "-") { return; }
+
+    var popup = iframeDocument.getElementById('popupDeletingGroup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
+function editGroupPrev()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectElem = iframeDocument.getElementById("groupList");
+    if(selectElem.options[selectElem.selectedIndex].value == "-") { return; }
+
+    var popup = iframeDocument.getElementById('popupEditingName');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var nameInput = iframeDocument.getElementById("newGroupName");
+    nameInput.value =  selectElem.options[selectElem.selectedIndex].text;
+}
+
+function closeGroupPopup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupEdit = iframeDocument.getElementById('popupEditingName');
+    var popupDelete = iframeDocument.getElementById('popupDeletingGroup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    
+    if(popupEdit) { popupEdit.style.visibility = "hidden"; }
+    if(popupDelete) { popupDelete.style.visibility = "hidden"; }
+    popupOverlay.style.visibility = "hidden";
+}

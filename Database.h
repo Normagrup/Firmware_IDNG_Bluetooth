@@ -41,10 +41,11 @@ public:
     QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
 
     QList<QPair<QString, QString>> getGroups(void);
-    void createGroup(QString name);
+    void createGroup();
     void createTestEntry(QString address);
     void removeGroup(QString address);
     void removeTestEntry(QString address);
+    void editGroup(QString address, QString name);
 
     void clearAllData(void);
     void addNode(uint16_t nodeAddress);

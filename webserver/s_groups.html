@@ -14,94 +14,66 @@
     </div>
 
     <div class="popup-overlay" id="popupOverlay"></div>
-    <div class="popup" id="popup">
-        <h2></h2>
-        <div class="loader"></div>
-        <label style="margin-top: 4%;" id="labelCommissionNodes"></label>
+    <div class="popup" id="popupEditingName">
+        <div class="popup-container" >
+            <div class="popup-subcontainer">
+                <label id="newGroupLabel" style="margin-top: 10px; color: #4682b4;"> <b> Group Name </b> </label>
+                <input type="text" id="newGroupName" placeholder="Cannot be empty" />
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.editGroup()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popup" id="popupDeletingGroup">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label style="margin-top: 10px; color: #4682b4;"> Do you want to delete the group? </label>
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.delGroup()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+            </div>
+        </div>
     </div>
 
     <div class="wrap-container">
         <div class="wrap-list-container">
             <div class="title-container">
-                <h2> Wireless Configuration </h2>
-                <div class="enable-container">
-                    <label style="font-size: 14px; margin-right: 10px;" id="automaticLabel"> Automatic </label>
-                    <div class="switch-container">
-                        <label class="switch">
-                            <input type="checkbox" onchange="parent.switchMode()" id="toggleMode">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    <label style="font-size: 14px; margin-left: 10px;" id="manualLabel"> Manual </label>
-                </div>
+                <h2> Groups Configuration </h2>
             </div>
-            <div class="list-container">
-                <div class="list">
-                    <label> Scanned devices</label>
-                    <ul id="scannedDevicesList"></ul>
-                </div>
-                <div class="list-button-container" id="manualContainer">
-                    <button onclick="parent.getScannedDevices()"> Scan devices </button>
-                    <button onclick="parent.addDevice()"> Add device </button>
-                    <button onclick="parent.delDevice()"> Remove device </button>
-                    <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
-
-                    <button onclick="parent.delAllDevices()" class="remove-all-btn">
-                        Remove all devices
-                    </button>
-                </div>
-                <div class="list-button-container" id="automaticContainer">
-                    <button onclick="parent.startCommission()"> Start commission </button>
-                </div>
-                <div class="list">
-                    <label> Network Nodes </label>
-                    <ul id="networkNodesList"></ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="wrap-group-container ">
-            <h2> Group Configuration </h2>
             <div class="group-container">
-                <label> Pick group and node </label>
-
                 <select class="selector" id="groupList">
                     <option value="-"> ---- </option>
 				</select>
 
-                <div class="group-button-container">
-                    <button onclick="parent.addToGroup()"> Add Node </button>
+                <button onclick="parent.editGroupPrev()"> Edit Name </button>
+                <button onclick="parent.delGroupPrev()"> Delete Group </button>
+                <button onclick="parent.addGroup()"> Add Group </button>
+            </div>
+            <div class="list-container">
+                <div class="list">
+                    <label> Nodes included in the group </label>
+                    <ul id="includedNodesList"></ul>
                     <button onclick="parent.delFromGroup()"> Delete Node </button>
                 </div>
-
-                <label id="groupError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
+                <div class="list">
+                    <label> Nodes not included in the group </label>
+                    <ul id="notIncludedNodesList"></ul>
+                    <button onclick="parent.addToGroup()"> Add Node </button>
+                </div>
             </div>
-
-            <div class="group-container">
-                <label> Creating and deleting groups </label>
-
-                <input type="text" id="newGroupName" placeholder="Group Name" />
-                <button onclick="parent.addGroup()"> Add Group </button>
-
-                <select class="selector" id="groupList2">
-                    <option value="-"> ---- </option>
-				</select>
-                <button onclick="parent.delGroup()"> Delete Group </button>
-
-                <label id="groupError2" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
-            </div>
-
-            <br>
         </div>
     </div>
 
     <script>
-        function getNodesFromDatabase() {
-			setTimeout(function() {
-				parent.sendData("SET_LOAD_NODES", "");
-			}, 10);
-		}
-
         function getGroupsFromDatabase() {
 			setTimeout(function() {
 				parent.sendData("GET_GROUPS", "");
@@ -109,28 +81,32 @@
 		}
 		
 		window.onload = function() {
-            getNodesFromDatabase();
             getGroupsFromDatabase();
 
-            var automaticLabel = document.getElementById("automaticLabel");
-            automaticLabel.style.color = "#4682b4";
-            automaticLabel.style.fontWeight = "bold";
+            function handleButtonClick(e) {
+                var button = e.currentTarget;
+                button.classList.add("clicked");
+                setTimeout(function() {
+                    button.classList.remove("clicked");
+                }, 400);
+            }
 
-            var manualContainer = document.getElementById("manualContainer");
-            manualContainer.style.display = "none";
+            document.querySelectorAll("button").forEach(function(btn) {
+                btn.addEventListener("click", handleButtonClick);
+            });
         };
 
         document.addEventListener('click', function(event) {
-            var scannedDevicesList = document.getElementById('scannedDevicesList');
-            var networkNodesList = document.getElementById('networkNodesList');
+            var includedNodesList = document.getElementById('includedNodesList');
+            var notIncludedNodesList = document.getElementById('notIncludedNodesList');
 
-            var scannedDevices = scannedDevicesList.getElementsByTagName('li');
-            var networkDevices = networkNodesList.getElementsByTagName('li');
+            var includedNodes = includedNodesList.getElementsByTagName('li');
+            var notIncludedNodes = notIncludedNodesList.getElementsByTagName('li');
 
             if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI') { return; }
 
-            for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
-            for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+            for (var i = 0; i < includedNodes.length; i++) { includedNodes[i].classList.remove('selectedDevice'); }
+            for (var i = 0; i < notIncludedNodes.length; i++) { notIncludedNodes[i].classList.remove('selectedDevice'); }
         });
 
     </script>

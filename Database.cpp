@@ -680,16 +680,11 @@ QList<QPair<QString, QString>> Database::getGroups()
     return groupList;
 }
 
-void Database::createGroup(QString name)
+void Database::createGroup()
 {
+    QString newGroupAddress, newGroupName;
+
     QSqlQuery query;
-
-    // Se comprueba que no exista un grupo con ese nombre
-    query.prepare("SELECT * FROM Groups WHERE GroupName = ?");
-    query.addBindValue(name);
-    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return; }
-
-    if(query.next()) { return; }
 
     // Se extrae el GroupAddress del último grupo añadido
     query.prepare("SELECT GroupAddress FROM Groups ORDER BY GroupAddress DESC LIMIT 1");
@@ -699,11 +694,10 @@ void Database::createGroup(QString name)
     if(query.next())
         lastGroupAddress = query.value("GroupAddress").toString();
 
-    QString newGroupAddress;
-
     // Si no existe un último GroupAddress, damos el primer valor destinado a las direcciones de grupo
     if(lastGroupAddress.isEmpty()) {
         newGroupAddress = "C010";
+        newGroupName = "Group 1";
     }
     // Si el último GroupAddress no es el máximo, obtenemos el siguiente con un incremento unitario
     else if(lastGroupAddress != "FEFF") {
@@ -712,6 +706,7 @@ void Database::createGroup(QString name)
         if (!ok) { qDebug() << "Error converting group address:" << lastGroupAddress; return; }
         groupAddr++;
         newGroupAddress = QString("%1").arg(groupAddr, 4, 16, QLatin1Char('0')).toUpper();
+        newGroupName = "Group " + QString::number(groupAddr - 49167); // 49167 es la última dirección no perteneciente a grupos
     }
     // Si el último GroupAddress es el máximo, hay que buscar GroupAddress intermedios disponibles
     else {
@@ -731,6 +726,7 @@ void Database::createGroup(QString name)
             QString addrStr = QString("%1").arg(addr, 4, 16, QLatin1Char('0')).toUpper();
             if (!usedAddresses.contains(addrStr)) {
                 newGroupAddress = addrStr;
+                newGroupName = "Group " + newGroupAddress;
                 found = true;
                 break;
             }
@@ -741,7 +737,7 @@ void Database::createGroup(QString name)
 
     // Se inserta el nuevo grupo con ese GroupAddress y el nombre del parámetro
     query.prepare("INSERT INTO Groups (GroupName, GroupAddress) VALUES (?, ?)");
-    query.addBindValue(name);
+    query.addBindValue(newGroupName);
     query.addBindValue(newGroupAddress);
     if (!query.exec()) { qDebug() << "Error inserting new group:" << query.lastError().text(); return; }
 
@@ -785,6 +781,16 @@ void Database::removeTestEntry(QString address)
     query.addBindValue(address);
 
     if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
+}
+
+void Database::editGroup(QString address, QString name)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Groups SET GroupName = :name WHERE GroupAddress = :address");
+    query.bindValue(":name", name);
+    query.bindValue(":address", address);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in GROUPS" << query.lastError().text(); }
 }
 
 void Database::clearAllData()

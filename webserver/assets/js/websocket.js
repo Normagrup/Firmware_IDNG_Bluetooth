@@ -916,66 +916,57 @@ function addGroup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
-
-    var inputField = iframeDocument.getElementById("newGroupName");
-    var groupName = inputField.value.trim();
 
     var groupList = iframeDocument.getElementById('groupList');
-    var groupList2 = iframeDocument.getElementById('groupList2');
 
-    if (groupName !== "") {
-        var exists = false;
-        for (var i = 0; i < groupList.options.length; i++) {
-            var optionText = groupList.options[i].textContent.trim();
-            if(optionText.toLowerCase() === groupName.toLowerCase()) {
-                exists = true;
-                break;
-            }
-        }
+    groupList.innerHTML = "<option value='-'> ---- </option>"
+    sendData("SET_ADD_A_GROUP", "");
 
-        if(!exists) {
-            groupErrorLabel2.style.visibility = "hidden";
-        
-            inputField.value = "";
-            groupList.innerHTML = '<option value="-"> ---- </option>';
-            groupList2.innerHTML = '<option value="-"> ---- </option>';
-            sendData("SET_ADD_A_GROUP", groupName);
+    setTimeout(function(){
+        if(groupList.options.length > 0) {
+            groupList.selectedIndex = groupList.options.length - 1;
         }
-        else {
-            groupErrorLabel2.style.color = "#C30101";
-            groupErrorLabel2.innerHTML = "<b> Group already exists! </b>";
-            groupErrorLabel2.style.visibility = "visible";
-        }
-    }
-    else {
-        groupErrorLabel2.style.color = "#C30101";
-        groupErrorLabel2.innerHTML = "<b> Write a name! </b>";
-        groupErrorLabel2.style.visibility = "visible";
-    }
+    }, 1000);
+
+    // TODO: Vaciar los nodos en el grupo, llenar los nodos fuera del grupo
 }
 
 function delGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    closeGroupPopup();
 
     var groupList = iframeDocument.getElementById('groupList');
-    var groupList2 = iframeDocument.getElementById('groupList2');
-    var groupSelected = groupList2.options[groupList2.selectedIndex].value;
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (groupSelected != '-') {
-        groupErrorLabel2.style.visibility = "hidden";
-
         groupList.innerHTML = '<option value="-"> ---- </option>';
-        groupList2.innerHTML = '<option value="-"> ---- </option>';
         sendData("SET_DEL_A_GROUP", groupSelected);
     }
-    else {
-        groupErrorLabel2.style.color = "#C30101";
-        groupErrorLabel2.innerHTML = "<b> Pick a group! </b>";
-        groupErrorLabel2.style.visibility = "visible";
+}
+
+function editGroup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var nameInput = iframeDocument.getElementById("newGroupName");
+    if(nameInput.value.trim() === "") { return; }
+
+    closeGroupPopup();
+
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if (groupSelected != '-') {
+        var tmpIndex = groupList.selectedIndex;
+        groupList.innerHTML = '<option value="-"> ---- </option>';
+        sendData("SET_EDIT_A_GROUP", groupSelected + "#" + nameInput.value);
+        setTimeout(function() {
+            groupList.selectedIndex = tmpIndex;
+        }, 1000);
     }
 }
 

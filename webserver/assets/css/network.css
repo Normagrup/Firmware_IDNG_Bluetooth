@@ -408,8 +408,9 @@ label {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 8px 12px;
+    padding: 5px 10px;
     font-size: 16px;
+    height: 60%;
     cursor: pointer;
     border: none;
     background-color: #4682b4;
