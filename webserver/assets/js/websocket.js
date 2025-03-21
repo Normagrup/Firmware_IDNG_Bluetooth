@@ -436,6 +436,30 @@ function processGroupInfo(value)
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 }
 
+function processGroupNode(value, included)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var parts = value.split("_");
+    var nodeNetAddress = parts[0];
+    var serialNumber = parts[1];
+
+    var node = iframeDocument.createElement('li');
+    node.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
+    node.setAttribute('class', 'deviceIncluded');
+    node.setAttribute('onclick', 'parent.selectDevice(this)');
+
+    if(included) {   
+        var includedNodesList = iframeDocument.getElementById('includedNodesList');
+        includedNodesList.appendChild(node);
+    } 
+    else {
+        var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+        notIncludedNodesList.appendChild(node);
+    }
+}
+
 function processTestData(value) {
     var testArray = value.split('#');
     var functionalEnable = testArray[0];
@@ -683,6 +707,8 @@ function processReceivedData(data)
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "GROUP_INFO") { processGroupInfo(value); }
+    else if (type == "GROUP_NODE_INCLUDED") { processGroupNode(value, true); }
+    else if (type == "GROUP_NODE_NOT_INCLUDED") { processGroupNode(value, false); }
     else if (type == "TEST_DATA") { processTestData(value); }
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
@@ -870,46 +896,40 @@ function addToGroup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel = iframeDocument.getElementById('groupError');
 
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var selectedNode = iframeDocument.querySelector('#notIncludedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (selectedNode && groupSelected != '-') {
-        groupErrorLabel.style.visibility = "hidden";
         var textNodeSelected = selectedNode.textContent.trim();
         var message = textNodeSelected + ' ' + groupSelected;
         sendData("SET_ADD_GROUP", message);
     }
-    else {
-        groupErrorLabel.style.color = "#C30101";
-        groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
-        groupErrorLabel.style.visibility = "visible";
-    }
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 250);
 }
 
 function delFromGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel = iframeDocument.getElementById('groupError');
 
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (selectedNode && groupSelected != '-') {
-        groupErrorLabel.style.visibility = "hidden";
         var textNodeSelected = selectedNode.textContent.trim();
         var message = textNodeSelected + ' ' + groupSelected;
         sendData("SET_DEL_GROUP", message);
     }
-    else {
-        groupErrorLabel.style.color = "#C30101";
-        groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
-        groupErrorLabel.style.visibility = "visible";
-    }
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 250);
 }
 
 function addGroup() 
@@ -928,7 +948,10 @@ function addGroup()
         }
     }, 1000);
 
-    // TODO: Vaciar los nodos en el grupo, llenar los nodos fuera del grupo
+    setTimeout(function() {
+        console.log("a");
+        loadNodesLists();
+    }, 1300);
 }
 
 function delGroup() 
@@ -945,6 +968,10 @@ function delGroup()
         groupList.innerHTML = '<option value="-"> ---- </option>';
         sendData("SET_DEL_A_GROUP", groupSelected);
     }
+
+    setTimeout(function(){
+        loadNodesLists();
+    }, 1000);
 }
 
 function editGroup()
@@ -967,7 +994,30 @@ function editGroup()
         setTimeout(function() {
             groupList.selectedIndex = tmpIndex;
         }, 1000);
+
+        setTimeout(function() {
+            loadNodesLists();
+        }, 1300);
     }
+}
+
+function loadNodesLists()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
+    includedNodesList.innerHTML = "";
+
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+    notIncludedNodesList.innerHTML = "";
+
+    var groupList = iframeDocument.getElementById("groupList");
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if(groupSelected == "-") { return; }
+
+    sendData("GET_GROUP_NODES", groupSelected);
 }
 
 function maxButton() 

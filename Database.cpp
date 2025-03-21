@@ -619,6 +619,7 @@ QList<uint16_t> Database::getConfiguredNodes()
         uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
 
         uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
+
         nodeNetAddressList.append(nodeNetAddress);
     }
 

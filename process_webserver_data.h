@@ -23,6 +23,7 @@
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"     // eliminar nodo de grupo)
 #define WS_SET_DEL_A_GROUP                  "SET_DEL_A_GROUP"   // eliminar un grupo
 #define WS_SET_EDIT_A_GROUP                 "SET_EDIT_A_GROUP"  // cambiar nombre de grupo
+#define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
@@ -66,6 +67,8 @@
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
 #define WS_SEND_GROUP                       "GROUP_NAME_AND_ADDRESS"
 #define WS_SEND_GROUP_INFO                  "GROUP_INFO"
+#define WS_SEND_GROUP_NODE_INCLUDED         "GROUP_NODE_INCLUDED"
+#define WS_SEND_GROUP_NODE_NOT_INCLUDED     "GROUP_NODE_NOT_INCLUDED"
 #define WS_SEND_TEST                        "TEST_DATA"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
 #define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
@@ -93,6 +96,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
+void sendGroupNodes(WebServer* webServer, QString groupAddress);
 void sendTest(WebServer* webServer, Database* database, QString groupAddress);
 void sendDevicesCount(WebServer* webServer, int count);
 void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);

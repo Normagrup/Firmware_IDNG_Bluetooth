@@ -240,13 +240,30 @@ function selectDevice(device)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
 
-    var scannedDevices = scannedDevicesList.getElementsByTagName('li');
-    var networkDevices = networkNodesList.getElementsByTagName('li');
+    // Botones de nodos en s_wireless.html
+    if(scannedDevicesList && networkNodesList) {
+        var scannedDevices = scannedDevicesList.getElementsByTagName('li');
+        var networkDevices = networkNodesList.getElementsByTagName('li');
 
-    for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
-    for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+        for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
+        for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
 
-    device.classList.add('selectedDevice');
+        device.classList.add('selectedDevice');
+    }
+
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+
+    // Botones de nodos en s_groups.html
+    if(includedNodesList && notIncludedNodesList) {
+        var includedNodes = includedNodesList.getElementsByTagName('li');
+        var notIncludedNodes = notIncludedNodesList.getElementsByTagName('li');
+
+        for (var i = 0; i < includedNodes.length; i++) { includedNodes[i].classList.remove('selectedDevice'); }
+        for (var i = 0; i < notIncludedNodes.length; i++) { notIncludedNodes[i].classList.remove('selectedDevice'); }
+
+        device.classList.add('selectedDevice');
+    }
 }
 
 function openGroupControl(button)

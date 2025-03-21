@@ -210,6 +210,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->editGroup(address, newName);
         sendGroups(webServer, database);
     }
+    else if (type == WS_GET_GROUP_NODES) {
+        sendGroupNodes(webServer, value);
+    }
     else if (type == WS_SET_MAX) {
         if(isCommissionInProgress(webServer)) { return; }
 
@@ -746,6 +749,31 @@ void sendGroupInfo(WebServer* webServer, QString groupAddress)
     QString message = QString(WS_SEND_GROUP_INFO) + "@" + lampFailCountS + "." + emerModeCountS + "." + batFailCountS + "." + durFailCountS + "." + averageLvlS + "." + comFailCountS;
 
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendGroupNodes(WebServer* webServer, QString groupAddress) {
+    QString messageIncludedNodeInit = QString(WS_SEND_GROUP_NODE_INCLUDED) + "@";
+    QString messageNotIncludedNodeInit = QString(WS_SEND_GROUP_NODE_NOT_INCLUDED) + "@";
+    QString message;
+
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured()) {
+                uint16_t groupSubAddress[1];
+                convertGroupSubStringToArray(groupAddress, groupSubAddress);
+
+                if(device.isOnGroupSubAddress(groupSubAddress[0]))
+                    message = messageIncludedNodeInit;
+                else
+                    message = messageNotIncludedNodeInit;
+
+                message += QString::number(device.getRealAddress()) + "_" + device.serialNumberString();
+
+                if (webServer != nullptr) { webServer->sendData(message); }
+            }
+        }
+    }
 }
 
 void sendTest(WebServer* webServer, Database* database, QString groupAddress)
