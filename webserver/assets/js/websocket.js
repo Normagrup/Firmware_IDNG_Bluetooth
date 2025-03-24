@@ -909,7 +909,7 @@ function addToGroup()
 
     setTimeout(function() {
         loadNodesLists();
-    }, 250);
+    }, 3000);
 }
 
 function delFromGroup() 
@@ -929,7 +929,7 @@ function delFromGroup()
 
     setTimeout(function() {
         loadNodesLists();
-    }, 250);
+    }, 300);
 }
 
 function addGroup() 
@@ -949,7 +949,6 @@ function addGroup()
     }, 1000);
 
     setTimeout(function() {
-        console.log("a");
         loadNodesLists();
     }, 1300);
 }

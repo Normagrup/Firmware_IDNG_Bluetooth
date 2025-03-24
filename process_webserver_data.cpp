@@ -719,10 +719,10 @@ void sendGroupInfo(WebServer* webServer, QString groupAddress)
         for(int j = 0; j < MAX_NODES_SUBNET; j++) {
             Device& device = meshDevice[i][j];
             if(device.getIsConfigured()) {
-                configDevs++;
                 uint16_t groupSubAddress[1];
                 convertGroupSubStringToArray(groupAddress, groupSubAddress);
                 if(device.isOnGroupSubAddress(groupSubAddress[0])) {
+                    configDevs++;
                     if(device.hasLampFailure()) { lampFailCount++; }
                     if(device.hasBatteryFailure()) { batFailCount++; }
                     if(device.hasBatteryDurationFailure()) { durFailCount++; }
