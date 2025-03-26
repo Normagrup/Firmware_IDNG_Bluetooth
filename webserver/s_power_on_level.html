@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_power_on_lvl.css">
+</head>
+
+<body>
+    <div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <!-- Left Side: Display Current Power-On Levels -->
+        <div class="wrap-list-container">
+            <h2>Current Power On Levels</h2>
+            <table id="powerLevelsTable">
+                <thead>
+                    <tr>
+                        <th>Group Name</th>
+                        <th>Power On Level</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="pagination-container">
+            <label for="paginationDropdown">Select Page:</label>
+            <select id="paginationDropdown"></select>
+        </div>
+
+        <!-- Right Side: Select and Update Power-On Levels -->
+        <div class="wrap-group-container">
+            <h2>Update Power On Level</h2>
+            <div class="group-container">
+                <label>Select Group</label>
+                <select class="selector" id="groupListPowerOn">
+                    <option value="-"> ---- </option>
+                </select>
+
+                <label>Select Power On Level</label>
+                <select class="selector" id="powerOnLevelList">
+                    <option value="254">Max</option>
+                    <option value="0">Off</option>
+                    <option value="255">Last Value</option>
+                </select>
+                <label id="powerOnError"></label>
+                <button onclick="parent.onSetPowerOnLevelClick()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(function () {
+                parent.sendData("GET_POWER_ON_LVL", "");
+            }, 10);
+            parent.resetPowerOnLevelPage();
+        };
+    </script>
+</body>
+
+</html>

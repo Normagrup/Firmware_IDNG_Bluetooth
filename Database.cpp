@@ -116,7 +116,8 @@ void Database::initDatabase()
      * **************************************************/
     query.exec("CREATE TABLE IF NOT EXISTS Groups "
                "(GroupAddress TEXT, "
-               "GroupName TEXT);");
+               "GroupName TEXT, "
+               "PowerOnLevel INTEGER);");
 
     query.prepare("SELECT * FROM Groups");
 
@@ -127,12 +128,13 @@ void Database::initDatabase()
             //QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
             QStringList groupAddresses = {};
 
-            query.prepare("INSERT INTO Groups (GroupAddress, GroupName) VALUES (:groupAddress, :groupName)");
+            query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
             int groupNumber = 1;
             foreach (const QString &groupAddress, groupAddresses) {
                 query.bindValue(":groupAddress", groupAddress);
                 query.bindValue(":groupName", "Group " + QString::number(groupNumber));
+                query.bindValue(":powerOnLevel", 255);
 
                 if (!query.exec()) { qDebug() << "Error executing INSERT query in Groups:" << query.lastError().text(); }
 
@@ -690,6 +692,35 @@ void Database::removeTestEntry(QString address)
     query.addBindValue(address);
 
     if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
+}
+
+void Database::setPowerOnLevelGroup(QString groupAddress, uint8_t powerOnLevel)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE Groups SET PowerOnLevel = :powerOnLevel WHERE GroupAddress = :groupAddress");
+    query.bindValue(":powerOnLevel", powerOnLevel);
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) { qDebug() << "Error setting PowerOnLevel:" << query.lastError().text(); }
+}
+
+QList<PowerOnLevGroupInfo> Database::getPowerOnLevelGroup()
+{
+    QSqlQuery query;
+    QList<PowerOnLevGroupInfo> groupList;
+    if (!query.exec("SELECT * FROM Groups")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        PowerOnLevGroupInfo group;
+        group.groupAddress = query.value("GroupAddress").toString();
+        group.groupName = query.value("GroupName").toString();
+        group.powerOnLevel = query.value("PowerOnLevel").toInt();
+
+        groupList.append(group);
+    }
+
+    return groupList;
 }
 
 void Database::clearAllData()

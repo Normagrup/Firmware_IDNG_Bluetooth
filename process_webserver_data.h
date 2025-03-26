@@ -48,6 +48,8 @@
 #define WS_SET_FUNCTION_TEST                "SET_FUNCTION_TEST"
 #define WS_SET_DURATION_TEST                "SET_DURATION_TEST"
 #define WS_SET_STOP                         "SET_STOP"
+#define WS_SET_POWER_ON_LVL                 "SET_POWER_ON_LVL"
+#define WS_GET_POWER_ON_LVL                 "GET_POWER_ON_LVL"
 
 #define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
@@ -73,6 +75,7 @@
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
+#define WS_SEND_POWER_ON_LVL                "POWER_ON_LVL"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -101,6 +104,8 @@ void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
 void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
+void sendPowerOnGroup(WebServer *webServer, Database *database);
+void updatePowerOnLvlToWeb(WebServer *webServer, Database *database, QString groupAddress, int powerOnLvl);
 
 
 #endif // PROCESS_WEBSERVER_DATA_H
