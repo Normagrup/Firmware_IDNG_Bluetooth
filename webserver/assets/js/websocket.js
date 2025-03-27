@@ -802,8 +802,7 @@ function getScannedDevices()
 }
 
 function startCommission() 
-{   
-    nodesAdded = 0;
+{
     sendData("SET_START_ACTION", "0");
 }
 
