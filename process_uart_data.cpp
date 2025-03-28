@@ -425,9 +425,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                return;
+                break;
             }
         }
+      
     }
 
     netAddress = 0;
