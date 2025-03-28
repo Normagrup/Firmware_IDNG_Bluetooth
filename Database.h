@@ -3,7 +3,6 @@
 
 #include <QObject>
 #include <QSqlDatabase>
-#include "structures.h"
 
 class Database : public QObject
 {

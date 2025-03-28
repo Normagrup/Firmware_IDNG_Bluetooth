@@ -143,12 +143,13 @@ static bool addDeviceFrameReceived = false;
 static bool featuresFrameReceived = false;
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database)
-{   
+{
     QString hexString;
     for (uint8_t i = 0; i < data.size(); i++) {
         hexString += QString::asprintf("%02X ", static_cast<unsigned char>(data[i]));
     }
     qDebug() << hexString.trimmed();
+    //qDebug() << "DATA SIZE" << data.size();
     QByteArray dataChecked = processUartFrame(data);
     if (!dataChecked.isEmpty() && (unsigned char)dataChecked[0] == UART_HEADER && checkCRC(data)) {
         switch ((unsigned char)dataChecked[1]) {
@@ -210,55 +211,59 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)dataChecked[3], 2, 16, QChar('0')).toUpper();
                     break;
 
-                    // case LINE_SCAN_SEND:
-                    // {
-                    //     // Esperamos 22 bytes mínimo
-                    //     if (dataChecked.size() < 22) {
-                    //         qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                    //         break;
-                    //     }
+                    case LINE_SCAN_SEND:
+                    {
+                        // Esperamos 22 bytes mínimo
+                        if (dataChecked.size() < 22) {
+                            qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
+                            break;
+                        }
                     
-                    //     // [3..4] => realAddress
-                    //     uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                    //     uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                    //     uint16_t realAddr = (highByte << 8) | lowByte;
+                        // [3..4] => realAddress
+                        uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
+                        uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
+                        uint16_t realAddr = (highByte << 8) | lowByte;
                     
-                    //     // [5..20] => 16 bytes de UUID binario
-                    //     QByteArray uuidBytes = dataChecked.mid(5, 16);
-                    //     // Convertir a string en hex para la DB
-                    //     QString uuidHex = QString(uuidBytes.toHex()).toUpper();
+                        // [5..20] => 16 bytes de UUID binario
+                        QByteArray uuidBytes = dataChecked.mid(5, 16);
+                        // Convertir a string en hex para la DB
+                        QString uuidHex = QString(uuidBytes.toHex()).toUpper();
                     
-                    //     // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                    //     // ...
+                        // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
+                        // ...
                     
-                    //     // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                    //     uint8_t subnetAddr = 0;
-                    //     uint8_t nodeSubnetAddr = 0;
+                        // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
+                        uint8_t subnetAddr = 0;
+                        uint8_t nodeSubnetAddr = 0;
                     
-                    //     // Llamada a la DB
-                    //     database->addOrUpdateNode(
-                    //         subnetAddr,
-                    //         nodeSubnetAddr,
-                    //         realAddr,
-                    //         uuidHex,   // guardas el UUID en la columna “UUID”
-                    //         "",        // groupSub vacío
-                    //         0,         // deviceType
-                    //         0,         // ratedDuration
-                    //         0,         // emergencyFeatures
-                    //         0          // physicalMinLvl
-                    //     );
-                    //     database->loadNodesFromDatabase();
-                    //     qDebug() << "Insertado/actualizado nodo" 
-                    //              << QString::asprintf("%04X", realAddr)
-                    //              << " con UUID=" << uuidHex;
-                    // }
-                    // break;
+                        // Llamada a la DB
+                        database->addOrUpdateNode(
+                            subnetAddr,
+                            nodeSubnetAddr,
+                            realAddr,
+                            uuidHex,   // guardas el UUID en la columna “UUID”
+                            "",        // groupSub vacío
+                            0,         // deviceType
+                            0,         // ratedDuration
+                            0,         // emergencyFeatures
+                            0          // physicalMinLvl
+                        );
+                        database->loadNodesFromDatabase();
+                        qDebug() << "Insertado/actualizado nodo" 
+                                 << QString::asprintf("%04X", realAddr)
+                                 << " con UUID=" << uuidHex;
+                    }
+                    break;
                 }
+            // default:       
+            // break;
+
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(dataChecked, database, webServer);
             break;
+
             case UART_RSP_POLLING_FRAME_TYPE:
-                processPollingFrame(dataChecked); 
+                processPollingFrame(dataChecked);
             break;
 
             case UART_ID_FRAME_TYPE:
@@ -283,10 +288,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
             default:
                 break;
         }
-     
-
     }
 }
+
 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
 {
@@ -422,9 +426,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                return;
+                break;
             }
         }
+      
     }
 
     netAddress = 0;
@@ -463,12 +468,6 @@ void processChangeFrame(QByteArray data, Database* database, WebServer* webServe
     daliRegisterValue = (unsigned char)data[5];
 
     qDebug() << "CHANGE FRAME FROM " << address << ": " << daliCommandType << daliRegisterValue;
-
-    if(daliCommandType == QUERY_POWER_ON_LVL){
-        QString groupHex = QString("%1").arg(address, 4, 16, QChar('0')).toUpper();
-        database->setPowerOnLevelGroup(groupHex, daliRegisterValue);
-        updatePowerOnLvlToWeb(webServer, database, groupHex, daliRegisterValue);
-    }
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -512,7 +511,7 @@ void processPollingFrame(QByteArray data)
     qDebug() << "POLLING FRAME FROM " << address << ": " << actualLvl << controlGearStatus << emergencyMode << emergencyFailureStatus;
 
     pollingData.pollingReceived = true;
-    qDebug() << "[process_uart_data.cpp] pollingReceived asignado a TRUE";
+
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == address) {
@@ -520,9 +519,6 @@ void processPollingFrame(QByteArray data)
                 meshDevice[i][j].setControlGearStatus(controlGearStatus);
                 meshDevice[i][j].setEmergencyMode(emergencyMode);
                 meshDevice[i][j].setEmergencyFailureStatus(emergencyFailureStatus);
-
-                // pollingData.pollingReceived = true;
-                //qDebug() << "[process_uart_data.cpp] pollingReceived establecido a TRUE";
                 return;
             }
         }

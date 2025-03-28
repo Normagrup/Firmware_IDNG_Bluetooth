@@ -199,7 +199,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_DEL_A_GROUP) {
         database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
-        qDebug() << "the group address belongs to: " << groupAddress;
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         sendGroups(webServer, database);
     }
@@ -413,34 +412,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
         }
     }
-
-    else if (type == WS_SET_POWER_ON_LVL){
-        if(isCommissionInProgress(webServer)) { return; }
-        QStringList parts = value.split("_");
-        QString parts1 = parts[0];
-        QString parts2 = parts[1];
-        uint16_t groupAddress = parts1.toUShort(nullptr, 16);
-        uint16_t powerOnLevel = parts2.toInt(nullptr, 10);
-
-        sendUartDaliCommand(uartPort, groupAddress, STORE_DTR_POWER_ON_LVL, powerOnLevel , IS_TWICE);
-        delay(SLEEP_DALI_TIME_MS);
-        sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
-    }
-
-    else if (type == WS_GET_POWER_ON_LVL){
-        if(isCommissionInProgress(webServer)) { return; }
-        QList<PowerOnLevGroupInfo> groupList = database-> getPowerOnLevelGroup();
-
-        for (const PowerOnLevGroupInfo &group : groupList) {
-            QString groupAddrStr = group.groupAddress;
-            uint16_t groupAddress = groupAddrStr.toUShort(nullptr, 16);
-
-            sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
-            delay(WEBSERVER_SEND_TIME_MS);
-        }
-        sendPowerOnGroup(webServer, database);
-    }
-
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);
     }
