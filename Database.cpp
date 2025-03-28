@@ -399,7 +399,102 @@ void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
 }
 
+void Database::addNode(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO Nodes (RealAddress) VALUES (:nodeAddress)");
+    query.bindValue(":nodeAddress", nodeAddress);
 
+    if (!query.exec()) {
+        qDebug() << "Error executing INSERT query in addNode:"
+                 << query.lastError().text();
+    }
+}
+
+void Database::addOrUpdateNode(
+    uint8_t subnetAddress,
+    uint8_t nodeSubnetAddress,
+    uint16_t realAddress,
+    const QString &uuid,
+    const QString &groupSub,
+    uint8_t deviceType,
+    uint8_t ratedDuration,
+    uint8_t emergencyFeatures,
+    uint8_t physicalMinLvl
+)
+{
+    // Abre la BD, si no está abierta.
+    if (!openDatabase()) {
+        qDebug() << "Error opening DB in addOrUpdateNode()";
+        return;
+    }
+
+    // 1. Verificar si YA existe un registro con el mismo RealAddress.
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM Nodes WHERE RealAddress = :rAddr");
+    query.bindValue(":rAddr", static_cast<int>(realAddress));
+
+    if (!query.exec()) {
+        qDebug() << "Error SELECT in addOrUpdateNode:" << query.lastError().text();
+        return;
+    }
+
+    bool exists = false;
+    if (query.next()) {
+        exists = (query.value(0).toInt() > 0);  
+    }
+
+    // 2. Si NO existe → INSERT
+    //    Si SÍ existe → UPDATE
+    if (!exists) {
+        query.prepare(
+         "INSERT INTO Nodes ("
+         "   SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, "
+         "   DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl"
+         ") VALUES ("
+         "   :subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, "
+         "   :deviceType, :ratedDuration, :emergencyFeatures, :physicalMinLvl"
+         ")"
+        );
+        qDebug() << "[DB] Insertando nodo nuevo (RealAddress:" << realAddress << ")";
+    } else {
+        query.prepare(
+         "UPDATE Nodes SET "
+         "   SubnetAddress = :subnetAddress, "
+         "   NodeSubnetAddress = :nodeSubnetAddress, "
+         "   UUID = :uuid, "
+         "   GroupSub = :groupSub, "
+         "   DeviceType = :deviceType, "
+         "   RatedDuration = :ratedDuration, "
+         "   EmergencyFeatures = :emergencyFeatures, "
+         "   PhysicalMinLvl = :physicalMinLvl "
+         "WHERE RealAddress = :realAddress"
+        );
+        qDebug() << "[DB] Actualizando nodo existente (RealAddress:" << realAddress << ")";
+    }
+
+    // 3. Vincular todos los valores
+    query.bindValue(":subnetAddress",     static_cast<int>(subnetAddress));
+    query.bindValue(":nodeSubnetAddress", static_cast<int>(nodeSubnetAddress));
+    query.bindValue(":realAddress",       static_cast<int>(realAddress));
+    query.bindValue(":uuid",             uuid);
+    query.bindValue(":groupSub",         groupSub);
+    query.bindValue(":deviceType",       static_cast<int>(deviceType));
+    query.bindValue(":ratedDuration",    static_cast<int>(ratedDuration));
+    query.bindValue(":emergencyFeatures",static_cast<int>(emergencyFeatures));
+    query.bindValue(":physicalMinLvl",   static_cast<int>(physicalMinLvl));
+
+    // 4. Ejecutar la sentencia SQL
+    if (!query.exec()) {
+        qDebug() << "[DB] Error en INSERT/UPDATE addOrUpdateNode:" << query.lastError().text();
+    } else {
+        if (!exists) {
+            qDebug() << "[DB] Nodo insertado correctamente en la tabla Nodes.";
+        } else {
+            qDebug() << "[DB] Nodo actualizado correctamente en la tabla Nodes.";
+        }
+    }
+}
 void Database::setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value)
 {
     QSqlQuery query;
@@ -526,6 +621,7 @@ QList<uint16_t> Database::getConfiguredNodes()
         uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
 
         uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
+
         nodeNetAddressList.append(nodeNetAddress);
     }
 
@@ -587,16 +683,11 @@ QList<QPair<QString, QString>> Database::getGroups()
     return groupList;
 }
 
-void Database::createGroup(QString name)
+void Database::createGroup()
 {
+    QString newGroupAddress, newGroupName;
+
     QSqlQuery query;
-
-    // Se comprueba que no exista un grupo con ese nombre
-    query.prepare("SELECT * FROM Groups WHERE GroupName = ?");
-    query.addBindValue(name);
-    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return; }
-
-    if(query.next()) { return; }
 
     // Se extrae el GroupAddress del último grupo añadido
     query.prepare("SELECT GroupAddress FROM Groups ORDER BY GroupAddress DESC LIMIT 1");
@@ -606,11 +697,10 @@ void Database::createGroup(QString name)
     if(query.next())
         lastGroupAddress = query.value("GroupAddress").toString();
 
-    QString newGroupAddress;
-
     // Si no existe un último GroupAddress, damos el primer valor destinado a las direcciones de grupo
     if(lastGroupAddress.isEmpty()) {
         newGroupAddress = "C010";
+        newGroupName = "Group 1";
     }
     // Si el último GroupAddress no es el máximo, obtenemos el siguiente con un incremento unitario
     else if(lastGroupAddress != "FEFF") {
@@ -619,6 +709,7 @@ void Database::createGroup(QString name)
         if (!ok) { qDebug() << "Error converting group address:" << lastGroupAddress; return; }
         groupAddr++;
         newGroupAddress = QString("%1").arg(groupAddr, 4, 16, QLatin1Char('0')).toUpper();
+        newGroupName = "Group " + QString::number(groupAddr - 49167); // 49167 es la última dirección no perteneciente a grupos
     }
     // Si el último GroupAddress es el máximo, hay que buscar GroupAddress intermedios disponibles
     else {
@@ -638,6 +729,7 @@ void Database::createGroup(QString name)
             QString addrStr = QString("%1").arg(addr, 4, 16, QLatin1Char('0')).toUpper();
             if (!usedAddresses.contains(addrStr)) {
                 newGroupAddress = addrStr;
+                newGroupName = "Group " + newGroupAddress;
                 found = true;
                 break;
             }
@@ -648,7 +740,7 @@ void Database::createGroup(QString name)
 
     // Se inserta el nuevo grupo con ese GroupAddress y el nombre del parámetro
     query.prepare("INSERT INTO Groups (GroupName, GroupAddress) VALUES (?, ?)");
-    query.addBindValue(name);
+    query.addBindValue(newGroupName);
     query.addBindValue(newGroupAddress);
     if (!query.exec()) { qDebug() << "Error inserting new group:" << query.lastError().text(); return; }
 
@@ -721,6 +813,17 @@ QList<PowerOnLevGroupInfo> Database::getPowerOnLevelGroup()
     }
 
     return groupList;
+}
+
+void Database::editGroup(QString address, QString name)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Groups SET GroupName = :name WHERE GroupAddress = :address");
+    query.bindValue(":name", name);
+    query.bindValue(":address", address);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in GROUPS" << query.lastError().text(); }
+
 }
 
 void Database::clearAllData()

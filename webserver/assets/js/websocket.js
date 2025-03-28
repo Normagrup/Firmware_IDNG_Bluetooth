@@ -300,10 +300,16 @@ function processNodeInfo(value)
 
     actualLvl = actualLvl / 254 * 100;
     if (actualLvl > 100) { actualLvl = 100; }
-    var actualLvlNum = parseFloat(actualLvl);
-    var actualLvlFormatted = (actualLvlNum % 1 === 0) ? actualLvlNum.toString() : actualLvlNum.toFixed(2);
-    lvlIcon.innerHTML = "<b>" + actualLvlFormatted + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvlFormatted + "%, #fff " + actualLvlFormatted + "%)";
+    var actualLvlNum = parseFloat(actualLvl).toFixed(0);
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider")
+    lvlSlider.value = actualLvlNum;
+
+    lvlIcon.innerHTML = "<b>" + actualLvlNum + "%" + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvlNum + "%, #fff " + actualLvlNum + "%)";
+
+    updateAllDisplayedButtons();
+    requestDevicesAndFailuresCount();
 
     if (communicationFailure != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
@@ -334,7 +340,7 @@ function processGroupBasicInfo(value) {
         container.appendChild(groupButton);
     }
 
-    // Procesado si el mensaje se recibe en s_wireless.html o s_tests.html: Se crea el elemento en el selector
+    // Procesado si el mensaje se recibe en s_tests.html: Se crea el elemento en el selector
     var groupSelector = iframeDocument.getElementById('groupList');
     if(groupSelector)
     {
@@ -343,16 +349,6 @@ function processGroupBasicInfo(value) {
         group.textContent = groupName;
 
         groupSelector.appendChild(group);
-    }
-
-    var groupSelector2 = iframeDocument.getElementById('groupList2');
-    if(groupSelector2)
-    {
-        var group2 = iframeDocument.createElement('option');
-        group2.value = groupAddress;
-        group2.textContent = groupName;
-
-        groupSelector2.appendChild(group2);
     }
 }
 
@@ -428,10 +424,16 @@ function processGroupInfo(value)
 
     averageLvl = averageLvl / 254 * 100;
     if (averageLvl > 100) { averageLvl = 100; }
-    var averageLvlNum = parseFloat(averageLvl);
-    var averageLvlFormatted = (averageLvlNum % 1 === 0) ? averageLvlNum.toString() : averageLvlNum.toFixed(2);
-    lvlIcon.innerHTML = "<b>" + averageLvlFormatted + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlFormatted + "%, #fff " + averageLvlFormatted + "%)";
+    var averageLvlNum = parseFloat(averageLvl).toFixed(0);
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider")
+    lvlSlider.value = averageLvlNum;
+
+    lvlIcon.innerHTML = "<b>" + averageLvlNum + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlNum + "%, #fff " + averageLvlNum + "%)";
+
+    updateAllDisplayedButtons();
+    requestDevicesAndFailuresCount();
 
     if (comFailures != 0) { 
         comIcon.style.backgroundImage = "url('images/comIconOnFail.png')";
@@ -442,6 +444,30 @@ function processGroupInfo(value)
         comIcon.appendChild(comFailuresCountSpan);
     }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
+}
+
+function processGroupNode(value, included)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var parts = value.split("_");
+    var nodeNetAddress = parts[0];
+    var serialNumber = parts[1];
+
+    var node = iframeDocument.createElement('li');
+    node.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
+    node.setAttribute('class', 'deviceIncluded');
+    node.setAttribute('onclick', 'parent.selectDevice(this)');
+
+    if(included) {   
+        var includedNodesList = iframeDocument.getElementById('includedNodesList');
+        includedNodesList.appendChild(node);
+    } 
+    else {
+        var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+        notIncludedNodesList.appendChild(node);
+    }
 }
 
 function processTestData(value) {
@@ -745,6 +771,8 @@ function processReceivedData(data)
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "GROUP_INFO") { processGroupInfo(value); }
+    else if (type == "GROUP_NODE_INCLUDED") { processGroupNode(value, true); }
+    else if (type == "GROUP_NODE_NOT_INCLUDED") { processGroupNode(value, false); }
     else if (type == "TEST_DATA") { processTestData(value); }
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
@@ -818,6 +846,9 @@ function sendDateTime()
 
     var message = date + ' ' + time;
     sendData("SET_DATE_TIME", message);
+
+    var timeLabel = iframeDocument.getElementById('timeLabel');
+    timeLabel.style.visibility = "visible";
 }
 
 function rebootDevice()
@@ -930,128 +961,161 @@ function addToGroup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel = iframeDocument.getElementById('groupError');
 
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var selectedNode = iframeDocument.querySelector('#notIncludedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (selectedNode && groupSelected != '-') {
-        groupErrorLabel.style.visibility = "hidden";
         var textNodeSelected = selectedNode.textContent.trim();
         var message = textNodeSelected + ' ' + groupSelected;
         sendData("SET_ADD_GROUP", message);
     }
-    else {
-        groupErrorLabel.style.color = "#C30101";
-        groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
-        groupErrorLabel.style.visibility = "visible";
-    }
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 3000);
 }
 
 function delFromGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel = iframeDocument.getElementById('groupError');
 
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (selectedNode && groupSelected != '-') {
-        groupErrorLabel.style.visibility = "hidden";
         var textNodeSelected = selectedNode.textContent.trim();
         var message = textNodeSelected + ' ' + groupSelected;
         sendData("SET_DEL_GROUP", message);
     }
-    else {
-        groupErrorLabel.style.color = "#C30101";
-        groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
-        groupErrorLabel.style.visibility = "visible";
-    }
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 300);
 }
 
 function addGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
-
-    var inputField = iframeDocument.getElementById("newGroupName");
-    var groupName = inputField.value.trim();
 
     var groupList = iframeDocument.getElementById('groupList');
-    var groupList2 = iframeDocument.getElementById('groupList2');
 
-    if (groupName !== "") {
-        var exists = false;
-        for (var i = 0; i < groupList.options.length; i++) {
-            var optionText = groupList.options[i].textContent.trim();
-            if(optionText.toLowerCase() === groupName.toLowerCase()) {
-                exists = true;
-                break;
-            }
-        }
+    groupList.innerHTML = "<option value='-'> ---- </option>"
+    sendData("SET_ADD_A_GROUP", "");
 
-        if(!exists) {
-            groupErrorLabel2.style.visibility = "hidden";
-        
-            inputField.value = "";
-            groupList.innerHTML = '<option value="-"> ---- </option>';
-            groupList2.innerHTML = '<option value="-"> ---- </option>';
-            sendData("SET_ADD_A_GROUP", groupName);
+    setTimeout(function(){
+        if(groupList.options.length > 0) {
+            groupList.selectedIndex = groupList.options.length - 1;
         }
-        else {
-            groupErrorLabel2.style.color = "#C30101";
-            groupErrorLabel2.innerHTML = "<b> Group already exists! </b>";
-            groupErrorLabel2.style.visibility = "visible";
-        }
-    }
-    else {
-        groupErrorLabel2.style.color = "#C30101";
-        groupErrorLabel2.innerHTML = "<b> Write a name! </b>";
-        groupErrorLabel2.style.visibility = "visible";
-    }
+    }, 1000);
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 1300);
 }
 
 function delGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    closeGroupPopup();
 
     var groupList = iframeDocument.getElementById('groupList');
-    var groupList2 = iframeDocument.getElementById('groupList2');
-    var groupSelected = groupList2.options[groupList2.selectedIndex].value;
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (groupSelected != '-') {
-        groupErrorLabel2.style.visibility = "hidden";
-
         groupList.innerHTML = '<option value="-"> ---- </option>';
-        groupList2.innerHTML = '<option value="-"> ---- </option>';
         sendData("SET_DEL_A_GROUP", groupSelected);
     }
-    else {
-        groupErrorLabel2.style.color = "#C30101";
-        groupErrorLabel2.innerHTML = "<b> Pick a group! </b>";
-        groupErrorLabel2.style.visibility = "visible";
+
+    setTimeout(function(){
+        loadNodesLists();
+    }, 1000);
+}
+
+function editGroup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var nameInput = iframeDocument.getElementById("newGroupName");
+    if(nameInput.value.trim() === "") { return; }
+
+    closeGroupPopup();
+
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if (groupSelected != '-') {
+        var tmpIndex = groupList.selectedIndex;
+        groupList.innerHTML = '<option value="-"> ---- </option>';
+        sendData("SET_EDIT_A_GROUP", groupSelected + "#" + nameInput.value);
+        setTimeout(function() {
+            groupList.selectedIndex = tmpIndex;
+        }, 1000);
+
+        setTimeout(function() {
+            loadNodesLists();
+        }, 1300);
     }
+}
+
+function loadNodesLists()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
+    includedNodesList.innerHTML = "";
+
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+    notIncludedNodesList.innerHTML = "";
+
+    var groupList = iframeDocument.getElementById("groupList");
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if(groupSelected == "-") { return; }
+
+    sendData("GET_GROUP_NODES", groupSelected);
 }
 
 function maxButton() 
 {
     sendData("SET_MAX", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function minButton() 
 {
     sendData("SET_MIN", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    }
+    else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }  
 }
 
 function offButton() 
 {
     sendData("SET_OFF", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function identifyButton() 
@@ -1071,12 +1135,14 @@ function rebootButton()
 
 function sliderInput() 
 {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var sliderValue = iframeDocument.getElementById("lvlSlider").value;
     var message = addressClicked + ' ' + sliderValue;
     sendData("SET_ACTUAL_LVL", message);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function facSettingsButton() 
@@ -1226,7 +1292,13 @@ function sendFile()
 
 function clearAllData()
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
     sendData("SET_CLEAR_ALL_DATA", "");
+
+    var clearDataLabel = iframeDocument.getElementById('clearDataLabel');
+    clearDataLabel.style.visibility = "visible";
 }
 
 function getLogs()
@@ -1361,6 +1433,39 @@ function loadGroupInfo(groupAddress) {
     sendData("GET_GROUP_INFO", groupAddress);
 }
 
+
 function sendPowerOnLevel(groupAddress, powerOnLevel){
     sendData("SET_POWER_ON_LVL", groupAddress + "_" + powerOnLevel)
+}
+
+function updateAllDisplayedButtons() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    const container = iframeDocument.getElementById("node-container");
+    const buttons = container.querySelectorAll('button[data-device]');
+    buttons.forEach(button => {
+        const device = button.getAttribute('data-device');
+        isAnExistingDevice(device);
+    });
+}
+
+function lineScanningFunction() {
+    sendData("SET_LINE_SCAN", "");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var feedbackLabel = iframeDocument.getElementById("feedbackLineScanning");
+    
+    feedbackLabel.style.visibility = "visible";
+    feedbackLabel.style.opacity = "1";
+    
+    setTimeout(function(){
+        feedbackLabel.style.opacity = "0";
+        
+        setTimeout(function(){
+            feedbackLabel.style.visibility = "hidden";
+        }, 2000);
+    }, 2000);
 }

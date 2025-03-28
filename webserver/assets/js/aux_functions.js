@@ -108,6 +108,7 @@ function createSettingsButton()
     var settingsIPConfig = document.createElement('li');
     var settingsTime = document.createElement('li');
     var settingsWirelessConfig = document.createElement('li');
+    var settingsGroupsConfig = document.createElement('li');
     var settingsLogs = document.createElement('li');
     var settingsTests = document.createElement('li');
     var settingsPOL = document.createElement('li');
@@ -125,6 +126,10 @@ function createSettingsButton()
     var settingsWirelessConfigLink = document.createElement('a');
     settingsWirelessConfigLink.onclick = function() { loadPage('s_wireless.html') };
     settingsWirelessConfigLink.textContent = "Wireless Config";
+
+    var settingsGroupsConfigLink = document.createElement('a');
+    settingsGroupsConfigLink.onclick = function() { loadPage('s_groups.html') };
+    settingsGroupsConfigLink.textContent = "Groups Config";
 
     var settingsLogsLink = document.createElement('a');
     settingsLogsLink.onclick = function() { loadPage('s_logs.html') };
@@ -149,6 +154,7 @@ function createSettingsButton()
     settingsIPConfig.appendChild(settingsIPConfigLink);
     settingsTime.appendChild(settingsTimeLink);
     settingsWirelessConfig.appendChild(settingsWirelessConfigLink);
+    settingsGroupsConfig.appendChild(settingsGroupsConfigLink);
     settingsLogs.appendChild(settingsLogsLink);
     settingsTests.appendChild(settingsTestsLink);
     settingsPOL.appendChild(settingsPowerOnLevLink);
@@ -158,6 +164,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsIPConfig);
     settingsButtonMenu.appendChild(settingsTime);
     settingsButtonMenu.appendChild(settingsWirelessConfig);
+    settingsButtonMenu.appendChild(settingsGroupsConfig);
     settingsButtonMenu.appendChild(settingsLogs);
     settingsButtonMenu.appendChild(settingsTests);
     settingsButtonMenu.appendChild(settingsPOL);
@@ -240,13 +247,30 @@ function selectDevice(device)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
 
-    var scannedDevices = scannedDevicesList.getElementsByTagName('li');
-    var networkDevices = networkNodesList.getElementsByTagName('li');
+    // Botones de nodos en s_wireless.html
+    if(scannedDevicesList && networkNodesList) {
+        var scannedDevices = scannedDevicesList.getElementsByTagName('li');
+        var networkDevices = networkNodesList.getElementsByTagName('li');
 
-    for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
-    for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+        for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
+        for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
 
-    device.classList.add('selectedDevice');
+        device.classList.add('selectedDevice');
+    }
+
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+
+    // Botones de nodos en s_groups.html
+    if(includedNodesList && notIncludedNodesList) {
+        var includedNodes = includedNodesList.getElementsByTagName('li');
+        var notIncludedNodes = notIncludedNodesList.getElementsByTagName('li');
+
+        for (var i = 0; i < includedNodes.length; i++) { includedNodes[i].classList.remove('selectedDevice'); }
+        for (var i = 0; i < notIncludedNodes.length; i++) { notIncludedNodes[i].classList.remove('selectedDevice'); }
+
+        device.classList.add('selectedDevice');
+    }
 }
 
 function openGroupControl(button)
@@ -500,4 +524,58 @@ function onSetPowerOnLevelClick(){
         errorLabel.textContent = "";
     }
     sendPowerOnLevel(groupAddress, powerOnLevel);
+}
+
+function transformDecimalGroupAddressIntoHexGroupAddress(value) {
+    // Ejemplo: Recibe 49153 (la dirección del grupo de emergencia) y devuelve "C001" (la dirección en hexadecimal)
+    let hex = value .toString(16);
+    hex = hex.toUpperCase();
+    return hex;
+}
+
+function delGroupPrev() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectElem = iframeDocument.getElementById("groupList");
+    if(selectElem.options[selectElem.selectedIndex].value == "-") { return; }
+
+    var popup = iframeDocument.getElementById('popupDeletingGroup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
+function editGroupPrev()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectElem = iframeDocument.getElementById("groupList");
+    if(selectElem.options[selectElem.selectedIndex].value == "-") { return; }
+
+    var popup = iframeDocument.getElementById('popupEditingName');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var nameInput = iframeDocument.getElementById("newGroupName");
+    nameInput.value =  selectElem.options[selectElem.selectedIndex].text;
+}
+
+function closeGroupPopup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupEdit = iframeDocument.getElementById('popupEditingName');
+    var popupDelete = iframeDocument.getElementById('popupDeletingGroup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    
+    if(popupEdit) { popupEdit.style.visibility = "hidden"; }
+    if(popupDelete) { popupDelete.style.visibility = "hidden"; }
+    popupOverlay.style.visibility = "hidden";
 }

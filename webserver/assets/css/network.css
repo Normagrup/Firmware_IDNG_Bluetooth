@@ -145,6 +145,10 @@ label {
     outline: 2px solid #63e8f0;
 }
 
+.range-container button {
+    height: 60%;
+}
+
 .node-container {
     display: grid;
     grid-template-columns: repeat(8, auto);
@@ -273,12 +277,19 @@ label {
     width: 100%;
     height: 100%;
     border-radius: 8px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .popup-button-subcontainer button:hover {
     color: #4682b4;
     background-color: #63e8f0;
+}
+
+.popup-button-subcontainer button.clicked {
+    color: #4682b4;
+    /*background-color: #c0eff1;*/
+    background-color: #c2fcff;
+    transform: scale(0.95);
 }
 
 .closeWindow {
@@ -387,3 +398,41 @@ label {
 .status-indicator.off-state {
     background-color: #000;
 }
+
+.line-scanning-container {
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.line-scanning-container button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 16px;
+    height: 60%;
+    cursor: pointer;
+    border: none;
+    background-color: #4682b4;
+    color: #fff;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+  
+.line-scanning-container button:hover {
+    background-color: #63e8f0;
+}
+
+#feedbackLineScanning {
+    color: #4682b4;
+    visibility: hidden;
+    opacity: 0;
+    margin-right: 10px;
+    transition: opacity 2s ease-out;
+}
+
+.button-icon {
+    width: 20px;   /* Ajusta según lo necesites */
+    height: 20px;
+}
+  

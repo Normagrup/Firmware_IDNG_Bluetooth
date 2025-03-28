@@ -59,40 +59,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="wrap-group-container ">
-            <h2> Group Configuration </h2>
-            <div class="group-container">
-                <label> Pick group and node </label>
-
-                <select class="selector" id="groupList">
-                    <option value="-"> ---- </option>
-				</select>
-
-                <div class="group-button-container">
-                    <button onclick="parent.addToGroup()"> Add Node </button>
-                    <button onclick="parent.delFromGroup()"> Delete Node </button>
-                </div>
-
-                <label id="groupError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
-            </div>
-
-            <div class="group-container">
-                <label> Creating and deleting groups </label>
-
-                <input type="text" id="newGroupName" placeholder="Group Name" />
-                <button onclick="parent.addGroup()"> Add Group </button>
-
-                <select class="selector" id="groupList2">
-                    <option value="-"> ---- </option>
-				</select>
-                <button onclick="parent.delGroup()"> Delete Group </button>
-
-                <label id="groupError2" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
-            </div>
-
-            <br>
-        </div>
     </div>
 
     <script>
@@ -101,16 +67,9 @@
 				parent.sendData("SET_LOAD_NODES", "");
 			}, 10);
 		}
-
-        function getGroupsFromDatabase() {
-			setTimeout(function() {
-				parent.sendData("GET_GROUPS", "");
-			}, 10);
-		}
 		
 		window.onload = function() {
             getNodesFromDatabase();
-            getGroupsFromDatabase();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";
@@ -132,7 +91,6 @@
             for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
             for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
         });
-
     </script>
 </body>
 

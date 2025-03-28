@@ -6,6 +6,7 @@
 #include "process_uart_data.h"
 #include "aux_functions.h"
 #include "dali_headers.h"
+#include "global_variables.h"
 #include <QSqlQuery>
 
 
@@ -92,15 +93,22 @@ void Wireless::webServerReceivedData(QString data)
 void Wireless::pollingTimerHandler()
 {
     if (pollingData.pollingInProgress){
+        //qDebug() << "[Wireless.cpp] pollingReceived detectado como TRUE";
         if (pollingData.pollingReceived) {
             meshDevice[subnetCount][nodeSubnetCount].setCommunicationFailure(false);
-            pollingData.pollingReceived = false;
+            
+            qDebug() << "[Wireless.cpp] Polling recibido con éxito, seguimos.";
+
             pollingData.pollingInProgress = false;
+            pollingData.pollingReceived = false;
+            pollingData.retries = 0;
+
             nodeSubnetCount++;
             goto sendNewPolling;
         }
         else if (pollingData.retries < 5) {
             pollingData.retries++;
+            qDebug() << "[Wireless.cpp] Reintento de polling #" << pollingData.retries;
             sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
             return;
         }
@@ -109,6 +117,7 @@ void Wireless::pollingTimerHandler()
             meshDevice[subnetCount][nodeSubnetCount].setCommunicationFailure(true);
             pollingData.pollingInProgress = false;
             nodeSubnetCount++;
+            goto sendNewPolling;
         }
     }
 
@@ -116,8 +125,15 @@ sendNewPolling:
     while (subnetCount < MAX_SUBNET) {
         while (nodeSubnetCount < MAX_NODES_SUBNET) {
             if (meshDevice[subnetCount][nodeSubnetCount].getIsConfigured()) {
-                sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
+                uint16_t nodeAddr = meshDevice[subnetCount][nodeSubnetCount].getRealAddress();
+
+                //qDebug() << "[Wireless.cpp] Enviando polling inicial a nodo:" << nodeAddr;
+
                 pollingData.pollingInProgress = true;
+                pollingData.pollingReceived = false;
+                pollingData.retries = 0;
+
+                sendPollingFrame(_uartPort, nodeAddr);
                 return;
             }
             nodeSubnetCount++;
@@ -128,6 +144,8 @@ sendNewPolling:
 
     nodeSubnetCount = 0;
     subnetCount = 0;
+
+
 }
 
 void Wireless::testTimerHandler()

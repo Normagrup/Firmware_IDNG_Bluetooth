@@ -29,6 +29,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartScannedDevices(uartPort);
     }
+    else if (type == WS_SET_LINE_SCAN) {
+        if(isCommissionInProgress(webServer)) { return; }
+        requestMicroDatabase(uartPort);
+        
+    }
     else if (type == WS_GET_IP_CONFIG) {
         QStringList messages = database->getInterfaceParameters();
         QString message = messages.join(" ");
@@ -98,11 +103,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_DELETE_DEVICE) {
         if(isCommissionInProgress(webServer)) { return; }
 
-        //uint16_t nodeNetAddress = getNodeNetAddress(value);
-        //uint16_t  nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-        //meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-        //database->deleteNode(nodeAddress);
-        //sendUartDelDevice(uartPort, 0xFFFF);
         uint16_t nodeNetAddress = getNodeNetAddress(value);
         uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
         printf(" Intentando eliminar nodo...\n");
@@ -193,15 +193,26 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDelGroup(uartPort, address, database);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
-        createGroup(value, database);
+        database->createGroup();
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_DEL_A_GROUP) {
-        removeGroup(value, database);
+        database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
         qDebug() << "the group address belongs to: " << groupAddress;
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         sendGroups(webServer, database);
+    }
+    else if (type == WS_SET_EDIT_A_GROUP) {
+        QStringList parts = value.split("#");
+        QString address = parts[0];
+        QString newName = parts[1];
+
+        database->editGroup(address, newName);
+        sendGroups(webServer, database);
+    }
+    else if (type == WS_GET_GROUP_NODES) {
+        sendGroupNodes(webServer, value);
     }
     else if (type == WS_SET_MAX) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -209,9 +220,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(254); // 254 / 254 = 100%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, RECALL_MAX_LVL, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(254); // 254 / 254 = 100%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, RECALL_MAX_LVL, IS_NORMAL);
         }
     }
@@ -221,9 +240,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(0); // 0 / 254 = 0%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, OFF, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(0); // 0 / 254 = 0%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, OFF, IS_NORMAL);
         }
     }
@@ -233,9 +260,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(3); // 3 / 254 = 1%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, RECALL_MIN_LVL, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(3); // 3 / 254 = 1%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, RECALL_MIN_LVL, IS_NORMAL);
         }
     }
@@ -253,6 +288,20 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_ACTUAL_LVL) {
         uint16_t* values = getActualLvl(value);
+
+        if(values[0] < 0xC000) {
+            meshDevice[(values[0] - 1) / 64][(values[0] - 1) % 64].setActualLvl(values[1]);
+        }
+        else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(values[0]))
+                        device.setActualLvl(values[1]);
+                }
+            }
+        }
+
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
     else if (type == WS_SET_IDENTIFY) {
@@ -699,10 +748,10 @@ void sendGroupInfo(WebServer* webServer, QString groupAddress)
         for(int j = 0; j < MAX_NODES_SUBNET; j++) {
             Device& device = meshDevice[i][j];
             if(device.getIsConfigured()) {
-                configDevs++;
                 uint16_t groupSubAddress[1];
                 convertGroupSubStringToArray(groupAddress, groupSubAddress);
                 if(device.isOnGroupSubAddress(groupSubAddress[0])) {
+                    configDevs++;
                     if(device.hasLampFailure()) { lampFailCount++; }
                     if(device.hasBatteryFailure()) { batFailCount++; }
                     if(device.hasBatteryDurationFailure()) { durFailCount++; }
@@ -729,6 +778,31 @@ void sendGroupInfo(WebServer* webServer, QString groupAddress)
     QString message = QString(WS_SEND_GROUP_INFO) + "@" + lampFailCountS + "." + emerModeCountS + "." + batFailCountS + "." + durFailCountS + "." + averageLvlS + "." + comFailCountS;
 
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendGroupNodes(WebServer* webServer, QString groupAddress) {
+    QString messageIncludedNodeInit = QString(WS_SEND_GROUP_NODE_INCLUDED) + "@";
+    QString messageNotIncludedNodeInit = QString(WS_SEND_GROUP_NODE_NOT_INCLUDED) + "@";
+    QString message;
+
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured()) {
+                uint16_t groupSubAddress[1];
+                convertGroupSubStringToArray(groupAddress, groupSubAddress);
+
+                if(device.isOnGroupSubAddress(groupSubAddress[0]))
+                    message = messageIncludedNodeInit;
+                else
+                    message = messageNotIncludedNodeInit;
+
+                message += QString::number(i * 64 + j + 1) + "_" + device.serialNumberString();
+
+                if (webServer != nullptr) { webServer->sendData(message); }
+            }
+        }
+    }
 }
 
 void sendTest(WebServer* webServer, Database* database, QString groupAddress)
@@ -814,8 +888,6 @@ void clearSystemData(Database* database,  UartPort* uartPort)
     qDebug() << "[Embebido] Enviando CLEAR_ALL_DATA al micro por UART...";
     sendUartClearAllData(uartPort); 
 
-    // Borrado del micro
-    // TODO
 }
 
 void sendPowerOnGroup(WebServer *webServer, Database *database)
@@ -854,3 +926,4 @@ void updatePowerOnLvlToWeb(WebServer *webServer, Database *database, QString gro
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+

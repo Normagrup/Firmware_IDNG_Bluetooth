@@ -42,14 +42,26 @@ public:
     QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
 
     QList<QPair<QString, QString>> getGroups(void);
-    void createGroup(QString name);
+    void createGroup();
     void createTestEntry(QString address);
     void removeGroup(QString address);
     void removeTestEntry(QString address);
     void setPowerOnLevelGroup(QString groupAddress, uint8_t powerOnLevel);
     QList<PowerOnLevGroupInfo> getPowerOnLevelGroup(void);
-
+    void editGroup(QString address, QString name);
     void clearAllData(void);
+    void addNode(uint16_t nodeAddress);
+    void addOrUpdateNode(
+        uint8_t subnetAddress,
+        uint8_t nodeSubnetAddress,
+        uint16_t realAddress,
+        const QString &uuid,
+        const QString &groupSub,
+        uint8_t deviceType,
+        uint8_t ratedDuration,
+        uint8_t emergencyFeatures,
+        uint8_t physicalMinLvl
+    );
 
 signals:
 
