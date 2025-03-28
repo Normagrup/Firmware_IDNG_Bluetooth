@@ -1380,6 +1380,7 @@ function updateAllDisplayedButtons() {
     });
 }
 
+
 function lineScanningFunction() {
     sendData("SET_LINE_SCAN", "");
 

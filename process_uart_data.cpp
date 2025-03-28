@@ -211,51 +211,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)dataChecked[3], 2, 16, QChar('0')).toUpper();
                     break;
 
-                    case LINE_SCAN_SEND:
-                    {
-                        // Esperamos 22 bytes mínimo
-                        if (dataChecked.size() < 22) {
-                            qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                            break;
-                        }
                     
-                        // [3..4] => realAddress
-                        uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                        uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                        uint16_t realAddr = (highByte << 8) | lowByte;
-                    
-                        // [5..20] => 16 bytes de UUID binario
-                        QByteArray uuidBytes = dataChecked.mid(5, 16);
-                        // Convertir a string en hex para la DB
-                        QString uuidHex = QString(uuidBytes.toHex()).toUpper();
-                    
-                        // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                        // ...
-                    
-                        // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                        uint8_t subnetAddr = 0;
-                        uint8_t nodeSubnetAddr = 0;
-                    
-                        // Llamada a la DB
-                        database->addOrUpdateNode(
-                            subnetAddr,
-                            nodeSubnetAddr,
-                            realAddr,
-                            uuidHex,   // guardas el UUID en la columna “UUID”
-                            "",        // groupSub vacío
-                            0,         // deviceType
-                            0,         // ratedDuration
-                            0,         // emergencyFeatures
-                            0          // physicalMinLvl
-                        );
-                        database->loadNodesFromDatabase();
-                        qDebug() << "Insertado/actualizado nodo" 
-                                 << QString::asprintf("%04X", realAddr)
-                                 << " con UUID=" << uuidHex;
-                    }
+                    default:
                     break;
-            // default:       
-            // break;
+                }
+            break;
 
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(dataChecked, database, webServer);
@@ -288,7 +248,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                 break;
         }
     }
-}
 }
 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
@@ -812,19 +771,4 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-}
-
-void requestMicroDatabase(UartPort* uartPort)
-{
-    QByteArray frame;
-
-    unsigned char length = 3;
-
-    frame.append(UART_HEADER);               // 0x02, o lo que tengas definido
-    frame.append(length);                    // 3
-    frame.append(UART_CONFIG_FRAME_TYPE);    // 0x10, por ejemplo
-    frame.append(LINE_SCAN);                 // 0x20 (o el valor que hayas definido para "REQUEST_DB")
-    frame.append(UART_END);                  // 0x03, por ejemplo
-
-    uartPort->sendData(frame); 
 }
