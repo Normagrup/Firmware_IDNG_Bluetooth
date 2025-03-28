@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSqlDatabase>
+#include "structures.h"
 
 class Database : public QObject
 {
@@ -46,6 +47,8 @@ public:
     void removeGroup(QString address);
     void removeTestEntry(QString address);
     void editGroup(QString address, QString name);
+    void setPowerOnLevelGroup(QString groupAddress, uint8_t powerOnLevel);
+    QList<PowerOnLevGroupInfo> getPowerOnLevelGroup(void);
 
     void clearAllData(void);
     void addNode(uint16_t nodeAddress);

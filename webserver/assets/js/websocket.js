@@ -2,6 +2,16 @@ var socket = new WebSocket("ws://" + window.location.hostname + ":4322");
 var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
+var allGroups = []; // Stores groups globally
+var groupsPerPage = 15;
+var currentPage = 1;
+
+const fixedGroups = [
+    { name: "Lighting", address: "C000" },
+    { name: "Emergency", address: "C001" },
+    { name: "Even", address: "C002" },
+    { name: "Odd", address: "C003" }
+];
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -687,6 +697,60 @@ function processIsConfig(value)
     }
 }
 
+function processPowerOnLevelGroup(value) {
+    var parts = value.split("_");
+    var groupAddress = parts[0];
+    var groupName = parts[1];
+    var powerOnValue = parts[2];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var powerOnGroupSelector = iframeDocument.getElementById('groupListPowerOn');
+    var powerLevelText = (powerOnValue === "0") ? "Off" : (powerOnValue === "254") ? "Max" : "Last Value";
+
+    fixedGroups.forEach(group => {
+        if (!powerOnGroupSelector.querySelector(`option[value="${group.address}"]`)) {
+            var opt = iframeDocument.createElement('option');
+            opt.value = group.address;
+            opt.textContent = group.name;
+            powerOnGroupSelector.appendChild(opt);
+        }
+    });
+
+    if (!powerOnGroupSelector.querySelector(`option[value="${groupAddress}"]`)) {
+        var opt = iframeDocument.createElement('option');
+        opt.value = groupAddress;
+        opt.textContent = groupName;
+        powerOnGroupSelector.appendChild(opt);
+    }
+
+    let updated = false;
+
+    fixedGroups.forEach(group => {
+        if(group.address === groupAddress){
+            let target = allGroups.find(g => g.address === group.address);
+            if(target){
+                target.powerOnValue = powerLevelText;
+                updated = true;
+            }
+        }
+    });
+
+    if (!updated) {
+        let existing = allGroups.find(g => g.address === groupAddress);
+        if (existing) {
+            existing.powerOnValue = powerLevelText;
+        } else {
+            allGroups.push({ address: groupAddress, name: groupName, powerOnValue: powerLevelText });
+        }
+    }
+
+    updatePaginationDropdown(iframeDocument);
+    displayPowerOnGroups(iframeDocument, 1); // always reset to page 1
+    iframeDocument.getElementById('paginationDropdown').value = "1";
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -718,6 +782,7 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
+    else if (type == 'POWER_ON_LVL') { processPowerOnLevelGroup(value)}
 }
 
 function sendData(type, value) 
@@ -1398,4 +1463,7 @@ function lineScanningFunction() {
             feedbackLabel.style.visibility = "hidden";
         }, 2000);
     }, 2000);
+}
+function sendPowerOnLevel(groupAddress, powerOnLevel){
+    sendData("SET_POWER_ON_LVL", groupAddress + "_" + powerOnLevel)
 }

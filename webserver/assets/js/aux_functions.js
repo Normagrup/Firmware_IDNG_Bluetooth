@@ -111,6 +111,7 @@ function createSettingsButton()
     var settingsGroupsConfig = document.createElement('li');
     var settingsLogs = document.createElement('li');
     var settingsTests = document.createElement('li');
+    var settingsPOL = document.createElement('li');
     var settingsUpdateDevice = document.createElement('li');
     var settingsManageData = document.createElement('li');
 
@@ -138,6 +139,10 @@ function createSettingsButton()
     settingsTestsLink.onclick = function() { loadPage('s_tests.html') };
     settingsTestsLink.textContent = "Emergency Tests";
 
+    var settingsPowerOnLevLink = document.createElement('a');
+    settingsPowerOnLevLink.onclick = function() { loadPage('s_power_on_level.html') };
+    settingsPowerOnLevLink.textContent = "Power On Level";
+
     var settingsUpdateDeviceLink = document.createElement('a');
     settingsUpdateDeviceLink.onclick = function() { loadPage('s_update.html') };
     settingsUpdateDeviceLink.textContent = "Update Device";
@@ -152,6 +157,7 @@ function createSettingsButton()
     settingsGroupsConfig.appendChild(settingsGroupsConfigLink);
     settingsLogs.appendChild(settingsLogsLink);
     settingsTests.appendChild(settingsTestsLink);
+    settingsPOL.appendChild(settingsPowerOnLevLink);
     settingsUpdateDevice.appendChild(settingsUpdateDeviceLink);
     settingsManageData.appendChild(settingsManageDataLink);
 
@@ -161,6 +167,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsGroupsConfig);
     settingsButtonMenu.appendChild(settingsLogs);
     settingsButtonMenu.appendChild(settingsTests);
+    settingsButtonMenu.appendChild(settingsPOL);
     settingsButtonMenu.appendChild(settingsUpdateDevice);
     settingsButtonMenu.appendChild(settingsManageData);
 
@@ -483,4 +490,91 @@ function closeGroupPopup()
     if(popupEdit) { popupEdit.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
+}
+function displayPowerOnGroups(iframeDocument, page) {
+    var tableBody= iframeDocument.getElementById('powerLevelsTable').getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = ""; 
+
+    var start = (page - 1) * groupsPerPage;
+    var end = start + groupsPerPage;
+
+    allGroups.slice(start, end).forEach(group => {
+        var row = iframeDocument.createElement('tr');
+        row.setAttribute("data-group", group.address);
+
+        var nameCell = iframeDocument.createElement('td');
+        nameCell.textContent = group.name;
+
+        var valueCell = iframeDocument.createElement('td');
+        valueCell.className = "power-level";
+        valueCell.textContent = group.powerOnValue;
+
+        row.appendChild(nameCell);
+        row.appendChild(valueCell);
+        tableBody.appendChild(row);
+    });
+}
+
+function updatePaginationDropdown(iframeDocument) {
+    var dropdown = iframeDocument.getElementById('paginationDropdown');
+    dropdown.innerHTML = ""; 
+
+    var pages = Math.ceil(allGroups.length / groupsPerPage);
+
+    for (var i = 1; i <= pages; i++) {
+        var option = iframeDocument.createElement('option');
+        option.value = i;
+        option.textContent = "Page " + i;
+        dropdown.appendChild(option);
+    }
+
+    dropdown.onchange = function () {
+        currentPage = parseInt(this.value);
+        displayPowerOnGroups(iframeDocument, currentPage);
+    };
+}
+
+function resetPowerOnLevelPage() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    allGroups = []; // Clear old data
+
+    fixedGroups.forEach(group => {
+        allGroups.push({
+            address: group.address,
+            name: group.name,
+            powerOnValue: "—" // Placeholder 
+        });
+    });
+    
+    currentPage = 1;
+    var groupSelector = iframeDocument.getElementById('groupListPowerOn');
+    var tableBody = iframeDocument.getElementById('powerLevelsTable').getElementsByTagName('tbody')[0];
+    var dropdown = iframeDocument.getElementById('paginationDropdown');
+
+    if (groupSelector) groupSelector.innerHTML = '<option value="-">-----</option>';
+    if (tableBody) tableBody.innerHTML = "";
+    if (dropdown) dropdown.innerHTML = "";
+}
+
+function onSetPowerOnLevelClick(){
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var groupSelector = iframeDocument.getElementById('groupListPowerOn');
+    var levelSelector = iframeDocument.getElementById('powerOnLevelList');
+    var errorLabel = iframeDocument.getElementById('powerOnError');
+
+    var groupAddress = groupSelector.value;
+    var powerOnLevel = levelSelector.value;
+    
+    if (groupAddress === "-" || !groupAddress) {
+        errorLabel.textContent = "Please select a group.";
+        errorLabel.style.color = "#C30101";
+        return;
+    } else {
+        errorLabel.textContent = "";
+    }
+    sendPowerOnLevel(groupAddress, powerOnLevel);
 }
