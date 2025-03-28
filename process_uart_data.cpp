@@ -254,6 +254,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                  << " con UUID=" << uuidHex;
                     }
                     break;
+                }
             // default:       
             // break;
 
@@ -289,7 +290,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
         }
     }
 }
-}
+
 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
 {
