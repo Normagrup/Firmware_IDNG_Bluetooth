@@ -423,9 +423,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel , IS_NORMAL);
         delay(SLEEP_DALI_TIME_MS);
-        sendUartDaliCommand(uartPort, groupAddress, STORE_DTR_POWER_ON_LVL, powerOnLevel , IS_TWICE);
+        sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
         delay(SLEEP_DALI_TIME_MS);
-        sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
+        sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, QUERY_POWER_ON_LVL, IS_QUERY);
     }
 
     else if (type == WS_GET_POWER_ON_LVL){
@@ -436,7 +436,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             QString groupAddrStr = group.groupAddress;
             uint16_t groupAddress = groupAddrStr.toUShort(nullptr, 16);
 
-            sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
+            sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, QUERY_POWER_ON_LVL, IS_QUERY);
             delay(WEBSERVER_SEND_TIME_MS);
         }
         sendPowerOnGroup(webServer, database);
