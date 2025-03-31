@@ -116,7 +116,8 @@ void Database::initDatabase()
      * **************************************************/
     query.exec("CREATE TABLE IF NOT EXISTS Groups "
                "(GroupAddress TEXT, "
-               "GroupName TEXT);");
+               "GroupName TEXT, "
+               "PowerOnLevel INTEGER);");
 
     query.prepare("SELECT * FROM Groups");
 
@@ -127,12 +128,13 @@ void Database::initDatabase()
             //QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
             QStringList groupAddresses = {};
 
-            query.prepare("INSERT INTO Groups (GroupAddress, GroupName) VALUES (:groupAddress, :groupName)");
+            query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
             int groupNumber = 1;
             foreach (const QString &groupAddress, groupAddresses) {
                 query.bindValue(":groupAddress", groupAddress);
                 query.bindValue(":groupName", "Group " + QString::number(groupNumber));
+                query.bindValue(":powerOnLevel", 255);
 
                 if (!query.exec()) { qDebug() << "Error executing INSERT query in Groups:" << query.lastError().text(); }
 
@@ -821,6 +823,7 @@ void Database::editGroup(QString address, QString name)
     query.bindValue(":address", address);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in GROUPS" << query.lastError().text(); }
+
 }
 
 void Database::clearAllData()

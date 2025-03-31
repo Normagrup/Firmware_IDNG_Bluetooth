@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSqlDatabase>
+#include "structures.h"
 
 class Database : public QObject
 {
@@ -60,7 +61,7 @@ public:
         uint8_t ratedDuration,
         uint8_t emergencyFeatures,
         uint8_t physicalMinLvl
-    );
+        );
 
 signals:
 

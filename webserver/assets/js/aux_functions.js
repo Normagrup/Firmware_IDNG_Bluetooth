@@ -111,6 +111,7 @@ function createSettingsButton()
     var settingsGroupsConfig = document.createElement('li');
     var settingsLogs = document.createElement('li');
     var settingsTests = document.createElement('li');
+    var settingsPOL = document.createElement('li');
     var settingsUpdateDevice = document.createElement('li');
     var settingsManageData = document.createElement('li');
 
@@ -138,6 +139,10 @@ function createSettingsButton()
     settingsTestsLink.onclick = function() { loadPage('s_tests.html') };
     settingsTestsLink.textContent = "Emergency Tests";
 
+    var settingsPowerOnLevLink = document.createElement('a');
+    settingsPowerOnLevLink.onclick = function() { loadPage('s_power_on_level.html') };
+    settingsPowerOnLevLink.textContent = "Power On Level";
+
     var settingsUpdateDeviceLink = document.createElement('a');
     settingsUpdateDeviceLink.onclick = function() { loadPage('s_update.html') };
     settingsUpdateDeviceLink.textContent = "Update Device";
@@ -152,6 +157,7 @@ function createSettingsButton()
     settingsGroupsConfig.appendChild(settingsGroupsConfigLink);
     settingsLogs.appendChild(settingsLogsLink);
     settingsTests.appendChild(settingsTestsLink);
+    settingsPOL.appendChild(settingsPowerOnLevLink);
     settingsUpdateDevice.appendChild(settingsUpdateDeviceLink);
     settingsManageData.appendChild(settingsManageDataLink);
 
@@ -161,6 +167,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsGroupsConfig);
     settingsButtonMenu.appendChild(settingsLogs);
     settingsButtonMenu.appendChild(settingsTests);
+    settingsButtonMenu.appendChild(settingsPOL);
     settingsButtonMenu.appendChild(settingsUpdateDevice);
     settingsButtonMenu.appendChild(settingsManageData);
 

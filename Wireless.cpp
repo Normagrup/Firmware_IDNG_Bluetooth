@@ -6,6 +6,7 @@
 #include "process_uart_data.h"
 #include "aux_functions.h"
 #include "dali_headers.h"
+#include "global_variables.h"
 #include <QSqlQuery>
 
 

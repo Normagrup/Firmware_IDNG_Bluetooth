@@ -36,4 +36,10 @@ typedef struct {
     bool isChangeRelayConfirmed;
 } CommissionData;
 
+typedef struct {
+    QString groupAddress;
+    QString groupName;
+    int powerOnLevel;
+} PowerOnLevGroupInfo;
+
 #endif // STRUCTURES_H

@@ -469,6 +469,12 @@ void processChangeFrame(QByteArray data, Database* database, WebServer* webServe
 
     qDebug() << "CHANGE FRAME FROM " << address << ": " << daliCommandType << daliRegisterValue;
 
+    if(daliCommandType == QUERY_POWER_ON_LVL){
+        QString groupHex = QString("%1").arg(address, 4, 16, QChar('0')).toUpper();
+        database->setPowerOnLevelGroup(groupHex, daliRegisterValue);
+        updatePowerOnLvlToWeb(webServer, database, groupHex, daliRegisterValue);
+    }
+
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == address) {
