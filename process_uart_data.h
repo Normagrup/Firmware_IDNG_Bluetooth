@@ -24,6 +24,8 @@
 #define ADD_DEVICE                      0x09
 #define DEVICE_ERROR                    0x11
 #define DEL_DEVICES                     0x13
+#define DEL_ALL_DEVICES                 0x41
+#define NODE_DELETED                    0x50
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
 #define CLEAR_ALL_DATA                  0x18
@@ -41,8 +43,6 @@
 #define DEBUG                           0x90
 #define LINE_SCAN                       0x20
 #define LINE_SCAN_SEND                  0x22
-#define DEL_ALL_DEVICES_BROADCAST       0x41
-#define NODE_DELETED                    0x50
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -57,6 +57,7 @@ void sendUartNewIteration(UartPort* _uartPort);
 void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
+void sendUartDelAllDevices(UartPort* uartPort);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
@@ -65,5 +66,5 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void requestMicroDatabase(UartPort* _uartPort);
-void sendUartDelAllDevicesBroadcast(UartPort* uartPort);
+
 #endif // PROCESS_UART_DATA_H
