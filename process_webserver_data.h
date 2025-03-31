@@ -18,6 +18,7 @@
 #define WS_SET_NEW_COMMISSION_ITERATION     "SET_NEW_COMMISSION_ITERATION"
 #define WS_SET_DELETE_DEVICE                "SET_DELETE_DEVICE"
 #define WS_SET_DELETE_ALL_DEVICES           "SET_DELETE_ALL_DEVICES"
+#define WS_SET_DELETE_ALL_DEVICES_BROADCAST "SET_DELETE_ALL_DEVICES_BROADCAST"
 #define WS_SET_ADD_GROUP                    "SET_ADD_GROUP"     // añadir nodo a grupo
 #define WS_SET_ADD_A_GROUP                  "SET_ADD_A_GROUP"   // añadir un grupo
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"     // eliminar nodo de grupo)

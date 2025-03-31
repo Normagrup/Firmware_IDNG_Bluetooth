@@ -876,21 +876,35 @@ function delDevice() {
     }
 }
 
+// function delAllDevices() {
+//     var iframe = document.getElementById('mainframe');
+//     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+//     var networkErrorLabel = iframeDocument.getElementById('networkError');
+    
+//     // Seleccionar la lista de nodos
+//     var networkNodesList = iframeDocument.getElementById('networkNodesList');
+    
+//     console.log("Enviando comando SET_DELETE_ALL_DEVICES");
+//     // Enviar comando al embebido para eliminar los nodos
+//     sendData("SET_DELETE_ALL_DEVICES", "");
+
+//     networkErrorLabel.style.visibility = "hidden";
+//     networkNodesList.innerHTML = "";
+// }
+
 function delAllDevices() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     var networkErrorLabel = iframeDocument.getElementById('networkError');
-    
-    // Seleccionar la lista de nodos
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
-    
-    console.log("Enviando comando SET_DELETE_ALL_DEVICES");
-    // Enviar comando al embebido para eliminar los nodos
-    sendData("SET_DELETE_ALL_DEVICES", "");
+
+    console.log("Enviando comando SET_DELETE_ALL_DEVICES_BROADCAST");
+    sendData("SET_DELETE_ALL_DEVICES_BROADCAST", "");
 
     networkErrorLabel.style.visibility = "hidden";
     networkNodesList.innerHTML = "";
 }
+
 
 function addToGroup() 
 {

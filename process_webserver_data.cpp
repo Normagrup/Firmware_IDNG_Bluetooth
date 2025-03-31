@@ -109,57 +109,72 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         printf(" Net Address: %04X\n", nodeNetAddress);
         printf(" Dirección obtenida de meshDevice: %04X\n", nodeAddress);
 
-        // Notificar al microcontrolador maestro
         sendUartDelDevice(uartPort, nodeAddress);
 
         // Eliminar el nodo de la estructura interna
         meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
 
-        // Eliminar el nodo de la base de datos
         database->deleteNode(nodeAddress);
-
-
 
         printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
     }
-    else if (type == WS_SET_DELETE_ALL_DEVICES) {
+    else if (type == WS_SET_DELETE_ALL_DEVICES_BROADCAST) {
         if(isCommissionInProgress(webServer)) { return; }
-
-        QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
-
-        for (uint16_t nodeNetAddress : nodeNetAddressList) {
-            uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-
-            qDebug() << "Eliminando Nodo (NodeNetAddress:" << nodeNetAddress << "--- NodeAddress:" << nodeAddress << ")";
-
-            // Notificar al microcontrolador maestro
-            sendUartDelDevice(uartPort, nodeAddress);
-
-            // Esperar confirmación de eliminación verificando la base de datos
-            bool eliminado = false;
-            int intentos = 0;
-
-            while (!eliminado && intentos < 3) {  // Intentar hasta 3 veces
-                QThread::msleep(1000);  // Esperar 1 segundo para dar tiempo a la eliminación
-
-                // Comprobar si el nodo sigue en la base de datos
-                eliminado = !database->isNodeInDatabase(nodeAddress);
-                intentos++;
-            }
-
-            if (eliminado) {
-                qDebug() << "Nodo " << nodeAddress << " eliminado correctamente.";
-                meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-            } else {
-                qDebug() << "Error: Nodo " << nodeAddress << " no respondió a la eliminación.";
+    
+        sendUartDelAllDevicesBroadcast(uartPort);
+    
+        QThread::msleep(3000);
+    
+        // Limpiar estructura interna meshDevice (sin depender de confirmación individual)
+        for(int i = 0; i < MAX_SUBNET; i++) {
+            for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                meshDevice[i][j].deleteDevice();
             }
         }
-
-        // Eliminar todos los nodos de la base de datos
+    
         database->deleteAllNodes();
-
-        qDebug() << "Eliminación de nodos completada";
+    
+        qDebug() << "Broadcast eliminación completa, nodos borrados de DB y meshDevice.";
     }
+    
+    // else if (type == WS_SET_DELETE_ALL_DEVICES) {
+    //     if(isCommissionInProgress(webServer)) { return; }
+
+    //     QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
+
+    //     for (uint16_t nodeNetAddress : nodeNetAddressList) {
+    //         uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+
+    //         qDebug() << "Eliminando Nodo (NodeNetAddress:" << nodeNetAddress << "--- NodeAddress:" << nodeAddress << ")";
+
+    //         // Notificar al microcontrolador maestro
+    //         sendUartDelDevice(uartPort, nodeAddress);
+
+    //         // Esperar confirmación de eliminación verificando la base de datos
+    //         bool eliminado = false;
+    //         int intentos = 0;
+
+    //         while (!eliminado && intentos < 3) {  // Intentar hasta 3 veces
+    //             QThread::msleep(1000);  // Esperar 1 segundo para dar tiempo a la eliminación
+
+    //             // Comprobar si el nodo sigue en la base de datos
+    //             eliminado = !database->isNodeInDatabase(nodeAddress);
+    //             intentos++;
+    //         }
+
+    //         if (eliminado) {
+    //             qDebug() << "Nodo " << nodeAddress << " eliminado correctamente.";
+    //             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+    //         } else {
+    //             qDebug() << "Error: Nodo " << nodeAddress << " no respondió a la eliminación.";
+    //         }
+    //     }
+
+    //     // Eliminar todos los nodos de la base de datos
+    //     database->deleteAllNodes();
+
+    //     qDebug() << "Eliminación de nodos completada";
+    // }
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }
 

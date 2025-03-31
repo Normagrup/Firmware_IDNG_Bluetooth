@@ -41,6 +41,8 @@
 #define DEBUG                           0x90
 #define LINE_SCAN                       0x20
 #define LINE_SCAN_SEND                  0x22
+#define DEL_ALL_DEVICES_BROADCAST       0x41
+#define NODE_DELETED                    0x50
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -63,4 +65,5 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void requestMicroDatabase(UartPort* _uartPort);
+void sendUartDelAllDevicesBroadcast(UartPort* uartPort);
 #endif // PROCESS_UART_DATA_H
