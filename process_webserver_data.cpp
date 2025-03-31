@@ -421,6 +421,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t groupAddress = parts1.toUShort(nullptr, 16);
         uint16_t powerOnLevel = parts2.toInt(nullptr, 10);
 
+        sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel , IS_NORMAL);
+        delay(SLEEP_DALI_TIME_MS);
         sendUartDaliCommand(uartPort, groupAddress, STORE_DTR_POWER_ON_LVL, powerOnLevel , IS_TWICE);
         delay(SLEEP_DALI_TIME_MS);
         sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
