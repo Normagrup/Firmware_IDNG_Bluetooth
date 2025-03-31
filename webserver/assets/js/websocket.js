@@ -1070,14 +1070,17 @@ function rebootButton()
 
 function sliderInput() 
 {
-    var message = addressClicked + ' ' + sliderValue;
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider");
+
+    var message = addressClicked + ' ' + lvlSlider.value;
     sendData("SET_ACTUAL_LVL", message);
 
-    if(addressClicked < 49152) {
-        sendData("GET_NODE_INFO", addressClicked);
-    } else {
-        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
-    }
+    var lvlIcon = iframeDocument.getElementById('lvlIcon');
+    lvlIcon.innerHTML = "<b>" + lvlSlider.value + "%" + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + lvlSlider.value + "%, #fff " + lvlSlider.value + "%)";
 }
 
 function facSettingsButton() 
