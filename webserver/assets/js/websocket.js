@@ -798,11 +798,23 @@ function rebootDevice()
 
 function getScannedDevices() 
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
+
     sendData("SET_SCANNED_DEVICES", "");
 }
 
 function startCommission() 
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
+
     sendData("SET_START_ACTION", "0");
 }
 
@@ -813,6 +825,8 @@ function addDevice()
 
     var networkErrorLabel = iframeDocument.getElementById('networkError');
     sendData("SET_START_ACTION", "FF");
+
+    // TODO: Eliminar el elemento que se añada de la lista de scannedDevicesMessages [ALEX]
 
     // var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
     // if (selectedDevice) {

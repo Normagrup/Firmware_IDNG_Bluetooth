@@ -163,6 +163,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         //qDebug() << "PRUEBA UART";
                         qDebug() << "PARANDO TIMER START COMMISSION";
                         addDeviceTimer.start(ADD_DEVICE_TIMER_MS);
+                        isCommissioning = true;  // Lock server from accepting new commands
                         sendConfirmStartCommission(webServer); 
                     break;
 

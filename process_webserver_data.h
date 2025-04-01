@@ -14,6 +14,7 @@
 #define WS_SET_DATE_TIME                    "SET_DATE_TIME"
 
 #define WS_SET_SCANNED_DEVICES              "SET_SCANNED_DEVICES"
+#define WS_SET_STORED_SCANNED_DEVICES       "SET_STORED_SCANNED_DEVICES"
 #define WS_SET_START_ACTION                 "SET_START_ACTION"
 #define WS_SET_NEW_COMMISSION_ITERATION     "SET_NEW_COMMISSION_ITERATION"
 #define WS_SET_DELETE_DEVICE                "SET_DELETE_DEVICE"
@@ -90,6 +91,7 @@ void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);
 void sendScannedDevices(QByteArray data, WebServer* webServer);
+void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
@@ -108,5 +110,6 @@ void sendRecordedDevice(WebServer* webServer);
 void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
 
+QStringList scannedDevicesMessages;
 
 #endif // PROCESS_WEBSERVER_DATA_H

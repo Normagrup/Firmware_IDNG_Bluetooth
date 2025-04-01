@@ -67,9 +67,16 @@
 				parent.sendData("SET_LOAD_NODES", "");
 			}, 10);
 		}
+
+        function getScannedNodes() {
+			setTimeout(function() {
+				parent.sendData("SET_STORED_SCANNED_DEVICES", "");
+			}, 10);
+		}
 		
 		window.onload = function() {
             getNodesFromDatabase();
+            getScannedNodes();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";

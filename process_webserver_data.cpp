@@ -26,8 +26,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
         if(isCommissionInProgress(webServer)) { return; }
-
+        scannedDevicesMessages.clear();
         sendUartScannedDevices(uartPort);
+    }
+    else if (type == WS_SET_STORED_SCANNED_DEVICES) {
+        sendStoredScannedDevices(webServer);
     }
     else if (type == WS_SET_LINE_SCAN) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -83,11 +86,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         else {
             qDebug() << "START COMMISSION";
-
-            isCommissioning = true;  // Lock server from accepting new commands
+            scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
-
-            sendConfirmStartCommission(webServer);
         }
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
@@ -599,7 +599,16 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
 
     qDebug() << "NODE SCANNED: " << value <<  " - REPORT ADDRESS: " << reportAddress;
 
+    if(!isCommissioning)
+        scannedDevicesMessages.append(message);
+
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendStoredScannedDevices(WebServer* webServer)
+{
+    for(QString message : scannedDevicesMessages)
+        if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
