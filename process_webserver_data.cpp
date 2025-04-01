@@ -420,12 +420,20 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QString parts2 = parts[1];
         uint16_t groupAddress = parts1.toUShort(nullptr, 16);
         uint16_t powerOnLevel = parts2.toInt(nullptr, 10);
+        QStringList fixedGroupAddresses = {"C000", "C001", "C002", "C003"};
 
         sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel , IS_NORMAL);
         delay(SLEEP_DALI_TIME_MS);
-        sendUartDaliCommand(uartPort, groupAddress, STORE_DTR_POWER_ON_LVL, powerOnLevel , IS_TWICE);
+        sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
         delay(SLEEP_DALI_TIME_MS);
-        sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
+
+        if (fixedGroupAddresses.contains(parts1)) {
+            database->setPowerOnLevFixGroup(parts1, powerOnLevel);  // FixedGroups
+        } else {
+            database->setPowerOnLevelGroup(parts1, powerOnLevel);  // All other Groups
+        }
+
+        updatePowerOnLvlToWeb(webServer, database, parts1, powerOnLevel);
     }
 
     else if (type == WS_GET_POWER_ON_LVL){
@@ -436,7 +444,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             QString groupAddrStr = group.groupAddress;
             uint16_t groupAddress = groupAddrStr.toUShort(nullptr, 16);
 
-            sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
+            sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, QUERY_POWER_ON_LVL, IS_QUERY);
             delay(WEBSERVER_SEND_TIME_MS);
         }
         sendPowerOnGroup(webServer, database);
@@ -894,6 +902,9 @@ void clearSystemData(Database* database,  UartPort* uartPort)
 void sendPowerOnGroup(WebServer *webServer, Database *database)
 {
     QList<PowerOnLevGroupInfo> groups = database->getPowerOnLevelGroup();
+    QList<PowerOnLevGroupInfo> fixedGroups = database->getPowerOnLevelFixGroup();
+
+    groups.append(fixedGroups);
 
     for (const PowerOnLevGroupInfo& group : groups) {
         QString groupAddress = group.groupAddress;

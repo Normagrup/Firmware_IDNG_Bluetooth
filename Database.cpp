@@ -147,6 +147,39 @@ void Database::initDatabase()
 
     /* **************************************************
      *                                                  *
+     *                     FIXED GRUOPS                 *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS FixedGroups "
+               "(GroupAddress TEXT, "
+               "GroupName TEXT, "
+               "PowerOnLevel INTEGER);");
+
+    query.prepare("SELECT * FROM FixedGroups");
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query in FixedGroups:" << query.lastError().text(); }
+    else {
+        if (!query.next()) {
+
+            QStringList groupAddresses = {"C000", "C001", "C002", "C003"};
+            QStringList groupNames = {"Lighting", "Emergency", "Even", "Odd"};
+
+            query.prepare("INSERT INTO FixedGroups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
+
+            for (int i = 0; i < groupAddresses.size(); ++i) {
+                query.bindValue(":groupAddress", groupAddresses[i]);
+                query.bindValue(":groupName", groupNames[i]);
+                query.bindValue(":powerOnLevel", 255);
+
+                if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedGroups:" << query.lastError().text(); }
+            }
+        }
+    }
+
+
+
+    /* **************************************************
+     *                                                  *
      *                      TEST                        *
      *                                                  *
      * **************************************************/
@@ -813,6 +846,36 @@ QList<PowerOnLevGroupInfo> Database::getPowerOnLevelGroup()
     }
 
     return groupList;
+}
+
+void Database::setPowerOnLevFixGroup(QString groupAddress, uint8_t powerOnLevel)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE FixedGroups SET PowerOnLevel = :powerOnLevel WHERE GroupAddress = :groupAddress");
+    query.bindValue(":powerOnLevel", powerOnLevel);
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) { qDebug() << "Error setting PowerOnLevel:" << query.lastError().text(); }
+}
+
+QList<PowerOnLevGroupInfo> Database::getPowerOnLevelFixGroup()
+{
+    QSqlQuery query;
+    QList<PowerOnLevGroupInfo> fixedGroupList;
+
+    if (!query.exec("SELECT * FROM FixedGroups")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        PowerOnLevGroupInfo group;
+        group.groupAddress = query.value("GroupAddress").toString();
+        group.groupName = query.value("GroupName").toString();
+        group.powerOnLevel = query.value("PowerOnLevel").toInt();
+
+        fixedGroupList.append(group);
+    }
+
+    return fixedGroupList;
 }
 
 void Database::editGroup(QString address, QString name)

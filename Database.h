@@ -48,6 +48,8 @@ public:
     void removeTestEntry(QString address);
     void setPowerOnLevelGroup(QString groupAddress, uint8_t powerOnLevel);
     QList<PowerOnLevGroupInfo> getPowerOnLevelGroup(void);
+    void setPowerOnLevFixGroup(QString groupAddress, uint8_t powerOnLevel);
+    QList<PowerOnLevGroupInfo> getPowerOnLevelFixGroup(void);
     void editGroup(QString address, QString name);
     void clearAllData(void);
     void addNode(uint16_t nodeAddress);
