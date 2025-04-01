@@ -436,3 +436,11 @@ label {
     height: 20px;
 }
   
+.dark-filter {
+    filter: brightness(50%);
+}
+
+.button-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
