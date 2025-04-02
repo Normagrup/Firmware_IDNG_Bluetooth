@@ -167,6 +167,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmStartCommission(webServer); 
                     break;
 
+                    case CONFIRM_SCAN:
+                        qDebug() << "CONFIRM SCAN";
+                        sendConfirmScan(webServer);
+                    break;
+
                     case CONFIRM_ADD_DEVICE:
                         qDebug() << "PARANDO TIMER ADD DEVICE";
                         confirmAddDeviceTimer.stop();

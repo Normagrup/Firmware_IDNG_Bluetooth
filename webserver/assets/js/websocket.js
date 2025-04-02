@@ -135,6 +135,26 @@ function addDeviceToScannedList(value)
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 }
 
+function confirmScan(value) 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = "Scan in progress...";
+    
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 12000); // 12 segundos (el escaneo dura 10)
+}
+
 function confirmStartCommission(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -699,6 +719,7 @@ function processReceivedData(data)
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
+    else if (type == 'CONFIRM_SCAN') { confirmScan(value); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
     else if (type == 'START_ADDING_DEVICES') { startAddingDevices(value); }
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }
