@@ -146,8 +146,9 @@ function confirmStartCommission(value)
     var popupHeader = popup.querySelector('h2');
     popupHeader.textContent = "Automatic commission in progress...";
 
+    nodesAdded = 0; nodesScanned = 0;
     var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
-    labelCommissionNodes.textContent = "0 / 0";
+    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
