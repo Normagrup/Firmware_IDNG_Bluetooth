@@ -668,24 +668,8 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    printf("Comando de eliminación enviado al nodo: %04X\n", nodeAddress);
+    printf("Comando de eliminación enviado: %04X\n", nodeAddress);
 }
-
-void sendUartDelAllDevices(UartPort* _uartPort)
-{
-    QByteArray frame;
-    unsigned char length = 3; 
-
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(DEL_ALL_DEVICES);
-    frame.append(UART_END);
-
-    _uartPort->sendData(frame);
-    qDebug() << "Comando BROADCAST para eliminar todos los nodos enviado.";
-}
-
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
 {

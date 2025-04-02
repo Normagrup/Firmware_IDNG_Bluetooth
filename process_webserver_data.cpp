@@ -104,26 +104,32 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         if(isCommissionInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
-        uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-        printf(" Intentando eliminar nodo...\n");
-        printf(" Net Address: %04X\n", nodeNetAddress);
-        printf(" Dirección obtenida de meshDevice: %04X\n", nodeAddress);
 
-        sendUartDelDevice(uartPort, nodeAddress);
+        if(nodeNetAddress == 0xFFFF)
+        {
+            sendUartDelDevice(uartPort, nodeNetAddress);
 
-        // Eliminar el nodo de la estructura interna
-        meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+            // Eliminar nodos de la estructura interna
+            // TODO: Mover a la confirmación del micro
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    if(meshDevice[i][j].getIsConfigured()) { meshDevice[i][j].deleteDevice(); }
+                }
+            }
+            database->deleteAllNodes();
+        }
+        else
+        {
+            uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
-        database->deleteNode(nodeAddress);
+            sendUartDelDevice(uartPort, nodeAddress);
 
-        printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
-    }
-    else if (type == WS_SET_DELETE_ALL_DEVICES) {
-        if(isCommissionInProgress(webServer)) { return; }
-    
-        sendUartDelAllDevices(uartPort);
-    
-        qDebug() << "Broadcast eliminación completa, nodos borrados de DB y meshDevice.";
+            // Eliminar el nodo de la estructura interna
+            // TODO: Mover a la confirmación del micro
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+            database->deleteNode(nodeAddress);
+        }
     }
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }

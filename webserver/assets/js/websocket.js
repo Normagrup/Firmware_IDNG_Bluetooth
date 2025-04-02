@@ -884,9 +884,9 @@ function delAllDevices() {
     // Seleccionar la lista de nodos
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
  
-    console.log("Enviando comando SET_DELETE_ALL_DEVICES");
+    console.log("Enviando comando SET_DELETE_DEVICE en BROADCAST");
     // Enviar comando al embebido para eliminar los nodos
-    sendData("SET_DELETE_ALL_DEVICES", "");
+    sendData("SET_DELETE_DEVICE", "65535");
 
     networkErrorLabel.style.visibility = "hidden";
     networkNodesList.innerHTML = "";
