@@ -419,8 +419,8 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     database->setGroup(nodeAddress, deviceTypeGroupAddress);
     if (netAdressGroupAddress != 0x0000) { database->setGroup(nodeAddress, netAdressGroupAddress); }
 
-    //QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress);
-    //if (webServer != nullptr) { webServer->sendData(message); }
+    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress);
+    if (webServer != nullptr) { webServer->sendData(message); }
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
