@@ -67,9 +67,16 @@
 				parent.sendData("SET_LOAD_NODES", "");
 			}, 10);
 		}
+
+        function isCommissionInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_COMMISSION_IN_PROGRESS", "");
+			}, 10);
+        }
 		
 		window.onload = function() {
             getNodesFromDatabase();
+            isCommissionInProgress();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";

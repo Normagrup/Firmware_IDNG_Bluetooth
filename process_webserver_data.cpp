@@ -415,6 +415,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);
     }
+    else if (type == WS_SET_IS_COMMISSION_IN_PROGRESS) {
+        sendIsCommissionInProgress(webServer);
+    }
     else if (type == WS_SET_TEST) {
         if(isCommissionInProgress(webServer)) { return; }
 
@@ -677,6 +680,13 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
+}
+
+void sendIsCommissionInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_COMMISSION_IN_PROGRESS) + "@" + (isCommissioning ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendNodeInfo(WebServer* webServer, QString nodeNetAddress)

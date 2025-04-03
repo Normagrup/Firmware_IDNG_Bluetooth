@@ -739,6 +739,28 @@ function processIsConfig(value)
     }
 }
 
+function processIsCommissionInProgress(value)
+{
+    var isCommissioning = (value === "true");
+    
+    if(isCommissioning) {
+        var iframe = document.getElementById('mainframe');
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var popup = iframeDocument.getElementById('popup');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+        var popupHeader = popup.querySelector('h2');
+        popupHeader.textContent = "Automatic commission in progress...";
+
+        var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
+        labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+        
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -770,6 +792,7 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
+    else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
 }
 
 function sendData(type, value) 
