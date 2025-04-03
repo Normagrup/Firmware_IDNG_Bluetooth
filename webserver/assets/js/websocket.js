@@ -149,6 +149,9 @@ function confirmStartCommission(value)
     nodesAdded = 0; nodesScanned = 0;
     var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+    var logCommission = iframeDocument.getElementById('logCommission');
+    logCommission.innerHTML = "";
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
@@ -241,6 +244,17 @@ function processDeviceError(value)
     //         sendData("SET_NEW_COMMISSION_ITERATION", "");
     //     }
     // }, 5000);
+}
+
+function processLogCommissionEntry(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    
+    var logCommissionList = iframeDocument.getElementById('logCommission');
+    var newEntry = iframeDocument.createElement('li');
+    newEntry.textContent = value;
+    logCommissionList.insertBefore(newEntry);
 }
 
 function processNodeInfo(value) 
@@ -647,6 +661,20 @@ function processEndNodeConfiguration(value)
     }, 5000);
 }
 
+function stopCommission()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+
+    sendData("SET_STOP_ACTION", "");
+}
+
 function processEndAutoCommission(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -755,6 +783,9 @@ function processIsCommissionInProgress(value)
 
         var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
         labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+        var logCommission = iframeDocument.getElementById('logCommission');
+        logCommission.innerHTML = "";
         
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
@@ -778,6 +809,7 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }
     else if (type == 'ADDED_DEVICE') { addDeviceToNetworkList(value); }
     else if (type == 'DEVICE_ERROR') { processDeviceError(value); }
+    else if (type == 'LOG_COMMISSION_ENTRY') { processLogCommissionEntry(value); }
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "GROUP_INFO") { processGroupInfo(value); }

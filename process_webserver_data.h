@@ -16,6 +16,7 @@
 #define WS_SET_SCANNED_DEVICES              "SET_SCANNED_DEVICES"
 #define WS_SET_START_ACTION                 "SET_START_ACTION"
 #define WS_SET_NEW_COMMISSION_ITERATION     "SET_NEW_COMMISSION_ITERATION"
+#define WS_SET_STOP_ACTION                  "SET_STOP_ACTION"
 #define WS_SET_DELETE_DEVICE                "SET_DELETE_DEVICE"
 #define WS_SET_DELETE_ALL_DEVICES           "SET_DELETE_ALL_DEVICES"
 #define WS_SET_ADD_GROUP                    "SET_ADD_GROUP"     // añadir nodo a grupo
@@ -58,6 +59,7 @@
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
 #define WS_SEND_IPCONFIG_INFO               "IPCONFIG_INFO"
+#define WS_SEND_LOG_COMMISSION_ENTRY        "LOG_COMMISSION_ENTRY"
 #define WS_SEND_CONFIRM_START_COMMISSION    "CONFIRM_START_COMMISSION"
 #define WS_SEND_CONFIRM_ADDING_DEVICE       "CONFIRM_ADDING_DEVICE"
 #define WS_SEND_START_ADDING_DEVICES        "START_ADDING_DEVICES"
@@ -88,6 +90,7 @@ void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
+void sendLogCommissionEntry(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);

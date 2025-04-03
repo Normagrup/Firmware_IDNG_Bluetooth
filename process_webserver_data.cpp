@@ -100,6 +100,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         */
     }
+    else if (type == WS_SET_STOP_ACTION) {
+        qDebug() << "Mensaje de detención de COMMISSIONING recibido.";
+    }
     else if (type == WS_SET_DELETE_DEVICE) {
         if(isCommissionInProgress(webServer)) { return; }
 
@@ -537,6 +540,13 @@ void sendDateTimeInfo(WebServer* webServer, QString info)
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo)
 {
     QString message = QString(WS_SEND_IPCONFIG_INFO) + "@" + QString::number(ipConfigInfo);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendLogCommissionEntry(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + "CONTENIDO";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
