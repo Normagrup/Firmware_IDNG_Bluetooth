@@ -1012,7 +1012,7 @@ function delFromGroup()
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
         loadNodesLists();
-    }, 750);
+    }, 1000);
 }
 
 function addGroup() 
