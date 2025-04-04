@@ -24,7 +24,6 @@
 #define ADD_DEVICE                      0x09
 #define DEVICE_ERROR                    0x11
 #define DEL_DEVICES                     0x13
-#define DEL_ALL_DEVICES                 0x41
 #define NODE_DELETED                    0x50
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
@@ -43,6 +42,8 @@
 #define DEBUG                           0x90
 #define LINE_SCAN                       0x20
 #define LINE_SCAN_SEND                  0x22
+#define CONFIRM_START_REMOVE_ALL_NODES  0x51
+#define CONFIRM_END_REMOVE_ALL_NODES    0x53
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);

@@ -832,3 +832,16 @@ void clearSystemData(Database* database,  UartPort* uartPort)
 
 }
 
+void sendConfirmStartRemoveAllNodes(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_DEL_ALL_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndRemoveAllNodes(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_DEL_ALL_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}

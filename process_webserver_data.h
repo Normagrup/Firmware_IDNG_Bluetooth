@@ -77,6 +77,8 @@
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
+#define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
+#define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -106,6 +108,8 @@ void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
 void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
+void sendConfirmStartRemoveAllNodes(WebServer* webServer);
+void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 
 
 #endif // PROCESS_WEBSERVER_DATA_H

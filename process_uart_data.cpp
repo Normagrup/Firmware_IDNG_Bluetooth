@@ -230,6 +230,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
 
+                    case CONFIRM_START_REMOVE_ALL_NODES:
+                        sendConfirmStartRemoveAllNodes(webServer);
+                    break;
+
+                    case CONFIRM_END_REMOVE_ALL_NODES:
+                        sendConfirmEndRemoveAllNodes(webServer);
+                    break;
+
                     case LINE_SCAN_SEND:
                     {
                         // Esperamos 22 bytes mínimo

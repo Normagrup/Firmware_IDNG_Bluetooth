@@ -687,6 +687,14 @@ function processIsConfig(value)
     }
 }
 
+function processDelAllDev(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    console.log("TODO");
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -718,6 +726,8 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
+    else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
+    else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
 }
 
 function sendData(type, value) 
