@@ -538,9 +538,9 @@ void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendConfirmScan(WebServer* webServer)
+void sendConfirmStartScan(WebServer* webServer)
 {
-    QString message = QString(WS_SEND_CONFIRM_SCAN) + "@" + " ";
+    QString message = QString(WS_SEND_CONFIRM_START_SCAN) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

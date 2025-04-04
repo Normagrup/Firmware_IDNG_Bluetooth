@@ -41,7 +41,7 @@
 #define DEBUG                           0x90
 #define LINE_SCAN                       0x20
 #define LINE_SCAN_SEND                  0x22
-#define CONFIRM_SCAN                    0x24
+#define CONFIRM_START_SCAN              0x49
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);

@@ -58,7 +58,7 @@
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
 #define WS_SEND_IPCONFIG_INFO               "IPCONFIG_INFO"
-#define WS_SEND_CONFIRM_SCAN                "CONFIRM_SCAN"
+#define WS_SEND_CONFIRM_START_SCAN          "CONFIRM_START_SCAN"
 #define WS_SEND_CONFIRM_START_COMMISSION    "CONFIRM_START_COMMISSION"
 #define WS_SEND_CONFIRM_ADDING_DEVICE       "CONFIRM_ADDING_DEVICE"
 #define WS_SEND_START_ADDING_DEVICES        "START_ADDING_DEVICES"
@@ -88,7 +88,7 @@ void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
-void sendConfirmScan(WebServer* webServer);
+void sendConfirmStartScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);

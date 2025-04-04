@@ -135,7 +135,7 @@ function addDeviceToScannedList(value)
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 }
 
-function confirmScan(value) 
+function confirmStartScan(value) 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -719,7 +719,7 @@ function processReceivedData(data)
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
-    else if (type == 'CONFIRM_SCAN') { confirmScan(value); }
+    else if (type == 'CONFIRM_START_SCAN') { confirmStartScan(value); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
     else if (type == 'START_ADDING_DEVICES') { startAddingDevices(value); }
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }

@@ -167,9 +167,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmStartCommission(webServer); 
                     break;
 
-                    case CONFIRM_SCAN:
-                        qDebug() << "CONFIRM SCAN";
-                        sendConfirmScan(webServer);
+                    case CONFIRM_START_SCAN:
+                        qDebug() << "CONFIRM START SCAN";
+                        sendConfirmStartScan(webServer);
                     break;
 
                     case CONFIRM_ADD_DEVICE:
