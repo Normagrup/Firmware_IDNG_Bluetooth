@@ -22,6 +22,8 @@
 #define WS_SET_ADD_A_GROUP                  "SET_ADD_A_GROUP"   // añadir un grupo
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"     // eliminar nodo de grupo)
 #define WS_SET_DEL_A_GROUP                  "SET_DEL_A_GROUP"   // eliminar un grupo
+#define WS_SET_EDIT_A_GROUP                 "SET_EDIT_A_GROUP"  // cambiar nombre de grupo
+#define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
@@ -34,8 +36,10 @@
 #define WS_GET_IS_CONFIG                    "GET_IS_CONFIG"
 #define WS_GET_GROUPS                       "GET_GROUPS"
 #define WS_GET_GROUP_INFO                   "GET_GROUP_INFO"
+#define WS_GET_TEST                         "GET_TEST"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
 
+#define WS_SET_LINE_SCAN                        "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
 #define WS_SET_MIN                          "SET_MIN"
@@ -48,6 +52,7 @@
 #define WS_SET_DURATION_TEST                "SET_DURATION_TEST"
 #define WS_SET_STOP                         "SET_STOP"
 
+#define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -61,6 +66,10 @@
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
 #define WS_SEND_GROUP                       "GROUP_NAME_AND_ADDRESS"
+#define WS_SEND_GROUP_INFO                  "GROUP_INFO"
+#define WS_SEND_GROUP_NODE_INCLUDED         "GROUP_NODE_INCLUDED"
+#define WS_SEND_GROUP_NODE_NOT_INCLUDED     "GROUP_NODE_NOT_INCLUDED"
+#define WS_SEND_TEST                        "TEST_DATA"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
 #define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
 #define WS_SEND_END_NODE_CONFIG             "END_NODE_CONFIG"
@@ -72,6 +81,7 @@
 #define WS_SEND_LOG_DATA                    "LOG_DATA"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
+bool isCommissionInProgress(WebServer* webServer);
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
@@ -87,6 +97,8 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
+void sendGroupNodes(WebServer* webServer, QString groupAddress);
+void sendTest(WebServer* webServer, Database* database, QString groupAddress);
 void sendDevicesCount(WebServer* webServer, int count);
 void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
 void sendEndNodeConfiguration(WebServer* webServer);
@@ -94,7 +106,9 @@ void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures);
 void sendLogFile(WebServer* webServer, QString fileDir);
+void clearSystemData(Database* database,UartPort* uartPort);
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
+
 
 #endif // PROCESS_WEBSERVER_DATA_H

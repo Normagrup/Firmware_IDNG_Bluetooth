@@ -16,6 +16,15 @@
     <div class="wrap-container">
         <div class="wrap-test-container">
             <div class="test-container">
+                <h2 style="width: 70%; margin-left: 0;"> Group Selection </h2>
+                <label> Pick some group </label>
+                <select id="groupList" style="width: 100%; margin-top: 20px;" onchange="parent.loadTests()">
+                    <option value="-"> ---- </option>
+                    <option value="FFFF"> Broadcast </option>
+                </select>
+            </div>
+            <br>
+            <div class="test-container">
                 <div class="title-container">
                     <h2> Functional Test </h2>
                     <div class="enable-container">
@@ -60,7 +69,7 @@
                             <input type="checkbox" id="sunday">
                         </div>
                     </div>
-
+                    <br>
                     <div class="features-container" style="padding-bottom: 40px;">
                         <img src="images/timePickerIcon.png" style="height: 45px; width: 45px; margin-top: 10px;">
                         <div class="time">
@@ -96,7 +105,7 @@
                             <option value="12"> 1 year </option>
                         </select>
                     </div>
-
+                    <br>
                     <div class="features-container" style="justify-content: space-between; padding-bottom: 40px;">
                         <div class="field-container">
                             <img src="images/datePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
@@ -116,14 +125,7 @@
                 </div>
             </div>
             <button class="test-button" onclick="parent.setTest()"> Set test </button>
-            <label id="testError" style="margin-top: 10px; color: #C30101; visibility: visible"></label>
-            
-            <h2 style="width: 70%; margin-left: 0;"> Group Selection </h2>
-            <label> Pick some group </label>
-            <select id="groupList" style="width: 100%; margin-top: 20px;">
-                <option value="-"> ---- </option>
-                <option value="FFFF"> Broadcast </option>
-            </select>
+            <label id="testError" style="margin-top: 10px; color: #C30101; visibility: visible"> ‎ </label> <!-- caracter vacío -->
         </div>
     </div>
 

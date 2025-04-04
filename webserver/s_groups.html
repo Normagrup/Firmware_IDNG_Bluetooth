@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_groups.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popupEditingName">
+        <div class="popup-container" >
+            <div class="popup-subcontainer">
+                <label id="newGroupLabel" style="margin-top: 10px; color: #4682b4;"> <b> Group Name </b> </label>
+                <input type="text" id="newGroupName" placeholder="Cannot be empty" />
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.editGroup()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popup" id="popupDeletingGroup">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label style="margin-top: 10px; color: #4682b4;"> Do you want to delete the group? </label>
+                <div class="popup-button-subcontainer">
+                    <button onclick="parent.delGroup()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-list-container">
+            <div class="title-container">
+                <h2> Groups Configuration </h2>
+            </div>
+            <div class="group-container">
+                <select class="selector" id="groupList" onchange="parent.loadNodesLists()">
+                    <option value="-"> ---- </option>
+				</select>
+
+                <button onclick="parent.editGroupPrev()"> Edit Name </button>
+                <button onclick="parent.delGroupPrev()"> Delete Group </button>
+                <button onclick="parent.addGroup()"> Add Group </button>
+            </div>
+            <div class="list-container">
+                <div class="list">
+                    <label> Nodes not included in the group </label>
+                    <ul id="notIncludedNodesList"></ul>
+                    <button onclick="parent.addToGroup()"> Add Node </button>
+                </div>
+                <div class="list">
+                    <label> Nodes included in the group </label>
+                    <ul id="includedNodesList"></ul>
+                    <button onclick="parent.delFromGroup()"> Delete Node </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getGroupsFromDatabase() {
+			setTimeout(function() {
+				parent.sendData("GET_GROUPS", "");
+			}, 10);
+		}
+		
+		window.onload = function() {
+            getGroupsFromDatabase();
+
+            function handleButtonClick(e) {
+                var button = e.currentTarget;
+                button.classList.add("clicked");
+                setTimeout(function() {
+                    button.classList.remove("clicked");
+                }, 400);
+            }
+
+            document.querySelectorAll("button").forEach(function(btn) {
+                btn.addEventListener("click", handleButtonClick);
+            });
+        };
+
+        document.addEventListener('click', function(event) {
+            var includedNodesList = document.getElementById('includedNodesList');
+            var notIncludedNodesList = document.getElementById('notIncludedNodesList');
+
+            var includedNodes = includedNodesList.getElementsByTagName('li');
+            var notIncludedNodes = notIncludedNodesList.getElementsByTagName('li');
+
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI') { return; }
+
+            for (var i = 0; i < includedNodes.length; i++) { includedNodes[i].classList.remove('selectedDevice'); }
+            for (var i = 0; i < notIncludedNodes.length; i++) { notIncludedNodes[i].classList.remove('selectedDevice'); }
+        });
+
+    </script>
+</body>
+
+</html>

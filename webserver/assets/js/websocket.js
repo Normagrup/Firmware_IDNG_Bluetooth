@@ -11,6 +11,11 @@ socket.onmessage = function(event) {
     processReceivedData(event.data);
 }
 
+function processAlertCommission(value)
+{
+    alert(value);
+}
+
 function processLoginInfo(value) 
 {
     var signErrorLabel = document.getElementById('signError');
@@ -141,14 +146,12 @@ function confirmStartCommission(value)
     var popupHeader = popup.querySelector('h2');
     popupHeader.textContent = "Automatic commission in progress...";
 
+    nodesAdded = 0; nodesScanned = 0;
     var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
-    labelCommissionNodes.textContent = "0 / 0";
+    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
-
-    if (window.parent)
-        window.parent.document.body.style.pointerEvents = "none"; // Disable clicks on the entire parent page
 }
 
 function startAddingDevices(value) 
@@ -187,6 +190,10 @@ function addDeviceToNetworkList(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    // Si llega la info de un nodo en red y estamos durante un commissioning, 
+    // se elimina uno de los elementos de scannedDevices y se añade uno a networkNodes 
+    // Si llega la info de un nodo en red y no estamos durante un commissioning, 
+    // simplemente se añadirá a networkNodes pero no se eliminará nada de scannedDevices (ya que estará vacía)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     var devices = scannedDevicesList.getElementsByTagName('li');
     var firstDevice = devices[0];
@@ -261,6 +268,15 @@ function processNodeInfo(value)
     var lvlIcon = iframeDocument.getElementById('lvlIcon');
     var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
     var deviceTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
+    var functionalTestButton = iframeDocument.querySelector('button[onclick="parent.funcTestButton()"]');
+    var durationTestButton = iframeDocument.querySelector('button[onclick="parent.durTestButton()"]');
+    var stopButton = iframeDocument.querySelector('button[onclick="parent.stopButton()"]');
+
+    autonomyIcon.innerHTML = "";
+    batteryIcon.innerHTML = "";
+    lampIcon.innerHTML = "";
+    comIcon.innerHTML = "";
+    emergencyIcon.innerHTML = "";
 
     if ((controlGearStatus >> 1) & 1) { lampIcon.style.backgroundImage = "url('images/lampIconOnFail.png')"; }
     else { lampIcon.style.backgroundImage = "url('images/lampIcon.png')"; }
@@ -282,15 +298,47 @@ function processNodeInfo(value)
 
     actualLvl = actualLvl / 254 * 100;
     if (actualLvl > 100) { actualLvl = 100; }
-    lvlIcon.innerHTML = "<b>" + actualLvl + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvl + "%, #fff " + actualLvl + "%)";
+    var actualLvlNum = parseFloat(actualLvl).toFixed(0);
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider")
+    lvlSlider.value = actualLvlNum;
+
+    lvlIcon.innerHTML = "<b>" + actualLvlNum + "%" + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + actualLvlNum + "%, #fff " + actualLvlNum + "%)";
+
+    updateAllDisplayedButtons();
+    requestDevicesAndFailuresCount();
 
     if (communicationFailure != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 
-    if (deviceType == "1") { deviceTypeIcon.src = "images/emergencyLightIcon.png"; }
-    else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png"; }
-    else { deviceTypeIcon.src = "images/defaultLightIcon.png"; }
+    if (deviceType == "1") { 
+        deviceTypeIcon.src = "images/emergencyLightIcon.png";
+        autonomyIcon.classList.remove('dark-filter');
+        batteryIcon.classList.remove('dark-filter');
+        emergencyIcon.classList.remove('dark-filter');
+        functionalTestButton.classList.remove('button-disabled');
+        durationTestButton.classList.remove('button-disabled');
+        stopButton.classList.remove('button-disabled');
+    }
+    else if (deviceType == "6") { 
+        deviceTypeIcon.src = "images/normalLightIcon.png"; 
+        autonomyIcon.classList.add('dark-filter');
+        batteryIcon.classList.add('dark-filter');
+        emergencyIcon.classList.add('dark-filter');
+        functionalTestButton.classList.add('button-disabled');
+        durationTestButton.classList.add('button-disabled');
+        stopButton.classList.add('button-disabled');
+    }
+    else { 
+        deviceTypeIcon.src = "images/defaultLightIcon.png";
+        autonomyIcon.classList.remove('dark-filter');
+        batteryIcon.classList.remove('dark-filter');
+        emergencyIcon.classList.remove('dark-filter');
+        functionalTestButton.classList.remove('button-disabled');
+        durationTestButton.classList.remove('button-disabled');
+        stopButton.classList.remove('button-disabled');
+    }
 }
 
 function processGroupBasicInfo(value) {
@@ -314,7 +362,7 @@ function processGroupBasicInfo(value) {
         container.appendChild(groupButton);
     }
 
-    // Procesado si el mensaje se recibe en s_wireless.html o s_tests.html: Se crea el elemento en el selector
+    // Procesado si el mensaje se recibe en s_tests.html: Se crea el elemento en el selector
     var groupSelector = iframeDocument.getElementById('groupList');
     if(groupSelector)
     {
@@ -324,16 +372,203 @@ function processGroupBasicInfo(value) {
 
         groupSelector.appendChild(group);
     }
+}
 
-    var groupSelector2 = iframeDocument.getElementById('groupList2');
-    if(groupSelector2)
-    {
-        var group2 = iframeDocument.createElement('option');
-        group2.value = groupAddress;
-        group2.textContent = groupName;
+function processGroupInfo(value) 
+{
+    var groupInfoArray = value.split('.');
+    var lampFailures = groupInfoArray[0];
+    var emergencyModeCount = groupInfoArray[1];
+    var batFailures = groupInfoArray[2];
+    var durFailures = groupInfoArray[3];
+    var averageLvl = groupInfoArray[4];
+    var comFailures = groupInfoArray[5];
 
-        groupSelector2.appendChild(group2);
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var autonomyIcon = iframeDocument.getElementById('autonomyIcon');
+    var batteryIcon = iframeDocument.getElementById('batteryIcon');
+    var lampIcon = iframeDocument.getElementById('lampIcon');
+    var comIcon = iframeDocument.getElementById('comIcon');
+    var lvlIcon = iframeDocument.getElementById('lvlIcon');
+    var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
+    var functionalTestButton = iframeDocument.querySelector('button[onclick="parent.funcTestButton()"]');
+    var durationTestButton = iframeDocument.querySelector('button[onclick="parent.durTestButton()"]');
+    var stopButton = iframeDocument.querySelector('button[onclick="parent.stopButton()"]');
+
+    autonomyIcon.innerHTML = "";
+    batteryIcon.innerHTML = "";
+    lampIcon.innerHTML = "";
+    comIcon.innerHTML = "";
+    emergencyIcon.innerHTML = "";
+
+    if (lampFailures > 0) { 
+        lampIcon.style.backgroundImage = "url('images/lampIconOnFail.png')";
+        
+        var lampFailuresCountSpan = iframeDocument.createElement("span");
+        lampFailuresCountSpan.classList.add("fail-count-badge");
+        lampFailuresCountSpan.textContent = lampFailures;
+        lampIcon.appendChild(lampFailuresCountSpan);
     }
+    else { lampIcon.style.backgroundImage = "url('images/lampIcon.png')"; }
+
+    if (emergencyModeCount > 0) { 
+        emergencyIcon.style.backgroundImage = "url('images/emergencyIconOnFail.png')";
+        emergencyIcon.style.backgroundColor = "#fdfab2";
+
+        var emergencyModeCountSpan = iframeDocument.createElement("span");
+        emergencyModeCountSpan.classList.add("emergency-count-badge");
+        emergencyModeCountSpan.textContent = emergencyModeCount;
+        emergencyIcon.appendChild(emergencyModeCountSpan);
+    }
+    else { 
+        emergencyIcon.style.backgroundImage = "url('images/emergencyIcon.png')";
+        emergencyIcon.style.backgroundColor = "#fff";
+    }
+
+    if (durFailures > 0) { 
+        autonomyIcon.style.backgroundImage = "url('images/autonomyIconOnFail.png')";
+
+        var durFailuresCountSpan = iframeDocument.createElement("span");
+        durFailuresCountSpan.classList.add("fail-count-badge");
+        durFailuresCountSpan.textContent = durFailures;
+        autonomyIcon.appendChild(durFailuresCountSpan);
+    } 
+    else { autonomyIcon.style.backgroundImage = "url('images/autonomyIcon.png')"; }
+
+    if (batFailures > 0) { 
+        batteryIcon.style.backgroundImage = "url('images/batteryIconOnFail.png')"; 
+
+        var batFailuresCountSpan = iframeDocument.createElement("span");
+        batFailuresCountSpan.classList.add("fail-count-badge");
+        batFailuresCountSpan.textContent = batFailures;
+        batteryIcon.appendChild(batFailuresCountSpan);
+    }
+    else { batteryIcon.style.backgroundImage = "url('images/batteryIcon.png')"; }
+
+    averageLvl = averageLvl / 254 * 100;
+    if (averageLvl > 100) { averageLvl = 100; }
+    var averageLvlNum = parseFloat(averageLvl).toFixed(0);
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider")
+    lvlSlider.value = averageLvlNum;
+
+    lvlIcon.innerHTML = "<b>" + averageLvlNum + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + averageLvlNum + "%, #fff " + averageLvlNum + "%)";
+
+    updateAllDisplayedButtons();
+    requestDevicesAndFailuresCount();
+
+    if (comFailures != 0) { 
+        comIcon.style.backgroundImage = "url('images/comIconOnFail.png')";
+
+        var comFailuresCountSpan = iframeDocument.createElement("span");
+        comFailuresCountSpan.classList.add("fail-count-badge");
+        comFailuresCountSpan.textContent = comFailures;
+        comIcon.appendChild(comFailuresCountSpan);
+    }
+    else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
+
+    if (addressClicked == 49152) { 
+        autonomyIcon.classList.add('dark-filter');
+        batteryIcon.classList.add('dark-filter');
+        emergencyIcon.classList.add('dark-filter');
+        functionalTestButton.classList.add('button-disabled');
+        durationTestButton.classList.add('button-disabled');
+        stopButton.classList.add('button-disabled');
+    }
+    else { 
+        autonomyIcon.classList.remove('dark-filter');
+        batteryIcon.classList.remove('dark-filter');
+        emergencyIcon.classList.remove('dark-filter');
+        functionalTestButton.classList.remove('button-disabled');
+        durationTestButton.classList.remove('button-disabled');
+        stopButton.classList.remove('button-disabled');
+    }
+}
+
+function processGroupNode(value, included)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var parts = value.split("_");
+    var nodeNetAddress = parts[0];
+    var serialNumber = parts[1];
+
+    var node = iframeDocument.createElement('li');
+    node.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
+    node.setAttribute('class', 'deviceIncluded');
+    node.setAttribute('onclick', 'parent.selectDevice(this)');
+
+    if(included) {   
+        var includedNodesList = iframeDocument.getElementById('includedNodesList');
+        includedNodesList.appendChild(node);
+    } 
+    else {
+        var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+        notIncludedNodesList.appendChild(node);
+    }
+}
+
+function processTestData(value) {
+    var testArray = value.split('#');
+    var functionalEnable = testArray[0];
+    var durationEnable = testArray[1];
+    var functionalDays = testArray[2];
+    var functionalTime = testArray[3];
+    var durationPeriodicity = testArray[4];
+    var durationDate = testArray[5];
+    var durationTime = testArray[6]
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var toggleFunction = iframeDocument.getElementById('toggleFunction');
+    toggleFunction.checked = (functionalEnable === "1") ? true : false;
+
+    var toggleDuration = iframeDocument.getElementById('toggleDuration');
+    toggleDuration.checked = (durationEnable === "1") ? true : false;
+
+    var monday = iframeDocument.getElementById('monday'); monday.checked = false;
+    var tuesday = iframeDocument.getElementById('tuesday'); tuesday.checked = false;
+    var wednesday = iframeDocument.getElementById('wednesday'); wednesday.checked = false;
+    var thursday = iframeDocument.getElementById('thursday'); thursday.checked = false;
+    var friday = iframeDocument.getElementById('friday'); friday.checked = false;
+    var saturday = iframeDocument.getElementById('saturday'); saturday.checked = false;
+    var sunday = iframeDocument.getElementById('sunday'); sunday.checked = false;
+
+    var days = functionalDays.split(' ');
+    for (var day of days) {
+        if(day === "Mon") { monday.checked = true; }
+        else if(day === "Tue") { tuesday.checked = true; }
+        else if(day === "Wed") { wednesday.checked = true; }
+        else if(day === "Thu") { thursday.checked = true; }
+        else if(day === "Fri") { friday.checked = true; }
+        else if(day === "Sat") { saturday.checked = true; }
+        else if(day === "Sun") { sunday.checked = true; }
+    }
+
+    var functionTime = iframeDocument.getElementById('functionTimePicker');
+    functionTime.value = functionalTime;
+
+    var periodicityList = iframeDocument.getElementById('periodicityList');
+    if(durationPeriodicity === "0") { periodicityList.selectedIndex = 0; }
+    else if(durationPeriodicity === "1") { periodicityList.selectedIndex = 1; }
+    else if(durationPeriodicity === "3") { periodicityList.selectedIndex = 2; }
+    else if(durationPeriodicity === "6") { periodicityList.selectedIndex = 3; }
+    else if(durationPeriodicity === "12") { periodicityList.selectedIndex = 4; }
+
+    var durationDateElem = iframeDocument.getElementById('durationDatePicker');
+    if(durationDate !== "0000-00-00") { durationDateElem.value = durationDate; }
+    else { durationDateElem.value = "2000-01-01"}
+
+    var durationTimeElem = iframeDocument.getElementById('durationTimePicker');
+    durationTimeElem.value = durationTime;
+
+    var testErrorLabel = iframeDocument.getElementById('testError');
+    testErrorLabel.innerHTML = " ‎ ";
 }
 
 function processDevicesCounter(value) {
@@ -422,9 +657,6 @@ function processEndAutoCommission(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
-
-    if (window.parent)
-        window.parent.document.body.style.pointerEvents = "auto"; // Enable clicks on the parent page again
 }
 
 function processFactoryIDWrote(value) 
@@ -476,8 +708,10 @@ function processIsConfig(value)
     var sn = parts[1];
     var isConfig = parts[2];
     var hasFailures = parts[3];
+    var onOffStatus = parts[4];
     var configured = (isConfig === "true");
     var failed = (hasFailures === "true");
+    var onOff = (onOffStatus === "on");
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -496,6 +730,7 @@ function processIsConfig(value)
                 button.classList.add("blue");
             }
             button.disabled = false;
+            button.innerHTML += '<span class="status-indicator ' + (onOff ? 'on-state' : 'off-state') + '"></span>';
         } else {
             button.classList.remove("red", "blue"); 
             button.classList.add("gray");
@@ -518,7 +753,8 @@ function processReceivedData(data)
     var type = dataArray[0];
     var value = dataArray[1];
     
-    if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
+    if(type == 'ALERT_COMMISSION') { processAlertCommission(value); }
+    else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
@@ -530,6 +766,10 @@ function processReceivedData(data)
     else if (type == 'DEVICE_ERROR') { processDeviceError(value); }
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
+    else if (type == "GROUP_INFO") { processGroupInfo(value); }
+    else if (type == "GROUP_NODE_INCLUDED") { processGroupNode(value, true); }
+    else if (type == "GROUP_NODE_NOT_INCLUDED") { processGroupNode(value, false); }
+    else if (type == "TEST_DATA") { processTestData(value); }
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
@@ -602,6 +842,9 @@ function sendDateTime()
 
     var message = date + ' ' + time;
     sendData("SET_DATE_TIME", message);
+
+    var timeLabel = iframeDocument.getElementById('timeLabel');
+    timeLabel.style.visibility = "visible";
 }
 
 function rebootDevice()
@@ -714,143 +957,161 @@ function addToGroup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel = iframeDocument.getElementById('groupError');
 
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var selectedNode = iframeDocument.querySelector('#notIncludedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (selectedNode && groupSelected != '-') {
-        groupErrorLabel.style.visibility = "hidden";
         var textNodeSelected = selectedNode.textContent.trim();
         var message = textNodeSelected + ' ' + groupSelected;
         sendData("SET_ADD_GROUP", message);
     }
-    else {
-        groupErrorLabel.style.color = "#C30101";
-        groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
-        groupErrorLabel.style.visibility = "visible";
-    }
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 3000);
 }
 
 function delFromGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel = iframeDocument.getElementById('groupError');
 
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (selectedNode && groupSelected != '-') {
-        groupErrorLabel.style.visibility = "hidden";
         var textNodeSelected = selectedNode.textContent.trim();
         var message = textNodeSelected + ' ' + groupSelected;
         sendData("SET_DEL_GROUP", message);
     }
-    else {
-        groupErrorLabel.style.color = "#C30101";
-        groupErrorLabel.innerHTML = "<b> Pick a group and select a node from network nodes! </b>";
-        groupErrorLabel.style.visibility = "visible";
-    }
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 300);
 }
 
 function addGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
-
-    var inputField = iframeDocument.getElementById("newGroupName");
-    var groupName = inputField.value.trim();
 
     var groupList = iframeDocument.getElementById('groupList');
-    var groupList2 = iframeDocument.getElementById('groupList2');
 
-    if (groupName !== "") {
-        var exists = false;
-        for (var i = 0; i < groupList.options.length; i++) {
-            var optionText = groupList.options[i].textContent.trim();
-            if(optionText.toLowerCase() === groupName.toLowerCase()) {
-                exists = true;
-                break;
-            }
-        }
+    groupList.innerHTML = "<option value='-'> ---- </option>"
+    sendData("SET_ADD_A_GROUP", "");
 
-        if(!exists) {
-            groupErrorLabel2.style.visibility = "hidden";
-        
-            inputField.value = "";
-            groupList.innerHTML = '<option value="-"> ---- </option>';
-            groupList2.innerHTML = '<option value="-"> ---- </option>';
-            sendData("SET_ADD_A_GROUP", groupName);
+    setTimeout(function(){
+        if(groupList.options.length > 0) {
+            groupList.selectedIndex = groupList.options.length - 1;
         }
-        else {
-            groupErrorLabel2.style.color = "#C30101";
-            groupErrorLabel2.innerHTML = "<b> Group already exists! </b>";
-            groupErrorLabel2.style.visibility = "visible";
-        }
-    }
-    else {
-        groupErrorLabel2.style.color = "#C30101";
-        groupErrorLabel2.innerHTML = "<b> Write a name! </b>";
-        groupErrorLabel2.style.visibility = "visible";
-    }
+    }, 1000);
+
+    setTimeout(function() {
+        loadNodesLists();
+    }, 1300);
 }
 
 function delGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var groupErrorLabel2 = iframeDocument.getElementById('groupError2');
+
+    closeGroupPopup();
 
     var groupList = iframeDocument.getElementById('groupList');
-    var groupList2 = iframeDocument.getElementById('groupList2');
-    var groupSelected = groupList2.options[groupList2.selectedIndex].value;
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (groupSelected != '-') {
-        groupErrorLabel2.style.visibility = "hidden";
-
         groupList.innerHTML = '<option value="-"> ---- </option>';
-        groupList2.innerHTML = '<option value="-"> ---- </option>';
         sendData("SET_DEL_A_GROUP", groupSelected);
     }
-    else {
-        groupErrorLabel2.style.color = "#C30101";
-        groupErrorLabel2.innerHTML = "<b> Pick a group! </b>";
-        groupErrorLabel2.style.visibility = "visible";
+
+    setTimeout(function(){
+        loadNodesLists();
+    }, 1000);
+}
+
+function editGroup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var nameInput = iframeDocument.getElementById("newGroupName");
+    if(nameInput.value.trim() === "") { return; }
+
+    closeGroupPopup();
+
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if (groupSelected != '-') {
+        var tmpIndex = groupList.selectedIndex;
+        groupList.innerHTML = '<option value="-"> ---- </option>';
+        sendData("SET_EDIT_A_GROUP", groupSelected + "#" + nameInput.value);
+        setTimeout(function() {
+            groupList.selectedIndex = tmpIndex;
+        }, 1000);
+
+        setTimeout(function() {
+            loadNodesLists();
+        }, 1300);
     }
+}
+
+function loadNodesLists()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
+    includedNodesList.innerHTML = "";
+
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+    notIncludedNodesList.innerHTML = "";
+
+    var groupList = iframeDocument.getElementById("groupList");
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if(groupSelected == "-") { return; }
+
+    sendData("GET_GROUP_NODES", groupSelected);
 }
 
 function maxButton() 
 {
     sendData("SET_MAX", addressClicked);
-}
 
-function offButton() 
-{
-    sendData("SET_OFF", addressClicked);
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function minButton() 
 {
     sendData("SET_MIN", addressClicked);
+
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    }
+    else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }  
 }
 
-function resetButton() 
+function offButton() 
 {
-    sendData("SET_RESET", addressClicked);
-}
+    sendData("SET_OFF", addressClicked);
 
-function sliderInput() 
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var sliderValue = iframeDocument.getElementById("lvlSlider").value;
-    var message = addressClicked + ' ' + sliderValue;
-    sendData("SET_ACTUAL_LVL", message);
+    if(addressClicked < 49152) {
+        sendData("GET_NODE_INFO", addressClicked);
+    } else {
+        loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+    }
 }
 
 function identifyButton() 
@@ -858,14 +1119,34 @@ function identifyButton()
     sendData("SET_IDENTIFY", addressClicked);
 }
 
-function facSettingsButton() 
+function resetButton() 
 {
-    sendData("SET_FACTORY_SETTINGS", addressClicked);
+    sendData("SET_RESET", addressClicked);
 }
 
 function rebootButton() 
 {
     sendData("SET_REBOOT", addressClicked);
+}
+
+function sliderInput() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var lvlSlider = iframeDocument.getElementById("lvlSlider");
+
+    var message = addressClicked + ' ' + lvlSlider.value;
+    sendData("SET_ACTUAL_LVL", message);
+
+    var lvlIcon = iframeDocument.getElementById('lvlIcon');
+    lvlIcon.innerHTML = "<b>" + lvlSlider.value + "%" + "</b>";
+    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + lvlSlider.value + "%, #fff " + lvlSlider.value + "%)";
+}
+
+function facSettingsButton() 
+{
+    sendData("SET_FACTORY_SETTINGS", addressClicked);
 }
 
 function funcTestButton()
@@ -888,65 +1169,68 @@ function setTest()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var toggleFunction = iframeDocument.getElementById('toggleFunction');
-    var toggleDuration = iframeDocument.getElementById('toggleDuration');
-
-    var monday = iframeDocument.getElementById('monday');
-    var tuesday = iframeDocument.getElementById('tuesday');
-    var wednesday = iframeDocument.getElementById('wednesday');
-    var thursday = iframeDocument.getElementById('thursday');
-    var friday = iframeDocument.getElementById('friday');
-    var saturday = iframeDocument.getElementById('saturday');
-    var sunday = iframeDocument.getElementById('sunday');
-
-    var testErrorLabel = iframeDocument.getElementById('testError');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
-    var periodicityList = iframeDocument.getElementById('periodicityList');
-    var periodicitySelected = periodicityList.options[periodicityList.selectedIndex].value;
+    var testErrorLabel = iframeDocument.getElementById('testError');
 
-    if (groupSelected != '-') {
-        testErrorLabel.style.visibility = "hidden";
-
+    if (groupSelected == '-') 
+    {
+        testErrorLabel.style.color = "#C30101";
+        testErrorLabel.innerHTML = "<b> Pick a group! </b>";
+        testErrorLabel.style.visibility = "visible";
+    } 
+    else 
+    {
         var message = groupSelected + ' ';
-        if (toggleFunction.checked) {
-            var functionTime = iframeDocument.getElementById('functionTimePicker').value;
 
-            if (monday.checked || tuesday.checked || wednesday.checked || thursday.checked || friday.checked || saturday.checked || sunday.checked) {
-                testErrorLabel.style.visibility = "hidden";
+        var toggleFunction = iframeDocument.getElementById('toggleFunction');
+        message += (toggleFunction.checked ? "1" : "0") + ' ';
 
-                if (monday.checked) { message += 'Mon-'; }
-                if (tuesday.checked) { message += 'Tue-'; }
-                if (wednesday.checked) { message += 'Wed-'; }
-                if (thursday.checked) { message += 'Thu-'; }
-                if (friday.checked) { message += 'Fri-'; }
-                if (saturday.checked) { message += 'Sat-'; }
-                if (sunday.checked) { message += 'Sun-'; }
+        var monday = iframeDocument.getElementById('monday');      
+        var tuesday = iframeDocument.getElementById('tuesday');    
+        var wednesday = iframeDocument.getElementById('wednesday');
+        var thursday = iframeDocument.getElementById('thursday');  
+        var friday = iframeDocument.getElementById('friday');      
+        var saturday = iframeDocument.getElementById('saturday');  
+        var sunday = iframeDocument.getElementById('sunday');      
+        var functionTime = iframeDocument.getElementById('functionTimePicker').value;
 
-                message += ' ' + functionTime + ' ';
-            }
-            else {
-                testErrorLabel.style.color = "#C30101";
-                testErrorLabel.innerHTML = "<b> Select one or more days! </b>";
-                testErrorLabel.style.visibility = "visible";
-
-                return;
-            }
+        if (!toggleFunction.checked || monday.checked || tuesday.checked || wednesday.checked || thursday.checked || friday.checked || saturday.checked || sunday.checked) {
+            if (monday.checked) { message += 'Mon-'; }
+            if (tuesday.checked) { message += 'Tue-'; }
+            if (wednesday.checked) { message += 'Wed-'; }
+            if (thursday.checked) { message += 'Thu-'; }
+            if (friday.checked) { message += 'Fri-'; }
+            if (saturday.checked) { message += 'Sat-'; }
+            if (sunday.checked) { message += 'Sun-'; }
+            message += ' ' + functionTime + ' ';
         }
-        if (toggleDuration.checked) {
-            var durationDate = iframeDocument.getElementById('durationDatePicker').value;
-            var durationTime = iframeDocument.getElementById('durationTimePicker').value;
+        else {
+            testErrorLabel.style.color = "#C30101";
+            testErrorLabel.innerHTML = "<b> Select one or more days! </b>";
+            testErrorLabel.style.visibility = "visible";
+            return;
+        }
 
-            if (periodicitySelected != '-') {
+        var toggleDuration = iframeDocument.getElementById('toggleDuration');
+        message += (toggleDuration.checked ? "1" : "0") + ' ';
+
+        var periodicityList = iframeDocument.getElementById('periodicityList');
+        var periodicitySelected = periodicityList.options[periodicityList.selectedIndex].value;
+        var durationDate = iframeDocument.getElementById('durationDatePicker').value;
+        var durationTime = iframeDocument.getElementById('durationTimePicker').value;
+
+        if (!toggleDuration.checked || periodicitySelected != '-') {
+            if (periodicitySelected === '-')
+                message += '0' + ' ' + durationDate + ' ' + durationTime;
+            else
                 message += periodicitySelected + ' ' + durationDate + ' ' + durationTime;
-            }
-            else {
-                testErrorLabel.style.color = "#C30101";
-                testErrorLabel.innerHTML = "<b> Select periodicity! </b>";
-                testErrorLabel.style.visibility = "visible";
-
-                return;
-            }
+        }
+        else {
+            testErrorLabel.style.color = "#C30101";
+            testErrorLabel.innerHTML = "<b> Select periodicity! </b>";
+            testErrorLabel.style.visibility = "visible";
+            return;
         }
 
         testErrorLabel.style.color = "#4682b4";
@@ -954,11 +1238,37 @@ function setTest()
         testErrorLabel.style.visibility = "visible";
         sendData("SET_TEST", message);
     }
-    else {
-        testErrorLabel.style.color = "#C30101";
-        testErrorLabel.innerHTML = "<b> Pick a group! </b>";
-        testErrorLabel.style.visibility = "visible";
+}
+
+function loadTests()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var select = iframeDocument.getElementById('groupList');
+    var group = select.value;
+    
+    if(group !== "-")
+        sendData("GET_TEST", group);
+    else
+    {
+        var toggleFunction = iframeDocument.getElementById('toggleFunction'); toggleFunction.checked = false;
+        var toggleDuration = iframeDocument.getElementById('toggleDuration'); toggleDuration.checked = false;
+
+        var monday = iframeDocument.getElementById('monday'); monday.checked = false;
+        var tuesday = iframeDocument.getElementById('tuesday'); tuesday.checked = false;
+        var wednesday = iframeDocument.getElementById('wednesday'); wednesday.checked = false;
+        var thursday = iframeDocument.getElementById('thursday'); thursday.checked = false;
+        var friday = iframeDocument.getElementById('friday'); friday.checked = false;
+        var saturday = iframeDocument.getElementById('saturday'); saturday.checked = false;
+        var sunday = iframeDocument.getElementById('sunday'); sunday.checked = false;
+
+        var periodicityList = iframeDocument.getElementById('periodicityList'); periodicityList.selectedIndex = 0;
+
+        parent.sendData("GET_DATE_TIME", "");
     }
+
+    var testErrorLabel = iframeDocument.getElementById('testError'); testErrorLabel.innerHTML = " ‎ ";
 }
 
 function sendFile()
@@ -981,7 +1291,13 @@ function sendFile()
 
 function clearAllData()
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
     sendData("SET_CLEAR_ALL_DATA", "");
+
+    var clearDataLabel = iframeDocument.getElementById('clearDataLabel');
+    clearDataLabel.style.visibility = "visible";
 }
 
 function getLogs()
@@ -1114,4 +1430,36 @@ function loadGroups() {
 
 function loadGroupInfo(groupAddress) {
     sendData("GET_GROUP_INFO", groupAddress);
+}
+
+function updateAllDisplayedButtons() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    const container = iframeDocument.getElementById("node-container");
+    const buttons = container.querySelectorAll('button[data-device]');
+    buttons.forEach(button => {
+        const device = button.getAttribute('data-device');
+        isAnExistingDevice(device);
+    });
+}
+
+function lineScanningFunction() {
+    sendData("SET_LINE_SCAN", "");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var feedbackLabel = iframeDocument.getElementById("feedbackLineScanning");
+    
+    feedbackLabel.style.visibility = "visible";
+    feedbackLabel.style.opacity = "1";
+    
+    setTimeout(function(){
+        feedbackLabel.style.opacity = "0";
+        
+        setTimeout(function(){
+            feedbackLabel.style.visibility = "hidden";
+        }, 2000);
+    }, 2000);
 }

@@ -26,6 +26,7 @@
 #define DEL_DEVICES                     0x13
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
+#define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
 #define WRITE_ID_CODE                   0x33
 #define FACTORY_ID_WROTE                0x35
@@ -38,6 +39,8 @@
 #define CONFIRM_NEW_ITERATION           0x29
 #define CONFIRM_CHANGE_RELAY            0x31
 #define DEBUG                           0x90
+#define LINE_SCAN                       0x20
+#define LINE_SCAN_SEND                  0x22
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -58,5 +61,6 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
-
+void sendUartClearAllData(UartPort* _uartPort);
+void requestMicroDatabase(UartPort* _uartPort);
 #endif // PROCESS_UART_DATA_H

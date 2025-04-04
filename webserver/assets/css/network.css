@@ -135,7 +135,7 @@ label {
     width: 20%;
     border: 2px solid #4682b4;
     border-radius: 8px;
-    padding: 5px;
+    padding: 0px;
     font-size: 14px;
     color: #4682b4;
     cursor: pointer;
@@ -143,6 +143,10 @@ label {
 
 .range-container select:focus{
     outline: 2px solid #63e8f0;
+}
+
+.range-container button {
+    height: 60%;
 }
 
 .node-container {
@@ -157,6 +161,7 @@ label {
 }
 
 .node-container button {
+    position: relative;
     padding: 5px;
     background-color: #4682b4;
     color: #fff;
@@ -183,6 +188,7 @@ label {
     width: 100%;
     height: 100%;
     overflow-y: auto;
+    align-content: start;
 }
 
 .group-container button {
@@ -271,12 +277,19 @@ label {
     width: 100%;
     height: 100%;
     border-radius: 8px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .popup-button-subcontainer button:hover {
     color: #4682b4;
     background-color: #63e8f0;
+}
+
+.popup-button-subcontainer button.clicked {
+    color: #4682b4;
+    /*background-color: #c0eff1;*/
+    background-color: #c2fcff;
+    transform: scale(0.95);
 }
 
 .closeWindow {
@@ -313,7 +326,8 @@ label {
     background-color: #fff;
     background-repeat: no-repeat;
     background-position: center;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
 }
 
 .node-container button.blue {
@@ -338,4 +352,95 @@ label {
 
 .node-container button.red:hover {
     background-color: #ff7f7f;
+}
+
+.fail-count-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 2px 6px;
+    transform: translate(50%, -50%); /* Ajusta para centrar la burbuja en la esquina */
+}
+
+.emergency-count-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #fdfab2;
+    color: #000;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 2px 6px;
+    transform: translate(50%, -50%); /* Ajusta para centrar la burbuja en la esquina */
+}
+
+.status-indicator {
+    position: absolute;
+    top: 0; 
+    right: 0;
+    transform: translate(40%, -40%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    pointer-events: none;
+    border: 2px solid #000;
+}
+
+.status-indicator.on-state {
+    background-color: #fff;
+}
+.status-indicator.off-state {
+    background-color: #000;
+}
+
+.line-scanning-container {
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.line-scanning-container button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 16px;
+    height: 60%;
+    cursor: pointer;
+    border: none;
+    background-color: #4682b4;
+    color: #fff;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+  
+.line-scanning-container button:hover {
+    background-color: #63e8f0;
+}
+
+#feedbackLineScanning {
+    color: #4682b4;
+    visibility: hidden;
+    opacity: 0;
+    margin-right: 10px;
+    transition: opacity 2s ease-out;
+}
+
+.button-icon {
+    width: 20px;   /* Ajusta según lo necesites */
+    height: 20px;
+}
+  
+.dark-filter {
+    filter: brightness(50%);
+}
+
+.button-disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }

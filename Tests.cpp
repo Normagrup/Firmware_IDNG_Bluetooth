@@ -85,3 +85,15 @@ QString Tests::getDurationTime()
 {
     return _durationTime;
 }
+
+void Tests::deleteTest()
+{
+    this->_groupAddress = "";
+    this->_isFunctionalEnable = false;
+    this->_isDurationEnable = false;
+    this->_functionalDays = "";
+    this->_functionalTime = "";
+    this->_durationPeriodicity = "";
+    this->_durationDate = "";
+    this->_durationTime = "";
+}

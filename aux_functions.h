@@ -19,12 +19,6 @@ void convertUuidStringToByteArray(QString uuidString, uint8_t* UUID);
 uint8_t convertGroupSubStringToArray(QString groupSubString, uint16_t* groupSubArray);
 void setIPConfigInfo(QStringList webServerParts, Database* database);
 
-void disableAllTest(QStringList webServerParts, Database* database);
-void setFunctionalTest(QStringList webServerParts, Database* database);
-void setDurationTest(QStringList webServerParts, Database* database);
-void setAllTest(QStringList webServerParts, Database* database);
-
-void createGroup(QString name, Database *database);
-void removeGroup(QString address, Database *database);
+void setTests(QStringList webServerParts, Database* database);
 
 #endif // AUX_FUNCTIONS_H

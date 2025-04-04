@@ -17,11 +17,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     pollingTimer.stop();
 
-    if (isCommissioning) {
-        qDebug() << "Ignoring command " << type << " because commissioning is in progress.";
-        return;
-    }
-
     if (type == WS_SET_LOG_IN) {
         uint8_t loginInfo = database->verifyLoginParameters(value);
         sendLoginInfo(webServer, loginInfo);
@@ -30,7 +25,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         rebootDevice();
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         sendUartScannedDevices(uartPort);
+    }
+    else if (type == WS_SET_LINE_SCAN) {
+        if(isCommissionInProgress(webServer)) { return; }
+        requestMicroDatabase(uartPort);
+        
     }
     else if (type == WS_GET_IP_CONFIG) {
         QStringList messages = database->getInterfaceParameters();
@@ -69,6 +71,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         setLocalDateTime(webServerParts);
     }
     else if (type == WS_SET_START_ACTION) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         //qDebug() << "ADDING NEW NODE";
         if (value != "0") {
             sendUartDelDevice(uartPort, 0x0000);
@@ -97,11 +101,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         */
     }
     else if (type == WS_SET_DELETE_DEVICE) {
-        //uint16_t nodeNetAddress = getNodeNetAddress(value);
-        //uint16_t  nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-        //meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-        //database->deleteNode(nodeAddress);
-        //sendUartDelDevice(uartPort, 0xFFFF);
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = getNodeNetAddress(value);
         uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
         printf(" Intentando eliminar nodo...\n");
@@ -122,6 +123,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
     }
     else if (type == WS_SET_DELETE_ALL_DEVICES) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
 
         for (uint16_t nodeNetAddress : nodeNetAddressList) {
@@ -158,6 +161,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "Eliminación de nodos completada";
     }
     else if (type == WS_SET_ADD_GROUP) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
         QString parsedValue = parts0[0] + parts1[1]; // "Node 1 C010"
@@ -177,6 +182,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartAddGroup(uartPort, address);
     }
     else if (type == WS_SET_DEL_GROUP) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
         QString parsedValue = parts0[0] + parts1[1]; // "Node 1 C010"
@@ -186,46 +193,89 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDelGroup(uartPort, address, database);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
-        createGroup(value, database);
+        database->createGroup();
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_DEL_A_GROUP) {
-        removeGroup(value, database);
+        database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         sendGroups(webServer, database);
     }
+    else if (type == WS_SET_EDIT_A_GROUP) {
+        QStringList parts = value.split("#");
+        QString address = parts[0];
+        QString newName = parts[1];
+
+        database->editGroup(address, newName);
+        sendGroups(webServer, database);
+    }
+    else if (type == WS_GET_GROUP_NODES) {
+        sendGroupNodes(webServer, value);
+    }
     else if (type == WS_SET_MAX) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(254); // 254 / 254 = 100%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, RECALL_MAX_LVL, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(254); // 254 / 254 = 100%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, RECALL_MAX_LVL, IS_NORMAL);
         }
     }
     else if (type == WS_SET_OFF) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(0); // 0 / 254 = 0%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, OFF, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(0); // 0 / 254 = 0%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, OFF, IS_NORMAL);
         }
     }
     else if (type == WS_SET_MIN) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].setActualLvl(3); // 3 / 254 = 1%
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, RECALL_MIN_LVL, IS_NORMAL);
         }
         else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(nodeNetAddress))
+                        device.setActualLvl(3); // 3 / 254 = 1%
+                }
+            }
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, RECALL_MIN_LVL, IS_NORMAL);
         }
     }
     else if (type == WS_SET_RESET) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -237,9 +287,25 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_ACTUAL_LVL) {
         uint16_t* values = getActualLvl(value);
+
+        if(values[0] < 0xC000) {
+            meshDevice[(values[0] - 1) / 64][(values[0] - 1) % 64].setActualLvl(values[1]);
+        }
+        else {
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if(device.isOnGroupSubAddress(values[0]))
+                        device.setActualLvl(values[1]);
+                }
+            }
+        }
+
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
     else if (type == WS_SET_IDENTIFY) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -250,6 +316,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FACTORY_SETTINGS) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -272,6 +340,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_REBOOT) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -294,6 +364,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FUNCTION_TEST) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -308,6 +380,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_DURATION_TEST) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -323,6 +397,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 
     else if (type == WS_SET_STOP) {
+        if(isCommissionInProgress(webServer)) { return; }
+
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -339,21 +415,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);
     }
-    else if (type == WS_SET_TEST  ) {
-        QStringList webServerParts = value.split(" ");
+    else if (type == WS_SET_TEST) {
+        if(isCommissionInProgress(webServer)) { return; }
 
-        if (webServerParts.size() == 1) {                   // TODO DESHABILITADO
-            disableAllTest(webServerParts, database);
-        }
-        else if (webServerParts.size() == 3) {              // FUNCTIONAL HABILITADO
-            setFunctionalTest(webServerParts, database);
-        }
-        else if (webServerParts.size() == 4) {              // DURATION HABILITADO
-            setDurationTest(webServerParts, database);
-        }
-        else if (webServerParts.size() == 6) {              // TODO HABILITADO
-            setAllTest(webServerParts, database);
-        }
+        QStringList webServerParts = value.split(" ");
+        setTests(webServerParts, database);
     }
     else if (type == WS_SET_UPDATE_FILE) {
         qDebug() << "UPDATE FILE";
@@ -390,7 +456,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendWriteIDCodeFrame(uartPort, deviceID);
     }
     else if (type == WS_GET_DEVICES_COUNT) {
-        // NOTA: Se podría sacar de la BBDD en lugar de recorrer toda la estructura
         int count = 0;
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -411,11 +476,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                 Device& device = meshDevice[i][j];
-                count += device.getTotalFailures();
-                if(device.hasLampFailure()) { lampFailCount++; }
-                if(device.hasBatteryFailure()) { batFailCount++; }
-                if(device.hasBatteryDurationFailure()) { durFailCount++; }
-                if(device.hasCommunicationFailure()) { comFailCount++; }
+                if(device.getIsConfigured()) {
+                    count += device.getTotalFailures();
+                    if(device.hasLampFailure()) { lampFailCount++; }
+                    if(device.hasBatteryFailure()) { batFailCount++; }
+                    if(device.hasBatteryDurationFailure()) { durFailCount++; }
+                    if(device.hasCommunicationFailure()) { comFailCount++; }
+                }
             }
         }
         sendFailuresCount(webServer, count, lampFailCount, batFailCount, durFailCount, comFailCount);
@@ -427,8 +494,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QString serialNumber = meshDevice[subnet][id].serialNumberString();
         bool isConfig = meshDevice[subnet][id].getIsConfigured();
         bool hasFailures = meshDevice[subnet][id].getTotalFailures() > 0;
+        bool onOffStatus = meshDevice[subnet][id].getActualLvl() > 0;
 
-        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures);
+        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures, onOffStatus);
     }
     else if (type == WS_GET_GROUPS) {
         sendGroups(webServer, database);
@@ -436,14 +504,27 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_GROUP_INFO) {
         sendGroupInfo(webServer, value);
     }
+    else if (type == WS_GET_TEST) {
+        sendTest(webServer, database, value);
+    }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
-        qDebug() << "CLEAR ALL DATA";
-        // TODO: Preguntar, ¿qué se quiere borrar concretamente? ¿De dónde (sistema, BBDD, ...)?
+        if(isCommissionInProgress(webServer)) { return; }
+        clearSystemData(database, uartPort);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
     }
+}
+
+bool isCommissionInProgress(WebServer* webServer)
+{
+    if (isCommissioning) {
+        QString message = QString(WS_SEND_ALERT_COMMISSION) + "@" + "Command blocked. Commissioning in progress.";
+        if (webServer != nullptr) { webServer->sendData(message); }
+        return true;
+    }
+    return false;
 }
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo)
@@ -648,26 +729,79 @@ void sendGroups(WebServer* webServer, Database* database) {
 
 void sendGroupInfo(WebServer* webServer, QString groupAddress)
 {
-    // Recorrer
+    int lampFailCount = 0, batFailCount = 0, durFailCount = 0, comFailCount = 0, emerModeCount = 0;
+    int totalLvl = 0, configDevs = 0;
 
-    /**
-    QString controlGearStatus, emergencyMode, emergencyFailureStatus, actualLvl, communicationFailure, deviceType;
-    controlGearStatus = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getControlGearStatus());
-    emergencyMode = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getEmergencyMode());
-    emergencyFailureStatus = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getEmergencyFailureStatus());
-    actualLvl = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getActualLvl());
-    communicationFailure = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getComunicationFailure());
-    deviceType = QString::number(meshDevice[(nodeNetAddress.toUInt() - 1) / 64][(nodeNetAddress.toUInt() - 1) % 64].getDeviceType());
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured()) {
+                uint16_t groupSubAddress[1];
+                convertGroupSubStringToArray(groupAddress, groupSubAddress);
+                if(device.isOnGroupSubAddress(groupSubAddress[0])) {
+                    configDevs++;
+                    if(device.hasLampFailure()) { lampFailCount++; }
+                    if(device.hasBatteryFailure()) { batFailCount++; }
+                    if(device.hasBatteryDurationFailure()) { durFailCount++; }
+                    if(device.hasCommunicationFailure()) { comFailCount++; }
+                    if(device.isEmergencyModeActive()) { emerModeCount++; }
+                    totalLvl += device.getActualLvl();
+                }
+            }
+        }
+    }
 
-    lastNetAddressClicked = nodeNetAddress.toUInt();
-    isOpenNodeControl = true;
+    int average = (configDevs == 0) ? 0 : totalLvl / configDevs;
+    uint8_t averageLvl = average > 254 ? 254 : average; // Comprobación para asegurar que no produzca overflow
 
-    QString message = QString(WS_SEND_NODE_INFO) + "@" + controlGearStatus + "." + emergencyMode + "." + emergencyFailureStatus + "." + actualLvl + "." + communicationFailure + "." + deviceType;
+    // Conversión a cadena para pasar el mensaje
+    QString lampFailCountS, batFailCountS, durFailCountS, comFailCountS, emerModeCountS, averageLvlS;
+    lampFailCountS = QString::number(lampFailCount);
+    batFailCountS = QString::number(batFailCount);
+    durFailCountS = QString::number(durFailCount);
+    comFailCountS = QString::number(comFailCount);
+    emerModeCountS = QString::number(emerModeCount);
+    averageLvlS = QString::number(averageLvl);
+
+    QString message = QString(WS_SEND_GROUP_INFO) + "@" + lampFailCountS + "." + emerModeCountS + "." + batFailCountS + "." + durFailCountS + "." + averageLvlS + "." + comFailCountS;
 
     if (webServer != nullptr) { webServer->sendData(message); }
-    **/
+}
 
-    qDebug() << "SEND GROUP INFO:" << groupAddress << "- PENDING TODO";
+void sendGroupNodes(WebServer* webServer, QString groupAddress) {
+    QString messageIncludedNodeInit = QString(WS_SEND_GROUP_NODE_INCLUDED) + "@";
+    QString messageNotIncludedNodeInit = QString(WS_SEND_GROUP_NODE_NOT_INCLUDED) + "@";
+    QString message;
+
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured()) {
+                uint16_t groupSubAddress[1];
+                convertGroupSubStringToArray(groupAddress, groupSubAddress);
+
+                if(device.isOnGroupSubAddress(groupSubAddress[0]))
+                    message = messageIncludedNodeInit;
+                else
+                    message = messageNotIncludedNodeInit;
+
+                message += QString::number(i * 64 + j + 1) + "_" + device.serialNumberString();
+
+                if (webServer != nullptr) { webServer->sendData(message); }
+            }
+        }
+    }
+}
+
+void sendTest(WebServer* webServer, Database* database, QString groupAddress)
+{
+    QString testData = database->getTests(groupAddress);
+
+    if(testData.isEmpty()) { return; }
+
+    QString message = QString(WS_SEND_TEST) + "@" + testData;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendDevicesCount(WebServer* webServer, int counter) {
@@ -717,8 +851,8 @@ void sendRecordedDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures) {
-    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false");
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus) {
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -729,3 +863,32 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+
+void sendLogFile(WebServer *webServer, QString fileDir)
+{
+    QString message = QString(WS_SEND_LOG_DATA) + "@" + fileDir;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void clearSystemData(Database* database,  UartPort* uartPort)
+{
+    // Borrado de la BBDD del embebido
+    qDebug() << "[Embebido] Borrando datos de la BBDD...";
+    database->clearAllData();
+
+    // Borrado del modelo del embebido
+    qDebug() << "[Embebido] Borrando datos de meshDevice...";
+    for(int i = 0; i < MAX_SUBNET; i++)
+        for(int j = 0; j < MAX_NODES_SUBNET; j++)
+            meshDevice[i][j].deleteDevice();
+
+    qDebug() << "[Embebido] Borrando datos de tests...";
+    for(int i = 0; i < MAX_TEST; i++)
+        tests[i].deleteTest();
+
+    qDebug() << "[Embebido] Enviando CLEAR_ALL_DATA al micro por UART...";
+    sendUartClearAllData(uartPort); 
+
+}
+
