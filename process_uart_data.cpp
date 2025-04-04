@@ -423,8 +423,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString();
-                if (webServer != nullptr) { webServer->sendData(message); }
+                if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
+                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString();
+                    if (webServer != nullptr) { webServer->sendData(message); }
+                }
                 break;
             }
         }

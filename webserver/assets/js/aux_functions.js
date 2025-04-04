@@ -478,9 +478,33 @@ function closeGroupPopup()
 
     var popupEdit = iframeDocument.getElementById('popupEditingName');
     var popupDelete = iframeDocument.getElementById('popupDeletingGroup');
+    var popupDeleteNode = iframeDocument.getElementById('popupDeletingNode');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
     
     if(popupEdit) { popupEdit.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
+    if(popupDeleteNode) { popupDeleteNode.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
+}
+
+function delFromGroupPrev()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
+    var groupList = iframeDocument.getElementById('groupList');
+    var groupSelected = groupList.options[groupList.selectedIndex].value;
+
+    if (!selectedNode || groupSelected == '-') { return; }
+
+    var popup = iframeDocument.getElementById('popupDeletingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
+    var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    deletingNodeLabel.textContent = "Do you want to delete the node from the group?";
+    deletingNodeButton.classList.remove('button-disabled');
 }

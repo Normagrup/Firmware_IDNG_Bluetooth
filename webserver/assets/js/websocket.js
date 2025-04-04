@@ -953,13 +953,21 @@ function addToGroup()
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
-    if (selectedNode && groupSelected != '-') {
-        var textNodeSelected = selectedNode.textContent.trim();
-        var message = textNodeSelected + ' ' + groupSelected;
-        sendData("SET_ADD_GROUP", message);
-    }
+    if (!selectedNode || groupSelected == '-') { return; }
+
+    var popup = iframeDocument.getElementById('popupAddingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var textNodeSelected = selectedNode.textContent.trim();
+    var message = textNodeSelected + ' ' + groupSelected;
+    sendData("SET_ADD_GROUP", message);
 
     setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
         loadNodesLists();
     }, 3000);
 }
@@ -968,20 +976,28 @@ function delFromGroup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    
+    var popup = iframeDocument.getElementById('popupDeletingNode');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
+    var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
 
     var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
-    if (selectedNode && groupSelected != '-') {
-        var textNodeSelected = selectedNode.textContent.trim();
-        var message = textNodeSelected + ' ' + groupSelected;
-        sendData("SET_DEL_GROUP", message);
-    }
+    var textNodeSelected = selectedNode.textContent.trim();
+    var message = textNodeSelected + ' ' + groupSelected;
+    sendData("SET_DEL_GROUP", message);
+
+    deletingNodeLabel.textContent = "Deleting the node from the group...";
+    deletingNodeButton.classList.add('button-disabled');
 
     setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
         loadNodesLists();
-    }, 300);
+    }, 750);
 }
 
 function addGroup() 
