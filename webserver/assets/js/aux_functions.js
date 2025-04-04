@@ -508,3 +508,64 @@ function delFromGroupPrev()
     deletingNodeLabel.textContent = "Do you want to delete the node from the group?";
     deletingNodeButton.classList.remove('button-disabled');
 }
+
+function delDevicePrev()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var networkErrorLabel = iframeDocument.getElementById('networkError');
+    
+    // Seleccionar el nodo marcado en la lista de Network Nodes
+    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    
+    if (selectedNode) {
+        networkErrorLabel.style.visibility = "hidden";
+
+        var popup = iframeDocument.getElementById('popupDelDevice');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+        var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
+        var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
+
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+        deletingDeviceLabel.textContent = "Do you want to delete the node from the network?";
+        deletingDeviceButton.classList.remove('button-disabled');
+
+    } else {
+        networkErrorLabel.style.visibility = "visible";
+        networkErrorLabel.innerText = "No device selected";
+    }
+}
+
+function delAllDevicesPrev()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var networkErrorLabel = iframeDocument.getElementById('networkError');
+
+    networkErrorLabel.style.visibility = "hidden";
+
+    var popup = iframeDocument.getElementById('popupDelAllDevices');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
+    var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    deletingAllDevicesLabel.textContent = "Do you want to delete ALL the nodes from the network?";
+    deletingAllDevicesButton.classList.remove('button-disabled');
+}
+
+function closeWirelessPopup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupDelete = iframeDocument.getElementById('popupDelDevice');
+    var popupDeleteAll = iframeDocument.getElementById('popupDelAllDevices');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    
+    if(popupDelete) { popupDelete.style.visibility = "hidden"; }
+    if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
+    popupOverlay.style.visibility = "hidden";
+}

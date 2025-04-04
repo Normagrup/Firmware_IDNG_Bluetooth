@@ -19,6 +19,35 @@
         <div class="loader"></div>
         <label style="margin-top: 4%;" id="labelCommissionNodes"></label>
     </div>
+    <div class="popup" id="popupDelDevice">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the node from the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingDeviceButton" onclick="parent.delDevice()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popup" id="popupDelAllDevices">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingAllDevicesLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the nodes from the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingAllDevicesButton" onclick="parent.delAllDevices()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    
 
     <div class="wrap-container">
         <div class="wrap-list-container">
@@ -43,10 +72,10 @@
                 <div class="list-button-container" id="manualContainer">
                     <button onclick="parent.getScannedDevices()"> Scan devices </button>
                     <button onclick="parent.addDevice()"> Add device </button>
-                    <button onclick="parent.delDevice()"> Remove device </button>
+                    <button onclick="parent.delDevicePrev()"> Remove device </button>
                     <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
 
-                    <button onclick="parent.delAllDevices()" class="remove-all-btn">
+                    <button onclick="parent.delAllDevicesPrev()" class="remove-all-btn">
                         Remove all devices
                     </button>
                 </div>
