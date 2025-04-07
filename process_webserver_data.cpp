@@ -438,7 +438,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     else if (type == WS_GET_POWER_ON_LVL){
         if(isCommissionInProgress(webServer)) { return; }
+        qDebug() << "WS_GET_POWER_ON_LVL command received";
         QList<PowerOnLevGroupInfo> groupList = database-> getPowerOnLevelGroup();
+        QList<PowerOnLevGroupInfo> fixedGroups = database->getPowerOnLevelFixGroup();
+
+        groupList.append(fixedGroups);
 
         for (const PowerOnLevGroupInfo &group : groupList) {
             QString groupAddrStr = group.groupAddress;
@@ -446,8 +450,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, QUERY_POWER_ON_LVL, IS_QUERY);
             delay(WEBSERVER_SEND_TIME_MS);
+            qDebug() << "uart power on query command send - " << "GroupAddress: " << groupAddress;
         }
         sendPowerOnGroup(webServer, database);
+        qDebug() << "Refresh web page with database power on lvl data ";
     }
 
     else if (type == WS_SET_LOAD_NODES) {

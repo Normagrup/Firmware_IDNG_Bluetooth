@@ -259,6 +259,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
             // break;
 
             case UART_RSP_CHANGE_FRAME_TYPE:
+                qDebug() << "Received changed frame, entering to processChangeFrame" ;
                 processChangeFrame(dataChecked, database, webServer);
             break;
 
@@ -471,8 +472,10 @@ void processChangeFrame(QByteArray data, Database* database, WebServer* webServe
 
     if(daliCommandType == QUERY_POWER_ON_LVL){
         QString groupHex = QString("%1").arg(address, 4, 16, QChar('0')).toUpper();
-        database->setPowerOnLevelGroup(groupHex, daliRegisterValue);
+        qDebug() << "Entered to QUERY_POWER_ON_LVL with " << "Group: " << groupHex << " PowerOnValue: " << daliRegisterValue;
+        //database->setPowerOnLevelGroup(groupHex, daliRegisterValue);
         updatePowerOnLvlToWeb(webServer, database, groupHex, daliRegisterValue);
+        qDebug() << "Updated single power on lvl data in the web ";
     }
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
