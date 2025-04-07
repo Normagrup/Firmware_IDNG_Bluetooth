@@ -428,9 +428,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(SLEEP_DALI_TIME_MS);
 
         if (fixedGroupAddresses.contains(parts1)) {
-            database->setPowerOnLevFixGroup(parts1, powerOnLevel);  // FixedGroups
+            database->setPowerOnLevFixGroup(parts1, powerOnLevel);  
         } else {
-            database->setPowerOnLevelGroup(parts1, powerOnLevel);  // All other Groups
+            database->setPowerOnLevelGroup(parts1, powerOnLevel);  
         }
 
         updatePowerOnLvlToWeb(webServer, database, parts1, powerOnLevel);
