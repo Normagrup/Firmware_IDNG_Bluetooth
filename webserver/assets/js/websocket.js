@@ -166,8 +166,9 @@ function confirmStartCommission(value)
     var popupHeader = popup.querySelector('h2');
     popupHeader.textContent = "Automatic commission in progress...";
 
+    nodesAdded = 0; nodesScanned = 0;
     var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
-    labelCommissionNodes.textContent = "0 / 0";
+    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
@@ -209,6 +210,10 @@ function addDeviceToNetworkList(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    // Si llega la info de un nodo en red y estamos durante un commissioning, 
+    // se elimina uno de los elementos de scannedDevices y se añade uno a networkNodes 
+    // Si llega la info de un nodo en red y no estamos durante un commissioning, 
+    // simplemente se añadirá a networkNodes pero no se eliminará nada de scannedDevices (ya que estará vacía)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     var devices = scannedDevicesList.getElementsByTagName('li');
     var firstDevice = devices[0];
@@ -283,6 +288,9 @@ function processNodeInfo(value)
     var lvlIcon = iframeDocument.getElementById('lvlIcon');
     var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
     var deviceTypeIcon = iframeDocument.getElementById('deviceTypeIcon');
+    var functionalTestButton = iframeDocument.querySelector('button[onclick="parent.funcTestButton()"]');
+    var durationTestButton = iframeDocument.querySelector('button[onclick="parent.durTestButton()"]');
+    var stopButton = iframeDocument.querySelector('button[onclick="parent.stopButton()"]');
 
     autonomyIcon.innerHTML = "";
     batteryIcon.innerHTML = "";
@@ -324,9 +332,33 @@ function processNodeInfo(value)
     if (communicationFailure != 0) { comIcon.style.backgroundImage = "url('images/comIconOnFail.png')"; }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
 
-    if (deviceType == "1") { deviceTypeIcon.src = "images/emergencyLightIcon.png"; }
-    else if (deviceType == "6") { deviceTypeIcon.src = "images/normalLightIcon.png"; }
-    else { deviceTypeIcon.src = "images/defaultLightIcon.png"; }
+    if (deviceType == "1") { 
+        deviceTypeIcon.src = "images/emergencyLightIcon.png";
+        autonomyIcon.classList.remove('dark-filter');
+        batteryIcon.classList.remove('dark-filter');
+        emergencyIcon.classList.remove('dark-filter');
+        functionalTestButton.classList.remove('button-disabled');
+        durationTestButton.classList.remove('button-disabled');
+        stopButton.classList.remove('button-disabled');
+    }
+    else if (deviceType == "6") { 
+        deviceTypeIcon.src = "images/normalLightIcon.png"; 
+        autonomyIcon.classList.add('dark-filter');
+        batteryIcon.classList.add('dark-filter');
+        emergencyIcon.classList.add('dark-filter');
+        functionalTestButton.classList.add('button-disabled');
+        durationTestButton.classList.add('button-disabled');
+        stopButton.classList.add('button-disabled');
+    }
+    else { 
+        deviceTypeIcon.src = "images/defaultLightIcon.png";
+        autonomyIcon.classList.remove('dark-filter');
+        batteryIcon.classList.remove('dark-filter');
+        emergencyIcon.classList.remove('dark-filter');
+        functionalTestButton.classList.remove('button-disabled');
+        durationTestButton.classList.remove('button-disabled');
+        stopButton.classList.remove('button-disabled');
+    }
 }
 
 function processGroupBasicInfo(value) {
@@ -381,6 +413,9 @@ function processGroupInfo(value)
     var comIcon = iframeDocument.getElementById('comIcon');
     var lvlIcon = iframeDocument.getElementById('lvlIcon');
     var emergencyIcon = iframeDocument.getElementById('emergencyIcon');
+    var functionalTestButton = iframeDocument.querySelector('button[onclick="parent.funcTestButton()"]');
+    var durationTestButton = iframeDocument.querySelector('button[onclick="parent.durTestButton()"]');
+    var stopButton = iframeDocument.querySelector('button[onclick="parent.stopButton()"]');
 
     autonomyIcon.innerHTML = "";
     batteryIcon.innerHTML = "";
@@ -454,6 +489,23 @@ function processGroupInfo(value)
         comIcon.appendChild(comFailuresCountSpan);
     }
     else { comIcon.style.backgroundImage = "url('images/comIcon.png')"; }
+
+    if (addressClicked == 49152) { 
+        autonomyIcon.classList.add('dark-filter');
+        batteryIcon.classList.add('dark-filter');
+        emergencyIcon.classList.add('dark-filter');
+        functionalTestButton.classList.add('button-disabled');
+        durationTestButton.classList.add('button-disabled');
+        stopButton.classList.add('button-disabled');
+    }
+    else { 
+        autonomyIcon.classList.remove('dark-filter');
+        batteryIcon.classList.remove('dark-filter');
+        emergencyIcon.classList.remove('dark-filter');
+        functionalTestButton.classList.remove('button-disabled');
+        durationTestButton.classList.remove('button-disabled');
+        stopButton.classList.remove('button-disabled');
+    }
 }
 
 function processGroupNode(value, included)
