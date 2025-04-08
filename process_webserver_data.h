@@ -14,11 +14,11 @@
 #define WS_SET_DATE_TIME                    "SET_DATE_TIME"
 
 #define WS_SET_SCANNED_DEVICES              "SET_SCANNED_DEVICES"
+#define WS_SET_STORED_SCANNED_DEVICES       "SET_STORED_SCANNED_DEVICES"
 #define WS_SET_START_ACTION                 "SET_START_ACTION"
 #define WS_SET_NEW_COMMISSION_ITERATION     "SET_NEW_COMMISSION_ITERATION"
 #define WS_SET_STOP_ACTION                  "SET_STOP_ACTION"
 #define WS_SET_DELETE_DEVICE                "SET_DELETE_DEVICE"
-#define WS_SET_DELETE_ALL_DEVICES           "SET_DELETE_ALL_DEVICES"
 #define WS_SET_ADD_GROUP                    "SET_ADD_GROUP"     // añadir nodo a grupo
 #define WS_SET_ADD_A_GROUP                  "SET_ADD_A_GROUP"   // añadir un grupo
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"     // eliminar nodo de grupo)
@@ -60,6 +60,7 @@
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
 #define WS_SEND_IPCONFIG_INFO               "IPCONFIG_INFO"
 #define WS_SEND_LOG_COMMISSION_ENTRY        "LOG_COMMISSION_ENTRY"
+#define WS_SEND_CONFIRM_START_SCAN          "CONFIRM_START_SCAN"
 #define WS_SEND_CONFIRM_START_COMMISSION    "CONFIRM_START_COMMISSION"
 #define WS_SEND_CONFIRM_ADDING_DEVICE       "CONFIRM_ADDING_DEVICE"
 #define WS_SEND_START_ADDING_DEVICES        "START_ADDING_DEVICES"
@@ -82,6 +83,8 @@
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
+#define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
+#define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -91,10 +94,12 @@ void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
 void sendLogCommissionEntry(WebServer* webServer);
+void sendConfirmStartScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);
 void sendScannedDevices(QByteArray data, WebServer* webServer);
+void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
@@ -113,6 +118,7 @@ void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
 void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
-
+void sendConfirmStartRemoveAllNodes(WebServer* webServer);
+void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H
