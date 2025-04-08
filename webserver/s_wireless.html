@@ -14,10 +14,64 @@
     </div>
 
     <div class="popup-overlay" id="popupOverlay"></div>
-    <div class="popup" id="popup">
+    <div class="popup" id="popup"> <!-- popup for commissioning -->
         <h2></h2>
+        <br>
         <div class="loader"></div>
         <label style="margin-top: 4%;" id="labelCommissionNodes"></label>
+        <button onclick="parent.stopCommission()"> Stop commission </button>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logCommission"></ul>
+        </div>
+    </div>
+    <div class="popup" id="popupScanning">
+        <h2></h2>
+        <br>
+        <br>
+        <div class="loader"></div>
+    </div>
+    <div class="popupManageDevices" id="popupAddDevice">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="addingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to add the node to the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="addingDeviceButton" onclick="parent.addDevice()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popupManageDevices" id="popupDelDevice">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the node from the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingDeviceButton" onclick="parent.delDevice()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popupManageDevices" id="popupDelAllDevices">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingAllDevicesLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the nodes from the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingAllDevicesButton" onclick="parent.delAllDevices()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
     </div>
 
     <div class="wrap-container">
@@ -42,11 +96,11 @@
                 </div>
                 <div class="list-button-container" id="manualContainer">
                     <button onclick="parent.getScannedDevices()"> Scan devices </button>
-                    <button onclick="parent.addDevice()"> Add device </button>
-                    <button onclick="parent.delDevice()"> Remove device </button>
+                    <button onclick="parent.addDevicePrev()"> Add device </button>
+                    <button onclick="parent.delDevicePrev()"> Remove device </button>
                     <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
 
-                    <button onclick="parent.delAllDevices()" class="remove-all-btn">
+                    <button onclick="parent.delAllDevicesPrev()" class="remove-all-btn">
                         Remove all devices
                     </button>
                 </div>
@@ -67,9 +121,23 @@
 				parent.sendData("SET_LOAD_NODES", "");
 			}, 10);
 		}
+
+        function getScannedNodes() {
+			setTimeout(function() {
+				parent.sendData("SET_STORED_SCANNED_DEVICES", "");
+			}, 10);
+		}
+
+        function isCommissionInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_COMMISSION_IN_PROGRESS", "");
+			}, 10);
+        }
 		
 		window.onload = function() {
             getNodesFromDatabase();
+            getScannedNodes();
+            isCommissionInProgress();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";

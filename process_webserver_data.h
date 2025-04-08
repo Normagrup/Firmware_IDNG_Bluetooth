@@ -14,10 +14,11 @@
 #define WS_SET_DATE_TIME                    "SET_DATE_TIME"
 
 #define WS_SET_SCANNED_DEVICES              "SET_SCANNED_DEVICES"
+#define WS_SET_STORED_SCANNED_DEVICES       "SET_STORED_SCANNED_DEVICES"
 #define WS_SET_START_ACTION                 "SET_START_ACTION"
 #define WS_SET_NEW_COMMISSION_ITERATION     "SET_NEW_COMMISSION_ITERATION"
+#define WS_SET_STOP_ACTION                  "SET_STOP_ACTION"
 #define WS_SET_DELETE_DEVICE                "SET_DELETE_DEVICE"
-#define WS_SET_DELETE_ALL_DEVICES           "SET_DELETE_ALL_DEVICES"
 #define WS_SET_ADD_GROUP                    "SET_ADD_GROUP"     // añadir nodo a grupo
 #define WS_SET_ADD_A_GROUP                  "SET_ADD_A_GROUP"   // añadir un grupo
 #define WS_SET_DEL_GROUP                    "SET_DEL_GROUP"     // eliminar nodo de grupo)
@@ -25,6 +26,7 @@
 #define WS_SET_EDIT_A_GROUP                 "SET_EDIT_A_GROUP"  // cambiar nombre de grupo
 #define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
+#define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -59,11 +61,14 @@
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
 #define WS_SEND_IPCONFIG_INFO               "IPCONFIG_INFO"
+#define WS_SEND_LOG_COMMISSION_ENTRY        "LOG_COMMISSION_ENTRY"
+#define WS_SEND_CONFIRM_START_SCAN          "CONFIRM_START_SCAN"
 #define WS_SEND_CONFIRM_START_COMMISSION    "CONFIRM_START_COMMISSION"
 #define WS_SEND_CONFIRM_ADDING_DEVICE       "CONFIRM_ADDING_DEVICE"
 #define WS_SEND_START_ADDING_DEVICES        "START_ADDING_DEVICES"
 #define WS_SEND_SCANNED_DEVICES             "SCANNED_DEVICE"
 #define WS_SEND_ADDED_DEVICES               "ADDED_DEVICE"
+#define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
@@ -81,6 +86,8 @@
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 #define WS_SEND_POWER_ON_LVL                "POWER_ON_LVL"
+#define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
+#define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -89,13 +96,17 @@ void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
+void sendLogCommissionEntry(WebServer* webServer);
+void sendConfirmStartScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);
 void sendScannedDevices(QByteArray data, WebServer* webServer);
+void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
+void sendIsCommissionInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
@@ -113,5 +124,7 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
 void sendPowerOnGroup(WebServer *webServer, Database *database);
 void updatePowerOnLvlToWeb(WebServer *webServer, Database *database, QString groupAddress, int powerOnLvl);
 
+void sendConfirmStartRemoveAllNodes(WebServer* webServer);
+void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H
