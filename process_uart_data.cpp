@@ -397,26 +397,6 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 }
                 else if (deviceType == 0x06) {          // LIGHTING
                     timerGroupAddress[1] = 0xC000;
-
-                    if(((j + 1) % 2) != 0) {
-                        timerGroupAddress[2] = 0xC003;
-                        qDebug() << "GROUP IMPAR";
-                    }
-                    else {
-                        timerGroupAddress[2] = 0xC002;
-                        qDebug() << "GROUP PAR";
-                    }
-                }
-                else {                                  // DEFAULT or UNKNOWN DEV TYPE
-                    if(((j + 1) % 2) != 0) {
-                        timerGroupAddress[1] = 0xC003;
-                        qDebug() << "GROUP IMPAR";
-                    }
-                    else {
-                        timerGroupAddress[1] = 0xC002;
-                        qDebug() << "GROUP PAR";
-                    }
-
                     timerGroupAddress[2] = 0x0000;
                 }
                 groupFrameTimer.start(GROUP_FRAME_TIMER_MS);
@@ -440,15 +420,17 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     database->setGroup(nodeAddress, deviceTypeGroupAddress);
     if (netAdressGroupAddress != 0x0000) { database->setGroup(nodeAddress, netAdressGroupAddress); }
 
+    //QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress);
+    //if (webServer != nullptr) { webServer->sendData(message); }
+
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString();
-                if (webServer != nullptr) { webServer->sendData(message); }
                 break;
             }
         }
+      
     }
 
     netAddress = 0;
