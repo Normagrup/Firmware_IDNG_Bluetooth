@@ -25,6 +25,20 @@
         <br>
         <div class="loader"></div>
     </div>
+    <div class="popupManageDevices" id="popupAddDevice">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="addingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to add the node to the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="addingDeviceButton" onclick="parent.addDevice()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
     <div class="popupManageDevices" id="popupDelDevice">
         <div class="popup-container">
             <div class="popup-subcontainer">
@@ -76,7 +90,7 @@
                 </div>
                 <div class="list-button-container" id="manualContainer">
                     <button onclick="parent.getScannedDevices()"> Scan devices </button>
-                    <button onclick="parent.addDevice()"> Add device </button>
+                    <button onclick="parent.addDevicePrev()"> Add device </button>
                     <button onclick="parent.delDevicePrev()"> Remove device </button>
                     <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
 

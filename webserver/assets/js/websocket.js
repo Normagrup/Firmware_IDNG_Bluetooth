@@ -906,45 +906,27 @@ function addDevice()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
-    sendData("SET_START_ACTION", "FF");
+    var popup = iframeDocument.getElementById('popupAddDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var addingDeviceLabel = iframeDocument.getElementById('addingDeviceLabel');
+    var addingDeviceButton = iframeDocument.getElementById('addingDeviceButton');
 
-    // TODO: Eliminar el elemento que se añada de la lista de scannedDevicesMessages [ALEX]
+    // Seleccionar el nodo marcado en la lista de Scanned Devices
+    var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
 
-    // var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
-    // if (selectedDevice) {
-    //     networkErrorLabel.style.visibility = "hidden";
+    // TODO: Falta el resto de la implementación de este método a partir de este punto
 
-    //     var textDeviceSelected = selectedDevice.textContent.trim();
-    //     sendData("SET_START_ACTION", textDeviceSelected);
-    // }
-    // else {
-    //     networkErrorLabel.style.color = "#C30101";
-    //     networkErrorLabel.innerHTML = "<b> Select a device from scanned devices! </b>";
-    //     networkErrorLabel.style.visibility = "visible";
-    // }
+    addingDeviceLabel.textContent = "Adding the node to the network...";
+    addingDeviceButton.classList.add('button-disabled');
+
+    // Esperar confirmación antes de eliminarlo de la interfaz
+    setTimeout(() => {
+        // TODO: Eliminar el elemento que se añada de la lista de scannedDevicesMessages [ALEX]
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 3000); // TODO: Este timeout habrá que cambiarlo
 }
-
-// function delDevice() 
-// {
-//     var iframe = document.getElementById('mainframe');
-//     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-//     var networkErrorLabel = iframeDocument.getElementById('networkError');
-//     sendData("SET_DELETE_DEVICE", "");
-//     // var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-//     // if (selectedNode) {
-//     //     networkErrorLabel.style.visibility = "hidden";
-
-//     //     var textNodeSelected = selectedNode.textContent.trim();
-//     //     sendData("SET_DELETE_DEVICE", textNodeSelected);
-//     //     selectedNode.remove();
-//     // }
-//     // else {
-//     //     networkErrorLabel.style.color = "#C30101";
-//     //     networkErrorLabel.innerHTML = "<b> Select a node from network nodes! </b>";
-//     //     networkErrorLabel.style.visibility = "visible";
-//     // }
-// }
 
 function delDevice() {
     var iframe = document.getElementById('mainframe');
