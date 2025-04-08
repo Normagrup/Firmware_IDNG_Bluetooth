@@ -26,8 +26,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
         if(isCommissionInProgress(webServer)) { return; }
-
+        scannedDevicesMessages.clear();
         sendUartScannedDevices(uartPort);
+    }
+    else if (type == WS_SET_STORED_SCANNED_DEVICES) {
+        sendStoredScannedDevices(webServer);
     }
     else if (type == WS_SET_LINE_SCAN) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -83,11 +86,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         else {
             qDebug() << "START COMMISSION";
-
-            isCommissioning = true;  // Lock server from accepting new commands
+            scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
-
-            sendConfirmStartCommission(webServer);
         }
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
@@ -104,61 +104,32 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         if(isCommissionInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
-        uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-        printf(" Intentando eliminar nodo...\n");
-        printf(" Net Address: %04X\n", nodeNetAddress);
-        printf(" Dirección obtenida de meshDevice: %04X\n", nodeAddress);
 
-        // Notificar al microcontrolador maestro
-        sendUartDelDevice(uartPort, nodeAddress);
+        if(nodeNetAddress == 0xFFFF)
+        {
+            sendUartDelDevice(uartPort, nodeNetAddress);
 
-        // Eliminar el nodo de la estructura interna
-        meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-
-        // Eliminar el nodo de la base de datos
-        database->deleteNode(nodeAddress);
-
-
-
-        printf(" Nodo eliminado correctamente: %04X\n", nodeAddress);
-    }
-    else if (type == WS_SET_DELETE_ALL_DEVICES) {
-        if(isCommissionInProgress(webServer)) { return; }
-
-        QList<uint16_t> nodeNetAddressList = database->getConfiguredNodes();
-
-        for (uint16_t nodeNetAddress : nodeNetAddressList) {
+            // Eliminar nodos de la estructura interna
+            // TODO: Mover a la confirmación del micro
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    if(meshDevice[i][j].getIsConfigured()) { meshDevice[i][j].deleteDevice(); }
+                }
+            }
+            database->deleteAllNodes();
+        }
+        else
+        {
             uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
-            qDebug() << "Eliminando Nodo (NodeNetAddress:" << nodeNetAddress << "--- NodeAddress:" << nodeAddress << ")";
-
-            // Notificar al microcontrolador maestro
             sendUartDelDevice(uartPort, nodeAddress);
 
-            // Esperar confirmación de eliminación verificando la base de datos
-            bool eliminado = false;
-            int intentos = 0;
-
-            while (!eliminado && intentos < 3) {  // Intentar hasta 3 veces
-                QThread::msleep(1000);  // Esperar 1 segundo para dar tiempo a la eliminación
-
-                // Comprobar si el nodo sigue en la base de datos
-                eliminado = !database->isNodeInDatabase(nodeAddress);
-                intentos++;
-            }
-
-            if (eliminado) {
-                qDebug() << "Nodo " << nodeAddress << " eliminado correctamente.";
-                meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
-            } else {
-                qDebug() << "Error: Nodo " << nodeAddress << " no respondió a la eliminación.";
-            }
+            // Eliminar el nodo de la estructura interna
+            // TODO: Mover a la confirmación del micro
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+            database->deleteNode(nodeAddress);
         }
-
-        // Eliminar todos los nodos de la base de datos
-        database->deleteAllNodes();
-
-        qDebug() << "Eliminación de nodos completada";
     }
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -538,6 +509,13 @@ void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendConfirmStartScan(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_SCAN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendConfirmStartCommission(WebServer* webServer)
 {
     QString message = QString(WS_SEND_CONFIRM_START_COMMISSION) + "@" + " ";
@@ -599,7 +577,16 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
 
     qDebug() << "NODE SCANNED: " << value <<  " - REPORT ADDRESS: " << reportAddress;
 
+    if(!isCommissioning)
+        scannedDevicesMessages.append(message);
+
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendStoredScannedDevices(WebServer* webServer)
+{
+    for(QString message : scannedDevicesMessages)
+        if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
@@ -861,3 +848,16 @@ void clearSystemData(Database* database,  UartPort* uartPort)
 
 }
 
+void sendConfirmStartRemoveAllNodes(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_DEL_ALL_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndRemoveAllNodes(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_DEL_ALL_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}

@@ -135,6 +135,26 @@ function addDeviceToScannedList(value)
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 }
 
+function confirmStartScan(value) 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = "Scan in progress...";
+    
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 12000); // 12 segundos (el escaneo dura 10)
+}
+
 function confirmStartCommission(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -739,6 +759,14 @@ function processIsConfig(value)
     }
 }
 
+function processDelAllDev(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    console.log("TODO");
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -751,6 +779,7 @@ function processReceivedData(data)
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
+    else if (type == 'CONFIRM_START_SCAN') { confirmStartScan(value); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
     else if (type == 'START_ADDING_DEVICES') { startAddingDevices(value); }
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }
@@ -770,6 +799,8 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
+    else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
+    else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
 }
 
 function sendData(type, value) 
@@ -850,11 +881,23 @@ function rebootDevice()
 
 function getScannedDevices() 
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
+
     sendData("SET_SCANNED_DEVICES", "");
 }
 
 function startCommission() 
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
+
     sendData("SET_START_ACTION", "0");
 }
 
@@ -865,6 +908,8 @@ function addDevice()
 
     var networkErrorLabel = iframeDocument.getElementById('networkError');
     sendData("SET_START_ACTION", "FF");
+
+    // TODO: Eliminar el elemento que se añada de la lista de scannedDevicesMessages [ALEX]
 
     // var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
     // if (selectedDevice) {
@@ -942,10 +987,10 @@ function delAllDevices() {
 
     // Seleccionar la lista de nodos
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
-    
-    console.log("Enviando comando SET_DELETE_ALL_DEVICES");
+ 
+    console.log("Enviando comando SET_DELETE_DEVICE en BROADCAST");
     // Enviar comando al embebido para eliminar los nodos
-    sendData("SET_DELETE_ALL_DEVICES", "");
+    sendData("SET_DELETE_DEVICE", "65535");
 
     deletingAllDevicesLabel.textContent = "Deleting all the nodes from the network...";
     deletingAllDevicesButton.classList.add('button-disabled');
