@@ -24,6 +24,7 @@
 #define ADD_DEVICE                      0x09
 #define DEVICE_ERROR                    0x11
 #define DEL_DEVICES                     0x13
+#define NODE_DELETED                    0x50
 #define ADD_GROUP                       0x15
 #define DEL_GROUP                       0x17
 #define CLEAR_ALL_DATA                  0x18
@@ -42,6 +43,8 @@
 #define LINE_SCAN                       0x20
 #define LINE_SCAN_SEND                  0x22
 #define CONFIRM_START_SCAN              0x49
+#define CONFIRM_START_REMOVE_ALL_NODES  0x51
+#define CONFIRM_END_REMOVE_ALL_NODES    0x53
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -64,4 +67,5 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void requestMicroDatabase(UartPort* _uartPort);
+
 #endif // PROCESS_UART_DATA_H

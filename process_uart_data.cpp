@@ -217,6 +217,33 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)dataChecked[3], 2, 16, QChar('0')).toUpper();
                     break;
 
+                    case NODE_DELETED:
+                    {
+                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+
+                        qDebug() << "Nodo eliminado confirmado desde micro: " << nodeAddress;
+
+                        // Borrar de meshDevice local
+                        for (int i = 0; i < MAX_SUBNET; i++) {
+                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                                if(meshDevice[i][j].getRealAddress() == nodeAddress) {
+                                    meshDevice[i][j].deleteDevice();
+                                    database->deleteNode(nodeAddress);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                    case CONFIRM_START_REMOVE_ALL_NODES:
+                        sendConfirmStartRemoveAllNodes(webServer);
+                    break;
+
+                    case CONFIRM_END_REMOVE_ALL_NODES:
+                        sendConfirmEndRemoveAllNodes(webServer);
+                    break;
+
                     case LINE_SCAN_SEND:
                     {
                         // Esperamos 22 bytes mínimo
@@ -296,7 +323,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
         }
     }
 }
-
 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
 {
@@ -674,7 +700,7 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    printf("Comando de eliminación enviado al nodo: %04X\n", nodeAddress);
+    printf("Comando de eliminación enviado: %04X\n", nodeAddress);
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
