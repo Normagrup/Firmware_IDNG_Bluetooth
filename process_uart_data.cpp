@@ -422,6 +422,26 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 }
                 else if (deviceType == 0x06) {          // LIGHTING
                     timerGroupAddress[1] = 0xC000;
+
+                    if(((j + 1) % 2) != 0) {
+                        timerGroupAddress[2] = 0xC003;
+                        qDebug() << "GROUP IMPAR";
+                    }
+                    else {
+                        timerGroupAddress[2] = 0xC002;
+                        qDebug() << "GROUP PAR";
+                    }
+                }
+                else {                                  // DEFAULT or UNKNOWN DEV TYPE
+                    if(((j + 1) % 2) != 0) {
+                        timerGroupAddress[1] = 0xC003;
+                        qDebug() << "GROUP IMPAR";
+                    }
+                    else {
+                        timerGroupAddress[1] = 0xC002;
+                        qDebug() << "GROUP PAR";
+                    }
+
                     timerGroupAddress[2] = 0x0000;
                 }
                 groupFrameTimer.start(GROUP_FRAME_TIMER_MS);
