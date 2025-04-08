@@ -115,6 +115,4 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 
-QStringList scannedDevicesMessages;
-
 #endif // PROCESS_WEBSERVER_DATA_H
