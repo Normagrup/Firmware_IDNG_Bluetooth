@@ -381,168 +381,31 @@ void setMantenedorPasswordFile(QString mantenedorPassword)
     }
 }
 
-void saveFailureLog() 
+QString exportLogToCSV(Database *db, const QString &type, QString startDate, QString endDate)
 {
-    QString folderPath = QString(LOG_DATA_PATH) + "fail";
-    QDir dir;
-    if (!dir.exists(folderPath)) {
-      dir.mkpath(folderPath);
-    } // make dir if missing
-  
-    QString currentDate = getLocalDate();
-    QString filePath = folderPath + "/" + currentDate + ".csv";
-  
+    QDate startQDate = QDate::fromString(startDate, "yyyy-MM-dd");
+    QDate endQDate = QDate::fromString(endDate, "yyyy-MM-dd");
+
+    if (!startQDate.isValid() || !endQDate.isValid()) { qDebug() << "Invalid date format!"; return ""; }
+
+    QDateTime startDT(startQDate, QTime(0, 0, 0));
+    QDateTime endDT(endQDate, QTime(23, 59, 59));
+
+    qint64 start = startDT.toSecsSinceEpoch();
+    qint64 end = endDT.toSecsSinceEpoch();
+
+    QList<QStringList> logs = db->getLogEvent(type, start, end);
+
+    QString outputFileName = type + "_report_" + startDate + "_to_" + endDate + ".csv";
+    QString filePath = QString(LOG_DATA_PATH) + outputFileName;
     QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-      qDebug() << "Failed to open fail log file: " << filePath;
-      return;
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) { qDebug() << "Failed to open log file"; return ""; }
+
+    QTextStream out(&file);
+    out << "DeviceId;Serial;Name;IP;DateTime;Event;EventType\n";
+    for (const QStringList &row : logs) {
+        out << row.join(";") << ";\n";
     }
-  
-    QTextStream out( & file);
-    out << "SubnetAddress;NodeSubnetAddress;RealAddress;SerialNumber;DeviceType;LampFail;CommunicationFail;DurationFail;BatteryFail;\n";
-  
-    for (int subnet = 0; subnet < MAX_SUBNET; ++subnet) {
-      for (int node = 0; node < MAX_NODES_SUBNET; ++node) {
-        Device * device = & meshDevice[subnet][node];
-        if (!device -> getIsConfigured()) continue;
-  
-        out << subnet << ";" << node << ";" << device -> getRealAddress() << ";" <<
-          device -> serialNumberString() << ";" << device -> getDeviceType() << ";" <<
-          device -> hasLampFailure() << ";" << device -> hasCommunicationFailure() << ";" <<
-          device -> hasBatteryDurationFailure() << ";" << device -> hasBatteryFailure() << ";\n";
-      }
-    }
-  
-    qDebug() << "Failure log saved: " << filePath;
     file.close();
-}
-
-void saveTestLog(Database * database) 
-{
-    QString folderPath = QString(LOG_DATA_PATH) + "test";
-    QDir dir;
-    if (!dir.exists(folderPath)) {
-      dir.mkpath(folderPath);
-    } // make dir if missing
-  
-    QString currentDate = getLocalDate();
-    QString filePath = folderPath + "/" + currentDate + ".csv";
-  
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-      qDebug() << "Failed to open test log file: " << filePath;
-      return;
-    }
-  
-    QTextStream out( & file);
-    out << "GroupAddress;FunctionalEnable;DurationEnable;FunctionalDays;FunctionalTime;DurationPeriodicity;DurationDate;DurationTime\n";
-  
-    QList < QStringList > testLogData = database -> getAllTestLogs();
-  
-    for (const QStringList & row: testLogData) {
-      out << row.join(";") << ";\n";
-    }
-  
-    file.close();
-    qDebug() << "Test log saved: " << filePath;
-}
-
-QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream &out, QString headerTitle)
-{
-    bool isFirstFile = true; // to control main header
-    bool isHeaderWritten = false; // to control adding header data once
-
-    for (QDate date = start; date <= end; date = date.addDays(1)) {
-        QString filePath = folderPath + "/" + date.toString("yyyy-MM-dd") + ".csv";
-        QFile inputFile(filePath);
-
-        if (!inputFile.exists()) { continue; } // skip missing dates
-        if (!inputFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            qDebug() << "Failed to open file: " << filePath;
-            continue;
-        }
-
-        QTextStream in(&inputFile);
-
-        if (isFirstFile) {
-            out << "\n# " << headerTitle << "\n"; //add main header once
-            isFirstFile = false;
-        }
-
-        out << "Date: " << date.toString("yyyy-MM-dd") << "\n";
-
-        QString firstLine = in.readLine();
-        if (!isHeaderWritten) {
-            out << firstLine << "\n"; //  add header data once
-            isHeaderWritten = true;
-        }
-
-        while (!in.atEnd()) {
-            QString line = in.readLine();
-            out << line << "\n";
-        }
-        out << "\n";
-        inputFile.close();
-    }
-    return "";
-}
-
-QString generateLogReport(QString reportType, QString startDate, QString endDate)
-{
-    QString folderPath;
-    folderPath = (reportType == "fail") ? "fail" : "test";
-
-    QString outputFileName = folderPath + "_report_" + startDate + "_to_" + endDate + ".csv";
-    if (reportType == "all") {
-        outputFileName = "all_report_" + startDate + "_to_" + endDate + ".csv"; // for "all" reports
-    }
-
-    QString logsDirPath = LOG_DATA_PATH;
-    QString outputFilePath = logsDirPath + outputFileName;
-
-    QDir dir;
-    if (!dir.exists(logsDirPath)) {
-        if (!dir.mkpath(logsDirPath)) {
-            qDebug() << "Failed to create logs directory: " << logsDirPath;
-            return "";
-        }
-    }
-
-    QFile outputFile(outputFilePath);
-    if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "Failed to create report file: " << outputFilePath;
-        return "";
-    }
-
-    QTextStream out(&outputFile);
-    out << "# Report Type: " << reportType.toUpper() << "\n";
-    out << "# Date Range: " << startDate << " to " << endDate << "\n\n";
-
-    QDate start = QDate::fromString(startDate, "yyyy-MM-dd");
-    QDate end = QDate::fromString(endDate, "yyyy-MM-dd");
-
-    if (reportType == "fail" || reportType == "all") {
-        processLogFiles(logsDirPath + "fail", start, end, out, "Failure Reports");
-    }
-
-    if (reportType == "test" || reportType == "all") {
-        processLogFiles(logsDirPath + "test", start, end, out, "Test Reports");
-    }
-
-    outputFile.close();
-    return outputFileName; // return file name for webpage
-}
-
-void logSaveNow(QString reportType, Database *database)
-{
-    if(reportType == "fail"){
-        saveFailureLog();
-    }
-    else if(reportType == "test"){
-        saveTestLog(database);
-    }
-    else {
-        saveFailureLog();
-        saveTestLog(database);
-    }
+    return outputFileName;
 }

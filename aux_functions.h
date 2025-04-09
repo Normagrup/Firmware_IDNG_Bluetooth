@@ -18,6 +18,7 @@ void setFirstAddressAvailable(uint16_t nodeAddress, uint8_t* nodeUUID, Database*
 void convertUuidStringToByteArray(QString uuidString, uint8_t* UUID);
 uint8_t convertGroupSubStringToArray(QString groupSubString, uint16_t* groupSubArray);
 void setIPConfigInfo(QStringList webServerParts, Database* database);
+void insertLogEvent(Database* database, int devId, QString serialNum, QString devName, QString devIP, QDateTime dateTime, int eventCode, QString eventType);
 
 void setTests(QStringList webServerParts, Database* database);
 

@@ -5,6 +5,7 @@
 #include "dali_headers.h"
 #include "time_functions.h"
 #include "file_handler.h"
+#include "global_def.h"
 #include <QThread>
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database)
@@ -365,52 +366,118 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_FUNCTION_TEST) {
         if(isCommissionInProgress(webServer)) { return; }
+        QString serial = "";
+        QString devName = "";
+        int devId = 0;
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
-            uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            int subnet = (nodeNetAddress - 1) / 64;
+            int node = (nodeNetAddress - 1) % 64;
+            uint16_t nodeAddress =  meshDevice[subnet][node].getRealAddress();
+            devId = nodeAddress;
+            serial =  meshDevice[subnet][node].serialNumberString();
+            devName = "SUB:" + QString::number(subnet) + " " + "ID:" + QString::number(node);
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
         }
         else {
+            devId = nodeNetAddress;
+            serial = "FF.FF.FF.FF";
+            devName = "Group: " + QString::number(nodeNetAddress);
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
         }
+
+        QString date = getLocalDate();
+        QString time = getLocalTime();
+        QDateTime antennaDateTime =  QDateTime::fromString(date + " " + time, "yyyy-MM-dd HH:mm:ss");
+        QString netIp = database->getInterfaceParameters().first();
+        insertLogEvent(database, devId, serial, devName, netIp, antennaDateTime, LOG_TEST_REQUESTED_FUNCTIONAL, "Test");
+
+        AntennaTestCheck check;
+        check.groupId = devId;
+        check.testType = "FUNCTIONAL";
+        check.checkTime = antennaDateTime.time().addSecs(3600); // 1 hour for FT
+        antennaTestCheckList.append(check);
+        qDebug() << "FUNCTIONAL test added...to checklist";
     }
     else if (type == WS_SET_DURATION_TEST) {
         if(isCommissionInProgress(webServer)) { return; }
+        QString serial = "";
+        QString devName = "";
+        int devId = 0;
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
-            uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            int subnet = (nodeNetAddress - 1) / 64;
+            int node = (nodeNetAddress - 1) % 64;
+            uint16_t nodeAddress =  meshDevice[subnet][node].getRealAddress();
+            devId = nodeAddress;
+            serial =  meshDevice[subnet][node].serialNumberString();
+            devName = "SUB:" + QString::number(subnet) + " " + "ID:" + QString::number(node);
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
         }
         else {
+            devId = nodeNetAddress;
+            serial = "FF.FF.FF.FF";
+            devName = "Group: " + QString::number(nodeNetAddress);
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
         }
+
+        QString date = getLocalDate();
+        QString time = getLocalTime();
+        QDateTime antennaDateTime =  QDateTime::fromString(date + " " + time, "yyyy-MM-dd HH:mm:ss");
+        QString netIp = database->getInterfaceParameters().first();
+        insertLogEvent(database, devId, serial, devName, netIp, antennaDateTime, LOG_TEST_REQUESTED_DURATION, "Test");
+
+        AntennaTestCheck check;
+        check.groupId = devId;
+        check.testType = "DURATION";
+        check.checkTime = antennaDateTime.time().addSecs(43200); // 12 hour for DT
+        antennaTestCheckList.append(check);
+        qDebug() << "DURATION test added...to checklist";
     }
 
     else if (type == WS_SET_STOP) {
         if(isCommissionInProgress(webServer)) { return; }
+        QString serial = "";
+        QString devName = "";
+        int devId = 0;
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
-            uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+            int subnet = (nodeNetAddress - 1) / 64;
+            int node = (nodeNetAddress - 1) % 64;
+            uint16_t nodeAddress =  meshDevice[subnet][node].getRealAddress();
+            devId = nodeAddress;
+            serial =  meshDevice[subnet][node].serialNumberString();
+            devName = "SUB:" + QString::number(subnet) + " " + "ID:" + QString::number(node);
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
         }
         else {
+            devId = nodeNetAddress;
+            serial = "FF.FF.FF.FF";
+            devName = "Group: " + QString::number(nodeNetAddress);
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
         }
+
+        QString date = getLocalDate();
+        QString time = getLocalTime();
+        QDateTime antennaDateTime =  QDateTime::fromString(date + " " + time, "yyyy-MM-dd HH:mm:ss");
+        QString netIp = database->getInterfaceParameters().first();
+        insertLogEvent(database, devId, serial, devName, netIp, antennaDateTime, LOG_TEST_STOPPED, "Test");
+         qDebug() << "Logged stop test";
     }
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);
@@ -431,14 +498,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QString startDate = webServerParts[1];
         QString endDate = webServerParts[2];
         QString downloadPath;
-        QDate dateNow = QDate::fromString(getLocalDate(), "yyyy-MM-dd");
-        QDate endDateConverted = QDate::fromString(endDate, "yyyy-MM-dd");
 
-        if (dateNow == endDateConverted) {
-            logSaveNow(reportType, database);
-        }
-
-        downloadPath = generateLogReport(reportType, startDate, endDate);
+        downloadPath = exportLogToCSV(database, reportType, startDate, endDate);
         QStringList ConfigInfo = database -> getInterfaceParameters();
         QString serverIP = ConfigInfo.first();
         QString fileUrl = "http://" + serverIP + "/logs/" + downloadPath;
@@ -853,13 +914,6 @@ void sendRecordedDevice(WebServer* webServer)
 
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus) {
     QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off");
-
-    if (webServer != nullptr) { webServer->sendData(message); }
-}
-
-void sendLogFile(WebServer *webServer, QString fileDir)
-{
-    QString message = QString(WS_SEND_LOG_DATA) + "@" + fileDir;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

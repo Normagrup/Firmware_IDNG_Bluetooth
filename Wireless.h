@@ -24,11 +24,11 @@ public:
 private slots:
     void pollingTimerHandler(void);
     void testTimerHandler(void);
+    void checkTestResultsHandler(void);
     void groupFrameTimerHandler(void);
     void addDeviceTimerHandler(void);
     void confirmAddDeviceTimerHandler(void);
     void newIterationTimerHandler(void);
-    void scheduleDailyLogSave();
 
 signals:
 

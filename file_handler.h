@@ -38,10 +38,6 @@ void setRtcTime(QString time);
 void setLocalDateTime(QStringList dateTime);
 void setAdminPasswordFile(QString adminPassword);
 void setMantenedorPasswordFile(QString mantenedorPassword);
-void saveFailureLog();
-void saveTestLog(Database *database);
-QString processLogFiles(QString folderPath, QDate start, QDate end, QTextStream &out, QString headerTitle);
-QString generateLogReport(QString reportType, QString startDate, QString endDate);
-void logSaveNow(QString reportType, Database *database);
+QString exportLogToCSV(Database *db, const QString &type, QString startDate, QString endDate);
 
 #endif // FILE_HANDLER_H

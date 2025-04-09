@@ -1,5 +1,6 @@
 #include "aux_functions.h"
 #include "file_handler.h"
+#include "global_def.h"
 
 #include <QDebug>
 
@@ -173,4 +174,18 @@ void setTests(QStringList webServerParts, Database *database)
             database->setDurationTest(tests[i].getGroupAddress(), durationPeriodicity, durationDate, durationTime);
         }
     }
+}
+
+void insertLogEvent(Database *database, int devId, QString serialNum, QString devName, QString devIP, QDateTime dateTime, int eventCode, QString eventType)
+{
+    LogInfo log;
+    log.deviceId = devId;
+    log.seriailNum = serialNum;
+    log.devName = devName;
+    log.devIP = devIP;
+    log.timestamp = dateTime.toSecsSinceEpoch();
+    log.event = eventCode;
+    log.eventType = eventType;
+
+    database->insertLogEvent(log);
 }
