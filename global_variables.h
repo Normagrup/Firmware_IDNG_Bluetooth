@@ -47,4 +47,6 @@ extern QTimer addDeviceTimer;
 extern QTimer confirmAddDeviceTimer;
 extern QTimer newIterationTimer;
 
+extern QStringList scannedDevicesMessages;
+
 #endif // GLOBAL_VARIABLES_H

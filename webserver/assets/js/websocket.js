@@ -135,6 +135,26 @@ function addDeviceToScannedList(value)
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 }
 
+function confirmStartScan(value) 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = "Scan in progress...";
+    
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 12000); // 12 segundos (el escaneo dura 10)
+}
+
 function confirmStartCommission(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -149,6 +169,9 @@ function confirmStartCommission(value)
     nodesAdded = 0; nodesScanned = 0;
     var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+    var logCommission = iframeDocument.getElementById('logCommission');
+    logCommission.innerHTML = "";
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
@@ -241,6 +264,17 @@ function processDeviceError(value)
     //         sendData("SET_NEW_COMMISSION_ITERATION", "");
     //     }
     // }, 5000);
+}
+
+function processLogCommissionEntry(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    
+    var logCommissionList = iframeDocument.getElementById('logCommission');
+    var newEntry = iframeDocument.createElement('li');
+    newEntry.textContent = value;
+    logCommissionList.insertBefore(newEntry);
 }
 
 function processNodeInfo(value) 
@@ -647,6 +681,20 @@ function processEndNodeConfiguration(value)
     }, 5000);
 }
 
+function stopCommission()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+
+    sendData("SET_STOP_ACTION", "");
+}
+
 function processEndAutoCommission(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -747,6 +795,39 @@ function processLogData(value){
     document.body.removeChild(link);
 }
 
+function processIsCommissionInProgress(value)
+{
+    var isCommissioning = (value === "true");
+    
+    if(isCommissioning) {
+        var iframe = document.getElementById('mainframe');
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var popup = iframeDocument.getElementById('popup');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+        var popupHeader = popup.querySelector('h2');
+        popupHeader.textContent = "Automatic commission in progress...";
+
+        var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
+        labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+        var logCommission = iframeDocument.getElementById('logCommission');
+        logCommission.innerHTML = "";
+        
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+}
+
+function processDelAllDev(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    console.log("TODO");
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -759,11 +840,13 @@ function processReceivedData(data)
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
+    else if (type == 'CONFIRM_START_SCAN') { confirmStartScan(value); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
     else if (type == 'START_ADDING_DEVICES') { startAddingDevices(value); }
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }
     else if (type == 'ADDED_DEVICE') { addDeviceToNetworkList(value); }
     else if (type == 'DEVICE_ERROR') { processDeviceError(value); }
+    else if (type == 'LOG_COMMISSION_ENTRY') { processLogCommissionEntry(value); }
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "GROUP_INFO") { processGroupInfo(value); }
@@ -779,6 +862,9 @@ function processReceivedData(data)
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
+    else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
+    else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
+    else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
 }
 
 function sendData(type, value) 
@@ -859,11 +945,23 @@ function rebootDevice()
 
 function getScannedDevices() 
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
+
     sendData("SET_SCANNED_DEVICES", "");
 }
 
 function startCommission() 
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
+
     sendData("SET_START_ACTION", "0");
 }
 
@@ -872,85 +970,84 @@ function addDevice()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
-    sendData("SET_START_ACTION", "FF");
+    var popup = iframeDocument.getElementById('popupAddDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var addingDeviceLabel = iframeDocument.getElementById('addingDeviceLabel');
+    var addingDeviceButton = iframeDocument.getElementById('addingDeviceButton');
 
-    // var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
-    // if (selectedDevice) {
-    //     networkErrorLabel.style.visibility = "hidden";
+    // Seleccionar el nodo marcado en la lista de Scanned Devices
+    var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
 
-    //     var textDeviceSelected = selectedDevice.textContent.trim();
-    //     sendData("SET_START_ACTION", textDeviceSelected);
-    // }
-    // else {
-    //     networkErrorLabel.style.color = "#C30101";
-    //     networkErrorLabel.innerHTML = "<b> Select a device from scanned devices! </b>";
-    //     networkErrorLabel.style.visibility = "visible";
-    // }
+    // TODO: Falta el resto de la implementación de este método a partir de este punto
+
+    addingDeviceLabel.textContent = "Adding the node to the network...";
+    addingDeviceButton.classList.add('button-disabled');
+
+    // Esperar confirmación antes de eliminarlo de la interfaz
+    setTimeout(() => {
+        // TODO: Eliminar el elemento que se añada de la lista de scannedDevicesMessages [ALEX]
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 3000); // TODO: Este timeout habrá que cambiarlo
 }
-
-// function delDevice() 
-// {
-//     var iframe = document.getElementById('mainframe');
-//     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-//     var networkErrorLabel = iframeDocument.getElementById('networkError');
-//     sendData("SET_DELETE_DEVICE", "");
-//     // var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-//     // if (selectedNode) {
-//     //     networkErrorLabel.style.visibility = "hidden";
-
-//     //     var textNodeSelected = selectedNode.textContent.trim();
-//     //     sendData("SET_DELETE_DEVICE", textNodeSelected);
-//     //     selectedNode.remove();
-//     // }
-//     // else {
-//     //     networkErrorLabel.style.color = "#C30101";
-//     //     networkErrorLabel.innerHTML = "<b> Select a node from network nodes! </b>";
-//     //     networkErrorLabel.style.visibility = "visible";
-//     // }
-// }
 
 function delDevice() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
-    
+
+    var popup = iframeDocument.getElementById('popupDelDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
+    var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
+
     // Seleccionar el nodo marcado en la lista de Network Nodes
     var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-    
-    if (selectedNode) {
-        networkErrorLabel.style.visibility = "hidden";
 
-        var nodeId = selectedNode.textContent.trim().split("-")[0]; // Obtener ID del nodo
-        console.log("Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
-        // Enviar comando al embebido para eliminar el nodo
-        sendData("SET_DELETE_DEVICE", nodeId);
+    var nodeId = selectedNode.textContent.trim().split("-")[0]; // Obtener ID del nodo
+    console.log("Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
+    // Enviar comando al embebido para eliminar el nodo
+    sendData("SET_DELETE_DEVICE", nodeId);
+
+    deletingDeviceLabel.textContent = "Deleting the node from the network...";
+    deletingDeviceButton.classList.add('button-disabled');
         
-        // Esperar confirmación antes de eliminarlo de la interfaz
-        setTimeout(() => {
-            selectedNode.remove();
-            console.log("Nodo eliminado de la interfaz: " + nodeId);
-        }, 1000);
-    } else {
-        networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerText = "No device selected";
-    }
+    // Esperar confirmación antes de eliminarlo de la interfaz
+    setTimeout(() => {
+        selectedNode.remove();
+        console.log("Nodo eliminado de la interfaz: " + nodeId);
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 1000);
 }
 
 function delAllDevices() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
     
+    var popup = iframeDocument.getElementById('popupDelAllDevices');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
+    var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
+
     // Seleccionar la lista de nodos
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
-    
-    console.log("Enviando comando SET_DELETE_ALL_DEVICES");
+ 
+    console.log("Enviando comando SET_DELETE_DEVICE en BROADCAST");
     // Enviar comando al embebido para eliminar los nodos
-    sendData("SET_DELETE_ALL_DEVICES", "");
+    sendData("SET_DELETE_DEVICE", "65535");
 
-    networkErrorLabel.style.visibility = "hidden";
-    networkNodesList.innerHTML = "";
+    deletingAllDevicesLabel.textContent = "Deleting all the nodes from the network...";
+    deletingAllDevicesButton.classList.add('button-disabled');
+
+    setTimeout(() => {
+        networkNodesList.innerHTML = "";
+        console.log("Nodos eliminados de la interfaz");
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 3000);
 }
 
 function addToGroup() 
@@ -962,13 +1059,21 @@ function addToGroup()
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
-    if (selectedNode && groupSelected != '-') {
-        var textNodeSelected = selectedNode.textContent.trim();
-        var message = textNodeSelected + ' ' + groupSelected;
-        sendData("SET_ADD_GROUP", message);
-    }
+    if (!selectedNode || groupSelected == '-') { return; }
+
+    var popup = iframeDocument.getElementById('popupAddingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var textNodeSelected = selectedNode.textContent.trim();
+    var message = textNodeSelected + ' ' + groupSelected;
+    sendData("SET_ADD_GROUP", message);
 
     setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
         loadNodesLists();
     }, 3000);
 }
@@ -977,20 +1082,28 @@ function delFromGroup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    
+    var popup = iframeDocument.getElementById('popupDeletingNode');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
+    var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
 
     var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
-    if (selectedNode && groupSelected != '-') {
-        var textNodeSelected = selectedNode.textContent.trim();
-        var message = textNodeSelected + ' ' + groupSelected;
-        sendData("SET_DEL_GROUP", message);
-    }
+    var textNodeSelected = selectedNode.textContent.trim();
+    var message = textNodeSelected + ' ' + groupSelected;
+    sendData("SET_DEL_GROUP", message);
+
+    deletingNodeLabel.textContent = "Deleting the node from the group...";
+    deletingNodeButton.classList.add('button-disabled');
 
     setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
         loadNodesLists();
-    }, 300);
+    }, 1000);
 }
 
 function addGroup() 
