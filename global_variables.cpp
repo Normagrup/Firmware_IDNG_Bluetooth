@@ -34,4 +34,4 @@ uint8_t subnetCount = 0, nodeSubnetCount = 0;
 
 QStringList scannedDevicesMessages;
 bool forceStopCommissioning;
-bool isManualAddingDevice = false;
+bool isManualAddingDevice;

@@ -974,12 +974,11 @@ function addDevice()
 
     // Seleccionar el nodo marcado en la lista de Scanned Devices
     var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
-
-    var uuidScanned = selectedDevice.textContent.trim(); 
+    var scannedUUID = selectedDevice.textContent.trim(); 
 
     // Enviar comando al embebido para añadir el nodo
-    console.log("Enviando comando SET_ADD_DEVICE para nodeID:", uuidScanned);
-    sendData("SET_ADD_DEVICE", uuidScanned);
+    console.log("Enviando comando SET_ADD_DEVICE para nodeID:", scannedUUID);
+    sendData("SET_ADD_DEVICE", scannedUUID);
     
     addingDeviceLabel.textContent = "Adding the node to the network...";
     addingDeviceButton.classList.add('button-disabled');

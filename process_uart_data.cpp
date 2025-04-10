@@ -819,7 +819,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning) { return; }
+    if(isCommissioning || isManualAddingDevice) { return; }
 
     QByteArray frame;
     unsigned char length = 4;
