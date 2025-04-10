@@ -86,6 +86,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         else {
             qDebug() << "START COMMISSION";
+            commissionData.numberOfNodesScanned = 0;
+            commissionData.numberOfNodesAdded = 0;
             scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
         }
@@ -101,6 +103,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         */
     }
     else if (type == WS_SET_STOP_ACTION) {
+        forceStopCommissioning = true;
         qDebug() << "Mensaje de detención de COMMISSIONING recibido.";
     }
     else if (type == WS_SET_DELETE_DEVICE) {

@@ -210,7 +210,7 @@ void Wireless::addDeviceTimerHandler()
     qDebug() << "IS CHANGE FALSE";
     commissionData.isChangeRelayConfirmed = false;
 
-    if (commissionData.numberOfNodesScanned > 0) {
+    if (commissionData.numberOfNodesScanned > 0 && !forceStopCommissioning) {
         qDebug() << "EMPEZAMOS A AÑADIR NODOS";
         commissionData.isRelayNode = false;
         uint8_t emptyUUID[16] = {0};
@@ -223,14 +223,23 @@ void Wireless::addDeviceTimerHandler()
         }
     }
     else {
-        if (numberOfIterations != 0) {
+        if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             sendUartNewIteration(_uartPort);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
         else {
             qDebug() << "FIN DEL AUTO COMMISSION";
+            forceStopCommissioning = false;
             isCommissioning = false;
+
+            numberOfIterations = 0;
+
+            for (uint8_t i = 0; i < 20; i++) {
+                memset(scannedUUID[i].UUID, 0, sizeof(scannedUUID[i].UUID));
+                scannedUUID[i].nodeAddressReport = 0;
+            }
+
             sendEndAutoCommission(_webServer);
             pollingTimer.start(POLLING_TIMER_MS);
         }

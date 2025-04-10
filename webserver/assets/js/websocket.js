@@ -179,6 +179,9 @@ function confirmStartCommission(value)
     var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 
+    var stopButton = iframeDocument.getElementById('stopCommissionButton');
+    stopButton.classList.remove('button-disabled');
+
     var logCommission = iframeDocument.getElementById('logCommission');
     logCommission.innerHTML = "";
     
@@ -647,8 +650,11 @@ function stopCommission()
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = "Stopping commissioning...";
+
+    var stopButton = iframeDocument.getElementById('stopCommissionButton');
+    stopButton.classList.add('button-disabled');
 
     sendData("SET_STOP_ACTION", "");
 }
