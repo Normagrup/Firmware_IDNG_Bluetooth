@@ -137,6 +137,58 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             database->deleteNode(nodeAddress);
         }
     }
+    else if (type == WS_SET_ADD_DEVICE) {
+        if (isCommissionInProgress(webServer)) { return; }
+        
+        isManualAddingDevice = true;
+        QString uuidHex = value;
+        if (uuidHex.length() != 32) {
+            qDebug() << "[ADD_DEVICE] UUID inválido";
+            return;
+        }
+
+        QByteArray uuidBytes = QByteArray::fromHex(uuidHex.toLatin1());
+        if (uuidBytes.size() != 16) {
+            qDebug() << "[ADD_DEVICE] Error al convertir UUID a bytes";
+            return;
+        }
+    
+        ScannedUUID uuidScanned;
+        bool found = false;
+    
+        for (int i = 0; i < 20; i++) {
+            bool empty = true;
+            for (int j = 0; j < 16; j++) {
+                if (scannedUUID[i].UUID[j] != 0) {
+                    empty = false;
+                    break;
+                }
+            }
+            if (empty) continue;
+    
+            bool match = true;
+            for (int j = 0; j < 16; j++) {
+                if (uuidBytes[j] != scannedUUID[i].UUID[j]) {
+                    match = false;
+                    break;
+                }
+            }
+    
+            if (match) {
+                uuidScanned = scannedUUID[i];
+                found = true;
+                break;
+            }
+        }
+    
+        if (!found) {
+            qDebug() << "[ADD_DEVICE] UUID no encontrado en scannedUUID[]";
+            return;
+        }
+    
+        sendUartAddDevice(uartPort, uuidScanned);
+        qDebug() << "[ADD_DEVICE] Enviado UUID al micro:" << uuidHex;
+    }  
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }
 

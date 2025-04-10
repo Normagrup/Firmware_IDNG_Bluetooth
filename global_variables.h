@@ -36,6 +36,7 @@ extern ScannedUUID scannedUUID[20];
 extern uint8_t numberOfAddedNodes;
 extern uint16_t numberOfIterations;
 extern uint16_t netAddress;
+extern uint8_t numScannedUUID;
 
 extern QTimer pollingTimer;
 extern QTimer testTimer;
@@ -46,5 +47,6 @@ extern QTimer newIterationTimer;
 
 extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
+extern bool isManualAddingDevice;
 
 #endif // GLOBAL_VARIABLES_H

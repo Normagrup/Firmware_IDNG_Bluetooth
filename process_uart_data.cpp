@@ -672,22 +672,6 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-// void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
-// {
-//     QByteArray frame;
-//     unsigned char length = 5;
-
-//     frame.append(UART_HEADER);
-//     frame.append(length);
-//     frame.append(UART_CONFIG_FRAME_TYPE);
-//     frame.append(DEL_DEVICE);
-//     frame.append((nodeAddress >> 8) & 0xFF);
-//     frame.append(nodeAddress & 0xFF);
-//     frame.append(UART_END);
-
-//     _uartPort->sendData(frame);
-// }
-
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
 {
     if (_uartPort == nullptr) {
