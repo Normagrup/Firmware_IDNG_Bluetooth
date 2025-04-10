@@ -490,6 +490,9 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
 
     delay(4000);
 
+    if(forceStopCommissioning)
+        commissionData.numberOfNodesScanned = commissionData.numberOfNodesAdded;
+
     uint8_t emptyUUID[16] = {0};
     for (uint8_t i = 0; i < 20; i++) {
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
@@ -644,6 +647,8 @@ void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
 {
+    if(forceStopCommissioning) { return; }
+
     QByteArray frame;
     unsigned char length = 21;
 
@@ -830,6 +835,8 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    if(isCommissioning) { return; }
+
     QByteArray frame;
     unsigned char length = 4;
 

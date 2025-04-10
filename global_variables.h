@@ -45,5 +45,6 @@ extern QTimer confirmAddDeviceTimer;
 extern QTimer newIterationTimer;
 
 extern QStringList scannedDevicesMessages;
+extern bool forceStopCommissioning;
 
 #endif // GLOBAL_VARIABLES_H
