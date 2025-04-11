@@ -404,7 +404,7 @@ function processGroupBasicInfo(value) {
         container.appendChild(groupButton);
     }
 
-    // Procesado si el mensaje se recibe en s_tests.html: Se crea el elemento en el selector
+    // Procesado si el mensaje se recibe en s_groups.html o s_tests.html: Se crea el elemento en el selector
     var groupSelector = iframeDocument.getElementById('groupList');
     if(groupSelector)
     {
@@ -1142,7 +1142,7 @@ function delGroup()
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if (groupSelected != '-') {
-        groupList.innerHTML = '<option value="-"> ---- </option>';
+        groupList.innerHTML = getDefaultGroupsForSelector();
         sendData("SET_DEL_A_GROUP", groupSelected);
     }
 
@@ -1166,7 +1166,7 @@ function editGroup()
 
     if (groupSelected != '-') {
         var tmpIndex = groupList.selectedIndex;
-        groupList.innerHTML = '<option value="-"> ---- </option>';
+        groupList.innerHTML = getDefaultGroupsForSelector();
         sendData("SET_EDIT_A_GROUP", groupSelected + "#" + nameInput.value);
         setTimeout(function() {
             groupList.selectedIndex = tmpIndex;

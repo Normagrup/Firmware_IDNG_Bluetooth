@@ -602,3 +602,12 @@ function closeWirelessPopup()
     if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
 }
+
+function getDefaultGroupsForSelector()
+{
+    return "<option value='-'> ---- </option>" +
+            "<option value='C000'> Lighting </option>" +
+            "<option value='C001'> Emergency </option>" +
+            "<option value='C002'> Even </option>" +
+            "<option value='C003'> Odd </option>";
+}
