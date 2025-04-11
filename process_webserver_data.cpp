@@ -140,13 +140,39 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_ADD_DEVICE) {
         if (isCommissionInProgress(webServer)) { return; }
 
+        // Extraer el índice del UUID correspondiente al nodo que queremos añadir
         int uuidIndex = getUUIDIndexOfScanned(value);
 
         if (uuidIndex == -1) { return; }
 
         isManualAddingDevice = true;
-    
-        sendUartAddDevice(uartPort, scannedUUID[uuidIndex]);
+
+        // Guardar backup de la lista original
+        memcpy(scannedUUIDBackup, scannedUUID, sizeof(scannedUUID));
+
+        // Limpiar la lista original
+        memset(scannedUUID, 0, sizeof(scannedUUID));
+
+        // Copiar el UUID y el nodeAddressReport en la lista nueva
+        memcpy(scannedUUID[0].UUID, scannedUUIDBackup[uuidIndex].UUID, sizeof(scannedUUIDBackup[0].UUID));
+        scannedUUID[0].nodeAddressReport = scannedUUIDBackup[uuidIndex].nodeAddressReport;
+
+        // Limpiar de la lista original el elemento correspondiente al nodo que queremos añadir
+        for(int i = uuidIndex; i < 20; i++) {
+            if(i != 19) {
+                memcpy(scannedUUIDBackup[i].UUID, scannedUUIDBackup[i+1].UUID, sizeof(scannedUUIDBackup[i].UUID));
+                scannedUUIDBackup[i].nodeAddressReport = scannedUUIDBackup[i+1].nodeAddressReport;
+            }
+            else {
+                memset(scannedUUIDBackup[i].UUID, 0, sizeof(scannedUUIDBackup[i].UUID));
+                scannedUUIDBackup[i].nodeAddressReport = 0;
+            }
+        }
+
+        // Eliminar la entrada del dispositivo que añadimos de la lista de dispositivos escaneados que se muestra en el webserver
+        scannedDevicesMessages.removeAt(uuidIndex);
+
+        sendUartAddDevice(uartPort, scannedUUID[0]);
     }  
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }

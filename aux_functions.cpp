@@ -154,9 +154,9 @@ int getUUIDIndexOfScanned(QString UUID)
     for (int i = 0; i < 20; i++) {
         ScannedUUID uuid = scannedUUID[i];
         for (int j = 0; j < 16; j++) {
-            if(uuid.UUID[i] != parts[i])
+            if(uuid.UUID[j] != parts[j])
                 break;
-            else if(j == 15)
+            else if(uuid.UUID[j] == parts[j] && j == 15)
                 return i;
         }
     }

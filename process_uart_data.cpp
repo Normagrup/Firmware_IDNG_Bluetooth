@@ -490,8 +490,21 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
 
     delay(4000);
 
-    if(forceStopCommissioning)
+    // PARA STOP_COMMISSION
+    if(forceStopCommissioning) 
+    {
         commissionData.numberOfNodesScanned = commissionData.numberOfNodesAdded;
+    }
+    
+    // PARA ADD_DEVICE MANUAL
+    if(isManualAddingDevice)
+    {
+        // Recuperar la lista de nodos escaneados en scannedUUID
+        memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
+        numberOfIterations = 0;
+        isManualAddingDevice = false;
+        return;
+    }
 
     uint8_t emptyUUID[16] = {0};
     for (uint8_t i = 0; i < 20; i++) {

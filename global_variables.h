@@ -33,6 +33,7 @@ extern GroupDataConfiguration groupDataConfiguration;
 extern uint16_t timerGroupAddress[3];
 extern CommissionData commissionData;
 extern ScannedUUID scannedUUID[20];
+extern ScannedUUID scannedUUIDBackup[20];
 extern uint8_t numberOfAddedNodes;
 extern uint16_t numberOfIterations;
 extern uint16_t netAddress;

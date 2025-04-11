@@ -21,6 +21,7 @@ QTimer confirmAddDeviceTimer;
 QTimer newIterationTimer;
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
+ScannedUUID scannedUUIDBackup[20];
 bool isOpenNodeControl = false;
 PollingData pollingData = {false, false, 0};
 GroupDataConfiguration groupDataConfiguration = {true, false};
