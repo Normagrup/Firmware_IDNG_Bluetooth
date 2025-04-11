@@ -530,6 +530,9 @@ function addDevicePrev()
         popupOverlay.style.visibility = "visible";
         addingDeviceLabel.textContent = "Do you want to add the node to the network?";
         addingDeviceButton.classList.remove('button-disabled');
+
+        var closeAddDev = iframeDocument.getElementById('closeAddDev');
+        closeAddDev.setAttribute("onclick", "parent.closeWirelessPopup()");
     }
     else {
         networkErrorLabel.style.visibility = "visible";

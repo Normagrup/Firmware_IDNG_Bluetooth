@@ -503,6 +503,9 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
         numberOfIterations = 0;
         isManualAddingDevice = false;
+
+        sendConfirmAddingDevice(webServer);
+
         return;
     }
 

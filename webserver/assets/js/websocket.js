@@ -201,14 +201,19 @@ function confirmAddingDevice(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var popup = iframeDocument.getElementById('popup');
+    var popup = iframeDocument.getElementById('popupAddDevice');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    var popupHeader = popup.querySelector('h2');
-    popupHeader.textContent = "Adding device to the network...";
+    var networkNodesList = iframeDocument.getElementById("networkNodesList");
+    networkNodesList.innerHTML = "";
 
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
+    sendData("SET_STORED_SCANNED_DEVICES", "");
+    sendData("SET_LOAD_NODES", "");
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 1000);
 }
 
 function addDeviceToNetworkList(value) 
@@ -712,6 +717,7 @@ function processEndAutoCommission(value)
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
 
+    // Limpiar la lista de escaneados cuando se hace un stop forzado
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     scannedDevicesList.innerHTML = "";
 }
@@ -986,13 +992,8 @@ function addDevice()
     addingDeviceLabel.textContent = "Adding the node to the network...";
     addingDeviceButton.classList.add('button-disabled');
 
-    // Esperar confirmación antes de eliminarlo de la interfaz
-    setTimeout(() => {
-        // TODO: Eliminar el elemento que se añada de la lista de scannedDevicesMessages [ALEX]
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 3000); // TODO: Este timeout habrá que cambiarlo
+    var closeAddDev = iframeDocument.getElementById('closeAddDev');
+    closeAddDev.removeAttribute("onclick");
 }
 
 function delDevice() {

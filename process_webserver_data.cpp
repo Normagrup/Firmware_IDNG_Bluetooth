@@ -578,11 +578,9 @@ void sendConfirmStartCommission(WebServer* webServer)
 
 void sendConfirmAddingDevice(WebServer* webServer)
 {
-    /*
     QString message = QString(WS_SEND_CONFIRM_ADDING_DEVICE) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
-    */
 }
 
 void sendStartAddingDevices(WebServer* webServer)
