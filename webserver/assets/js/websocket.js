@@ -1117,7 +1117,7 @@ function addGroup()
 
     var groupList = iframeDocument.getElementById('groupList');
 
-    groupList.innerHTML = "<option value='-'> ---- </option>"
+    groupList.innerHTML = getDefaultGroupsForSelector();
     sendData("SET_ADD_A_GROUP", "");
 
     setTimeout(function(){
