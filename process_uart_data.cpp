@@ -243,7 +243,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case CONFIRM_END_REMOVE_ALL_NODES:
                         sendConfirmEndRemoveAllNodes(webServer);
                     break;
-
+                    case CONFIRM_ADD_NODE_TO_GROUP:
+                        uin16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uin16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
+                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress);
+                    break;
                     case LINE_SCAN_SEND:
                     {
                         // Esperamos 22 bytes mínimo
@@ -708,6 +712,32 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
 
     _uartPort->sendData(frame);
     printf("Comando de eliminación enviado: %04X\n", nodeAddress);
+}
+
+
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
+{
+    QByteArray frame;
+
+    qDebug() << "UART GROUP SEND";
+    unsigned char length = 9;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(ADD_GROUP_MANUAL);
+    frame.append((address[0] >> 8) & 0xFF);
+    frame.append(address[0] & 0xFF);
+    frame.append((address[1] >> 8) & 0xFF);
+    frame.append(address[1] & 0xFF);
+    frame.append((address[2] >> 8) & 0xFF);
+    frame.append(address[2] & 0xFF);
+
+    qDebug() << address[0] << address[1] << address[2];
+
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)

@@ -26,6 +26,7 @@
 #define DEL_DEVICES                     0x13
 #define NODE_DELETED                    0x50
 #define ADD_GROUP                       0x15
+#define ADD_GROUP_MANUAL                0x16
 #define DEL_GROUP                       0x17
 #define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
@@ -45,6 +46,7 @@
 #define CONFIRM_START_SCAN              0x49
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
+#define CONFIRM_ADD_NODE_TO_GROUP       0x55
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -60,6 +62,7 @@ void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);

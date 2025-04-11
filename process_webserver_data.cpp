@@ -193,7 +193,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         timerGroupAddress[2] = 0x0000;
         groupDataConfiguration.configSecondGroup = false;
         qDebug() << "GROUP ADD";
-        sendUartAddGroup(uartPort, address);
+        sendUartAddGroupManual(uartPort, address);
+
     }
     else if (type == WS_SET_DEL_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -919,3 +920,14 @@ void sendConfirmEndRemoveAllNodes(WebServer* webServer)
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+
+
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress)
+{
+    // TODO: Añadir el grupo (deviceTypeGroupAddress) al nodo (address) en la bbdd y en el modelo (buscar si hay algun metodo que ya lo haga)
+
+    //QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+
+    //if (webServer != nullptr) { webServer->sendData(message); }
+}
+
