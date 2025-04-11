@@ -711,6 +711,9 @@ function processEndAutoCommission(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
+
+    var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevicesList.innerHTML = "";
 }
 
 function processFactoryIDWrote(value) 
