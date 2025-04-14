@@ -280,9 +280,10 @@ function processLogCommissionEntry(value)
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     
     var logCommissionList = iframeDocument.getElementById('logCommission');
+
     var newEntry = iframeDocument.createElement('li');
     newEntry.textContent = value;
-    logCommissionList.insertBefore(newEntry);
+    logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
 }
 
 function processNodeInfo(value) 
@@ -831,8 +832,26 @@ function processDelAllDev(value, init)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    
+    var popup = iframeDocument.getElementById('popupDelAllDevices');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    console.log("TODO");
+    if(init) // Cuando empieza el borrado
+    {
+        var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
+        var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
+
+        deletingAllDevicesLabel.textContent = "Deleting all the nodes from the network...";
+        deletingAllDevicesButton.classList.add('button-disabled');
+    }
+    else // Cuando termina el borrado
+    {
+        var networkNodesList = iframeDocument.getElementById('networkNodesList');
+        networkNodesList.innerHTML = "";
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }
 }
 
 function processReceivedData(data) 
@@ -1026,32 +1045,10 @@ function delDevice() {
     }, 1000);
 }
 
-function delAllDevices() {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    
-    var popup = iframeDocument.getElementById('popupDelAllDevices');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-    var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
-    var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
-
-    // Seleccionar la lista de nodos
-    var networkNodesList = iframeDocument.getElementById('networkNodesList');
- 
+function delAllDevices() { 
     console.log("Enviando comando SET_DELETE_DEVICE en BROADCAST");
     // Enviar comando al embebido para eliminar los nodos
     sendData("SET_DELETE_DEVICE", "65535");
-
-    deletingAllDevicesLabel.textContent = "Deleting all the nodes from the network...";
-    deletingAllDevicesButton.classList.add('button-disabled');
-
-    setTimeout(() => {
-        networkNodesList.innerHTML = "";
-        console.log("Nodos eliminados de la interfaz");
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 3000);
 }
 
 function addToGroup() 

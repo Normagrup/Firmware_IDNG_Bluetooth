@@ -90,6 +90,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             commissionData.numberOfNodesAdded = 0;
             scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
+            delay(300);
             sendLogCommissionEntry(webServer, "Scanning devices...");
         }
     }
