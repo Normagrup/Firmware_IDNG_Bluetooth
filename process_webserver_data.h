@@ -95,7 +95,7 @@ void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
-void sendLogCommissionEntry(WebServer* webServer);
+void sendLogCommissionEntry(WebServer* webServer, QString content);
 void sendConfirmStartScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);

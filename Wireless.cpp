@@ -211,12 +211,14 @@ void Wireless::addDeviceTimerHandler()
 
     if (commissionData.numberOfNodesScanned > 0 && !forceStopCommissioning) {
         qDebug() << "EMPEZAMOS A AÑADIR NODOS";
+        sendLogCommissionEntry(_webServer, "Start adding nodes...");
         commissionData.isRelayNode = false;
         uint8_t emptyUUID[16] = {0};
         for (uint8_t i = 0; i < 16 ; i++) {
             if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
                 confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
                 sendUartAddDevice(_uartPort, scannedUUID[i]);
+                sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
                 break;
             }
         }
@@ -224,6 +226,7 @@ void Wireless::addDeviceTimerHandler()
     else {
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
+            sendLogCommissionEntry(_webServer, "Starting new iteration from a node...");
             sendUartNewIteration(_uartPort);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
@@ -253,6 +256,7 @@ void Wireless::confirmAddDeviceTimerHandler()
     for (uint8_t i = 0; i < 20; i++) {
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             sendUartAddDevice(_uartPort, scannedUUID[i]);
+            sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
             break;
         }
     }

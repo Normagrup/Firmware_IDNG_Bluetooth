@@ -173,6 +173,12 @@ int getUUIDIndexOfScanned(QString UUID)
     */
 }
 
+QString getUUIDAsString(uint8_t UUID[16])
+{
+    QByteArray byteArray(reinterpret_cast<const char*>(UUID), 16);
+    return byteArray.toHex().toUpper();
+}
+
 void setTests(QStringList webServerParts, Database *database)
 {
     QString groupAddress = webServerParts[0];
