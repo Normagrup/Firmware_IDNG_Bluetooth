@@ -248,49 +248,54 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndRemoveAllNodes(webServer);
                     break;
 
-                    case LINE_SCAN_SEND:
-                    {
-                        // Esperamos 22 bytes mínimo
-                        if (dataChecked.size() < 22) {
-                            qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                            break;
-                        }
-                    
-                        // [3..4] => realAddress
-                        uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                        uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                        uint16_t realAddr = (highByte << 8) | lowByte;
-                    
-                        // [5..20] => 16 bytes de UUID binario
-                        QByteArray uuidBytes = dataChecked.mid(5, 16);
-                        // Convertir a string en hex para la DB
-                        QString uuidHex = QString(uuidBytes.toHex()).toUpper();
-                    
-                        // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                        // ...
-                    
-                        // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                        uint8_t subnetAddr = 0;
-                        uint8_t nodeSubnetAddr = 0;
-                    
-                        // Llamada a la DB
-                        database->addOrUpdateNode(
-                            subnetAddr,
-                            nodeSubnetAddr,
-                            realAddr,
-                            uuidHex,   // guardas el UUID en la columna “UUID”
-                            "",        // groupSub vacío
-                            0,         // deviceType
-                            0,         // ratedDuration
-                            0,         // emergencyFeatures
-                            0          // physicalMinLvl
-                        );
-                        database->loadNodesFromDatabase();
-                        qDebug() << "Insertado/actualizado nodo" 
-                                 << QString::asprintf("%04X", realAddr)
-                                 << " con UUID=" << uuidHex;
-                    }
+                    case CONFIRM_ADD_NODE_TO_GROUP:
+                        uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
+                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, database);
                     break;
+                    // case LINE_SCAN_SEND:
+                    // {
+                    //     // Esperamos 22 bytes mínimo
+                    //     if (dataChecked.size() < 22) {
+                    //         qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
+                    //         break;
+                    //     }
+                    
+                    //     // [3..4] => realAddress
+                    //     uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
+                    //     uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
+                    //     uint16_t realAddr = (highByte << 8) | lowByte;
+                    
+                    //     // [5..20] => 16 bytes de UUID binario
+                    //     QByteArray uuidBytes = dataChecked.mid(5, 16);
+                    //     // Convertir a string en hex para la DB
+                    //     QString uuidHex = QString(uuidBytes.toHex()).toUpper();
+                    
+                    //     // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
+                    //     // ...
+                    
+                    //     // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
+                    //     uint8_t subnetAddr = 0;
+                    //     uint8_t nodeSubnetAddr = 0;
+                    
+                    //     // Llamada a la DB
+                    //     database->addOrUpdateNode(
+                    //         subnetAddr,
+                    //         nodeSubnetAddr,
+                    //         realAddr,
+                    //         uuidHex,   // guardas el UUID en la columna “UUID”
+                    //         "",        // groupSub vacío
+                    //         0,         // deviceType
+                    //         0,         // ratedDuration
+                    //         0,         // emergencyFeatures
+                    //         0          // physicalMinLvl
+                    //     );
+                    //     database->loadNodesFromDatabase();
+                    //     qDebug() << "Insertado/actualizado nodo" 
+                    //              << QString::asprintf("%04X", realAddr)
+                    //              << " con UUID=" << uuidHex;
+                    // }
+                    // break;
                 }
             // default:       
             // break;
@@ -719,6 +724,32 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
 
     _uartPort->sendData(frame);
     printf("Comando de eliminación enviado: %04X\n", nodeAddress);
+}
+
+
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
+{
+    QByteArray frame;
+
+    qDebug() << "UART GROUP SEND";
+    unsigned char length = 9;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(ADD_GROUP_MANUAL);
+    frame.append((address[0] >> 8) & 0xFF);
+    frame.append(address[0] & 0xFF);
+    frame.append((address[1] >> 8) & 0xFF);
+    frame.append(address[1] & 0xFF);
+    frame.append((address[2] >> 8) & 0xFF);
+    frame.append(address[2] & 0xFF);
+
+    qDebug() << address[0] << address[1] << address[2];
+
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)

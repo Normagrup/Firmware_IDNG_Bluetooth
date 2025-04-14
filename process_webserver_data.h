@@ -76,6 +76,7 @@
 #define WS_SEND_GROUP_INFO                  "GROUP_INFO"
 #define WS_SEND_GROUP_NODE_INCLUDED         "GROUP_NODE_INCLUDED"
 #define WS_SEND_GROUP_NODE_NOT_INCLUDED     "GROUP_NODE_NOT_INCLUDED"
+#define WS_SEND_CONFIRM_ADD_NODE_TO_GROUP   "CONFIRM_ADD_NODE_TO_GROUP"
 #define WS_SEND_TEST                        "TEST_DATA"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
 #define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
@@ -122,5 +123,6 @@ void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database);
 
 #endif // PROCESS_WEBSERVER_DATA_H

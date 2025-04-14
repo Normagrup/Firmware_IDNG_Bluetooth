@@ -196,7 +196,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         timerGroupAddress[2] = 0x0000;
         groupDataConfiguration.configSecondGroup = false;
         qDebug() << "GROUP ADD";
-        sendUartAddGroup(uartPort, address);
+        sendUartAddGroupManual(uartPort, address);
+
     }
     else if (type == WS_SET_DEL_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -922,6 +923,27 @@ void sendConfirmStartRemoveAllNodes(WebServer* webServer)
 void sendConfirmEndRemoveAllNodes(WebServer* webServer)
 {
     QString message = QString(WS_SEND_CONFIRM_END_DEL_ALL_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database)
+{
+    // Añadir grupo en la BBDD
+    database->setGroup(address, deviceTypeGroupAddress);
+
+    // Añadir al modelo  
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address) {
+                meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
+                break;
+            }
+        }
+    }
+
+    QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

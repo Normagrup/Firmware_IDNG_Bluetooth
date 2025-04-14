@@ -854,6 +854,20 @@ function processDelAllDev(value, init)
     }
 }
 
+function processAddNodeToGroup(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    loadNodesLists();
+
+    var popup = iframeDocument.getElementById('popupAddingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -890,6 +904,7 @@ function processReceivedData(data)
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
+    else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
 }
 
 function sendData(type, value) 
@@ -1071,12 +1086,6 @@ function addToGroup()
     var textNodeSelected = selectedNode.textContent.trim();
     var message = textNodeSelected + ' ' + groupSelected;
     sendData("SET_ADD_GROUP", message);
-
-    setTimeout(function() {
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-        loadNodesLists();
-    }, 3000);
 }
 
 function delFromGroup() 
