@@ -243,54 +243,55 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case CONFIRM_END_REMOVE_ALL_NODES:
                         sendConfirmEndRemoveAllNodes(webServer);
                     break;
+
                     case CONFIRM_ADD_NODE_TO_GROUP:
-                        uin16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        uin16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
-                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress);
+                        uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
+                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, database);
                     break;
-                    case LINE_SCAN_SEND:
-                    {
-                        // Esperamos 22 bytes mínimo
-                        if (dataChecked.size() < 22) {
-                            qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                            break;
-                        }
+                    // case LINE_SCAN_SEND:
+                    // {
+                    //     // Esperamos 22 bytes mínimo
+                    //     if (dataChecked.size() < 22) {
+                    //         qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
+                    //         break;
+                    //     }
                     
-                        // [3..4] => realAddress
-                        uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                        uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                        uint16_t realAddr = (highByte << 8) | lowByte;
+                    //     // [3..4] => realAddress
+                    //     uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
+                    //     uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
+                    //     uint16_t realAddr = (highByte << 8) | lowByte;
                     
-                        // [5..20] => 16 bytes de UUID binario
-                        QByteArray uuidBytes = dataChecked.mid(5, 16);
-                        // Convertir a string en hex para la DB
-                        QString uuidHex = QString(uuidBytes.toHex()).toUpper();
+                    //     // [5..20] => 16 bytes de UUID binario
+                    //     QByteArray uuidBytes = dataChecked.mid(5, 16);
+                    //     // Convertir a string en hex para la DB
+                    //     QString uuidHex = QString(uuidBytes.toHex()).toUpper();
                     
-                        // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                        // ...
+                    //     // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
+                    //     // ...
                     
-                        // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                        uint8_t subnetAddr = 0;
-                        uint8_t nodeSubnetAddr = 0;
+                    //     // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
+                    //     uint8_t subnetAddr = 0;
+                    //     uint8_t nodeSubnetAddr = 0;
                     
-                        // Llamada a la DB
-                        database->addOrUpdateNode(
-                            subnetAddr,
-                            nodeSubnetAddr,
-                            realAddr,
-                            uuidHex,   // guardas el UUID en la columna “UUID”
-                            "",        // groupSub vacío
-                            0,         // deviceType
-                            0,         // ratedDuration
-                            0,         // emergencyFeatures
-                            0          // physicalMinLvl
-                        );
-                        database->loadNodesFromDatabase();
-                        qDebug() << "Insertado/actualizado nodo" 
-                                 << QString::asprintf("%04X", realAddr)
-                                 << " con UUID=" << uuidHex;
-                    }
-                    break;
+                    //     // Llamada a la DB
+                    //     database->addOrUpdateNode(
+                    //         subnetAddr,
+                    //         nodeSubnetAddr,
+                    //         realAddr,
+                    //         uuidHex,   // guardas el UUID en la columna “UUID”
+                    //         "",        // groupSub vacío
+                    //         0,         // deviceType
+                    //         0,         // ratedDuration
+                    //         0,         // emergencyFeatures
+                    //         0          // physicalMinLvl
+                    //     );
+                    //     database->loadNodesFromDatabase();
+                    //     qDebug() << "Insertado/actualizado nodo" 
+                    //              << QString::asprintf("%04X", realAddr)
+                    //              << " con UUID=" << uuidHex;
+                    // }
+                    // break;
                 }
             // default:       
             // break;

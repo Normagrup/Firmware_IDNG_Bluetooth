@@ -922,12 +922,22 @@ void sendConfirmEndRemoveAllNodes(WebServer* webServer)
 }
 
 
-void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress)
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database)
 {
-    // TODO: Añadir el grupo (deviceTypeGroupAddress) al nodo (address) en la bbdd y en el modelo (buscar si hay algun metodo que ya lo haga)
+    // Añadir grupo en la BBDD
+    database->setGroup(address, deviceTypeGroupAddress);
 
-    //QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+    // Añadir al modelo  
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address) {
+                meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
+                break;
+            }
+        }
+    }
 
-    //if (webServer != nullptr) { webServer->sendData(message); }
+    QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
-
