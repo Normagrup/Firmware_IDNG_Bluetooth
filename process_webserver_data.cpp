@@ -525,8 +525,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t groupAddress = parts[0].toUShort(nullptr, 16);
         uint8_t powerOnLevel = static_cast<uint8_t>(parts[1].toUInt(nullptr, 10));
 
-        qDebug() << groupAddress << "-" << powerOnLevel;
-
         sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel, IS_NORMAL);
         delay(SLEEP_DALI_TIME_MS);
         sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
@@ -970,6 +968,17 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
     }
 
     QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database)
+{
+    QString groupAddressString = QString("%1").arg(groupAddress, 4, 16, QLatin1Char('0')).toUpper();
+
+    database->setPowerOnLevel(groupAddressString, powerOnLevel);
+
+    QString message = QString(WS_SEND_CONFIRM_POWER_ON_LEVEL) + "@" + groupAddressString + "_" + QString::number(powerOnLevel);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

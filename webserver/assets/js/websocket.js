@@ -911,6 +911,31 @@ function processAddNodeToGroup(value)
     popupOverlay.style.visibility = "hidden";
 }
 
+function processPowerOnLevelChange(value)
+{
+    var parts = value.split("_");
+    var groupAddress = parts[0];
+    var groupPOL = parts[1];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectorElement = iframeDocument.querySelector('#groupListPowerOnLevel option[value="' + groupAddress + '"]');
+    var groupName = selectorElement.textContent;
+
+    console.log(groupName);
+
+    for (let i = 0; i < 16; i++) {
+        var firstCell = iframeDocument.getElementById('gp' + i);
+
+        if (firstCell.textContent.trim() === groupName) {
+            let secondCell = iframeDocument.getElementById('pl' + i);
+            secondCell.textContent = groupPOL === "0" ? "Off" : (groupPOL === "254" ? "Max" : "Last Value");
+            break;
+        }
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -949,6 +974,7 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
     else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
+    else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
 }
 
 function sendData(type, value) 

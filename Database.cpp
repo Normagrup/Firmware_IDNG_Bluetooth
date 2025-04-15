@@ -771,7 +771,7 @@ void Database::createGroup()
     }
 
     // Se inserta el nuevo grupo con ese GroupAddress y el nombre del parámetro
-    query.prepare("INSERT INTO Groups (GroupName, GroupAddress) VALUES (?, ?)");
+    query.prepare("INSERT INTO Groups (GroupName, GroupAddress, PowerOnLevel) VALUES (?, ?, 255)");
     query.addBindValue(newGroupName);
     query.addBindValue(newGroupAddress);
     if (!query.exec()) { qDebug() << "Error inserting new group:" << query.lastError().text(); return; }
