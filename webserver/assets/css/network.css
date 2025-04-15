@@ -393,7 +393,7 @@ label {
 }
 
 .status-indicator.on-state {
-    background-color: #fff;
+    background-color: #f2ff36;
 }
 .status-indicator.off-state {
     background-color: #000;

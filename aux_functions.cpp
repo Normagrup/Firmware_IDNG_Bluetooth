@@ -144,6 +144,42 @@ void setIPConfigInfo(QStringList webServerParts, Database* database)
     database->setInterfaceParameters(webServerParts);
 }
 
+int getUUIDIndexOfScanned(QString UUID)
+{
+    // Para pasar de "FFFFFFFFF49A1EA75C47AB0C0B65E158" a [255, 255, 255, 255, 244, 154, 30, ...]
+    // Es decir, parte el UUID en paquetes de 2 caracteres, lo convierte a hexadecimal y lo mete en "parts"
+    uint8_t parts[16];
+    for(int i = 0; i < 16; i++)
+        parts[i] = static_cast<uint8_t>(UUID.mid(i*2, 2).toUInt(nullptr, 16));
+
+    for (int i = 0; i < 20; i++) {
+        ScannedUUID uuid = scannedUUID[i];
+        for (int j = 0; j < 16; j++) {
+            if(uuid.UUID[j] != parts[j])
+                break;
+            else if(uuid.UUID[j] == parts[j] && j == 15)
+                return i;
+        }
+    }
+
+    return -1;
+
+    /** PARA PRINTEAR EL CONTENIDO DE SCANNEDUUID
+    for(int i = 0; i < 20; i++) {
+        qDebug() << "+++ UUID" << i << ":" << scannedUUID[i].nodeAddressReport;
+        for(int j = 0; j < 16; j++) {
+            qDebug() << "Pos" << j << ":" << scannedUUID[i].UUID[j];
+        }
+    }
+    */
+}
+
+QString getUUIDAsString(uint8_t UUID[16])
+{
+    QByteArray byteArray(reinterpret_cast<const char*>(UUID), 16);
+    return byteArray.toHex().toUpper();
+}
+
 void setTests(QStringList webServerParts, Database *database)
 {
     QString groupAddress = webServerParts[0];

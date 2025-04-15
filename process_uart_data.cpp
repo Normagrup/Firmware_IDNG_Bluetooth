@@ -163,17 +163,27 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         //qDebug() << "PRUEBA UART";
                         qDebug() << "PARANDO TIMER START COMMISSION";
                         addDeviceTimer.start(ADD_DEVICE_TIMER_MS);
+                        isCommissioning = true;  // Lock server from accepting new commands
                         sendConfirmStartCommission(webServer); 
+                    break;
+
+                    case CONFIRM_START_SCAN:
+                        qDebug() << "CONFIRM START SCAN";
+                        isScanning = true;
+                        sendConfirmStartScan(webServer);
+                        QTimer::singleShot(12000, []() {isScanning = false;});
                     break;
 
                     case CONFIRM_ADD_DEVICE:
                         qDebug() << "PARANDO TIMER ADD DEVICE";
+                        sendLogCommissionEntry(webServer, "Add device command received...");
                         confirmAddDeviceTimer.stop();
                         //sendConfirmAddingDevice(webServer);
                     break;
 
                     case CONFIRM_GROUP_FRAME:
                         qDebug() << "PARANDO TIMER GROUP FRAME";
+                        sendLogCommissionEntry(webServer, "Adding node to groups...");
                         groupFrameTimer.stop();
                     break;
 
@@ -187,6 +197,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_CHANGE_RELAY:
                         qDebug() << "CONFIRM CHANGE RELAY";
+                        sendLogCommissionEntry(webServer, "Confirm change relay...");
                         commissionData.isChangeRelayConfirmed = true;
                     break;
 
@@ -196,6 +207,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case DEVICE_ERROR:
                         qDebug() << "DEVICE ERROR";
+                        sendLogCommissionEntry(webServer, "An error has occurred with the device...");
                         sendDeviceError(dataChecked, uartPort, webServer);
                     break;
 
@@ -211,49 +223,81 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)dataChecked[3], 2, 16, QChar('0')).toUpper();
                     break;
 
-                    case LINE_SCAN_SEND:
+                    case NODE_DELETED:
                     {
-                        // Esperamos 22 bytes mínimo
-                        if (dataChecked.size() < 22) {
-                            qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                            break;
+                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+
+                        qDebug() << "Nodo eliminado confirmado desde micro: " << nodeAddress;
+
+                        // Borrar de meshDevice local
+                        for (int i = 0; i < MAX_SUBNET; i++) {
+                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                                if(meshDevice[i][j].getRealAddress() == nodeAddress) {
+                                    meshDevice[i][j].deleteDevice();
+                                    database->deleteNode(nodeAddress);
+                                    break;
+                                }
+                            }
                         }
-                    
-                        // [3..4] => realAddress
-                        uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                        uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                        uint16_t realAddr = (highByte << 8) | lowByte;
-                    
-                        // [5..20] => 16 bytes de UUID binario
-                        QByteArray uuidBytes = dataChecked.mid(5, 16);
-                        // Convertir a string en hex para la DB
-                        QString uuidHex = QString(uuidBytes.toHex()).toUpper();
-                    
-                        // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                        // ...
-                    
-                        // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                        uint8_t subnetAddr = 0;
-                        uint8_t nodeSubnetAddr = 0;
-                    
-                        // Llamada a la DB
-                        database->addOrUpdateNode(
-                            subnetAddr,
-                            nodeSubnetAddr,
-                            realAddr,
-                            uuidHex,   // guardas el UUID en la columna “UUID”
-                            "",        // groupSub vacío
-                            0,         // deviceType
-                            0,         // ratedDuration
-                            0,         // emergencyFeatures
-                            0          // physicalMinLvl
-                        );
-                        database->loadNodesFromDatabase();
-                        qDebug() << "Insertado/actualizado nodo" 
-                                 << QString::asprintf("%04X", realAddr)
-                                 << " con UUID=" << uuidHex;
                     }
                     break;
+
+                    case CONFIRM_START_REMOVE_ALL_NODES:
+                        sendConfirmStartRemoveAllNodes(webServer);
+                    break;
+
+                    case CONFIRM_END_REMOVE_ALL_NODES:
+                        sendConfirmEndRemoveAllNodes(webServer);
+                    break;
+
+                    case CONFIRM_ADD_NODE_TO_GROUP:
+                        uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
+                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, database);
+                    break;
+                    // case LINE_SCAN_SEND:
+                    // {
+                    //     // Esperamos 22 bytes mínimo
+                    //     if (dataChecked.size() < 22) {
+                    //         qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
+                    //         break;
+                    //     }
+                    
+                    //     // [3..4] => realAddress
+                    //     uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
+                    //     uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
+                    //     uint16_t realAddr = (highByte << 8) | lowByte;
+                    
+                    //     // [5..20] => 16 bytes de UUID binario
+                    //     QByteArray uuidBytes = dataChecked.mid(5, 16);
+                    //     // Convertir a string en hex para la DB
+                    //     QString uuidHex = QString(uuidBytes.toHex()).toUpper();
+                    
+                    //     // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
+                    //     // ...
+                    
+                    //     // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
+                    //     uint8_t subnetAddr = 0;
+                    //     uint8_t nodeSubnetAddr = 0;
+                    
+                    //     // Llamada a la DB
+                    //     database->addOrUpdateNode(
+                    //         subnetAddr,
+                    //         nodeSubnetAddr,
+                    //         realAddr,
+                    //         uuidHex,   // guardas el UUID en la columna “UUID”
+                    //         "",        // groupSub vacío
+                    //         0,         // deviceType
+                    //         0,         // ratedDuration
+                    //         0,         // emergencyFeatures
+                    //         0          // physicalMinLvl
+                    //     );
+                    //     database->loadNodesFromDatabase();
+                    //     qDebug() << "Insertado/actualizado nodo" 
+                    //              << QString::asprintf("%04X", realAddr)
+                    //              << " con UUID=" << uuidHex;
+                    // }
+                    // break;
                 }
             // default:       
             // break;
@@ -291,9 +335,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
     }
 }
 
-
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
 {
+    sendLogCommissionEntry(webServer, "Start loading features...");
+
     uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
     uint8_t nodeUUID[16];
     uint16_t address;
@@ -374,6 +419,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                     if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
                         qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[l].UUID[0], 2, 16, QChar('0')).toUpper();
                         sendUartAddDevice(uartPort, scannedUUID[l]);
+                        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID));
                         confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
                         break;
                     }
@@ -396,6 +442,26 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 }
                 else if (deviceType == 0x06) {          // LIGHTING
                     timerGroupAddress[1] = 0xC000;
+
+                    if(((j + 1) % 2) != 0) {
+                        timerGroupAddress[2] = 0xC003;
+                        qDebug() << "GROUP IMPAR";
+                    }
+                    else {
+                        timerGroupAddress[2] = 0xC002;
+                        qDebug() << "GROUP PAR";
+                    }
+                }
+                else {                                  // DEFAULT or UNKNOWN DEV TYPE
+                    if(((j + 1) % 2) != 0) {
+                        timerGroupAddress[1] = 0xC003;
+                        qDebug() << "GROUP IMPAR";
+                    }
+                    else {
+                        timerGroupAddress[1] = 0xC002;
+                        qDebug() << "GROUP PAR";
+                    }
+
                     timerGroupAddress[2] = 0x0000;
                 }
                 groupFrameTimer.start(GROUP_FRAME_TIMER_MS);
@@ -405,6 +471,8 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
             }
         }
     }
+
+    sendLogCommissionEntry(webServer, "The features have been loaded.");
 }
 
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
@@ -423,8 +491,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString();
-                if (webServer != nullptr) { webServer->sendData(message); }
+                if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
+                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString();
+                    if (webServer != nullptr) { webServer->sendData(message); }
+                }
                 break;
             }
         }
@@ -433,8 +503,28 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     netAddress = 0;
 
     qDebug()  << "NODO AÑADIDO";
+    sendLogCommissionEntry(webServer, "The groups have been setted.");
 
     delay(4000);
+
+    // PARA STOP_COMMISSION
+    if(forceStopCommissioning) 
+    {
+        commissionData.numberOfNodesScanned = commissionData.numberOfNodesAdded;
+    }
+    
+    // PARA ADD_DEVICE MANUAL
+    if(isManualAddingDevice)
+    {
+        // Recuperar la lista de nodos escaneados en scannedUUID
+        memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
+        numberOfIterations = 0;
+        isManualAddingDevice = false;
+
+        sendConfirmAddingDevice(webServer);
+
+        return;
+    }
 
     uint8_t emptyUUID[16] = {0};
     for (uint8_t i = 0; i < 20; i++) {
@@ -448,6 +538,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[i].UUID[0], 2, 16, QChar('0')).toUpper();
             sendUartAddDevice(uartPort, scannedUUID[i]);
+            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
             confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
             break;
         }
@@ -590,6 +681,8 @@ void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
 {
+    if(forceStopCommissioning) { return; }
+
     QByteArray frame;
     unsigned char length = 21;
 
@@ -613,22 +706,6 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-// void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
-// {
-//     QByteArray frame;
-//     unsigned char length = 5;
-
-//     frame.append(UART_HEADER);
-//     frame.append(length);
-//     frame.append(UART_CONFIG_FRAME_TYPE);
-//     frame.append(DEL_DEVICE);
-//     frame.append((nodeAddress >> 8) & 0xFF);
-//     frame.append(nodeAddress & 0xFF);
-//     frame.append(UART_END);
-
-//     _uartPort->sendData(frame);
-// }
-
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
 {
     if (_uartPort == nullptr) {
@@ -648,7 +725,33 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    printf("Comando de eliminación enviado al nodo: %04X\n", nodeAddress);
+    printf("Comando de eliminación enviado: %04X\n", nodeAddress);
+}
+
+
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
+{
+    QByteArray frame;
+
+    qDebug() << "UART GROUP SEND";
+    unsigned char length = 9;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(ADD_GROUP_MANUAL);
+    frame.append((address[0] >> 8) & 0xFF);
+    frame.append(address[0] & 0xFF);
+    frame.append((address[1] >> 8) & 0xFF);
+    frame.append(address[1] & 0xFF);
+    frame.append((address[2] >> 8) & 0xFF);
+    frame.append(address[2] & 0xFF);
+
+    qDebug() << address[0] << address[1] << address[2];
+
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
@@ -776,6 +879,8 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    if(isCommissioning || isManualAddingDevice || isScanning) { return; }
+
     QByteArray frame;
     unsigned char length = 4;
 

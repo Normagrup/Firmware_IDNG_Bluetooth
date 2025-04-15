@@ -43,6 +43,28 @@
             </div>
         </div>
     </div>
+    <div class="popup" id="popupAddingNode">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label style="margin-top: 10px; color: #4682b4;"> Adding Node... </label>
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+    <div class="popup" id="popupDeletingNode">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingNodeLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the node from the group? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingNodeButton" onclick="parent.delFromGroup()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
 
     <div class="wrap-container">
         <div class="wrap-list-container">
@@ -52,6 +74,10 @@
             <div class="group-container">
                 <select class="selector" id="groupList" onchange="parent.loadNodesLists()">
                     <option value="-"> ---- </option>
+                    <option value="C000"> Lighting </option>
+                    <option value="C001"> Emergency </option>
+                    <option value="C002"> Even </option>
+                    <option value="C003"> Odd </option>
 				</select>
 
                 <button onclick="parent.editGroupPrev()"> Edit Name </button>
@@ -67,7 +93,7 @@
                 <div class="list">
                     <label> Nodes included in the group </label>
                     <ul id="includedNodesList"></ul>
-                    <button onclick="parent.delFromGroup()"> Delete Node </button>
+                    <button onclick="parent.delFromGroupPrev()"> Delete Node </button>
                 </div>
             </div>
         </div>

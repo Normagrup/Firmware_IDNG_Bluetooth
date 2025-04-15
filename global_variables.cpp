@@ -24,6 +24,7 @@ QTimer confirmAddDeviceTimer;
 QTimer newIterationTimer;
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
+ScannedUUID scannedUUIDBackup[20];
 bool isOpenNodeControl = false;
 PollingData pollingData = {false, false, 0};
 GroupDataConfiguration groupDataConfiguration = {true, false};
@@ -34,3 +35,8 @@ uint16_t numberOfIterations = 0;
 uint16_t netAddress = 0;
 
 uint8_t subnetCount = 0, nodeSubnetCount = 0;
+
+QStringList scannedDevicesMessages;
+bool forceStopCommissioning;
+bool isManualAddingDevice;
+bool isScanning;
