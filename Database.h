@@ -46,6 +46,8 @@ public:
     void removeGroup(QString address);
     void removeTestEntry(QString address);
     void editGroup(QString address, QString name);
+    void setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel);
+    QStringList getPowerOnLevel(int page);
 
     void clearAllData(void);
     void addNode(uint16_t nodeAddress);
