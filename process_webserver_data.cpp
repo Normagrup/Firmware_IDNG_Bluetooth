@@ -527,11 +527,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         qDebug() << groupAddress << "-" << powerOnLevel;
 
-        //sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel , IS_NORMAL);
+        sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel, IS_NORMAL);
         delay(SLEEP_DALI_TIME_MS);
-        //sendUartDaliCommand(uartPort, groupAddress, STORE_DTR_POWER_ON_LVL, powerOnLevel , IS_TWICE);
-        delay(SLEEP_DALI_TIME_MS);
-        //sendUartDaliCommand(uartPort, groupAddress, QUERY_POWER_ON_LVL, 0x00, IS_QUERY);
+        sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
