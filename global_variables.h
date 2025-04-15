@@ -48,5 +48,5 @@ extern QTimer newIterationTimer;
 extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
-
+extern bool isScanning;
 #endif // GLOBAL_VARIABLES_H

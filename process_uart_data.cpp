@@ -169,7 +169,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_START_SCAN:
                         qDebug() << "CONFIRM START SCAN";
+                        isScanning = true;
                         sendConfirmStartScan(webServer);
+                        QTimer::singleShot(12000, []() {isScanning = false;});
                     break;
 
                     case CONFIRM_ADD_DEVICE:
@@ -877,7 +879,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning || isManualAddingDevice) { return; }
+    if(isCommissioning || isManualAddingDevice || isScanning) { return; }
 
     QByteArray frame;
     unsigned char length = 4;
