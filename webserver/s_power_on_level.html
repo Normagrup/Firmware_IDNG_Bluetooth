@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_power_on_lvl.css">
+</head>
+
+<body>
+    <div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <!-- Left Side: Display Current Power-On Levels -->
+        <div class="wrap-list-container">
+            <h2>Power On Level</h2>
+            <table id="powerOnLevelTable">
+                <thead>
+                    <tr>
+                        <th>Group Name</th>
+                        <th>Power On Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="gp0">-</td>
+                        <td id="pl0">-</td>
+                    </tr>
+                    <tr>
+                        <td id="gp1">-</td>
+                        <td id="pl1">-</td>
+                    </tr>
+                    <tr>
+                        <td id="gp2">-</td>
+                        <td id="pl2">-</td>
+                    </tr>
+                    <tr>
+                        <td id="gp3">-</td>
+                        <td id="pl3">-</td>
+                    </tr>
+                    <tr>
+                        <td id="gp4">-</td>
+                        <td id="pl4">-</td>
+                    </tr>
+                    <tr>
+                        <td id="gp5">-</td>
+                        <td id="pl5">-</td>
+                    </tr>
+                    <tr>
+                        <td id="gp6">-</td>
+                        <td id="pl6">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp7">-</td>
+                        <td id="pl7">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp8">-</td>
+                        <td id="pl8">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp9">-</td>
+                        <td id="pl9">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp10">-</td>
+                        <td id="pl10">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp11">-</td>
+                        <td id="pl11">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp12">-</td>
+                        <td id="pl12">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp13">-</td>
+                        <td id="pl13">-</td>
+                    </tr> 
+                    <tr> 
+                        <td id="gp14">-</td>
+                        <td id="pl14">-</td>
+                    </tr>
+                    <tr> 
+                        <td id="gp15">-</td>
+                        <td id="pl15">-</td>
+                    </tr> 
+                </tbody>
+            </table>
+            <div class="pagination-container">
+                <button id="prevPage" onclick="parent.goToPreviousPage()"> &#8592; </button>
+                <label id="page"> Page: 1 </label>
+                <button id="nextPage" onclick="parent.goToNextPage()"> &#8594; </button>
+            </div>
+        </div>
+
+        <!-- Right Side: Select and Update Power-On Levels -->
+        <div class="wrap-group-container">
+            <h2>Update Power On Level</h2>
+            <div class="group-container">
+                <label>Select Group</label>
+                <select class="selector" id="groupListPowerOnLevel">
+                    <option value="-"> ---- </option>
+                </select>
+
+                <label>Select Power On Level</label>
+                <select class="selector" id="powerOnLevelList">
+                    <option value="0">Off</option>
+                    <option value="254">Max</option>
+                    <option value="255">Last Value</option>
+                </select>
+                <button onclick="parent.setPowerOnLevel()">Apply</button>
+                <label id="powerOnError" style="color: #C30101; visibility: hidden;"> Select a group! </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(function () {
+                parent.sendData("GET_POWER_ON_LVL", "1");
+            }, 10);
+        };
+    </script>
+</body>
+
+</html>

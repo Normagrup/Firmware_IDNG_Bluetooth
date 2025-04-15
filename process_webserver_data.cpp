@@ -515,6 +515,20 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         if(isCommissionInProgress(webServer)) { return; }
         clearSystemData(database, uartPort);
     }
+    else if (type == WS_GET_POWER_ON_LEVEL) {
+        sendGroupsWithPOL(webServer, database, value);
+    }
+    else if (type == WS_SET_POWER_ON_LEVEL) {
+        if(isCommissionInProgress(webServer)) { return; }
+
+        QStringList parts = value.split("_");
+        uint16_t groupAddress = parts[0].toUShort(nullptr, 16);
+        uint8_t powerOnLevel = static_cast<uint8_t>(parts[1].toUInt(nullptr, 10));
+
+        sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel, IS_NORMAL);
+        delay(SLEEP_DALI_TIME_MS);
+        sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -828,6 +842,16 @@ void sendGroupNodes(WebServer* webServer, QString groupAddress) {
     }
 }
 
+void sendGroupsWithPOL(WebServer* webServer, Database* database, QString value) {
+    QStringList groupList = database->getPowerOnLevel(value.toInt());
+
+    for (const QString& group : groupList) {
+        QString message = QString(WS_SEND_GROUP_WITH_POL) + "@" + group;
+        if (webServer != nullptr) { webServer->sendData(message); }
+        delay(WEBSERVER_SEND_TIME_MS);
+    }
+}
+
 void sendTest(WebServer* webServer, Database* database, QString groupAddress)
 {
     QString testData = database->getTests(groupAddress);
@@ -944,6 +968,17 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
     }
 
     QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database)
+{
+    QString groupAddressString = QString("%1").arg(groupAddress, 4, 16, QLatin1Char('0')).toUpper();
+
+    database->setPowerOnLevel(groupAddressString, powerOnLevel);
+
+    QString message = QString(WS_SEND_CONFIRM_POWER_ON_LEVEL) + "@" + groupAddressString + "_" + QString::number(powerOnLevel);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

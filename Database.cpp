@@ -116,7 +116,8 @@ void Database::initDatabase()
      * **************************************************/
     query.exec("CREATE TABLE IF NOT EXISTS Groups "
                "(GroupAddress TEXT, "
-               "GroupName TEXT);");
+               "GroupName TEXT, "
+               "PowerOnLevel INTEGER);");
 
     query.prepare("SELECT * FROM Groups");
 
@@ -127,16 +128,49 @@ void Database::initDatabase()
             QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
             // QStringList groupAddresses = {};
 
-            query.prepare("INSERT INTO Groups (GroupAddress, GroupName) VALUES (:groupAddress, :groupName)");
+            query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
             int groupNumber = 1;
             foreach (const QString &groupAddress, groupAddresses) {
                 query.bindValue(":groupAddress", groupAddress);
                 query.bindValue(":groupName", "Group " + QString::number(groupNumber));
+                query.bindValue(":powerOnLevel", 255);
 
                 if (!query.exec()) { qDebug() << "Error executing INSERT query in Groups:" << query.lastError().text(); }
 
                 groupNumber++;
+            }
+        }
+    }
+
+
+
+    /* **************************************************
+     *                                                  *
+     *                   FIXED GROUPS                   *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS FixedGroups "
+               "(GroupAddress TEXT, "
+               "GroupName TEXT, "
+               "PowerOnLevel INTEGER);");
+
+    query.prepare("SELECT * FROM FixedGroups");
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query in FixedGroups:" << query.lastError().text(); }
+    else {
+        if (!query.next()) {
+            QStringList groupAddresses = {"C000", "C001", "C002", "C003"};
+            QStringList groupNames = {"Lighting", "Emergency", "Even", "Odd"};
+
+            query.prepare("INSERT INTO FixedGroups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
+
+            for (int i = 0; i < groupAddresses.size(); ++i) {
+                query.bindValue(":groupAddress", groupAddresses[i]);
+                query.bindValue(":groupName", groupNames[i]);
+                query.bindValue(":powerOnLevel", 255);
+
+                if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedGroups:" << query.lastError().text(); }
             }
         }
     }
@@ -737,7 +771,7 @@ void Database::createGroup()
     }
 
     // Se inserta el nuevo grupo con ese GroupAddress y el nombre del parámetro
-    query.prepare("INSERT INTO Groups (GroupName, GroupAddress) VALUES (?, ?)");
+    query.prepare("INSERT INTO Groups (GroupName, GroupAddress, PowerOnLevel) VALUES (?, ?, 255)");
     query.addBindValue(newGroupName);
     query.addBindValue(newGroupAddress);
     if (!query.exec()) { qDebug() << "Error inserting new group:" << query.lastError().text(); return; }
@@ -792,6 +826,53 @@ void Database::editGroup(QString address, QString name)
     query.bindValue(":address", address);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in GROUPS" << query.lastError().text(); }
+}
+
+void Database::setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel)
+{
+    QSqlQuery query;
+
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("UPDATE FixedGroups SET PowerOnLevel = :powerOnLevel WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("UPDATE Groups SET PowerOnLevel = :powerOnLevel WHERE GroupAddress = :groupAddress");
+
+    query.bindValue(":powerOnLevel", powerOnLevel);
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) { qDebug() << "Error setting PowerOnLevel:" << query.lastError().text(); }
+}
+
+QStringList Database::getPowerOnLevel(int page)
+{
+    if(page < 0) { return QStringList{}; }
+
+    QSqlQuery query;
+
+    QStringList groupListGeneral;
+    QStringList groupListPaged;
+
+    if (!query.exec("SELECT * FROM FixedGroups")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        groupListGeneral.append(query.value("GroupAddress").toString() + "_" + query.value("GroupName").toString() + "_" + query.value("PowerOnLevel").toString());
+    }
+
+    if (!query.exec("SELECT * FROM Groups")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        groupListGeneral.append(query.value("GroupAddress").toString() + "_" + query.value("GroupName").toString() + "_" + query.value("PowerOnLevel").toString());
+    }
+
+    for(int i = page * 16 - 16; i < page * 16; i++) {
+        if(i < groupListGeneral.size()) {
+            groupListPaged.append(groupListGeneral[i]);
+        } else {
+            groupListPaged.append("-_-_-"); // emtpy entry
+        }
+    }
+
+    return groupListPaged;
 }
 
 void Database::clearAllData()

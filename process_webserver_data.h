@@ -41,8 +41,10 @@
 #define WS_GET_GROUP_INFO                   "GET_GROUP_INFO"
 #define WS_GET_TEST                         "GET_TEST"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
+#define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
+#define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 
-#define WS_SET_LINE_SCAN                        "SET_LINE_SCAN"
+#define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
 #define WS_SET_MIN                          "SET_MIN"
@@ -74,9 +76,11 @@
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
 #define WS_SEND_GROUP                       "GROUP_NAME_AND_ADDRESS"
 #define WS_SEND_GROUP_INFO                  "GROUP_INFO"
+#define WS_SEND_GROUP_WITH_POL              "GROUP_WITH_POL"
 #define WS_SEND_GROUP_NODE_INCLUDED         "GROUP_NODE_INCLUDED"
 #define WS_SEND_GROUP_NODE_NOT_INCLUDED     "GROUP_NODE_NOT_INCLUDED"
 #define WS_SEND_CONFIRM_ADD_NODE_TO_GROUP   "CONFIRM_ADD_NODE_TO_GROUP"
+#define WS_SEND_CONFIRM_POWER_ON_LEVEL      "CONFIRM_POWER_ON_LEVEL"
 #define WS_SEND_TEST                        "TEST_DATA"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
 #define WS_SEND_FAILURES_COUNTER            "FAILURES_COUNTER"
@@ -111,6 +115,7 @@ void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
 void sendGroupNodes(WebServer* webServer, QString groupAddress);
+void sendGroupsWithPOL(WebServer* webServer, Database* database, QString value);
 void sendTest(WebServer* webServer, Database* database, QString groupAddress);
 void sendDevicesCount(WebServer* webServer, int count);
 void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
@@ -124,5 +129,6 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database);
+void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 
 #endif // PROCESS_WEBSERVER_DATA_H

@@ -2,6 +2,7 @@ var socket = new WebSocket("ws://" + window.location.hostname + ":4322");
 var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
+var tablePosition = 0;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -531,6 +532,48 @@ function processGroupInfo(value)
     }
 }
 
+function processGroupInfoWithPOL(value)
+{
+    var parts = value.split("_");
+    var groupAddress = parts[0];
+    var groupName = parts[1];
+    var groupPOL = parts[2];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var tableGroupName = iframeDocument.getElementById("gp" + tablePosition);
+    var tablePowerOnLevel = iframeDocument.getElementById("pl" + tablePosition);
+
+    if(groupName !== "-" && groupPOL !== "-") {
+        tableGroupName.textContent = groupName;
+        tablePowerOnLevel.textContent = groupPOL === "0" ? "Off" : (groupPOL === "254" ? "Max" : "Last Value");
+    }
+    else {
+        tableGroupName.textContent = "-";
+        tablePowerOnLevel.textContent = "-";
+    }
+
+    var groupSelector = iframeDocument.getElementById('groupListPowerOnLevel');
+    if(groupSelector)
+    {
+        if(tablePosition == 0) { groupSelector.innerHTML = "<option value='-'> ---- </option>"; }
+
+        // Si lo que llega no es una entrada vacía
+        if(value !== "-_-_-") {
+            var group = iframeDocument.createElement('option');
+            group.value = groupAddress;
+            group.textContent = groupName;
+
+            groupSelector.appendChild(group);
+        }
+    }
+
+    // Incremento de la siguiente posición de la tabla a actualizar
+    if(tablePosition == 15) { tablePosition = 0; }
+    else { tablePosition++; }
+}
+
 function processGroupNode(value, included)
 {
     var iframe = document.getElementById('mainframe');
@@ -868,6 +911,31 @@ function processAddNodeToGroup(value)
     popupOverlay.style.visibility = "hidden";
 }
 
+function processPowerOnLevelChange(value)
+{
+    var parts = value.split("_");
+    var groupAddress = parts[0];
+    var groupPOL = parts[1];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectorElement = iframeDocument.querySelector('#groupListPowerOnLevel option[value="' + groupAddress + '"]');
+    var groupName = selectorElement.textContent;
+
+    console.log(groupName);
+
+    for (let i = 0; i < 16; i++) {
+        var firstCell = iframeDocument.getElementById('gp' + i);
+
+        if (firstCell.textContent.trim() === groupName) {
+            let secondCell = iframeDocument.getElementById('pl' + i);
+            secondCell.textContent = groupPOL === "0" ? "Off" : (groupPOL === "254" ? "Max" : "Last Value");
+            break;
+        }
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -890,6 +958,7 @@ function processReceivedData(data)
     else if (type == 'NODE_INFO') { processNodeInfo(value); }
     else if (type == 'GROUP_NAME_AND_ADDRESS') { processGroupBasicInfo(value); }
     else if (type == "GROUP_INFO") { processGroupInfo(value); }
+    else if (type == "GROUP_WITH_POL") { processGroupInfoWithPOL(value); }
     else if (type == "GROUP_NODE_INCLUDED") { processGroupNode(value, true); }
     else if (type == "GROUP_NODE_NOT_INCLUDED") { processGroupNode(value, false); }
     else if (type == "TEST_DATA") { processTestData(value); }
@@ -905,6 +974,7 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
     else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
+    else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
 }
 
 function sendData(type, value) 
@@ -1585,4 +1655,62 @@ function lineScanningFunction() {
             feedbackLabel.style.visibility = "hidden";
         }, 2000);
     }, 2000);
+}
+
+function goToPreviousPage() {
+    if(tablePosition != 0) { return; }
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var pageLabel = iframeDocument.getElementById("page");
+    
+    if(pageLabel.textContent.trim() === "Page: 1") { return; }
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+    currentPage--;
+    pageLabel.textContent = "Page: " + currentPage;
+
+    sendData("GET_POWER_ON_LVL", currentPage);
+}
+
+function goToNextPage() {
+    if(tablePosition != 0) { return; }
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var tableGroupNameLast = iframeDocument.getElementById("gp15");
+    var tablePowerOnLevelLast = iframeDocument.getElementById("pl15");
+
+    if(tableGroupNameLast.textContent.trim() === "-" || tablePowerOnLevelLast.textContent.trim() === "-") { return; }
+
+    var pageLabel = iframeDocument.getElementById("page");
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+    currentPage++;
+    pageLabel.textContent = "Page: " + currentPage;
+
+    sendData("GET_POWER_ON_LVL", currentPage);
+
+}
+
+function setPowerOnLevel(){
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var groupSelector = iframeDocument.getElementById('groupListPowerOnLevel');
+    var levelSelector = iframeDocument.getElementById('powerOnLevelList');
+    var errorLabel = iframeDocument.getElementById('powerOnError');
+    
+    if (groupSelector.value === "-") {
+        errorLabel.style.visibility = "visible";
+    } 
+    else {
+        errorLabel.style.visibility = "hidden";
+
+        sendData("SET_POWER_ON_LVL", groupSelector.value + "_" + levelSelector.value)
+    }
 }

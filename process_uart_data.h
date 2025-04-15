@@ -47,6 +47,7 @@
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
 #define CONFIRM_ADD_NODE_TO_GROUP       0x55
+#define CONFIRM_SET_POWER_ON_LEVEL      0x57
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
