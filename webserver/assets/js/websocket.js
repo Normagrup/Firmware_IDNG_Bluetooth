@@ -110,6 +110,11 @@ function processDateTimeInfo(value)
         functionTimePicker.value = timeString;
         durationTimePicker.value = timeString;
     }
+
+    var navDateTimeElem = document.getElementById("antennaDateTime");
+    if (navDateTimeElem) {
+        navDateTimeElem.textContent = dateString + " " + timeString;
+    }
 }
 
 function addDeviceToScannedList(value) 
@@ -1038,6 +1043,11 @@ function sendDateTime()
 
     var message = date + ' ' + time;
     sendData("SET_DATE_TIME", message);
+
+    //  Pedimos la hora actualizada para reflejarla en el header
+    setTimeout(() => {
+        sendData("GET_DATE_TIME", "");
+    }, 500); // le damos medio segundo para procesar
 
     var timeLabel = iframeDocument.getElementById('timeLabel');
     timeLabel.style.visibility = "visible";

@@ -102,3 +102,28 @@ nav .wrapper {
     font-weight: 400;
     border-radius: 0px;
 }
+
+.nav-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .nav-info-wrapper {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 20px;
+    top: 0;
+    height: 70px;
+    gap: 20px;
+}
+
+.nav-date-time {
+    display: flex !important;
+    color: white;
+    font-size: 14px;
+    white-space: nowrap;
+    height: 70px;
+    align-items: center;
+}
