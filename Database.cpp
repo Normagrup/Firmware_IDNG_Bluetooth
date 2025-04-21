@@ -385,13 +385,20 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
 
     if (count == 0) {
         query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid)");
-        query.bindValue(":subnetAddress", subnetAddress);
-        query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
-        query.bindValue(":realAddress", realAddress);
-        query.bindValue(":uuid", nodeUUIDText);
 
-        if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
+       
     }
+    else {
+        query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress, RealAddress = :realAddress WHERE UUID = :uuid");
+    }
+
+    query.bindValue(":subnetAddress", subnetAddress);
+    query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
+    query.bindValue(":realAddress", realAddress);
+    query.bindValue(":uuid", nodeUUIDText);
+
+    if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
+
 }
 
 
