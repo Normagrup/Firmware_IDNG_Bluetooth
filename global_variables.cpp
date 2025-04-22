@@ -37,3 +37,4 @@ QStringList scannedDevicesMessages;
 bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;
+bool userIsLoggedIn;
