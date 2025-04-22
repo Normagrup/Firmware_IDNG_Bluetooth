@@ -25,6 +25,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_REBOOT_DEVICE) {
         rebootDevice();
     }
+    else if (type == WS_SET_LOG_OUT) {
+        userIsLoggedIn = false;
+        pollingTimer.stop(); 
+        qDebug() << "Logout recibido: polling detenido.";
+    }
+    
     else if (type == WS_SET_SCANNED_DEVICES) {
         if(isCommissionInProgress(webServer)) { return; }
         scannedDevicesMessages.clear();
