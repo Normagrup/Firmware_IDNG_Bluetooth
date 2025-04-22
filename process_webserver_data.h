@@ -92,6 +92,7 @@
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 #define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
+#define WS_SET_LOG_OUT                      "SET_LOG_OUT"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
