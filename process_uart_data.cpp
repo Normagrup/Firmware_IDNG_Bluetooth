@@ -890,6 +890,11 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    if (userIsLoggedIn == false) {
+        // qDebug() << " Polling bloqueado: usuario no logueado.";
+        return;
+    }
+
     if(isCommissioning || isManualAddingDevice || isScanning) { return; }
 
     QByteArray frame;

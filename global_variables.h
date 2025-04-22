@@ -49,4 +49,5 @@ extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;
+extern bool userIsLoggedIn;
 #endif // GLOBAL_VARIABLES_H
