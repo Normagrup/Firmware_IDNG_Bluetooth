@@ -3,6 +3,7 @@ var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
 var tablePosition = 0;
+let dateTimeInterval;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -1006,6 +1007,14 @@ function sendLogin()
     else {
         var message = username + ' ' + password;
         sendData("SET_LOG_IN", message);
+
+        document.getElementById("navDateTime").style.display = "flex";
+        sendData("GET_DATE_TIME", "");
+
+        if (dateTimeInterval) clearInterval(dateTimeInterval); 
+        dateTimeInterval = setInterval(() => {
+            sendData("GET_DATE_TIME", "");
+        }, 60000); 
     }
 }
 

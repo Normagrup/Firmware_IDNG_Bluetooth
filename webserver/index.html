@@ -31,6 +31,11 @@
 					<li id="loginButton"><a onclick="openLogin()"> Log in </a><div class="dot"></div></li>
 				</ul>
 			</div>
+
+			<div class="nav-date-time" id="navDateTime">
+				<span id="antennaDateTime"> Date & Time: --</span>
+			</div>
+
 		</div>
 
 		<div class="login-overlay" id="loginOverlay"></div>
@@ -42,6 +47,7 @@
 			<label id="signError" style="color: #C30101; visibility: hidden;"><b>Username or password are incorrect!</b></label>
 			<button onclick="sendLogin()"> Log in </button>
 		</div>
+
 	</nav>
 
 	<iframe id="mainframe" src="summary.html"></iframe>

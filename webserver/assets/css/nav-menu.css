@@ -95,6 +95,16 @@ nav .wrapper {
     visibility: visible;
 }
 
+#navDateTime {
+    display: none;
+    color: #ffffff;
+    font-size: 14px;
+    white-space: nowrap;
+    margin-left: 10px;
+    margin-right: 20px;
+    line-height: 70px;
+}
+
 .drop-menu li a{
     width: 100%;
     display: block;
