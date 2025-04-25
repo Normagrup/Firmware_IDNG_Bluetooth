@@ -114,7 +114,7 @@ function processDateTimeInfo(value)
     // Para actualizar el valor del campo general para la fecha y hora
     var navDateTimeElem = document.getElementById("antennaDateTime");
     if (navDateTimeElem) {
-        navDateTimeElem.textContent = dateString + " " + timeString;
+        navDateTimeElem.textContent = dateString + " ~ " + timeString + "h";
     }
 }
 

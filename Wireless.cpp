@@ -48,7 +48,7 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
-    //pollingTimer.start(POLLING_TIMER_MS);
+    pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;
     data.append(0x01);
