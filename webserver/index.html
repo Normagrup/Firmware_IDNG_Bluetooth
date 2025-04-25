@@ -14,15 +14,22 @@
 	<nav>
 		<div class="wrapper">
 			<div class="logo">
-				<a href="http://www.normagrup.com/"><img src="images/normagrupWhite.png" alt="imageLogo"/></a>
+				<a href="http://www.normagrup.com/">
+					<img src="images/normagrupWhite.png" alt="imageLogo"/>
+				</a>
 			</div>
-			
-			<ul class="nav-links" id="menuContainer">
-				<li id="summaryButton"><a onclick="loadPage('summary.html')"> Summary </a><div class="dot"></div></li>
-			</ul>
-			
-			<div class="nav-links" id="loginContainer">
-				<li id="loginButton"><a onclick="openLogin()"> Log in </a><div class="dot"></div></li>
+			<div class="nav-center">
+				<ul class="nav-links" id="menuContainer">
+					<li id="summaryButton"><a onclick="loadPage('summary.html')"> Summary </a><div class="dot"></div></li>
+				</ul>
+			</div>
+			<div class="nav-info-wrapper">
+				<div class="nav-date-time" id="navDateTime">
+					<span id="antennaDateTime"> </span>
+				</div>
+				<ul class="nav-links" id="loginContainer">
+					<li id="loginButton"><a onclick="openLogin()"> Log in </a><div class="dot"></div></li>
+				</ul>
 			</div>
 		</div>
 
@@ -45,6 +52,20 @@
 	<script>
 		var submask = 0;
 	</script>
+
+	<script>
+		// HORA DE LA ANTENA 
+		window.addEventListener("load", () => {
+			// Esperar a que el WebSocket esté listo
+			setTimeout(() => {
+				if (typeof sendData === "function") {
+					requestDateTime();
+					requestDevicesAndFailuresCount();
+				}
+			}, 1000);
+		});
+	</script>	
+
 </body>
 
 </html>

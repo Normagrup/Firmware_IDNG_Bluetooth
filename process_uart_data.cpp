@@ -251,10 +251,21 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
 
                     case CONFIRM_ADD_NODE_TO_GROUP:
+                    {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
                         uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
                         sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, database);
+                    }
                     break;
+
+                    case CONFIRM_SET_POWER_ON_LEVEL:
+                    {
+                        uint16_t groupAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uint8_t powerOnLevel = dataChecked[5];
+                        sendConfirmPowerOnLevel(webServer, powerOnLevel, groupAddress, database);
+                    }
+                    break;
+
                     // case LINE_SCAN_SEND:
                     // {
                     //     // Esperamos 22 bytes mínimo
