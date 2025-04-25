@@ -77,7 +77,7 @@ nav .wrapper {
     opacity: 1;
 }
 
-.nav-links .drop-menu{
+.nav-links .drop-menu {
     position: absolute;
     background: #4682b4;
     width: 180px;
@@ -95,7 +95,17 @@ nav .wrapper {
     visibility: visible;
 }
 
-.drop-menu li a{
+.nav-date-time span {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 9px 20px 9px 0px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.drop-menu li a {
     width: 100%;
     display: block;
     padding: 0 0 0 15px;
@@ -107,9 +117,9 @@ nav .wrapper {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-  }
+}
 
-  .nav-info-wrapper {
+.nav-info-wrapper {
     display: flex;
     align-items: center;
     position: absolute;

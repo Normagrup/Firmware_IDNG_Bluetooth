@@ -111,6 +111,7 @@ function processDateTimeInfo(value)
         durationTimePicker.value = timeString;
     }
 
+    // Para actualizar el valor del campo general para la fecha y hora
     var navDateTimeElem = document.getElementById("antennaDateTime");
     if (navDateTimeElem) {
         navDateTimeElem.textContent = dateString + " " + timeString;
@@ -1044,10 +1045,10 @@ function sendDateTime()
     var message = date + ' ' + time;
     sendData("SET_DATE_TIME", message);
 
-    //  Pedimos la hora actualizada para reflejarla en el header
+    // Pedimos la hora actualizada para reflejarla en el header automáticamente tras cambiarla
     setTimeout(() => {
         sendData("GET_DATE_TIME", "");
-    }, 500); // le damos medio segundo para procesar
+    }, 500);
 
     var timeLabel = iframeDocument.getElementById('timeLabel');
     timeLabel.style.visibility = "visible";
@@ -1723,4 +1724,8 @@ function setPowerOnLevel(){
 
         sendData("SET_POWER_ON_LVL", groupSelector.value + "_" + levelSelector.value)
     }
+}
+
+function requestDateTime() {
+    sendData("GET_DATE_TIME", "");
 }

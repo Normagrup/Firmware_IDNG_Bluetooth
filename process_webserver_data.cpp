@@ -20,7 +20,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     if (type == WS_SET_LOG_IN) {
         uint8_t loginInfo = database->verifyLoginParameters(value);
         sendLoginInfo(webServer, loginInfo);
-        userIsLoggedIn = true;
     }
     else if (type == WS_SET_REBOOT_DEVICE) {
         rebootDevice();
