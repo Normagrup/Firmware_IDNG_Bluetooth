@@ -1,7 +1,5 @@
 function logoutApp()
-{   
-    sendData("SET_LOG_OUT", "0");
-    
+{
     var logoutButton = document.getElementById("logoutButton");
     if (logoutButton) { logoutButton.remove(); }
 
