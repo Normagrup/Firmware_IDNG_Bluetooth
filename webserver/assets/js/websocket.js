@@ -769,6 +769,13 @@ function processEndAutoCommission(value)
     // Limpiar la lista de escaneados cuando se hace un stop forzado
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     scannedDevicesList.innerHTML = "";
+
+    // Limpiar la lista de nodos de la red
+    var networkNodesList = iframeDocument.getElementById('networkNodesList');
+    networkNodesList.innerHTML = "";
+
+    // Recargar nodos de la red
+    sendData("SET_LOAD_NODES", "");
 }
 
 function processFactoryIDWrote(value) 

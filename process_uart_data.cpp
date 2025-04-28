@@ -373,11 +373,15 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     commissionData.numberOfNodesAdded++;
     numberOfIterations++;
 
+    uint8_t revertedNodeUUID[16];
+    // Revertir el UUID para que el serialNumber quede al final al añadir el nodo al modelo
+    for (int8_t i = 15; i >= 0; i--) { revertedNodeUUID[i] = nodeUUID[15-i]; }
+
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (!meshDevice[i][j].getIsConfigured()) {
+            if (!meshDevice[i][j].getIsConfigured() || memcmp(meshDevice[i][j].getUUID(), revertedNodeUUID, sizeof(meshDevice[i][j].getUUID())) == 0){
                 meshDevice[i][j].setRealAddress(address);
-                meshDevice[i][j].setUUID(nodeUUID);
+                meshDevice[i][j].setUUID(revertedNodeUUID);
                 meshDevice[i][j].setDeviceType(deviceType);
                 meshDevice[i][j].setRatedDuration(ratedDuration);
                 meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
@@ -389,7 +393,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 database->setNewNode(i, j, address, nodeUUID);
 
                 delay(500);
-
+                
                 /*
                 QString valu = "";
                 for (uint8_t l = 0; l < 20; l++)  {
