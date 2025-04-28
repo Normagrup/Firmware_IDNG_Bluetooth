@@ -418,7 +418,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         AntennaTestCheck check;
         check.groupId = devId;
         check.testType = "FUNCTIONAL";
-        check.checkTime = antennaDateTime.time().addSecs(3600); // 1 hour for FT
+        check.checkTime = antennaDateTime.time().addSecs(900); // 15 min for FT
         antennaTestCheckList.append(check);
         qDebug() << "FUNCTIONAL test added...to checklist";
     }

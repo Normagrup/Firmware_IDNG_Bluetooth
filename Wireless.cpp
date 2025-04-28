@@ -233,7 +233,7 @@ void Wireless::testTimerHandler()
                     AntennaTestCheck testCheck;
                     testCheck.groupId = devId;
                     testCheck.testType = "FUNCTIONAL";
-                    testCheck.checkTime = antennaDateTime.time().addSecs(3600); // 1 hour for FT;
+                    testCheck.checkTime = antennaDateTime.time().addSecs(900); // 15 min for FT;
 
                     antennaTestCheckList.append(testCheck);
                 }
@@ -290,7 +290,7 @@ void Wireless::testTimerHandler()
                         AntennaTestCheck testCheck;
                         testCheck.groupId = devId;
                         testCheck.testType = "DURATION";
-                        testCheck.checkTime = QTime::currentTime().addSecs(60); // 12 hour for DT
+                        testCheck.checkTime = QTime::currentTime().addSecs(43200); // 12 hour for DT
 
                         antennaTestCheckList.append(testCheck);
                         break;

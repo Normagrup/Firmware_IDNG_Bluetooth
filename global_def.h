@@ -2,6 +2,10 @@
 #define GLOBAL_DEF_H
 
 // Log events
+#define LOG_DEVICE_ADDED                      0x05
+#define LOG_DEVICE_REMOVED                    0x06
+#define LOG_ALL_DEVICE_REMOVED                0x07
+
 // Communication Failures
 #define LOG_COMMUNICATION_FAILURE             0x01
 #define LOG_COMMUNICATION_RECOVERED           0x10
