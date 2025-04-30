@@ -1526,9 +1526,20 @@ function getLogs()
 
     var initialDate = new Date(initialDatePicker.value);
     var finalDate = new Date(finalDatePicker.value);
+    var today = new Date();
+    initialDate.setHours(0, 0, 0, 0);
+    finalDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
 
     if (reportListSelected != '-' && initialDatePicker.value && finalDatePicker.value) {
         if (initialDate <= finalDate) {
+            if (finalDate > today) {
+                logErrorLabel.style.color = "#C30101";
+                logErrorLabel.innerHTML = "<b> Final date cannot be in the future! </b>";
+                logErrorLabel.style.visibility = "visible";
+                return;
+            }
+
             var message = reportListSelected + ' ' + initialDatePicker.value + ' ' + finalDatePicker.value
 
             sendData("GET_LOGS", message);

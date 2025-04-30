@@ -1,6 +1,6 @@
 #include "aux_functions.h"
 #include "file_handler.h"
-#include "global_def.h"
+#include "log.h"
 
 #include <QDebug>
 
@@ -224,4 +224,71 @@ void insertLogEvent(Database *database, int devId, QString serialNum, QString de
     log.eventType = eventType;
 
     database->insertLogEvent(log);
+}
+
+void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QString& testType)
+{
+    QString serial = isGroup ? "FF.FF.FF.FF"
+                             : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].serialNumberString();
+
+    QString devName = isGroup
+                          ? "Group: " + QString::number(targetAddr)
+                          : "SUB:" + QString::number((targetAddr - 1) / 64) + " ID:" + QString::number((targetAddr - 1) % 64);
+
+    int devId = isGroup
+                    ? targetAddr
+                    : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].getRealAddress();
+
+    AntennaInfo info = getAntennaInfo(db);
+    QString eventType = "Test";
+
+    int logType = 0;
+    if (testType == "FUNCTIONAL") { logType = LOG_TEST_REQUESTED_FUNCTIONAL; }
+    else if (testType == "DURATION") { logType = LOG_TEST_REQUESTED_DURATION; }
+    else if (testType == "STOP") { logType = LOG_TEST_STOPPED; }
+
+    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, logType, eventType);
+
+    if (testType == "FUNCTIONAL" || testType == "DURATION") {
+        addTestToChecklist(devId, testType, info.timestamp);  // Pass full QDateTime now
+    }
+}
+
+void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateTime& baseTime)
+{
+    int delay = (testType == "FUNCTIONAL") ? 300 : 43200; // FT 15 min, DT 12 hours
+    QTime checkTime = baseTime.time().addSecs(delay);
+
+    AntennaTestCheck check;
+    check.groupId = realAddr;
+    check.testType = testType;
+    check.checkTime = checkTime;
+
+    antennaTestCheckList.append(check);
+}
+
+void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode)
+{
+    int subnet = (nodeAddress - 1) / 64;
+    int node = (nodeAddress - 1) % 64;
+
+    Device &device = meshDevice[subnet][node];
+
+    int devId = device.getRealAddress();
+    QString serial = device.serialNumberString();
+    QString devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+    AntennaInfo info = getAntennaInfo(db);
+    QString eventType = "Device";
+
+    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
+}
+
+AntennaInfo getAntennaInfo(Database *db)
+{
+    QString date = getLocalDate();
+    QString time = getLocalTime();
+    QDateTime timestamp = QDateTime::fromString(date + " " + time, "yyyy-MM-dd HH:mm:ss");
+    QString netIp = db->getInterfaceParameters().first();
+
+    return { timestamp, netIp };
 }

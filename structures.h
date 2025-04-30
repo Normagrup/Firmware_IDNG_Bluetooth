@@ -48,11 +48,14 @@ typedef struct {
 } LogInfo;
 
 typedef struct {
-    int subnet;
-    int node;
     uint16_t groupId;
     QString testType; // "FUNCTIONAL" or "DURATION"
     QTime checkTime;
 } AntennaTestCheck;
+
+typedef struct {
+    QDateTime timestamp;
+    QString ip;
+} AntennaInfo;
 
 #endif // STRUCTURES_H

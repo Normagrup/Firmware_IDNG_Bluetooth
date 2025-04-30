@@ -19,6 +19,11 @@ void convertUuidStringToByteArray(QString uuidString, uint8_t* UUID);
 uint8_t convertGroupSubStringToArray(QString groupSubString, uint16_t* groupSubArray);
 void setIPConfigInfo(QStringList webServerParts, Database* database);
 void insertLogEvent(Database* database, int devId, QString serialNum, QString devName, QString devIP, QDateTime dateTime, int eventCode, QString eventType);
+void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QString& testType);
+void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateTime& baseTime);
+void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode);
+AntennaInfo getAntennaInfo(Database* db);
+
 int getUUIDIndexOfScanned(QString UUID);
 QString getUUIDAsString(uint8_t UUID[16]);
 
