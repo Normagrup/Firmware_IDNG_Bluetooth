@@ -2,7 +2,7 @@ var socket = new WebSocket("ws://" + window.location.hostname + ":4322");
 var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
-var tablePosition = 0;
+var isStoppingCommission = false;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -124,17 +124,20 @@ function addDeviceToScannedList(value)
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
-    var devices = scannedDevicesList.getElementsByTagName('li');
-    
-    for (var i = 0; i < devices.length; i++) {
-        if (devices[i].textContent === value) { return; }
-    }
+    if(scannedDevicesList) {
+        var devices = scannedDevicesList.getElementsByTagName('li');
 
-    var newScanned = document.createElement('li');
-    newScanned.textContent = value;
-    newScanned.setAttribute('class', 'deviceScanned');
-    newScanned.setAttribute('onclick', 'parent.selectDevice(this)');
-    scannedDevicesList.appendChild(newScanned);
+        // Evitar duplicados
+        for (var i = 0; i < devices.length; i++) {
+            if (devices[i].textContent === value) { return; }
+        }
+
+        var newScanned = document.createElement('li');
+        newScanned.textContent = value;
+        newScanned.setAttribute('class', 'deviceScanned');
+        newScanned.setAttribute('onclick', 'parent.selectDevice(this)');
+        scannedDevicesList.appendChild(newScanned);
+    }
     nodesScanned++;
 
     var popup = iframeDocument.getElementById('popup');
@@ -233,21 +236,27 @@ function addDeviceToNetworkList(value)
     // Si llega la info de un nodo en red y no estamos durante un commissioning, 
     // simplemente se añadirá a networkNodes pero no se eliminará nada de scannedDevices (ya que estará vacía)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
-    var devices = scannedDevicesList.getElementsByTagName('li');
-    var firstDevice = devices[0];
-    if (firstDevice) { firstDevice.remove(); }
+    if(scannedDevicesList) {
+        var devices = scannedDevicesList.getElementsByTagName('li');
+        var firstDevice = devices[0];
+        if (firstDevice) { firstDevice.remove(); }
+    }
 
     var parts = value.split("_");
     var nodeNetAddress = parts[0];
     var serialNumber = parts[1];
+    var counterIncrement = (parts[2] === "true")
     
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
-    var newNode = iframeDocument.createElement('li');
-    newNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
-    newNode.setAttribute('class', 'deviceNetwork');
-    newNode.setAttribute('onclick', 'parent.selectDevice(this)');
-    networkNodesList.appendChild(newNode);
-    nodesAdded++;
+    if(networkNodesList) {
+        var newNode = iframeDocument.createElement('li');
+        newNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
+        newNode.setAttribute('class', 'deviceNetwork');
+        newNode.setAttribute('onclick', 'parent.selectDevice(this)');
+        networkNodesList.appendChild(newNode);
+    }
+
+    if(counterIncrement) { nodesAdded++; }
 
     var popup = iframeDocument.getElementById('popup');
     var labelCommissionNodes = popup.querySelector('label');
@@ -260,9 +269,11 @@ function processDeviceError(value)
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
-    var devices = scannedDevicesList.getElementsByTagName('li');
-    var firstDevice = devices[0];
-    firstDevice.remove();
+    if(scannedDevicesList) {
+        var devices = scannedDevicesList.getElementsByTagName('li');
+        var firstDevice = devices[0];
+        firstDevice.remove();
+    }
     nodesScanned--;
 
     var popup = iframeDocument.getElementById('popup');
@@ -540,33 +551,36 @@ function processGroupInfo(value)
 
 function processGroupInfoWithPOL(value)
 {
-    var parts = value.split("_");
-    var groupAddress = parts[0];
-    var groupName = parts[1];
-    var groupPOL = parts[2];
-
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var tableGroupName = iframeDocument.getElementById("gp" + tablePosition);
-    var tablePowerOnLevel = iframeDocument.getElementById("pl" + tablePosition);
-
-    if(groupName !== "-" && groupPOL !== "-") {
-        tableGroupName.textContent = groupName;
-        tablePowerOnLevel.textContent = groupPOL === "0" ? "Off" : (groupPOL === "254" ? "Max" : "Last Value");
-    }
-    else {
-        tableGroupName.textContent = "-";
-        tablePowerOnLevel.textContent = "-";
-    }
-
     var groupSelector = iframeDocument.getElementById('groupListPowerOnLevel');
-    if(groupSelector)
-    {
-        if(tablePosition == 0) { groupSelector.innerHTML = "<option value='-'> ---- </option>"; }
+    groupSelector.innerHTML = "<option value='-'> ---- </option>";
 
-        // Si lo que llega no es una entrada vacía
-        if(value !== "-_-_-") {
+    var groups = value.split("#");
+
+    for(var i = 0; i < groups.length; i++) {
+        var parts = groups[i].split("_");
+        var groupAddress = parts[0];
+        var groupName = parts[1];
+        var groupPOL = parts[2];
+
+        // Actualizar fila en la tabla
+        var tableGroupName = iframeDocument.getElementById("gp" + i);
+        var tablePowerOnLevel = iframeDocument.getElementById("pl" + i);
+
+        if(groupName !== "-" && groupPOL !== "-") {
+            tableGroupName.textContent = groupName;
+            tablePowerOnLevel.textContent = groupPOL === "0" ? "Off" : (groupPOL === "254" ? "Max" : "Last Value");
+        }
+        else {
+            tableGroupName.textContent = "-";
+            tablePowerOnLevel.textContent = "-";
+        }
+
+        // Añadir elemento al selector de la derecha (Si lo que llega no es una entrada vacía)
+        if(groups[i] != "-_-_-") 
+        {
             var group = iframeDocument.createElement('option');
             group.value = groupAddress;
             group.textContent = groupName;
@@ -574,10 +588,6 @@ function processGroupInfoWithPOL(value)
             groupSelector.appendChild(group);
         }
     }
-
-    // Incremento de la siguiente posición de la tabla a actualizar
-    if(tablePosition == 15) { tablePosition = 0; }
-    else { tablePosition++; }
 }
 
 function processGroupNode(value, included)
@@ -741,6 +751,8 @@ function processEndNodeConfiguration(value)
 
 function stopCommission()
 {
+    isStoppingCommission = true;
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -758,6 +770,8 @@ function stopCommission()
 
 function processEndAutoCommission(value) 
 {
+    isStoppingCommission = false;
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -864,10 +878,16 @@ function processIsCommissionInProgress(value)
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
         var popupHeader = popup.querySelector('h2');
-        popupHeader.textContent = "Automatic commission in progress...";
+        popupHeader.textContent = isStoppingCommission ? "Stopping commissioning..." : "Automatic commission in progress...";
 
         var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
         labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+        var stopButton = iframeDocument.getElementById('stopCommissionButton');
+        if(isStoppingCommission)
+            stopButton.classList.add('button-disabled');
+        else
+            stopButton.classList.remove('button-disabled');
 
         var logCommission = iframeDocument.getElementById('logCommission');
         logCommission.innerHTML = "";
@@ -1500,6 +1520,12 @@ function clearAllData()
 
     sendData("SET_CLEAR_ALL_DATA", "");
 
+    var popup = iframeDocument.getElementById('popup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+
     var clearDataLabel = iframeDocument.getElementById('clearDataLabel');
     clearDataLabel.style.visibility = "visible";
 }
@@ -1669,8 +1695,6 @@ function lineScanningFunction() {
 }
 
 function goToPreviousPage() {
-    if(tablePosition != 0) { return; }
-
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -1687,8 +1711,6 @@ function goToPreviousPage() {
 }
 
 function goToNextPage() {
-    if(tablePosition != 0) { return; }
-
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -1728,4 +1750,33 @@ function setPowerOnLevel(){
 
 function requestDateTime() {
     sendData("GET_DATE_TIME", "");
+}
+
+function syncPOL() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    sendData("SET_SYNC_POL", "");
+
+    setTimeout(function() {
+        var pageLabel = iframeDocument.getElementById("page");
+
+        if(pageLabel) {
+            var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+            var currentPage = parseInt(currentPageStr, 10);
+
+            pageLabel.textContent = "Page: " + currentPage;
+
+            sendData("GET_POWER_ON_LVL", currentPage);
+        }
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 10000);
 }

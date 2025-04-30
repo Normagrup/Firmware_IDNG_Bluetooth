@@ -362,7 +362,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
         value += QString::asprintf("%02X", nodeUUID[i]);
     }
 
-    deviceType = (unsigned char)data[21];
+    deviceType = (unsigned char)data[21] == 0 ? 1 : (unsigned char)data[21]; // Por defecto, tipo 1 (emergencia)
     ratedDuration = (unsigned char)data[22];
     emergencyFeatures = (unsigned char)data[23];
     physicalMinLvl = (unsigned char)data[24];
@@ -463,17 +463,17 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                         qDebug() << "GROUP PAR";
                     }
                 }
-                else {                                  // DEFAULT or UNKNOWN DEV TYPE
+                else {                                  // DEFAULT or UNKNOWN DEV TYPE -> Se mete en emergency
                     if(((j + 1) % 2) != 0) {
-                        timerGroupAddress[1] = 0xC003;
+                        timerGroupAddress[2] = 0xC003;
                         qDebug() << "GROUP IMPAR";
                     }
                     else {
-                        timerGroupAddress[1] = 0xC002;
+                        timerGroupAddress[2] = 0xC002;
                         qDebug() << "GROUP PAR";
                     }
 
-                    timerGroupAddress[2] = 0x0000;
+                    timerGroupAddress[1] = 0xC001;
                 }
                 groupFrameTimer.start(GROUP_FRAME_TIMER_MS);
                 sendUartAddGroup(uartPort, timerGroupAddress);
@@ -503,7 +503,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
                 if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
-                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString();
+                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
                     if (webServer != nullptr) { webServer->sendData(message); }
                 }
                 break;
@@ -943,4 +943,63 @@ void requestMicroDatabase(UartPort* uartPort)
     frame.append(UART_END);                  // 0x03, por ejemplo
 
     uartPort->sendData(frame); 
+}
+
+void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
+{
+    // Se genera un SET con todas las direcciones de los grupos existentes (los 4 por defecto y los creados manualmente)
+    QSet<QString> groupsSet = {"C000", "C001", "C002", "C003"};
+
+    QList<QPair<QString, QString>> groups = database->getGroups();
+    for(QPair<QString, QString> pair : groups)
+        groupsSet.insert(pair.first);
+
+    // Se recorre la estructura de devices para cruzar los grupos y los nodos
+    // Se crea una estructura de pares tal que el primer elemento es un nodo y el segundo es una lista con las addresses de los grupos donde ese nodo es el primero con comunicación
+    crossedGroupAndNodes.clear();
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured() && !device.hasCommunicationFailure()) {
+                for(const QString &groupAddress : QSet<QString>(groupsSet)) {
+                    if(device.isOnGroupSubAddress(groupAddress.toUShort(nullptr, 16))) {
+                        bool existingEntry = false;
+
+                        for(QPair<uint16_t, QStringList> &par : crossedGroupAndNodes) {
+                            if(par.first == device.getRealAddress()) {
+                                par.second.append(groupAddress);
+                                existingEntry = true;
+                                break;
+                            }
+                        }
+
+                        if(!existingEntry) {
+                            crossedGroupAndNodes.append(QPair<uint16_t, QStringList>(device.getRealAddress(), {groupAddress}));
+                        }
+
+                        groupsSet.remove(groupAddress);
+                    }
+                }
+            }
+        }
+    }
+
+    // TODO: Enviar a cada nodo de la estructura la pregunta de su POL, e implementar la respuesta y actualización de cada grupo
+
+    for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
+        qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
+    }
+
+    /**
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(NEW_ITERATION);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+    */
 }

@@ -529,6 +529,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(SLEEP_DALI_TIME_MS);
         sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
     }
+    else if (type == WS_SET_SYNC_POL) {
+        sendUartPOLForUpdate(uartPort, database);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -732,7 +735,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
         uint16_t netAddress = node.first;
         QString serialNumber = node.second;
 
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber;
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber + "_" + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
@@ -843,6 +846,7 @@ void sendGroupNodes(WebServer* webServer, QString groupAddress) {
 }
 
 void sendGroupsWithPOL(WebServer* webServer, Database* database, QString value) {
+    /**
     QStringList groupList = database->getPowerOnLevel(value.toInt());
 
     for (const QString& group : groupList) {
@@ -850,6 +854,13 @@ void sendGroupsWithPOL(WebServer* webServer, Database* database, QString value) 
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
+    */
+
+    QString groups = database->getPowerOnLevel(value.toInt()).join("#");
+
+    QString message = QString(WS_SEND_GROUP_WITH_POL) + "@" + groups;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendTest(WebServer* webServer, Database* database, QString groupAddress)
