@@ -250,13 +250,16 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
     insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, logType, eventType);
 
     if (testType == "FUNCTIONAL" || testType == "DURATION") {
-        addTestToChecklist(devId, testType, info.timestamp);  // Pass full QDateTime now
+        addTestToChecklist(devId, testType, info.timestamp);
+    }
+    if (testType == "STOP"){
+        removeLogTestFromCheckList(devId);
     }
 }
 
 void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateTime& baseTime)
 {
-    int delay = (testType == "FUNCTIONAL") ? 300 : 43200; // FT 15 min, DT 12 hours
+    int delay = (testType == "FUNCTIONAL") ? 900 : 43200; // FT 15 min, DT 12 hours
     QTime checkTime = baseTime.time().addSecs(delay);
 
     AntennaTestCheck check;
@@ -291,4 +294,15 @@ AntennaInfo getAntennaInfo(Database *db)
     QString netIp = db->getInterfaceParameters().first();
 
     return { timestamp, netIp };
+}
+
+void removeLogTestFromCheckList(uint16_t nodeAddress)
+{
+    for (int i = 0; i < antennaTestCheckList.size(); ) {
+        if (antennaTestCheckList[i].groupId == nodeAddress) {
+            antennaTestCheckList.removeAt(i);
+        } else {
+            ++i;
+        }
+    }
 }

@@ -140,8 +140,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             sendUartDelDevice(uartPort, nodeAddress);
 
-            qDebug() << "the value of nodenet single delte: " << nodeNetAddress;
-            // Deleted device added to log
+            // Device to delete added to log
             insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED);
 
             // Eliminar el nodo de la estructura interna
@@ -410,7 +409,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         bool isGroup = nodeNetAddress >= 0xC000;
         logTestRequest(database, nodeNetAddress, isGroup, "FUNCTIONAL");
-        qDebug() << "FUNCTIONAL test added...to checklist";
     }
     else if (type == WS_SET_DURATION_TEST) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -430,7 +428,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         bool isGroup = nodeNetAddress >= 0xC000;
         logTestRequest(database, nodeNetAddress, isGroup, "DURATION");
-        qDebug() << "DURATION test added...to checklist";
     }
 
     else if (type == WS_SET_STOP) {
@@ -451,7 +448,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         bool isGroup = nodeNetAddress >= 0xC000;
         logTestRequest(database, nodeNetAddress, isGroup, "STOP");
-        qDebug() << "Logged stop test";
     }
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);

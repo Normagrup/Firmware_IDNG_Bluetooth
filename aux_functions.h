@@ -23,6 +23,7 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
 void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateTime& baseTime);
 void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode);
 AntennaInfo getAntennaInfo(Database* db);
+void removeLogTestFromCheckList(uint16_t nodeAddress);
 
 int getUUIDIndexOfScanned(QString UUID);
 QString getUUIDAsString(uint8_t UUID[16]);

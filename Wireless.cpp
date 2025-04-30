@@ -143,40 +143,32 @@ sendNewPolling:
                 if (lampNow != lampPrev) {
                     if (lampNow) {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_LAMP_FAILURE, eventType);
-                        qDebug() << "Lamp Fail Detected...";
                     } else {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_LAMP_RECOVERED, eventType);
-                        qDebug() << "Lamp Fail recoverd...";
                     }
                     device.setPrevLampFail(lampNow);
                 }
                 if (batNow != batPrev) {
                     if (batNow) {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_BATTERY_FAILURE, eventType);
-                        qDebug() << "Bat Fail Detected...";
                     } else {
                         insertLogEvent(_database, devId, serailNum, devName,info.ip, info.timestamp, LOG_BATTERY_RECOVERED, eventType);
-                        qDebug() << "Bat Fail  recoverd...";
                     }
                     device.setPrevBatteryFail(batNow);
                 }
                 if (durNow != durPrev) {
                     if (durNow) {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_DURATION_FAILURE, eventType);
-                        qDebug() << "Dur Fail Detected...";
                     } else {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_DURATION_RECOVERED, eventType);
-                        qDebug() << "Dur Fail recoverd...";
                     }
                     device.setPrevDurationFail(durNow);
                 }
                 if (commNow != commPrev) {
                     if (commNow) {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_FAILURE, eventType);
-                        qDebug() << "Com Fail Detected...";
                     } else {
                         insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_RECOVERED, eventType);
-                        qDebug() << "Com Fail  recoverd...";
                     }
                     device.setPrevCommFail(commNow);
                 }
@@ -228,7 +220,7 @@ void Wireless::testTimerHandler()
                     AntennaTestCheck testCheck;
                     testCheck.groupId = devId;
                     testCheck.testType = "FUNCTIONAL";
-                    testCheck.checkTime = info.timestamp.time().addSecs(300); // 15 min for FT;
+                    testCheck.checkTime = info.timestamp.time().addSecs(900); // 15 min for FT;
 
                     antennaTestCheckList.append(testCheck);
                 }
@@ -343,12 +335,10 @@ void Wireless::checkTestResultsHandler()
                         insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
                         insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
                                        failed ? LOG_TEST_FT_FAIL : LOG_TEST_FT_OK, eventType);
-                        qDebug() << "FUNCTIONAL has been done";
                     } else {
                         insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_DURATION, eventType);
                         insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
                                        failed ? LOG_TEST_DT_FAIL : LOG_TEST_DT_OK, eventType);
-                        qDebug() << "Duration has been done";
                     }
                 }
             }
