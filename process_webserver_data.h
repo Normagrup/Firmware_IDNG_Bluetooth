@@ -43,6 +43,7 @@
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
 #define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
+#define WS_SET_SYNC_POL                     "SET_SYNC_POL"
 
 #define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"

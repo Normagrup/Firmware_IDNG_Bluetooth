@@ -71,5 +71,6 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void requestMicroDatabase(UartPort* _uartPort);
+void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 
 #endif // PROCESS_UART_DATA_H
