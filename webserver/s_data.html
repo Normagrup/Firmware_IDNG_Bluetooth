@@ -13,26 +13,10 @@
         <img src="images/background.png">
     </div>
 
-    <div class="popup-overlay" id="popupOverlay"></div>
-    <div class="popup" id="popup">
-        <div class="popup-container">
-            <div class="popup-subcontainer">
-                <label id="confirmDeleteData" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the data? </label>
-                <div class="popup-button-subcontainer">
-                    <button id="deletingDataButton" onclick="parent.clearAllData()"> Confirm </button>
-                </div>
-            </div>
-            
-            <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeManageDataPopup()"> &times; </span>
-            </div>
-        </div>
-    </div>
-
     <div class="wrap-container">
         <div class="update-container">
             <h2> Manage Data </h2>
-            <button onclick="parent.clearAllDataPrev()" style="margin-top: 50px;"> Clear All Data </button>
+            <button onclick="parent.clearAllData()" style="margin-top: 50px;"> Clear All Data </button>
             <label id="clearDataLabel" style="color: #4682b4; visibility: hidden; margin-top: 10px;"> <b> Data has been deleted! </b> </label>
         </div>
     </div>

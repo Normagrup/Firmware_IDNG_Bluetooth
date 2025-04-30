@@ -218,48 +218,6 @@ void Database::initDatabase()
             }
         }
     }
-
-
-
-    /* **************************************************
-     *                                                  *
-     *                   FIXED TEST                     *
-     *                                                  *
-     * **************************************************/
-    query.exec("CREATE TABLE IF NOT EXISTS FixedTest "
-               "(GroupAddress TEXT, "
-               "FunctionalEnable INTEGER, "
-               "DurationEnable INTEGER, "
-               "FunctionalDays TEXT, "
-               "FunctionalTime TEXT, "
-               "DurationPeriodicity TEXT, "
-               "DurationDate TEXT, "
-               "DurationTime TEXT);");
-
-    query.prepare("SELECT * FROM FixedTest");
-
-    if (!query.exec()) { qDebug() << "Error executing SELECT query in FixedTest:" << query.lastError().text(); }
-    else {
-        if (!query.next()) {
-            QStringList groupAddresses = {"C000", "C001", "C002", "C003"};
-
-            query.prepare("INSERT INTO FixedTest (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
-                          "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
-
-            foreach (const QString &groupAddress, groupAddresses) {
-                query.bindValue(":groupAddress", groupAddress);
-                query.bindValue(":functionalEnable", 0);
-                query.bindValue(":durationEnable", 0);
-                query.bindValue(":functionalDays", " ");
-                query.bindValue(":functionalTime", "00:00");
-                query.bindValue(":durationPeriodicity", "0");
-                query.bindValue(":durationDate", "0000-00-00");
-                query.bindValue(":durationTime", "00:00");
-
-                if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedTest:" << query.lastError().text(); }
-            }
-        }
-    }
 }
 
 bool Database::openDatabase()
@@ -380,33 +338,9 @@ void Database::loadNodesFromDatabase()
 void Database::loadTestsFromDatabase()
 {
     QSqlQuery query;
-    if (!query.exec("SELECT * FROM FixedTest")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+    if (!query.exec("SELECT * FROM Test")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
 
     uint8_t testCounter = 0;
-
-    while (query.next() && testCounter < MAX_TEST) {
-        QString groupAddress = query.value("GroupAddress").toString();
-        bool isFunctionalEnable = query.value("FunctionalEnable").toUInt();
-        bool isDurationEnable = query.value("DurationEnable").toUInt();
-        QString functionalDays = query.value("FunctionalDays").toString();
-        QString functionalTime = query.value("FunctionalTime").toString();
-        QString durationPeriodicity = query.value("DurationPeriodicity").toString();
-        QString durationDate = query.value("DurationDate").toString();
-        QString durationTime = query.value("DurationTime").toString();
-
-        tests[testCounter].setGroupAddress(groupAddress);
-        tests[testCounter].setFunctionalEnable(isFunctionalEnable);
-        tests[testCounter].setDurationEnable(isDurationEnable);
-        tests[testCounter].setFunctionalDays(functionalDays);
-        tests[testCounter].setFunctionalTime(functionalTime);
-        tests[testCounter].setDurationPeriodicity(durationPeriodicity);
-        tests[testCounter].setDurationDate(durationDate);
-        tests[testCounter].setDurationTime(durationTime);
-
-        testCounter++;
-    }
-
-    if (!query.exec("SELECT * FROM Test")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
 
     while (query.next() && testCounter < MAX_TEST) {
         QString groupAddress = query.value("GroupAddress").toString();
@@ -651,11 +585,7 @@ QString Database::getTests(QString groupAddress)
 {
     QSqlQuery query;
 
-    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
-        query.prepare("SELECT * FROM FixedTest WHERE GroupAddress = :groupAddress");
-    else
-        query.prepare("SELECT * FROM Test WHERE GroupAddress = :groupAddress");
-
+    query.prepare("SELECT * FROM Test WHERE GroupAddress = :groupAddress");
     query.bindValue(":groupAddress", groupAddress);
 
     if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return ""; }
@@ -671,37 +601,27 @@ QString Database::getTests(QString groupAddress)
         testString = testString + "#" + query.value("DurationTime").toString();
         return testString;
     }
-    else
-    {
-        return "0#0# #00:00#0#0000-00-00#00:00"; // Cadena con todos los datos vacíos
-    }
+
+    return "";
 }
 
 void Database::setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable)
 {
     QSqlQuery query;
 
-    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
-        query.prepare("UPDATE FixedTest SET FunctionalEnable = :isFunctionalEnable, DurationEnable = :isDurationEnable WHERE GroupAddress = :groupAddress");
-    else
-        query.prepare("UPDATE Test SET FunctionalEnable = :isFunctionalEnable, DurationEnable = :isDurationEnable WHERE GroupAddress = :groupAddress");
-
+    query.prepare("UPDATE Test SET FunctionalEnable = :isFunctionalEnable, DurationEnable = :isDurationEnable WHERE GroupAddress = :groupAddress");
     query.bindValue(":isFunctionalEnable", isFunctionalEnable);
     query.bindValue(":isDurationEnable", isDurationEnable);
     query.bindValue(":groupAddress", groupAddress);
 
-    if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); return; }
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
 void Database::setFunctionalTest(QString groupAddress, QString functionalDays, QString functionalTime)
 {
     QSqlQuery query;
 
-    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
-        query.prepare("UPDATE FixedTest SET FunctionalDays = :functionalDays, FunctionalTime = :functionalTime WHERE GroupAddress = :groupAddress");
-    else
-        query.prepare("UPDATE Test SET FunctionalDays = :functionalDays, FunctionalTime = :functionalTime WHERE GroupAddress = :groupAddress");
-
+    query.prepare("UPDATE Test SET FunctionalDays = :functionalDays, FunctionalTime = :functionalTime WHERE GroupAddress = :groupAddress");
     query.bindValue(":functionalDays", functionalDays);
     query.bindValue(":functionalTime", functionalTime);
     query.bindValue(":groupAddress", groupAddress);
@@ -713,11 +633,7 @@ void Database::setDurationTest(QString groupAddress, QString durationPeriodicity
 {
     QSqlQuery query;
 
-    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
-        query.prepare("UPDATE FixedTest SET DurationPeriodicity = :durationPeriodicity, DurationDate = :durationDate, DurationTime = :durationTime WHERE GroupAddress = :groupAddress");
-    else
-        query.prepare("UPDATE Test SET DurationPeriodicity = :durationPeriodicity, DurationDate = :durationDate, DurationTime = :durationTime WHERE GroupAddress = :groupAddress");
-
+    query.prepare("UPDATE Test SET DurationPeriodicity = :durationPeriodicity, DurationDate = :durationDate, DurationTime = :durationTime WHERE GroupAddress = :groupAddress");
     query.bindValue(":durationPeriodicity", durationPeriodicity);
     query.bindValue(":durationDate", durationDate);
     query.bindValue(":durationTime", durationTime);
@@ -952,7 +868,7 @@ QStringList Database::getPowerOnLevel(int page)
         if(i < groupListGeneral.size()) {
             groupListPaged.append(groupListGeneral[i]);
         } else {
-            groupListPaged.append("-_-_-"); // empty entry
+            groupListPaged.append("-_-_-"); // emtpy entry
         }
     }
 

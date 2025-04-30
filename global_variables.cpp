@@ -19,9 +19,6 @@ QTimer groupFrameTimer;
 QTimer addDeviceTimer;
 QTimer confirmAddDeviceTimer;
 QTimer newIterationTimer;
-
-QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
-
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
 ScannedUUID scannedUUIDBackup[20];

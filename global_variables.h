@@ -10,7 +10,7 @@
 
 #define MAX_SUBNET              32
 #define MAX_NODES_SUBNET        64
-#define MAX_TEST                37 // Grupo de Broadcast, 4 grupos por defecto, 32 grupos extra (PROVISIONAL)
+#define MAX_TEST                17
 
 extern WebServerData webServerData;
 extern QString networkIP[4];
@@ -44,7 +44,6 @@ extern QTimer groupFrameTimer;
 extern QTimer addDeviceTimer;
 extern QTimer confirmAddDeviceTimer;
 extern QTimer newIterationTimer;
-extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 
 extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;

@@ -618,27 +618,3 @@ function getDefaultGroupsForSelector()
             "<option value='C002'> Even </option>" +
             "<option value='C003'> Odd </option>";
 }
-
-function clearAllDataPrev()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var popup = iframeDocument.getElementById('popup');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
-}
-
-function closeManageDataPopup()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var popup = iframeDocument.getElementById('popup');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-    
-    if(popup) { popup.style.visibility = "hidden"; }
-    popupOverlay.style.visibility = "hidden";
-}
