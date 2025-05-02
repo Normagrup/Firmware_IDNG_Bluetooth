@@ -1,6 +1,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
+#include <QDir>
 
 #include "Database.h"
 #include "global_variables.h"
@@ -260,6 +261,28 @@ void Database::initDatabase()
             }
         }
     }
+
+
+
+    /* **************************************************
+     *                                                  *
+     *                      LOG                         *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS Log "
+        "(DeviceId INTEGER, "
+        "Serial TEXT, "
+        "Name TEXT, "
+        "IP TEXT, "
+        "Timestamp INTEGER, "
+        "Event INTEGER, "
+        "EventType TEXT);");
+
+    query.prepare("SELECT * FROM Log");
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query in Log:" << query.lastError().text(); }
+    query.exec("CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Log(Timestamp);");
+    query.exec("CREATE INDEX IF NOT EXISTS idx_log_eventType ON Log(EventType);");
 }
 
 bool Database::openDatabase()
@@ -647,6 +670,28 @@ void Database::delGroup(uint16_t realAddress, uint16_t groupAddress)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
+bool Database::deviceIsInGroup(uint16_t realAddress, uint16_t groupAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT GroupSub FROM Nodes WHERE RealAddress = :realAddress");
+    query.bindValue(":realAddress", realAddress);
+
+    if (!query.exec() || !query.next())
+        return false;
+
+    QString groupList = query.value(0).toString();
+    qDebug() << groupList;
+    QStringList groups = groupList.split(",", QString::SkipEmptyParts);
+    qDebug() << groups;
+
+    for (QString g : groups) {
+        if (g.trimmed().toUpper() == QString::number(groupAddress, 16).toUpper()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 QString Database::getTests(QString groupAddress)
 {
     QSqlQuery query;
@@ -900,6 +945,87 @@ void Database::removeTestEntry(QString address)
     query.addBindValue(address);
 
     if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
+}
+
+bool Database::insertLogEvent(const LogInfo log)
+{
+    QSqlQuery query;
+
+    query.prepare("INSERT INTO Log (DeviceId, Serial, Name, IP, Timestamp, Event, EventType) "
+                  "VALUES (:deviceId, :serial, :name, :ip, :timestamp, :event, :eventType)");
+
+    query.bindValue(":deviceId", log.deviceId);
+    query.bindValue(":serial", log.seriailNum);
+    query.bindValue(":name", log.devName);
+    query.bindValue(":ip", log.devIP);
+    query.bindValue(":timestamp", log.timestamp);
+    query.bindValue(":event", log.event);
+    query.bindValue(":eventType", log.eventType);
+
+    if (!query.exec()) { qDebug() << "Error inserting log event:" << query.lastError().text(); }
+
+    return true;
+}
+
+QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, qint64 endDate)
+{
+    QList<QStringList> results;
+    QSqlQuery query;
+    QString queryStr;
+
+    if (type.toLower() == "all") {
+        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE Timestamp BETWEEN :start AND :end";
+        query.prepare(queryStr);
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+    } else {
+        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end";
+        query.prepare(queryStr);
+        query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+    }
+
+    if (!query.exec()) { qDebug() << "Error in getLogData:" << query.lastError().text(); return results; }
+
+    while (query.next()) {
+        QStringList row;
+        row << query.value(0).toString();  
+        row << query.value(1).toString(); 
+        row << query.value(2).toString();  
+        row << query.value(3).toString();  
+        QDateTime dt = QDateTime::fromSecsSinceEpoch(query.value(4).toLongLong());
+        row << dt.toString("yyyy-MM-dd HH:mm:ss"); 
+        row << query.value(5).toString();  
+        row << query.value(6).toString();  
+        results.append(row);
+    }
+    return results;
+}
+
+QList<QStringList> Database::getAllTestLogs()
+{
+    QList<QStringList> results;
+
+    QSqlQuery query;
+    query.prepare("SELECT GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime FROM Test");
+
+    if (!query.exec()) {
+        qDebug() << "Error in getAllTestLogs:" << query.lastError().text();
+        return results;
+    }
+
+    while (query.next()) {
+        QStringList row;
+        for (int i = 0; i < 8; ++i) {
+            row << query.value(i).toString();
+        }
+        results.append(row);
+    }
+
+    return results;
 }
 
 void Database::editGroup(QString address, QString name)

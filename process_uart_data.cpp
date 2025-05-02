@@ -4,6 +4,7 @@
 #include "dali_headers.h"
 #include "time_functions.h"
 #include "global_variables.h"
+#include "log.h"
 
 QByteArray uartBuffer;
 static bool secondBufferRequired = false;
@@ -387,7 +388,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID);
-
+                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED);
                 delay(500);
 
                 /*
@@ -533,7 +534,6 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         isManualAddingDevice = false;
 
         sendConfirmAddingDevice(webServer);
-
         return;
     }
 

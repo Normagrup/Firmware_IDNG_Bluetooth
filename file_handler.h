@@ -4,11 +4,13 @@
 #include <QFile>
 #include <QTextStream>
 #include <QProcess>
+#include "Device.h"
 #include "Database.h"
 
 #define WEB_SERVER_DATA_PATH        "/normagrup/www/webserver.txt"
 #define MAC_ADDRESS_PATH            "/sys/class/net/eth0/address"
 #define INTERFACES_PATH             "/etc/network/interfaces"
+#define LOG_DATA_PATH               "/normagrup/logs/"
 
 void setWebServerData(Database* database);
 
@@ -36,5 +38,6 @@ void setRtcTime(QString time);
 void setLocalDateTime(QStringList dateTime);
 void setAdminPasswordFile(QString adminPassword);
 void setMantenedorPasswordFile(QString mantenedorPassword);
+QString exportLogToCSV(Database *db, const QString &type, QString startDate, QString endDate);
 
 #endif // FILE_HANDLER_H

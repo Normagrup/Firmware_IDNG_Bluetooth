@@ -91,6 +91,7 @@
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
+#define WS_SEND_LOG_DATA                    "LOG_DATA"
 #define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
 
@@ -125,6 +126,7 @@ void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
+void sendLogFile(WebServer* webServer, QString fileDir);
 void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);

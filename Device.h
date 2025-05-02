@@ -54,6 +54,15 @@ public:
     void deleteDevice(void);
 
     bool isOnSubList(uint16_t groupAddress);
+    bool getPrevLampFail() const { return _prevLampFail; }
+    bool getPrevCommFail() const { return _prevCommFail; }
+    bool getPrevBatteryFail() const { return _prevBatteryFail; }
+    bool getPrevDurationFail() const { return _prevDurationFail; }
+
+    void setPrevLampFail(bool value) { _prevLampFail = value; }
+    void setPrevCommFail(bool value) { _prevCommFail = value; }
+    void setPrevBatteryFail(bool value) { _prevBatteryFail = value; }
+    void setPrevDurationFail(bool value) { _prevDurationFail = value; }
 
 private:
     bool _isConfigured;
@@ -69,6 +78,11 @@ private:
     uint8_t _actualLvl;
     uint8_t _emergencyMode;
     uint8_t _emergencyFailureStatus;
+    bool _prevLampFail = false;
+    bool _prevCommFail = false;
+    bool _prevBatteryFail = false;
+    bool _prevDurationFail = false;
+
 };
 
 #endif // DEVICE_H

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSqlDatabase>
+#include "structures.h"
 
 class Database : public QObject
 {
@@ -31,6 +32,7 @@ public:
     void deleteNode(uint16_t nodeAddress);
     void deleteAllNodes(void);
     void delGroup(uint16_t realAddress, uint16_t groupAddress);
+    bool deviceIsInGroup(uint16_t realAddress, uint16_t groupAddress);
 
     QString getTests(QString groupAddress);
     void setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable);
@@ -62,6 +64,10 @@ public:
         uint8_t emergencyFeatures,
         uint8_t physicalMinLvl
     );
+
+    bool insertLogEvent(const LogInfo log);
+    QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
+    QList<QStringList> getAllTestLogs();
 
 signals:
 

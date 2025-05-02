@@ -865,6 +865,14 @@ function processIsConfig(value)
         }
     }
 }
+function processLogData(value){
+    let link = document.createElement("a");
+    link.href = value;
+    link.download = value.split('/').pop();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
 function processIsCommissionInProgress(value)
 {
@@ -996,6 +1004,7 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
+    else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
@@ -1543,9 +1552,20 @@ function getLogs()
 
     var initialDate = new Date(initialDatePicker.value);
     var finalDate = new Date(finalDatePicker.value);
+    var today = new Date();
+    initialDate.setHours(0, 0, 0, 0);
+    finalDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
 
     if (reportListSelected != '-' && initialDatePicker.value && finalDatePicker.value) {
         if (initialDate <= finalDate) {
+            if (finalDate > today) {
+                logErrorLabel.style.color = "#C30101";
+                logErrorLabel.innerHTML = "<b> Final date cannot be in the future! </b>";
+                logErrorLabel.style.visibility = "visible";
+                return;
+            }
+
             var message = reportListSelected + ' ' + initialDatePicker.value + ' ' + finalDatePicker.value
 
             sendData("GET_LOGS", message);
