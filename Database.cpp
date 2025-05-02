@@ -968,4 +968,11 @@ void Database::clearAllData()
     if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
     if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                     "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
+
+    // FixedGroups
+    setPowerOnLevel("C000", 255); setPowerOnLevel("C001", 255); setPowerOnLevel("C002", 255); setPowerOnLevel("C003", 255);
+    // FixedTest
+    setTestEnable("C000", false, false); setTestEnable("C001", false, false); setTestEnable("C002", false, false); setTestEnable("C003", false, false);
+    setFunctionalTest("C000", " ", "00:00"); setFunctionalTest("C001", " ", "00:00"); setFunctionalTest("C002", " ", "00:00"); setFunctionalTest("C003", " ", "00:00");
+    setDurationTest("C000", "0", "0000-00-00", "00:00"); setDurationTest("C001", "0", "0000-00-00", "00:00"); setDurationTest("C002", "0", "0000-00-00", "00:00"); setDurationTest("C003", "0", "0000-00-00", "00:00");
 }
