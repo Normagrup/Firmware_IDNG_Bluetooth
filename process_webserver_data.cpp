@@ -133,9 +133,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         else
         {
-            int subnet = (nodeNetAddress - 1) / 64;
-            int node = (nodeNetAddress - 1) % 64;
-            uint16_t nodeAddress = meshDevice[subnet][node].getRealAddress();
+            uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
             sendUartDelDevice(uartPort, nodeAddress);
@@ -145,7 +143,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             // Eliminar el nodo de la estructura interna
             // TODO: Mover a la confirmación del micro
-            meshDevice[subnet][node].deleteDevice();
+            meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
             database->deleteNode(nodeAddress);
         }
     }
@@ -400,15 +398,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, false, "FUNCTIONAL");
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, true, "FUNCTIONAL");
         }
-
-        bool isGroup = nodeNetAddress >= 0xC000;
-        logTestRequest(database, nodeNetAddress, isGroup, "FUNCTIONAL");
     }
     else if (type == WS_SET_DURATION_TEST) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -419,15 +416,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, false, "DURATION");
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, true, "DURATION");
         }
-
-        bool isGroup = nodeNetAddress >= 0xC000;
-        logTestRequest(database, nodeNetAddress, isGroup, "DURATION");
     }
 
     else if (type == WS_SET_STOP) {
@@ -439,15 +435,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, false, "STOP");
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, true, "STOP");
         }
-
-        bool isGroup = nodeNetAddress >= 0xC000;
-        logTestRequest(database, nodeNetAddress, isGroup, "STOP");
     }
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);

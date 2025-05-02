@@ -865,6 +865,7 @@ function processIsConfig(value)
         }
     }
 }
+
 function processLogData(value){
     let link = document.createElement("a");
     link.href = value;

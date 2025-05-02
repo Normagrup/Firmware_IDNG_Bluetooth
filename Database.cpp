@@ -680,9 +680,7 @@ bool Database::deviceIsInGroup(uint16_t realAddress, uint16_t groupAddress)
         return false;
 
     QString groupList = query.value(0).toString();
-    qDebug() << groupList;
     QStringList groups = groupList.split(",", QString::SkipEmptyParts);
-    qDebug() << groups;
 
     for (QString g : groups) {
         if (g.trimmed().toUpper() == QString::number(groupAddress, 16).toUpper()) {
