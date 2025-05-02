@@ -40,6 +40,12 @@ static QByteArray processUartFrame(QByteArray data)
                     return QByteArray();
                 }
             }
+            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == COMMISSION_TIMEOUT_CODE) {
+                if (data.size() != 4) {
+                    secondBufferRequired = true;
+                    return QByteArray();
+                }
+            }
             else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == CONFIRM_ADD_DEVICE) {
                 if (data.size() != 4) {
                     secondBufferRequired = true;
@@ -165,6 +171,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         addDeviceTimer.start(ADD_DEVICE_TIMER_MS);
                         isCommissioning = true;  // Lock server from accepting new commands
                         sendConfirmStartCommission(webServer); 
+                    break;
+
+                    case COMMISSION_TIMEOUT_CODE:
+                        qDebug() << "COMMISSION TIMEOUT RECEIVED";
+                        sendLogCommissionEntry(webServer, "Commissioning timeout — no response from nodes.");
+                        isCommissioning = false;
                     break;
 
                     case CONFIRM_START_SCAN:

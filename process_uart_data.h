@@ -19,6 +19,7 @@
 
 #define SCAN_DEVICES                    0x01
 #define START_COMMISSION                0x03
+#define COMMISSION_TIMEOUT_CODE         0xF5
 #define NEW_ITERATION                   0x05
 #define CHANGE_RELAY                    0x07
 #define ADD_DEVICE                      0x09
