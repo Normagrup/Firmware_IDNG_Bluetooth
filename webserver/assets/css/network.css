@@ -399,12 +399,12 @@ label {
     background-color: #000;
 }
 
-.line-scanning-container {
+.tree-container {
     margin-left: auto;
     margin-right: 20px;
 }
 
-.line-scanning-container button {
+.tree-container button {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -419,16 +419,8 @@ label {
     transition: background-color 0.3s ease;
 }
   
-.line-scanning-container button:hover {
+.tree-container button:hover {
     background-color: #63e8f0;
-}
-
-#feedbackLineScanning {
-    color: #4682b4;
-    visibility: hidden;
-    opacity: 0;
-    margin-right: 10px;
-    transition: opacity 2s ease-out;
 }
 
 .button-icon {

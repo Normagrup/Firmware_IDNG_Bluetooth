@@ -1686,24 +1686,8 @@ function updateAllDisplayedButtons() {
     });
 }
 
-function lineScanningFunction() {
-    sendData("SET_LINE_SCAN", "");
-
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var feedbackLabel = iframeDocument.getElementById("feedbackLineScanning");
-    
-    feedbackLabel.style.visibility = "visible";
-    feedbackLabel.style.opacity = "1";
-    
-    setTimeout(function(){
-        feedbackLabel.style.opacity = "0";
-        
-        setTimeout(function(){
-            feedbackLabel.style.visibility = "hidden";
-        }, 2000);
-    }, 2000);
+function showTree() {
+    loadPage('arf.html');
 }
 
 function goToPreviousPage() {
