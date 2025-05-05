@@ -38,7 +38,9 @@ void Database::initDatabase()
                "DeviceType INTEGER, "
                "RatedDuration INTEGER, "
                "EmergencyFeatures INTEGER, "
-               "PhysicalMinLvl INTEGER);");
+               "PhysicalMinLvl INTEGER, "
+               "RelayMode INTEGER, "
+               "FatherRealAddress INTEGER);");
 
 
 
@@ -454,7 +456,7 @@ void Database::loadTestsFromDatabase()
     }
 }
 
-void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID)
+void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID, uint16_t fatherRealAddress)
 {
     QString nodeUUIDText;
     for (int8_t i = 15; i >= 0; i--) { nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]); }
@@ -473,11 +475,12 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     if (query.next()) { count = query.value(0).toInt(); }
 
     if (count == 0) {
-        query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid)");
+        query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :fatherRealAddress)");
         query.bindValue(":subnetAddress", subnetAddress);
         query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
         query.bindValue(":realAddress", realAddress);
         query.bindValue(":uuid", nodeUUIDText);
+        query.bindValue(":fatherRealAddress", fatherRealAddress);
 
         if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
     }
@@ -507,15 +510,16 @@ void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
-void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl)
+void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode)
 {
     QSqlQuery query;
-    query.prepare("UPDATE Nodes SET DeviceType = :deviceType, RatedDuration = :ratedDuration, EmergencyFeatures = :emergencyFeatures, PhysicalMinLvl = :physicalMinLvl WHERE RealAddress = :nodeAddress");
+    query.prepare("UPDATE Nodes SET DeviceType = :deviceType, RatedDuration = :ratedDuration, EmergencyFeatures = :emergencyFeatures, PhysicalMinLvl = :physicalMinLvl, RelayMode = :relayMode WHERE RealAddress = :nodeAddress");
     query.bindValue(":deviceType", deviceType);
     query.bindValue(":ratedDuration", ratedDuration * 2);
     query.bindValue(":emergencyFeatures", emergencyFeatures);
     query.bindValue(":physicalMinLvl", physicalMinLvl);
     query.bindValue(":nodeAddress", nodeAddress);
+    query.bindValue(":relayMode", relayMode);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
 }
@@ -541,7 +545,9 @@ void Database::addOrUpdateNode(
     uint8_t deviceType,
     uint8_t ratedDuration,
     uint8_t emergencyFeatures,
-    uint8_t physicalMinLvl
+    uint8_t physicalMinLvl,
+    bool relayMode,
+    uint16_t fatherRealAddress
 )
 {
     // Abre la BD, si no está abierta.
@@ -571,10 +577,10 @@ void Database::addOrUpdateNode(
         query.prepare(
          "INSERT INTO Nodes ("
          "   SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, "
-         "   DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl"
+         "   DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl, RelayMode, FatherRealAddress"
          ") VALUES ("
          "   :subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, "
-         "   :deviceType, :ratedDuration, :emergencyFeatures, :physicalMinLvl"
+         "   :deviceType, :ratedDuration, :emergencyFeatures, :physicalMinLvl, :relayMode, :fatherRealAddress"
          ")"
         );
         qDebug() << "[DB] Insertando nodo nuevo (RealAddress:" << realAddress << ")";
@@ -588,7 +594,9 @@ void Database::addOrUpdateNode(
          "   DeviceType = :deviceType, "
          "   RatedDuration = :ratedDuration, "
          "   EmergencyFeatures = :emergencyFeatures, "
-         "   PhysicalMinLvl = :physicalMinLvl "
+         "   PhysicalMinLvl = :physicalMinLvl, "
+         "   RelayMode = :relayMode, "
+         "   FatherRealAddress = :fatherRealAddress"
          "WHERE RealAddress = :realAddress"
         );
         qDebug() << "[DB] Actualizando nodo existente (RealAddress:" << realAddress << ")";
@@ -604,6 +612,8 @@ void Database::addOrUpdateNode(
     query.bindValue(":ratedDuration",    static_cast<int>(ratedDuration));
     query.bindValue(":emergencyFeatures",static_cast<int>(emergencyFeatures));
     query.bindValue(":physicalMinLvl",   static_cast<int>(physicalMinLvl));
+    query.bindValue(":relayMode",        relayMode);
+    query.bindValue(":fatherRealAddress",fatherRealAddress);
 
     // 4. Ejecutar la sentencia SQL
     if (!query.exec()) {

@@ -408,7 +408,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                     }
                 }
 
-                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl);
+                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
 
                 /*
                 QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(i * 64 + j + 1);

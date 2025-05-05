@@ -23,9 +23,9 @@ public:
     void loadNodesFromDatabase(void);
     void loadTestsFromDatabase(void);
 
-    void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID);
+    void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID, uint16_t fatherRealAddress);
     void setGroup(uint16_t realAddress, uint16_t groupAddress);
-    void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl);
+    void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode);
     void setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value);
 
     bool isNodeInDatabase(uint16_t nodeAddress);
@@ -62,7 +62,9 @@ public:
         uint8_t deviceType,
         uint8_t ratedDuration,
         uint8_t emergencyFeatures,
-        uint8_t physicalMinLvl
+        uint8_t physicalMinLvl,
+        bool relayMode,
+        uint16_t fatherRealAddress
     );
 
     bool insertLogEvent(const LogInfo log);
