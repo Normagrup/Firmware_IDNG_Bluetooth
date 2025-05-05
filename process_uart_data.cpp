@@ -387,7 +387,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
                 netAddress = i * 64 + j + 1;
 
-                database->setNewNode(i, j, address, nodeUUID);
+                database->setNewNode(i, j, address, nodeUUID, 12345);
                 insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED);
                 delay(500);
 
