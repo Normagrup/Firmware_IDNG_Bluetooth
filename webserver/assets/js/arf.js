@@ -178,3 +178,31 @@ function toggle(d) {
     d._children = null;
   }
 }
+
+function searchNode() {
+  const input = document.getElementById("searchInput").value.trim();
+  if (!input) return;
+
+  const path = [];
+
+  function findPath(node, target) {
+    path.push(node);
+    const text = node.name.toLowerCase();
+    if (text.includes(input.toLowerCase())) return true;
+
+    const children = node.children || node._children || [];
+    for (const child of children) {
+      if (findPath(child, target)) return true;
+    }
+
+    path.pop();
+    return false;
+  }
+
+  if (findPath(root, input)) {
+    const names = path.map(n => n.name);
+    document.getElementById("pathResult").textContent = "[ ROOT" + names.join(" ] → [ ") + " ]";
+  } else {
+    document.getElementById("pathResult").textContent = "Not found.";
+  }
+}

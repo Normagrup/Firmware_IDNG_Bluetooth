@@ -37,3 +37,48 @@ path.link {
   stroke: #ccc;
   stroke-width: 1px;
 }
+
+#search-container {
+  text-align: center;
+  margin: 20px 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+#search-container input {
+  padding: 8px 12px;
+  border: 2px solid #4682b4;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 300px;
+  outline: none;
+  color: #4682b4;
+}
+
+#search-container input:focus {
+  border-color: #63e8f0;
+  box-shadow: 0 0 3px #63e8f0;
+}
+
+#search-container button {
+  padding: 8px 16px;
+  margin-left: 10px;
+  border: none;
+  background-color: #4682b4;
+  color: white;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#search-container button:hover {
+  background-color: #63e8f0;
+  color: #fff;
+}
+
+#pathResult {
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 16px;
+  color: #4682b4;
+}
