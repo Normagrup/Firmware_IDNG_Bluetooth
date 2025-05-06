@@ -1,8 +1,14 @@
 #include <QDebug>
 #include <QRegularExpression>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDir>
+#include <QDate>
+
 
 #include "file_handler.h"
 #include "global_variables.h"
+#include "Device.h"
 
 void setWebServerData(Database* database)
 {
@@ -373,4 +379,83 @@ void setMantenedorPasswordFile(QString mantenedorPassword)
         for (const QString& line : webServerLines) { webServerOutput << line << endl; }
         webServerFile.close();
     }
+}
+
+QString exportLogToCSV(Database *db, const QString &type, QString startDate, QString endDate)
+{
+    QDate startQDate = QDate::fromString(startDate, "yyyy-MM-dd");
+    QDate endQDate = QDate::fromString(endDate, "yyyy-MM-dd");
+
+    if (!startQDate.isValid() || !endQDate.isValid()) { qDebug() << "Invalid date format!"; return ""; }
+
+    QDateTime startDT(startQDate, QTime(0, 0, 0));
+    QDateTime endDT(endQDate, QTime(23, 59, 59));
+
+    qint64 start = startDT.toSecsSinceEpoch();
+    qint64 end = endDT.toSecsSinceEpoch();
+
+    QList<QStringList> logs = db->getLogEvent(type, start, end);
+
+    QString outputFileName = type + "_report_" + startDate + "_to_" + endDate + ".csv";
+    QString filePath = QString(LOG_DATA_PATH) + outputFileName;
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) { qDebug() << "Failed to open log file"; return ""; }
+
+    QTextStream out(&file);
+    out << "DeviceId;Serial;Name;IP;DateTime;Event;EventType\n";
+    for (const QStringList &row : logs) {
+        out << row.join(";") << ";\n";
+    }
+    file.close();
+    return outputFileName;
+}
+
+void buildJsonTree()
+{
+    QJsonObject root = buildJsonTreeRecursively(1); // RealAddress 1 = raíz
+    QJsonDocument doc(root);
+
+    QFile file(TREE_DATA_PATH);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(doc.toJson(QJsonDocument::Indented));
+        file.close();
+    } else {
+        qWarning() << "No se pudo escribir el JSON:" << file.errorString();
+    }
+}
+
+QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
+{
+    QString name;
+    if(realAddress != 1) // La raíz no tiene nombre (no es un nodo como tal, es la antena)
+    {
+        const NodeInfo &node = nodesByRealAddress[realAddress];
+        name = QString("Node %1 - %2")
+                           .arg(node.subnetAddress * 16 + node.nodeSubnetAddress + 1)
+                           .arg(node.serialNumber);
+    }
+    else
+    {
+        name = " ";
+    }
+
+    QJsonObject obj;
+    obj["name"] = name;
+
+    QList<uint16_t> children = childrenMap.values(realAddress);
+
+    if (!children.isEmpty()) {
+        obj["type"] = "folder";
+        QJsonArray childrenArray;
+
+        for (int childRealAddress : children) {
+            childrenArray.append(buildJsonTreeRecursively(childRealAddress));
+        }
+
+        obj["children"] = childrenArray;
+    } else {
+        obj["type"] = "url";
+    }
+
+    return obj;
 }

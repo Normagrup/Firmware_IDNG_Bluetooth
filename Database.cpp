@@ -1,6 +1,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
+#include <QDir>
 
 #include "Database.h"
 #include "global_variables.h"
@@ -37,7 +38,9 @@ void Database::initDatabase()
                "DeviceType INTEGER, "
                "RatedDuration INTEGER, "
                "EmergencyFeatures INTEGER, "
-               "PhysicalMinLvl INTEGER);");
+               "PhysicalMinLvl INTEGER, "
+               "RelayMode INTEGER, "
+               "FatherRealAddress INTEGER);");
 
 
 
@@ -218,6 +221,70 @@ void Database::initDatabase()
             }
         }
     }
+
+
+
+    /* **************************************************
+     *                                                  *
+     *                   FIXED TEST                     *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS FixedTest "
+               "(GroupAddress TEXT, "
+               "FunctionalEnable INTEGER, "
+               "DurationEnable INTEGER, "
+               "FunctionalDays TEXT, "
+               "FunctionalTime TEXT, "
+               "DurationPeriodicity TEXT, "
+               "DurationDate TEXT, "
+               "DurationTime TEXT);");
+
+    query.prepare("SELECT * FROM FixedTest");
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query in FixedTest:" << query.lastError().text(); }
+    else {
+        if (!query.next()) {
+            QStringList groupAddresses = {"C000", "C001", "C002", "C003"};
+
+            query.prepare("INSERT INTO FixedTest (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                          "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
+
+            foreach (const QString &groupAddress, groupAddresses) {
+                query.bindValue(":groupAddress", groupAddress);
+                query.bindValue(":functionalEnable", 0);
+                query.bindValue(":durationEnable", 0);
+                query.bindValue(":functionalDays", " ");
+                query.bindValue(":functionalTime", "00:00");
+                query.bindValue(":durationPeriodicity", "0");
+                query.bindValue(":durationDate", "0000-00-00");
+                query.bindValue(":durationTime", "00:00");
+
+                if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedTest:" << query.lastError().text(); }
+            }
+        }
+    }
+
+
+
+    /* **************************************************
+     *                                                  *
+     *                      LOG                         *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS Log "
+        "(DeviceId INTEGER, "
+        "Serial TEXT, "
+        "Name TEXT, "
+        "IP TEXT, "
+        "Timestamp INTEGER, "
+        "Event INTEGER, "
+        "EventType TEXT);");
+
+    query.prepare("SELECT * FROM Log");
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query in Log:" << query.lastError().text(); }
+    query.exec("CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Log(Timestamp);");
+    query.exec("CREATE INDEX IF NOT EXISTS idx_log_eventType ON Log(EventType);");
 }
 
 bool Database::openDatabase()
@@ -338,7 +405,7 @@ void Database::loadNodesFromDatabase()
 void Database::loadTestsFromDatabase()
 {
     QSqlQuery query;
-    if (!query.exec("SELECT * FROM Test")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+    if (!query.exec("SELECT * FROM FixedTest")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
 
     uint8_t testCounter = 0;
 
@@ -363,9 +430,33 @@ void Database::loadTestsFromDatabase()
 
         testCounter++;
     }
+
+    if (!query.exec("SELECT * FROM Test")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next() && testCounter < MAX_TEST) {
+        QString groupAddress = query.value("GroupAddress").toString();
+        bool isFunctionalEnable = query.value("FunctionalEnable").toUInt();
+        bool isDurationEnable = query.value("DurationEnable").toUInt();
+        QString functionalDays = query.value("FunctionalDays").toString();
+        QString functionalTime = query.value("FunctionalTime").toString();
+        QString durationPeriodicity = query.value("DurationPeriodicity").toString();
+        QString durationDate = query.value("DurationDate").toString();
+        QString durationTime = query.value("DurationTime").toString();
+
+        tests[testCounter].setGroupAddress(groupAddress);
+        tests[testCounter].setFunctionalEnable(isFunctionalEnable);
+        tests[testCounter].setDurationEnable(isDurationEnable);
+        tests[testCounter].setFunctionalDays(functionalDays);
+        tests[testCounter].setFunctionalTime(functionalTime);
+        tests[testCounter].setDurationPeriodicity(durationPeriodicity);
+        tests[testCounter].setDurationDate(durationDate);
+        tests[testCounter].setDurationTime(durationTime);
+
+        testCounter++;
+    }
 }
 
-void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID)
+void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID, uint16_t fatherRealAddress)
 {
     QString nodeUUIDText;
     for (int8_t i = 15; i >= 0; i--) { nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]); }
@@ -384,10 +475,10 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     if (query.next()) { count = query.value(0).toInt(); }
 
     if (count == 0) {
-        query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub)");
+        query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, :fatherRealAddress)");
     }
     else {
-        query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress, RealAddress = :realAddress, GroupSub = :groupSub WHERE UUID = :uuid");
+        query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress, RealAddress = :realAddress, GroupSub = :groupSub, FatherRealAddress = :fatherRealAddress WHERE UUID = :uuid");
     }
 
     query.bindValue(":subnetAddress", subnetAddress);
@@ -395,6 +486,7 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     query.bindValue(":realAddress", realAddress);
     query.bindValue(":uuid", nodeUUIDText);
     query.bindValue(":groupSub", "");
+    query.bindValue(":fatherRealAddress", fatherRealAddress);
 
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }
@@ -423,15 +515,16 @@ void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
-void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl)
+void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode)
 {
     QSqlQuery query;
-    query.prepare("UPDATE Nodes SET DeviceType = :deviceType, RatedDuration = :ratedDuration, EmergencyFeatures = :emergencyFeatures, PhysicalMinLvl = :physicalMinLvl WHERE RealAddress = :nodeAddress");
+    query.prepare("UPDATE Nodes SET DeviceType = :deviceType, RatedDuration = :ratedDuration, EmergencyFeatures = :emergencyFeatures, PhysicalMinLvl = :physicalMinLvl, RelayMode = :relayMode WHERE RealAddress = :nodeAddress");
     query.bindValue(":deviceType", deviceType);
     query.bindValue(":ratedDuration", ratedDuration * 2);
     query.bindValue(":emergencyFeatures", emergencyFeatures);
     query.bindValue(":physicalMinLvl", physicalMinLvl);
     query.bindValue(":nodeAddress", nodeAddress);
+    query.bindValue(":relayMode", relayMode);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
 }
@@ -457,7 +550,9 @@ void Database::addOrUpdateNode(
     uint8_t deviceType,
     uint8_t ratedDuration,
     uint8_t emergencyFeatures,
-    uint8_t physicalMinLvl
+    uint8_t physicalMinLvl,
+    bool relayMode,
+    uint16_t fatherRealAddress
 )
 {
     // Abre la BD, si no está abierta.
@@ -487,10 +582,10 @@ void Database::addOrUpdateNode(
         query.prepare(
          "INSERT INTO Nodes ("
          "   SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, "
-         "   DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl"
+         "   DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl, RelayMode, FatherRealAddress"
          ") VALUES ("
          "   :subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, "
-         "   :deviceType, :ratedDuration, :emergencyFeatures, :physicalMinLvl"
+         "   :deviceType, :ratedDuration, :emergencyFeatures, :physicalMinLvl, :relayMode, :fatherRealAddress"
          ")"
         );
         qDebug() << "[DB] Insertando nodo nuevo (RealAddress:" << realAddress << ")";
@@ -504,7 +599,9 @@ void Database::addOrUpdateNode(
          "   DeviceType = :deviceType, "
          "   RatedDuration = :ratedDuration, "
          "   EmergencyFeatures = :emergencyFeatures, "
-         "   PhysicalMinLvl = :physicalMinLvl "
+         "   PhysicalMinLvl = :physicalMinLvl, "
+         "   RelayMode = :relayMode, "
+         "   FatherRealAddress = :fatherRealAddress"
          "WHERE RealAddress = :realAddress"
         );
         qDebug() << "[DB] Actualizando nodo existente (RealAddress:" << realAddress << ")";
@@ -520,6 +617,8 @@ void Database::addOrUpdateNode(
     query.bindValue(":ratedDuration",    static_cast<int>(ratedDuration));
     query.bindValue(":emergencyFeatures",static_cast<int>(emergencyFeatures));
     query.bindValue(":physicalMinLvl",   static_cast<int>(physicalMinLvl));
+    query.bindValue(":relayMode",        relayMode);
+    query.bindValue(":fatherRealAddress",fatherRealAddress);
 
     // 4. Ejecutar la sentencia SQL
     if (!query.exec()) {
@@ -586,11 +685,35 @@ void Database::delGroup(uint16_t realAddress, uint16_t groupAddress)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
+bool Database::deviceIsInGroup(uint16_t realAddress, uint16_t groupAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT GroupSub FROM Nodes WHERE RealAddress = :realAddress");
+    query.bindValue(":realAddress", realAddress);
+
+    if (!query.exec() || !query.next())
+        return false;
+
+    QString groupList = query.value(0).toString();
+    QStringList groups = groupList.split(",", QString::SkipEmptyParts);
+
+    for (QString g : groups) {
+        if (g.trimmed().toUpper() == QString::number(groupAddress, 16).toUpper()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 QString Database::getTests(QString groupAddress)
 {
     QSqlQuery query;
 
-    query.prepare("SELECT * FROM Test WHERE GroupAddress = :groupAddress");
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("SELECT * FROM FixedTest WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("SELECT * FROM Test WHERE GroupAddress = :groupAddress");
+
     query.bindValue(":groupAddress", groupAddress);
 
     if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return ""; }
@@ -606,27 +729,37 @@ QString Database::getTests(QString groupAddress)
         testString = testString + "#" + query.value("DurationTime").toString();
         return testString;
     }
-
-    return "";
+    else
+    {
+        return "0#0# #00:00#0#0000-00-00#00:00"; // Cadena con todos los datos vacíos
+    }
 }
 
 void Database::setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable)
 {
     QSqlQuery query;
 
-    query.prepare("UPDATE Test SET FunctionalEnable = :isFunctionalEnable, DurationEnable = :isDurationEnable WHERE GroupAddress = :groupAddress");
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("UPDATE FixedTest SET FunctionalEnable = :isFunctionalEnable, DurationEnable = :isDurationEnable WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("UPDATE Test SET FunctionalEnable = :isFunctionalEnable, DurationEnable = :isDurationEnable WHERE GroupAddress = :groupAddress");
+
     query.bindValue(":isFunctionalEnable", isFunctionalEnable);
     query.bindValue(":isDurationEnable", isDurationEnable);
     query.bindValue(":groupAddress", groupAddress);
 
-    if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); return; }
 }
 
 void Database::setFunctionalTest(QString groupAddress, QString functionalDays, QString functionalTime)
 {
     QSqlQuery query;
 
-    query.prepare("UPDATE Test SET FunctionalDays = :functionalDays, FunctionalTime = :functionalTime WHERE GroupAddress = :groupAddress");
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("UPDATE FixedTest SET FunctionalDays = :functionalDays, FunctionalTime = :functionalTime WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("UPDATE Test SET FunctionalDays = :functionalDays, FunctionalTime = :functionalTime WHERE GroupAddress = :groupAddress");
+
     query.bindValue(":functionalDays", functionalDays);
     query.bindValue(":functionalTime", functionalTime);
     query.bindValue(":groupAddress", groupAddress);
@@ -638,7 +771,11 @@ void Database::setDurationTest(QString groupAddress, QString durationPeriodicity
 {
     QSqlQuery query;
 
-    query.prepare("UPDATE Test SET DurationPeriodicity = :durationPeriodicity, DurationDate = :durationDate, DurationTime = :durationTime WHERE GroupAddress = :groupAddress");
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("UPDATE FixedTest SET DurationPeriodicity = :durationPeriodicity, DurationDate = :durationDate, DurationTime = :durationTime WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("UPDATE Test SET DurationPeriodicity = :durationPeriodicity, DurationDate = :durationDate, DurationTime = :durationTime WHERE GroupAddress = :groupAddress");
+
     query.bindValue(":durationPeriodicity", durationPeriodicity);
     query.bindValue(":durationDate", durationDate);
     query.bindValue(":durationTime", durationTime);
@@ -823,6 +960,108 @@ void Database::removeTestEntry(QString address)
     if (!query.exec()) { qDebug() << "Error deleting test with address" << address << ":" << query.lastError().text(); }
 }
 
+bool Database::insertLogEvent(const LogInfo log)
+{
+    QSqlQuery query;
+
+    query.prepare("INSERT INTO Log (DeviceId, Serial, Name, IP, Timestamp, Event, EventType) "
+                  "VALUES (:deviceId, :serial, :name, :ip, :timestamp, :event, :eventType)");
+
+    query.bindValue(":deviceId", log.deviceId);
+    query.bindValue(":serial", log.seriailNum);
+    query.bindValue(":name", log.devName);
+    query.bindValue(":ip", log.devIP);
+    query.bindValue(":timestamp", log.timestamp);
+    query.bindValue(":event", log.event);
+    query.bindValue(":eventType", log.eventType);
+
+    if (!query.exec()) { qDebug() << "Error inserting log event:" << query.lastError().text(); }
+
+    return true;
+}
+
+QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, qint64 endDate)
+{
+    QList<QStringList> results;
+    QSqlQuery query;
+    QString queryStr;
+
+    if (type.toLower() == "all") {
+        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE Timestamp BETWEEN :start AND :end";
+        query.prepare(queryStr);
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+    } else {
+        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end";
+        query.prepare(queryStr);
+        query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+    }
+
+    if (!query.exec()) { qDebug() << "Error in getLogData:" << query.lastError().text(); return results; }
+
+    while (query.next()) {
+        QStringList row;
+        row << query.value(0).toString();  
+        row << query.value(1).toString(); 
+        row << query.value(2).toString();  
+        row << query.value(3).toString();  
+        QDateTime dt = QDateTime::fromSecsSinceEpoch(query.value(4).toLongLong());
+        row << dt.toString("yyyy-MM-dd HH:mm:ss"); 
+        row << query.value(5).toString();  
+        row << query.value(6).toString();  
+        results.append(row);
+    }
+    return results;
+}
+
+QList<QStringList> Database::getAllTestLogs()
+{
+    QList<QStringList> results;
+
+    QSqlQuery query;
+    query.prepare("SELECT GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime FROM Test");
+
+    if (!query.exec()) {
+        qDebug() << "Error in getAllTestLogs:" << query.lastError().text();
+        return results;
+    }
+
+    while (query.next()) {
+        QStringList row;
+        for (int i = 0; i < 8; ++i) {
+            row << query.value(i).toString();
+        }
+        results.append(row);
+    }
+
+    return results;
+}
+
+void Database::readNodesForTree()
+{
+    nodesByRealAddress = {};
+    childrenMap = {};
+
+    QSqlQuery query("SELECT SubnetAddress, NodeSubnetAddress, RealAddress, UUID, FatherRealAddress FROM Nodes");
+
+    while (query.next()) {
+        NodeInfo node;
+        node.subnetAddress = static_cast<uint8_t>(query.value(0).toInt());
+        node.nodeSubnetAddress = static_cast<uint8_t>(query.value(1).toInt());
+        node.realAddress = static_cast<uint16_t>(query.value(2).toInt());
+        QString nums = query.value(3).toString().right(8);
+        node.serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
+        node.fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
+
+        nodesByRealAddress[node.realAddress] = node;
+        childrenMap.insert(node.fatherRealAddress, node.realAddress);
+    }
+}
+
 void Database::editGroup(QString address, QString name)
 {
     QSqlQuery query;
@@ -873,7 +1112,7 @@ QStringList Database::getPowerOnLevel(int page)
         if(i < groupListGeneral.size()) {
             groupListPaged.append(groupListGeneral[i]);
         } else {
-            groupListPaged.append("-_-_-"); // emtpy entry
+            groupListPaged.append("-_-_-"); // empty entry
         }
     }
 
@@ -889,4 +1128,11 @@ void Database::clearAllData()
     if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
     if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                     "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
+
+    // FixedGroups
+    setPowerOnLevel("C000", 255); setPowerOnLevel("C001", 255); setPowerOnLevel("C002", 255); setPowerOnLevel("C003", 255);
+    // FixedTest
+    setTestEnable("C000", false, false); setTestEnable("C001", false, false); setTestEnable("C002", false, false); setTestEnable("C003", false, false);
+    setFunctionalTest("C000", " ", "00:00"); setFunctionalTest("C001", " ", "00:00"); setFunctionalTest("C002", " ", "00:00"); setFunctionalTest("C003", " ", "00:00");
+    setDurationTest("C000", "0", "0000-00-00", "00:00"); setDurationTest("C001", "0", "0000-00-00", "00:00"); setDurationTest("C002", "0", "0000-00-00", "00:00"); setDurationTest("C003", "0", "0000-00-00", "00:00");
 }

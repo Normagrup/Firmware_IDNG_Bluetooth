@@ -73,6 +73,12 @@
             </div>
         </div>
     </div>
+    <div class="popupTree" id="popupTree">
+        <h2> Loading tree... </h2>
+        <br>
+        <br>
+        <div class="loader"></div>
+    </div>
 
     <div class="wrap-container">
         <div class="wrap-network-container">
@@ -109,44 +115,43 @@
                 <div class="range-container">
                     <label style="margin: 0px 20px;"> Select node address range: </label>
                     <select id="addressList" title="Select range of address" onchange="parent.changeAddress()">
-                        <option value="1"> Subnet 1: 1-64 </option>
-                        <option value="2"> Subnet 2: 65-128 </option>
-                        <option value="3"> Subnet 3: 129-192 </option>
-                        <option value="4"> Subnet 4: 193-256 </option>
-                        <option value="5"> Subnet 5: 257-320 </option>
-                        <option value="6"> Subnet 6: 321-384 </option>
-                        <option value="7"> Subnet 7: 385-448 </option>
-                        <option value="8"> Subnet 8: 449-512 </option>
-                        <option value="9"> Subnet 9: 513-576 </option>
-                        <option value="10"> Subnet 10: 577-640 </option>
-                        <option value="11"> Subnet 11: 641-704 </option>
-                        <option value="12"> Subnet 12: 705-768 </option>
-                        <option value="13"> Subnet 13: 769-832 </option>
-                        <option value="14"> Subnet 14: 833-896 </option>
-                        <option value="15"> Subnet 15: 897-960 </option>
-                        <option value="16"> Subnet 16: 961-1024 </option>
-                        <option value="17"> Subnet 17: 1025-1088 </option>
-                        <option value="18"> Subnet 18: 1089-1152 </option>
-                        <option value="19"> Subnet 19: 1153-1216 </option>
-                        <option value="10"> Subnet 10: 1217-1280 </option>
-                        <option value="21"> Subnet 21: 1281-1344 </option>
-                        <option value="22"> Subnet 22: 1345-1408 </option>
-                        <option value="23"> Subnet 23: 1409-1472 </option>
-                        <option value="24"> Subnet 24: 1473-1536 </option>
-                        <option value="25"> Subnet 25: 1537-1600 </option>
-                        <option value="26"> Subnet 26: 1601-1664 </option>
-                        <option value="27"> Subnet 27: 1665-1728 </option>
-                        <option value="28"> Subnet 28: 1729-1792 </option>
-                        <option value="29"> Subnet 29: 1793-1856 </option>
-                        <option value="20"> Subnet 20: 1857-1920 </option>
-                        <option value="31"> Subnet 31: 1921-1984 </option>
-                        <option value="32"> Subnet 32: 1985-2048 </option>
+                        <option value="1"> Part 1: 1-64 </option>
+                        <option value="2"> Part 2: 65-128 </option>
+                        <option value="3"> Part 3: 129-192 </option>
+                        <option value="4"> Part 4: 193-256 </option>
+                        <option value="5"> Part 5: 257-320 </option>
+                        <option value="6"> Part 6: 321-384 </option>
+                        <option value="7"> Part 7: 385-448 </option>
+                        <option value="8"> Part 8: 449-512 </option>
+                        <option value="9"> Part 9: 513-576 </option>
+                        <option value="10"> Part 10: 577-640 </option>
+                        <option value="11"> Part 11: 641-704 </option>
+                        <option value="12"> Part 12: 705-768 </option>
+                        <option value="13"> Part 13: 769-832 </option>
+                        <option value="14"> Part 14: 833-896 </option>
+                        <option value="15"> Part 15: 897-960 </option>
+                        <option value="16"> Part 16: 961-1024 </option>
+                        <option value="17"> Part 17: 1025-1088 </option>
+                        <option value="18"> Part 18: 1089-1152 </option>
+                        <option value="19"> Part 19: 1153-1216 </option>
+                        <option value="10"> Part 10: 1217-1280 </option>
+                        <option value="21"> Part 21: 1281-1344 </option>
+                        <option value="22"> Part 22: 1345-1408 </option>
+                        <option value="23"> Part 23: 1409-1472 </option>
+                        <option value="24"> Part 24: 1473-1536 </option>
+                        <option value="25"> Part 25: 1537-1600 </option>
+                        <option value="26"> Part 26: 1601-1664 </option>
+                        <option value="27"> Part 27: 1665-1728 </option>
+                        <option value="28"> Part 28: 1729-1792 </option>
+                        <option value="29"> Part 29: 1793-1856 </option>
+                        <option value="20"> Part 20: 1857-1920 </option>
+                        <option value="31"> Part 31: 1921-1984 </option>
+                        <option value="32"> Part 32: 1985-2048 </option>
                     </select>
-                    <div class="line-scanning-container">
-                        <label id="feedbackLineScanning" style="color: #4682b4; visibility: hidden; margin-right: 10px;"> <b> Processing order... </b> </label>
-                        <button id="lineScanningButton" onclick="parent.lineScanningFunction()">
-                            <img src="images/lineScanning.png" alt="Refresh" class="button-icon">
-                            Line Scanning
+                    <div class="tree-container">
+                        <button id="showTree" onclick="parent.showTree()">
+                            <img src="images/tree.png" alt="Tree" class="button-icon">
+                            Show tree
                         </button>
                     </div>
                 </div>

@@ -24,10 +24,14 @@ public:
 private slots:
     void pollingTimerHandler(void);
     void testTimerHandler(void);
+    void checkTestResultsHandler(void);
     void groupFrameTimerHandler(void);
     void addDeviceTimerHandler(void);
     void confirmAddDeviceTimerHandler(void);
     void newIterationTimerHandler(void);
+
+    void updateLogsByPollings(Device &device);
+    void updateLogsByTests(uint8_t i, uint8_t code);
 
 signals:
 

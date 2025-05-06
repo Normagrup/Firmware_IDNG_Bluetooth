@@ -1,0 +1,39 @@
+body {
+  background-color: #ffffff;
+  font-size: 14px;
+  font-family: "Helvetica Neue", Helvetica;
+}
+
+#div1 {
+  margin: 0 auto;
+  position: relative;
+}
+
+#div2 {
+  font-size: 40px;
+  font-weight: bold;
+  top: 20px;
+  text-align: center;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  cursor: pointer;
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font-size: 12px;
+  fill: rgb(0, 0, 0);
+}
+
+path.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1px;
+}

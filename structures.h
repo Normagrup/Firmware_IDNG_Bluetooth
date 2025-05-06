@@ -2,6 +2,7 @@
 #define STRUCTURES_H
 
 #include <QString>
+#include <QDateTime>
 
 typedef struct {
     QString networkIP;
@@ -35,5 +36,34 @@ typedef struct {
     bool isRelayNode;
     bool isChangeRelayConfirmed;
 } CommissionData;
+
+typedef struct {
+    int deviceId;
+    QString seriailNum;
+    QString devName;
+    QString devIP;
+    qint64 timestamp;
+    int event;
+    QString eventType;
+} LogInfo;
+
+typedef struct {
+    uint16_t groupId;
+    QString testType; // "FUNCTIONAL" or "DURATION"
+    QTime checkTime;
+} AntennaTestCheck;
+
+typedef struct {
+    QDateTime timestamp;
+    QString ip;
+} AntennaInfo;
+
+typedef struct {
+    uint8_t subnetAddress;
+    uint8_t nodeSubnetAddress;
+    uint16_t realAddress;
+    uint16_t fatherRealAddress;
+    QString serialNumber;
+} NodeInfo;
 
 #endif // STRUCTURES_H

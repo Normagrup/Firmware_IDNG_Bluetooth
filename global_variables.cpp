@@ -10,15 +10,21 @@ Device meshDevice[MAX_SUBNET][MAX_NODES_SUBNET];
 //ScannedUUID scannedUUID[MAX_SUBNET * MAX_NODES_SUBNET] = { {nullptr, 0} };
 Pollings polling;
 Tests tests[MAX_TEST];
+QList<AntennaTestCheck> antennaTestCheckList;
 
 bool isCommissioning = false; // logic to prevent new commands
+bool logsSavedToday = false;
 
 QTimer pollingTimer;
+QTimer testResultCheckTimer;
 QTimer testTimer;
 QTimer groupFrameTimer;
 QTimer addDeviceTimer;
 QTimer confirmAddDeviceTimer;
 QTimer newIterationTimer;
+
+QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
+
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
 ScannedUUID scannedUUIDBackup[20];
@@ -37,4 +43,6 @@ QStringList scannedDevicesMessages;
 bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;
-bool userIsLoggedIn;
+
+QMap<uint16_t, NodeInfo> nodesByRealAddress;
+QMultiMap<uint16_t, uint16_t> childrenMap;

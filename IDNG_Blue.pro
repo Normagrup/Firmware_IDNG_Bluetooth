@@ -51,6 +51,7 @@ HEADERS += \
     frametype3_functions.h \
     frametype4_functions.h \
     global_variables.h \
+    log.h \
     process_eth_data.h \
     process_uart_data.h \
     process_webserver_data.h \

@@ -22,4 +22,6 @@ function loadPage(page)
 {
 	var frame = window.top.document.getElementById("mainframe");
 	frame.src = page;
+
+	requestDateTime();
 }

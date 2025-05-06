@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSqlDatabase>
+#include "structures.h"
 
 class Database : public QObject
 {
@@ -22,15 +23,16 @@ public:
     void loadNodesFromDatabase(void);
     void loadTestsFromDatabase(void);
 
-    void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID);
+    void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID, uint16_t fatherRealAddress);
     void setGroup(uint16_t realAddress, uint16_t groupAddress);
-    void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl);
+    void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode);
     void setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value);
 
     bool isNodeInDatabase(uint16_t nodeAddress);
     void deleteNode(uint16_t nodeAddress);
     void deleteAllNodes(void);
     void delGroup(uint16_t realAddress, uint16_t groupAddress);
+    bool deviceIsInGroup(uint16_t realAddress, uint16_t groupAddress);
 
     QString getTests(QString groupAddress);
     void setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable);
@@ -60,8 +62,16 @@ public:
         uint8_t deviceType,
         uint8_t ratedDuration,
         uint8_t emergencyFeatures,
-        uint8_t physicalMinLvl
+        uint8_t physicalMinLvl,
+        bool relayMode,
+        uint16_t fatherRealAddress
     );
+
+    bool insertLogEvent(const LogInfo log);
+    QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
+    QList<QStringList> getAllTestLogs();
+
+    void readNodesForTree();
 
 signals:
 

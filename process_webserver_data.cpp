@@ -5,6 +5,7 @@
 #include "dali_headers.h"
 #include "time_functions.h"
 #include "file_handler.h"
+#include "log.h"
 #include <QThread>
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database)
@@ -20,7 +21,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     if (type == WS_SET_LOG_IN) {
         uint8_t loginInfo = database->verifyLoginParameters(value);
         sendLoginInfo(webServer, loginInfo);
-        userIsLoggedIn = true;
     }
     else if (type == WS_SET_REBOOT_DEVICE) {
         rebootDevice();
@@ -122,7 +122,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             // TODO: Mover a la confirmación del micro
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
-                    if(meshDevice[i][j].getIsConfigured()) { meshDevice[i][j].deleteDevice(); }
+                    if(meshDevice[i][j].getIsConfigured()) {
+                        uint16_t nodeNetAddr = i * 64 + j + 1;
+                        insertDevToLog(nodeNetAddr, database, LOG_DEVICE_REMOVED);
+                        meshDevice[i][j].deleteDevice();
+                    }
                 }
             }
             database->deleteAllNodes();
@@ -133,6 +137,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
             sendUartDelDevice(uartPort, nodeAddress);
+
+            // Device to delete added to log
+            insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED);
 
             // Eliminar el nodo de la estructura interna
             // TODO: Mover a la confirmación del micro
@@ -391,11 +398,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, false, "FUNCTIONAL");
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, true, "FUNCTIONAL");
         }
     }
     else if (type == WS_SET_DURATION_TEST) {
@@ -407,11 +416,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, false, "DURATION");
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, true, "DURATION");
         }
     }
 
@@ -424,11 +435,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, false, "STOP");
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
             delay(SLEEP_DALI_TIME_MS);
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, STOP_TEST, IS_TWICE);
+            logTestRequest(database, nodeNetAddress, true, "STOP");
         }
     }
     else if (type == WS_SET_LOAD_NODES) {
@@ -448,6 +461,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_GET_LOGS) {
         qDebug() << "GETTING LOGS " << value;
+        QStringList webServerParts = value.split(" ");
+        QString reportType = webServerParts[0];
+        QString startDate = webServerParts[1];
+        QString endDate = webServerParts[2];
+        QString downloadPath;
+
+        downloadPath = exportLogToCSV(database, reportType, startDate, endDate);
+        QStringList ConfigInfo = database -> getInterfaceParameters();
+        QString serverIP = ConfigInfo.first();
+        QString fileUrl = "http://" + serverIP + "/logs/" + downloadPath;
+        sendLogFile(webServer, fileUrl);
     }
     else if (type == WS_GET_NODE_INFO) {
         sendNodeInfo(webServer, value);
@@ -529,6 +553,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDaliCommand(uartPort, groupAddress, DTR_0, powerOnLevel, IS_NORMAL);
         delay(SLEEP_DALI_TIME_MS);
         sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
+    }
+    else if (type == WS_SET_SYNC_POL) {
+        sendUartPOLForUpdate(uartPort, database);
+    }
+    else if (type == WS_SET_RELOAD_TREE) {
+        buildTreeAndSendConfirm(webServer, database);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -733,7 +763,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
         uint16_t netAddress = node.first;
         QString serialNumber = node.second;
 
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber;
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber + "_" + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
@@ -844,6 +874,7 @@ void sendGroupNodes(WebServer* webServer, QString groupAddress) {
 }
 
 void sendGroupsWithPOL(WebServer* webServer, Database* database, QString value) {
+    /**
     QStringList groupList = database->getPowerOnLevel(value.toInt());
 
     for (const QString& group : groupList) {
@@ -851,6 +882,13 @@ void sendGroupsWithPOL(WebServer* webServer, Database* database, QString value) 
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
+    */
+
+    QString groups = database->getPowerOnLevel(value.toInt()).join("#");
+
+    QString message = QString(WS_SEND_GROUP_WITH_POL) + "@" + groups;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendTest(WebServer* webServer, Database* database, QString groupAddress)
@@ -913,6 +951,13 @@ void sendRecordedDevice(WebServer* webServer)
 
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus) {
     QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendLogFile(WebServer *webServer, QString fileDir)
+{
+    QString message = QString(WS_SEND_LOG_DATA) + "@" + fileDir;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -980,6 +1025,16 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
     database->setPowerOnLevel(groupAddressString, powerOnLevel);
 
     QString message = QString(WS_SEND_CONFIRM_POWER_ON_LEVEL) + "@" + groupAddressString + "_" + QString::number(powerOnLevel);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
+{
+    database->readNodesForTree();
+    buildJsonTree();
+
+    QString message = QString(WS_SEND_CONFIRM_SHOW_TREE) + "@" + "";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

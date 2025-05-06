@@ -6,8 +6,11 @@
 #include "process_uart_data.h"
 #include "aux_functions.h"
 #include "dali_headers.h"
+#include "log.h"
 #include <QSqlQuery>
+#include <QDateTime>
 
+#include "file_handler.h"
 
 Wireless::Wireless(QObject *parent)
     : QObject{parent}
@@ -16,6 +19,7 @@ Wireless::Wireless(QObject *parent)
     _uartPort = new UartPort(this);
     _webServer = new WebServer(this);
     _database = new Database(this);
+
     pollingTimer.setInterval(POLLING_TIMER_MS);
     pollingTimer.stop();
     testTimer.setInterval(TEST_TIMER_MS);
@@ -29,6 +33,8 @@ Wireless::Wireless(QObject *parent)
     connect(&addDeviceTimer, &QTimer::timeout, this, &Wireless::addDeviceTimerHandler);
     connect(&confirmAddDeviceTimer, &QTimer::timeout, this, &Wireless::confirmAddDeviceTimerHandler);
     connect(&newIterationTimer, &QTimer::timeout, this, &Wireless::newIterationTimerHandler);
+    connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
+    testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
 
 void Wireless::runNetwork()
@@ -48,7 +54,7 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
-    //pollingTimer.start(POLLING_TIMER_MS);
+    pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;
     data.append(0x01);
@@ -116,6 +122,9 @@ sendNewPolling:
     while (subnetCount < MAX_SUBNET) {
         while (nodeSubnetCount < MAX_NODES_SUBNET) {
             if (meshDevice[subnetCount][nodeSubnetCount].getIsConfigured()) {
+                Device &device = meshDevice[subnetCount][nodeSubnetCount];
+                updateLogsByPollings(device);
+
                 sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
                 pollingData.pollingInProgress = true;
                 return;
@@ -128,6 +137,76 @@ sendNewPolling:
 
     nodeSubnetCount = 0;
     subnetCount = 0;
+}
+
+void Wireless::updateLogsByPollings(Device &device)
+{
+    bool lampNow = device.hasLampFailure();
+    bool lampPrev = device.getPrevLampFail();
+    bool batNow = device.hasBatteryFailure();
+    bool batPrev = device.getPrevBatteryFail();
+
+    bool durNow = device.hasBatteryDurationFailure();
+    bool durPrev = device.getPrevDurationFail();
+    bool commNow = device.hasCommunicationFailure();
+    bool commPrev = device.getPrevCommFail();
+
+    int devId = device.getRealAddress();
+    QString serialNum = device.serialNumberString();
+    QString devName = "SUB:" + QString::number(subnetCount) + " " + "ID:" + QString::number(nodeSubnetCount);
+    AntennaInfo info = getAntennaInfo(_database);
+    QString eventType = "Fail";
+
+    if (lampNow != lampPrev) {
+        if (lampNow) {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_LAMP_FAILURE, eventType);
+        } else {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_LAMP_RECOVERED, eventType);
+        }
+        device.setPrevLampFail(lampNow);
+    }
+    if (batNow != batPrev) {
+        if (batNow) {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_BATTERY_FAILURE, eventType);
+        } else {
+            insertLogEvent(_database, devId, serialNum, devName,info.ip, info.timestamp, LOG_BATTERY_RECOVERED, eventType);
+        }
+        device.setPrevBatteryFail(batNow);
+    }
+    if (durNow != durPrev) {
+        if (durNow) {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_DURATION_FAILURE, eventType);
+        } else {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_DURATION_RECOVERED, eventType);
+        }
+        device.setPrevDurationFail(durNow);
+    }
+    if (commNow != commPrev) {
+        if (commNow) {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_FAILURE, eventType);
+        } else {
+            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_RECOVERED, eventType);
+        }
+        device.setPrevCommFail(commNow);
+    }
+}
+
+void Wireless::updateLogsByTests(uint8_t i, uint8_t code)
+{
+    int devId = tests[i].getGroupAddress().toUInt(NULL, 16);
+    QString serailNum = "FF.FF.FF.FF";
+    QString devName = "Group: " + tests[i].getGroupAddress();
+    QString eventType = "Test";
+    AntennaInfo info = getAntennaInfo(_database);
+
+    insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, code, eventType);
+
+    AntennaTestCheck testCheck;
+    testCheck.groupId = devId;
+    testCheck.testType = code == LOG_TEST_REQUESTED_FUNCTIONAL ? "FUNCTIONAL" : "DURATION";
+    testCheck.checkTime = info.timestamp.time().addSecs(LOG_TEST_REQUESTED_FUNCTIONAL ? 900 : 43200);
+
+    antennaTestCheckList.append(testCheck);
 }
 
 void Wireless::testTimerHandler()
@@ -150,7 +229,8 @@ void Wireless::testTimerHandler()
                     sendUartDaliCommand(_uartPort, tests[i].getGroupAddress().toUInt(NULL, 16), BROADCAST_ADDR, START_FUNCTION_TEST, IS_TWICE);
                     delay(SLEEP_DALI_TIME_MS);
                     pollingTimer.start(POLLING_TIMER_MS);
-                    qDebug() << "FUNCTIONAL TEST";
+
+                    updateLogsByTests(i, LOG_TEST_REQUESTED_FUNCTIONAL);
                 }
             }
         }
@@ -166,7 +246,8 @@ void Wireless::testTimerHandler()
                 delay(SLEEP_DALI_TIME_MS);
                 sendUartDaliCommand(_uartPort, tests[i].getGroupAddress().toUInt(NULL, 16), BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
                 pollingTimer.start(POLLING_TIMER_MS);
-                qDebug() << "DURATION TEST";
+
+                updateLogsByTests(i, LOG_TEST_REQUESTED_DURATION);
             }
             else {
                 QDate nextTestDate = startDate;
@@ -177,12 +258,73 @@ void Wireless::testTimerHandler()
                         delay(SLEEP_DALI_TIME_MS);
                         sendUartDaliCommand(_uartPort, tests[i].getGroupAddress().toUInt(NULL, 16), BROADCAST_ADDR, START_DURATION_TEST, IS_TWICE);
                         pollingTimer.start(POLLING_TIMER_MS);
-                        qDebug() << "DURATION TEST";
+
+                        updateLogsByTests(i, LOG_TEST_REQUESTED_DURATION);
+
                         break;
                     }
                     nextTestDate = nextTestDate.addMonths(periodicityMonths);
                 }
             }
+        }
+    }
+}
+
+void Wireless::checkTestResultsHandler()
+{
+    QString timeNowStr = getLocalTime(); // format: "HH:mm:ss"
+    QTime timeNow = QTime::fromString(timeNowStr, "HH:mm:ss");
+
+    for (int i = antennaTestCheckList.size() - 1; i >= 0; i--) {
+        const AntennaTestCheck &check = antennaTestCheckList[i];
+
+        if (check.checkTime.hour() == timeNow.hour() &&
+            check.checkTime.minute() == timeNow.minute()) {
+            for (int subnet = 0; subnet < MAX_SUBNET; subnet++) {
+                for (int node = 0; node < MAX_NODES_SUBNET; node++) {
+                    Device &device = meshDevice[subnet][node];
+
+                    if (!device.getIsConfigured()){ continue; }
+
+                    uint16_t realAddress = device.getRealAddress();
+                    bool shouldCheckThisDevice = false;
+
+                    if (check.groupId < 0xC000) {
+                        // Direct device test
+                        shouldCheckThisDevice = (realAddress == check.groupId);
+
+                    } else {
+                        // Group test
+                        shouldCheckThisDevice = _database->deviceIsInGroup(realAddress, check.groupId);
+                    }
+
+                    if (!shouldCheckThisDevice){ continue; }
+
+                    bool com = device.hasCommunicationFailure();
+                    bool bat = device.hasBatteryFailure();
+                    bool lamp = device.hasLampFailure();
+                    bool dur = device.hasBatteryDurationFailure();
+                    bool failed = com || bat || lamp || dur;
+
+                    QString eventType = "Test";
+                    AntennaInfo info = getAntennaInfo(_database);
+                    int devId = realAddress;
+                    QString serial = device.serialNumberString();
+                    QString name = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+
+                    if (check.testType == "FUNCTIONAL") {
+                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
+                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
+                                       failed ? LOG_TEST_FT_FAIL : LOG_TEST_FT_OK, eventType);
+                    } else {
+                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_DURATION, eventType);
+                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
+                                       failed ? LOG_TEST_DT_FAIL : LOG_TEST_DT_OK, eventType);
+                    }
+                }
+            }
+            // Remove test check entry
+            antennaTestCheckList.removeAt(i);
         }
     }
 }
@@ -267,3 +409,5 @@ void Wireless::newIterationTimerHandler()
     qDebug() << "NEW ITERATION TIMER";
     sendUartNewIteration(_uartPort);
 }
+
+
