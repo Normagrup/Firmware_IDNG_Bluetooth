@@ -1036,6 +1036,27 @@ QList<QStringList> Database::getAllTestLogs()
     return results;
 }
 
+void Database::readNodesForTree()
+{
+    nodesByRealAddress = {};
+    childrenMap = {};
+
+    QSqlQuery query("SELECT SubnetAddress, NodeSubnetAddress, RealAddress, UUID, FatherRealAddress FROM Nodes");
+
+    while (query.next()) {
+        NodeInfo node;
+        node.subnetAddress = static_cast<uint8_t>(query.value(0).toInt());
+        node.nodeSubnetAddress = static_cast<uint8_t>(query.value(1).toInt());
+        node.realAddress = static_cast<uint16_t>(query.value(2).toInt());
+        QString nums = query.value(3).toString().right(8);
+        node.serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
+        node.fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
+
+        nodesByRealAddress[node.realAddress] = node;
+        childrenMap.insert(node.fatherRealAddress, node.realAddress);
+    }
+}
+
 void Database::editGroup(QString address, QString name)
 {
     QSqlQuery query;

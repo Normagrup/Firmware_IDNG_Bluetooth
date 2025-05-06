@@ -43,3 +43,6 @@ QStringList scannedDevicesMessages;
 bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;
+
+QMap<uint16_t, NodeInfo> nodesByRealAddress;
+QMultiMap<uint16_t, uint16_t> childrenMap;

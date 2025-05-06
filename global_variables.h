@@ -2,6 +2,7 @@
 #define GLOBAL_VARIABLES_H
 
 #include <QTimer>
+#include <QMap>
 
 #include "structures.h"
 #include "Device.h"
@@ -53,4 +54,8 @@ extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;
+
+extern QMap<uint16_t, NodeInfo> nodesByRealAddress;
+extern QMultiMap<uint16_t, uint16_t> childrenMap;
+
 #endif // GLOBAL_VARIABLES_H

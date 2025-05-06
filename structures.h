@@ -58,4 +58,12 @@ typedef struct {
     QString ip;
 } AntennaInfo;
 
+typedef struct {
+    uint8_t subnetAddress;
+    uint8_t nodeSubnetAddress;
+    uint16_t realAddress;
+    uint16_t fatherRealAddress;
+    QString serialNumber;
+} NodeInfo;
+
 #endif // STRUCTURES_H

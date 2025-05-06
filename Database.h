@@ -71,6 +71,8 @@ public:
     QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
     QList<QStringList> getAllTestLogs();
 
+    void readNodesForTree();
+
 signals:
 
 private:

@@ -44,6 +44,7 @@
 #define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
+#define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
 
 #define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
@@ -94,6 +95,7 @@
 #define WS_SEND_LOG_DATA                    "LOG_DATA"
 #define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
+#define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -133,5 +135,6 @@ void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
+void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 
 #endif // PROCESS_WEBSERVER_DATA_H

@@ -557,6 +557,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_SYNC_POL) {
         sendUartPOLForUpdate(uartPort, database);
     }
+    else if (type == WS_SET_RELOAD_TREE) {
+        buildTreeAndSendConfirm(webServer, database);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -1022,6 +1025,16 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
     database->setPowerOnLevel(groupAddressString, powerOnLevel);
 
     QString message = QString(WS_SEND_CONFIRM_POWER_ON_LEVEL) + "@" + groupAddressString + "_" + QString::number(powerOnLevel);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
+{
+    database->readNodesForTree();
+    buildJsonTree();
+
+    QString message = QString(WS_SEND_CONFIRM_SHOW_TREE) + "@" + "";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
