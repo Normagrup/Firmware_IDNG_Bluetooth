@@ -192,7 +192,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         //commissionData.numberOfNodesScanned--;
                         qDebug() << "PARANDO TIMER NEW ITERATION";
                         newIterationTimer.stop();
-                        numberOfIterations--;
                         addDeviceTimer.start(ADD_DEVICE_TIMER_MS);
                     break;
 

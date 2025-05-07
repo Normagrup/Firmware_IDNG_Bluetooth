@@ -368,6 +368,7 @@ void Wireless::addDeviceTimerHandler()
     else {
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
+            numberOfIterations--;
             sendLogCommissionEntry(_webServer, "Starting new iteration from a node...");
             sendUartNewIteration(_uartPort);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);

@@ -713,7 +713,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
     uint8_t nodeUUID[16];
 
     commissionData.numberOfNodesAdded++;
-    numberOfIterations++;
+    //numberOfIterations++;
 
     QString  value = "";
     for (uint8_t i = 0; i < 16; i++) {
