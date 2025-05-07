@@ -78,7 +78,7 @@ static QByteArray processUartFrame(QByteArray data)
                 }
             }
             else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == FEATURES) {
-                if (data.size() != 26) {
+                if (data.size() != 28) {
                     secondBufferRequired = true;
                     return QByteArray();
                 }
@@ -354,6 +354,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
     uint8_t nodeUUID[16];
     uint16_t address;
+    uint16_t fatherAddress;
 
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
     QString value = "";
@@ -367,9 +368,10 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     ratedDuration = (unsigned char)data[22];
     emergencyFeatures = (unsigned char)data[23];
     physicalMinLvl = (unsigned char)data[24];
+    fatherAddress = ((unsigned char)data[25] << 8) + (unsigned char)data[26];
 
 
-    qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl;
+    qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
 
     commissionData.numberOfNodesAdded++;
     numberOfIterations++;
@@ -391,7 +393,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
                 netAddress = i * 64 + j + 1;
 
-                database->setNewNode(i, j, address, nodeUUID, 12345);
+                database->setNewNode(i, j, address, nodeUUID, fatherAddress);
                 insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED);
                 delay(500);
                 
@@ -988,11 +990,12 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
         }
     }
 
-    // TODO: Enviar a cada nodo de la estructura la pregunta de su POL, e implementar la respuesta y actualización de cada grupo
+    // Para probar la creación correcta de la estructura que cruza (nodos) - (grupos en los que el nodo es el primero con comunicación)
+    //for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
+    //    qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
+    //}
 
-    for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
-        qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
-    }
+    // TODO: Enviar a cada nodo de la estructura la pregunta de su POL, e implementar la respuesta y actualización de cada grupo
 
     /**
     QByteArray frame;
