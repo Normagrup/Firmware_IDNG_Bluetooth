@@ -87,6 +87,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         else {
             qDebug() << "START COMMISSION";
+
+            numberOfIterations = 0;
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    if(meshDevice[i][j].getIsConfigured())
+                        numberOfIterations++;
+                }
+            }
+
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
             scannedDevicesMessages.clear();
