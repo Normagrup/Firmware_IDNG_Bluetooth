@@ -250,6 +250,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndRemoveAllNodes(webServer);
                     break;
 
+                    case CONFIRM_START_REMOVE_ONE_NODE:
+                        sendConfirmStartRemoveOneNode(webServer);
+                    break;
+
+                    case CONFIRM_END_REMOVE_ONE_NODE:
+                        sendConfirmEndRemoveOneNode(webServer);
+                    break;
+
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];

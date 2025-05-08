@@ -41,6 +41,7 @@ public:
 
     QList<uint16_t> getConfiguredNodes(void);
     QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
+    QList<QPair<uint16_t, uint16_t>> getDependentNodesList(uint16_t realAddress);
 
     QList<QPair<QString, QString>> getGroups(void);
     void createGroup();

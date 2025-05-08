@@ -841,6 +841,33 @@ QList<QPair<uint16_t, QString>> Database::getConfiguredNodesAndSerialNumbers()
     return nodeNetAddressAndSNList;
 }
 
+QList<QPair<uint16_t, uint16_t>> Database::getDependentNodesList(uint16_t realAddress)
+{
+    QList<QPair<uint16_t, uint16_t>> result;
+
+    // Obtener hijos directos de este padre
+    QSqlQuery query;
+    query.prepare("SELECT SubnetAddress, NodeSubnetAddress, RealAddress FROM Nodes WHERE FatherRealAddress = :realAddress");
+    query.bindValue(":realAddress", realAddress);
+
+    if (!query.exec()) { qWarning() << "Error ejecutando query:" << query.lastError().text(); return result; }
+
+    while (query.next()) {
+        int subnetAddress = query.value(0).toInt();
+        int nodeSubnetAddress = query.value(1).toInt();
+        uint16_t childNumber = subnetAddress * 64 + nodeSubnetAddress + 1;
+        uint16_t childRealAddress = static_cast<uint16_t>(query.value(2).toInt());
+
+        result.append(qMakePair(childNumber, childRealAddress));
+
+        // Recursión: obtener todos los descendientes de este hijo
+        QList<QPair<uint16_t, uint16_t>> childDescendants = getDependentNodesList(childRealAddress);
+        result.append(childDescendants);
+    }
+
+    return result;
+}
+
 QList<QPair<QString, QString>> Database::getGroups()
 {
     QSqlQuery query;

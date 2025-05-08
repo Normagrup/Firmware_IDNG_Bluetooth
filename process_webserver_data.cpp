@@ -128,7 +128,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDelDevice(uartPort, nodeNetAddress);
 
             // Eliminar nodos de la estructura interna
-            // TODO: Mover a la confirmación del micro
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured()) {
@@ -143,6 +142,35 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         else
         {
             uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+
+            QList<QPair<uint16_t, uint16_t>> dependentNodes = database->getDependentNodesList(nodeAddress);
+
+            // Ordenar los nodos hijos por el realAddress (descendentemente) para ir borrando sin problemas
+            QVector<QPair<uint16_t, uint16_t>> temp = dependentNodes.toVector();
+            std::sort(temp.begin(), temp.end(), [](const QPair<uint16_t, uint16_t> &a, const QPair<uint16_t, uint16_t> &b) {
+                return a.second > b.second; // orden descendente
+            });
+            dependentNodes = temp.toList();
+
+            // Borrado de todos los nodos dependientes
+            for(const QPair<uint16_t, uint16_t> &par : dependentNodes) {
+                uint16_t dependentNodeNetAddress = par.first;
+                uint16_t dependentNodeAddress = par.second;
+
+                printf(" Net Address: %04X - RealAddress: %04X\n", dependentNodeNetAddress, dependentNodeAddress);
+
+                sendUartDelDevice(uartPort, dependentNodeAddress);
+                delay(SLEEP_DALI_TIME_MS);
+
+                // Device to delete added to log
+                insertDevToLog(dependentNodeNetAddress, database, LOG_DEVICE_REMOVED);
+
+                // Eliminar el nodo de la estructura interna
+                meshDevice[(dependentNodeNetAddress - 1) / 64][(dependentNodeNetAddress - 1) % 64].deleteDevice();
+                database->deleteNode(dependentNodeAddress);
+            }
+
+            // Borrado del dispositivo elegido
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
             sendUartDelDevice(uartPort, nodeAddress);
@@ -151,7 +179,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED);
 
             // Eliminar el nodo de la estructura interna
-            // TODO: Mover a la confirmación del micro
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
             database->deleteNode(nodeAddress);
         }
@@ -1006,6 +1033,19 @@ void sendConfirmEndRemoveAllNodes(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendConfirmStartRemoveOneNode(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_DEL_ONE_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndRemoveOneNode(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_DEL_ONE_DEV) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
 
 void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database)
 {

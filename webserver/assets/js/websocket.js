@@ -913,6 +913,31 @@ function processIsCommissionInProgress(value)
     }
 }
 
+function processDelOneDev(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    
+    var popup = iframeDocument.getElementById('popupDelDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    if(init) // Cuando empieza el borrado
+    {
+        var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
+        var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
+
+        deletingDeviceLabel.textContent = "Deleting the node from the network...";
+        deletingDeviceButton.classList.add('button-disabled');
+    }
+    else // Cuando termina el borrado
+    {
+        selectedNode.remove();
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }
+}
+
 function processDelAllDev(value, init)
 {
     var iframe = document.getElementById('mainframe');
@@ -1028,6 +1053,8 @@ function processReceivedData(data)
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
+    else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
+    else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
     else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
@@ -1167,30 +1194,13 @@ function delDevice() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var popup = iframeDocument.getElementById('popupDelDevice');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-    var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
-    var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
-
     // Seleccionar el nodo marcado en la lista de Network Nodes
     var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-
     var nodeId = selectedNode.textContent.trim().split("-")[0]; // Obtener ID del nodo
+
     console.log("Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
     // Enviar comando al embebido para eliminar el nodo
     sendData("SET_DELETE_DEVICE", nodeId);
-
-    deletingDeviceLabel.textContent = "Deleting the node from the network...";
-    deletingDeviceButton.classList.add('button-disabled');
-        
-    // Esperar confirmación antes de eliminarlo de la interfaz
-    setTimeout(() => {
-        selectedNode.remove();
-        console.log("Nodo eliminado de la interfaz: " + nodeId);
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 1000);
 }
 
 function delAllDevices() { 

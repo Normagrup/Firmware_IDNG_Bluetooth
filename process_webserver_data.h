@@ -95,6 +95,8 @@
 #define WS_SEND_LOG_DATA                    "LOG_DATA"
 #define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
+#define WS_SEND_CONFIRM_START_DEL_ONE_DEV   "CONFIRM_START_DEL_ONE_DEV"
+#define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -133,6 +135,8 @@ void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
+void sendConfirmStartRemoveOneNode(WebServer* webServer);
+void sendConfirmEndRemoveOneNode(WebServer* webServer);
 void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
