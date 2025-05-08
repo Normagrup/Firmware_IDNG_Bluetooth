@@ -931,6 +931,7 @@ function processDelOneDev(value, init)
     }
     else // Cuando termina el borrado
     {
+        var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
         selectedNode.remove();
 
         popup.style.visibility = "hidden";
