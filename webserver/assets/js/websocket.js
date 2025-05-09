@@ -1403,12 +1403,25 @@ function sliderInput()
 
     var lvlSlider = iframeDocument.getElementById("lvlSlider");
 
-    var message = addressClicked + ' ' + lvlSlider.value;
-    sendData("SET_ACTUAL_LVL", message);
+    if(lvlSlider.value == 0) 
+    {
+        sendData("SET_OFF", addressClicked);
 
-    var lvlIcon = iframeDocument.getElementById('lvlIcon');
-    lvlIcon.innerHTML = "<b>" + lvlSlider.value + "%" + "</b>";
-    lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + lvlSlider.value + "%, #fff " + lvlSlider.value + "%)";
+        if(addressClicked < 49152) {
+            sendData("GET_NODE_INFO", addressClicked);
+        } else {
+            loadGroupInfo(transformDecimalGroupAddressIntoHexGroupAddress(addressClicked));
+        }
+    }
+    else
+    {
+        var message = addressClicked + ' ' + lvlSlider.value;
+        sendData("SET_ACTUAL_LVL", message);
+
+        var lvlIcon = iframeDocument.getElementById('lvlIcon');
+        lvlIcon.innerHTML = "<b>" + lvlSlider.value + "%" + "</b>";
+        lvlIcon.style.background = "linear-gradient(to top, #bcf4f7 " + lvlSlider.value + "%, #fff " + lvlSlider.value + "%)";
+    }
 }
 
 function facSettingsButton() 
