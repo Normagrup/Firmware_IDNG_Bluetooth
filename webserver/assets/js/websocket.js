@@ -931,11 +931,18 @@ function processDelOneDev(value, init)
     }
     else // Cuando termina el borrado
     {
-        var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-        selectedNode.remove();
+        //var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+        //selectedNode.remove();
 
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
+        var networkNodesList = iframeDocument.getElementById('networkNodesList');
+        networkNodesList.innerHTML = "";
+
+        sendData("SET_LOAD_NODES", "");
+
+        setTimeout(function() {
+            popup.style.visibility = "hidden";
+            popupOverlay.style.visibility = "hidden";
+        }, 3000);
     }
 }
 
