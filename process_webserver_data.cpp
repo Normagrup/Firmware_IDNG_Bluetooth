@@ -170,6 +170,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 database->deleteNode(dependentNodeAddress);
             }
 
+            // Sacamos el número de hijos del padre del nodo que estamos borrando, para saber si tras borrar, debemos desactivar el relay del padre o no
+            uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
+            int numberOfChildren = database->getCountOfDirectChildren(fatherNodeAddress);
+
             // Borrado del dispositivo elegido
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
@@ -181,6 +185,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             // Eliminar el nodo de la estructura interna
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
             database->deleteNode(nodeAddress);
+
+            // Si tenía solo un hijo, al haberlo eliminado, ahora tiene 0 y por tanto, se le desactiva el relay
+            if(fatherNodeAddress != 0x0001 && numberOfChildren <= 1)
+                sendUartSetRelay(uartPort, fatherNodeAddress, false);
         }
     }
     else if (type == WS_SET_ADD_DEVICE) {

@@ -1099,6 +1099,34 @@ void Database::updateRelayMode(uint16_t nodeAddress, bool enabled)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in NODES" << query.lastError().text(); }
 }
 
+uint16_t Database::getFatherRealAddress(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT FatherRealAddress FROM Nodes WHERE RealAddress = :nodeAddress");
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 1; }
+
+    if(query.next())
+        return query.value("FatherRealAddress").toUInt();
+    else
+        return 1;
+}
+
+int Database::getCountOfDirectChildren(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM Nodes WHERE FatherRealAddress = :fatherNodeAddress");
+    query.bindValue(":fatherNodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0; }
+
+    if (query.next())
+        return query.value(0).toInt();
+    else
+        return 0;
+}
+
 void Database::editGroup(QString address, QString name)
 {
     QSqlQuery query;

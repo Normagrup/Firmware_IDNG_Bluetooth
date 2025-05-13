@@ -74,6 +74,8 @@ public:
 
     void readNodesForTree();
     void updateRelayMode(uint16_t nodeAddress, bool enabled);
+    uint16_t getFatherRealAddress(uint16_t nodeAddress);
+    int getCountOfDirectChildren(uint16_t nodeAddress);
 
 signals:
 

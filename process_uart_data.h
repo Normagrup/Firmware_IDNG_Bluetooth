@@ -51,6 +51,7 @@
 #define CONFIRM_START_REMOVE_ONE_NODE   0x59
 #define CONFIRM_END_REMOVE_ONE_NODE     0x61
 #define RELAY_STATUS                    0x63
+#define SET_RELAY                       0x65
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -75,5 +76,6 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void requestMicroDatabase(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
+void sendUartSetRelay(UartPort* _uartPort, uint16_t fatherNodeAddress, bool enable);
 
 #endif // PROCESS_UART_DATA_H

@@ -1025,3 +1025,20 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     _uartPort->sendData(frame);
     */
 }
+
+void sendUartSetRelay(UartPort* _uartPort, uint16_t fatherNodeAddress, bool enable)
+{
+    QByteArray frame;
+    unsigned char length = 6;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SET_RELAY);
+    frame.append((fatherNodeAddress >> 8) & 0xFF);
+    frame.append(fatherNodeAddress & 0xFF);
+    frame.append(enable ? 0x01 : 0x00);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
