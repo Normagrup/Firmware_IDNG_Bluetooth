@@ -258,6 +258,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndRemoveOneNode(webServer);
                     break;
 
+                    case RELAY_STATUS:
+                    {
+                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        bool enabled = ((uint8_t)dataChecked[5] != 0);
+                        updateRelayStatus(webServer, database, nodeAddress, enabled);
+                    }
+                    break;
+
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];

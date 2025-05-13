@@ -1089,6 +1089,16 @@ void Database::readNodesForTree()
     }
 }
 
+void Database::updateRelayMode(uint16_t nodeAddress, bool enabled)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET RelayMode = :enabled WHERE RealAddress = :nodeAddress");
+    query.bindValue(":enabled", enabled);
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in NODES" << query.lastError().text(); }
+}
+
 void Database::editGroup(QString address, QString name)
 {
     QSqlQuery query;

@@ -50,6 +50,7 @@
 #define CONFIRM_SET_POWER_ON_LEVEL      0x57
 #define CONFIRM_START_REMOVE_ONE_NODE   0x59
 #define CONFIRM_END_REMOVE_ONE_NODE     0x61
+#define RELAY_STATUS                    0x63
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);

@@ -1087,3 +1087,9 @@ void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+
+void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled)
+{
+    qDebug() << "Node Address:" << address << "- RELAY:" << (enabled ? "Enabled" : "Disabled");
+    database->updateRelayMode(address, enabled);
+}

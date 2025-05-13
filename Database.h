@@ -73,6 +73,7 @@ public:
     QList<QStringList> getAllTestLogs();
 
     void readNodesForTree();
+    void updateRelayMode(uint16_t nodeAddress, bool enabled);
 
 signals:
 
