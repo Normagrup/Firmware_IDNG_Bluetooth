@@ -341,6 +341,12 @@ void Wireless::addDeviceTimerHandler()
     //sendStartAddingDevices(_webServer);
 
     if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != 0x0001) {
+        if (numberOfIterations != 0 && !forceStopCommissioning) {
+            qDebug() << "NUEVO ESCANEO" << numberOfIterations;
+            numberOfIterations--;
+            sendLogCommissionEntry(_webServer, "Starting new iteration from a node...");
+        }
+
         do {
             qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
             sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport);

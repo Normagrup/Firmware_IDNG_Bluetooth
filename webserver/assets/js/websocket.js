@@ -301,6 +301,8 @@ function processLogCommissionEntry(value)
 
     var newEntry = iframeDocument.createElement('li');
     newEntry.textContent = value;
+    if(value == "An error has occurred with the device...")
+        newEntry.style.color = "#C30101";
     logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
 }
 
