@@ -35,6 +35,7 @@ uint16_t timerGroupAddress[3] = {0};
 CommissionData commissionData = {0};
 uint8_t numberOfAddedNodes = 0;
 uint16_t numberOfIterations = 0;
+uint16_t doneIterations = 0;
 uint16_t netAddress = 0;
 
 uint8_t subnetCount = 0, nodeSubnetCount = 0;

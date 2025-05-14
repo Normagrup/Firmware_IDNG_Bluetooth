@@ -1127,6 +1127,26 @@ int Database::getCountOfDirectChildren(uint16_t nodeAddress)
         return 0;
 }
 
+QString Database::getNextNodeName(uint16_t doneIts)
+{
+    QSqlQuery query;
+    query.prepare("SELECT SubnetAddress, NodeSubnetAddress FROM Nodes ORDER BY RealAddress ASC LIMIT 1 OFFSET :offset");
+    query.bindValue(":offset", doneIts);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return "Node -"; }
+
+    if (query.next()) {
+        uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
+        uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
+
+        uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
+
+        return QString("Node %1").arg(nodeNetAddress);
+    }
+    else
+        return "Node -";
+}
+
 void Database::editGroup(QString address, QString name)
 {
     QSqlQuery query;

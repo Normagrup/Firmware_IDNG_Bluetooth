@@ -552,6 +552,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         // Recuperar la lista de nodos escaneados en scannedUUID
         memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
         numberOfIterations = 0;
+        doneIterations = 0;
         isManualAddingDevice = false;
 
         sendConfirmAddingDevice(webServer);
