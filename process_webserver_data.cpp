@@ -160,7 +160,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 printf(" Net Address: %04X - RealAddress: %04X\n", dependentNodeNetAddress, dependentNodeAddress);
 
                 sendUartDelDevice(uartPort, dependentNodeAddress);
-                delay(SLEEP_DALI_TIME_MS);
+                delay(800);
 
                 // Device to delete added to log
                 insertDevToLog(dependentNodeNetAddress, database, LOG_DEVICE_REMOVED);
