@@ -144,6 +144,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         {
             uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
+            /** 
             QList<QPair<uint16_t, uint16_t>> dependentNodes = database->getDependentNodesList(nodeAddress);
 
             // Ordenar los nodos hijos por el realAddress (descendentemente) para ir borrando sin problemas
@@ -170,6 +171,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 meshDevice[(dependentNodeNetAddress - 1) / 64][(dependentNodeNetAddress - 1) % 64].deleteDevice();
                 database->deleteNode(dependentNodeAddress);
             }
+            */
 
             // Sacamos el número de hijos del padre del nodo que estamos borrando, para saber si tras borrar, debemos desactivar el relay del padre o no
             uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);

@@ -933,9 +933,13 @@ function processDelOneDev(value, init)
     }
     else // Cuando termina el borrado
     {
-        //var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-        //selectedNode.remove();
+        var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+        selectedNode.remove();
 
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+
+        /**
         var networkNodesList = iframeDocument.getElementById('networkNodesList');
         networkNodesList.innerHTML = "";
 
@@ -945,6 +949,7 @@ function processDelOneDev(value, init)
             popup.style.visibility = "hidden";
             popupOverlay.style.visibility = "hidden";
         }, 3000);
+         */
     }
 }
 
