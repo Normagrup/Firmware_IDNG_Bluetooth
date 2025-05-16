@@ -53,6 +53,7 @@
 #define RELAY_STATUS                    0x63
 #define SET_RELAY                       0x65
 #define SCAN_FROM_NODE                  0x67
+#define SCAN_NODE_NOT_FOUND             0x68
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
