@@ -39,6 +39,7 @@ extern ScannedUUID scannedUUID[20];
 extern ScannedUUID scannedUUIDBackup[20];
 extern uint8_t numberOfAddedNodes;
 extern uint16_t numberOfIterations;
+extern uint16_t doneIterations;
 extern uint16_t netAddress;
 
 extern QTimer pollingTimer;

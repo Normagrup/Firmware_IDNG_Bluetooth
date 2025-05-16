@@ -78,7 +78,7 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void requestMicroDatabase(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
-void sendUartSetRelay(UartPort* _uartPort, uint16_t fatherNodeAddress, bool enable);
+void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
 
 #endif // PROCESS_UART_DATA_H

@@ -245,14 +245,34 @@ function addDeviceToNetworkList(value)
     var parts = value.split("_");
     var nodeNetAddress = parts[0];
     var serialNumber = parts[1];
-    var counterIncrement = (parts[2] === "true")
+    var relayStatus = (parts[2] === "relayOn");
+    var counterIncrement = (parts[3] === "true");
     
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
     if(networkNodesList) {
         var newNode = iframeDocument.createElement('li');
-        newNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
         newNode.setAttribute('class', 'deviceNetwork');
         newNode.setAttribute('onclick', 'parent.selectDevice(this)');
+
+        var textNode = iframeDocument.createElement('span');
+        textNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
+
+        var button = iframeDocument.createElement('button');
+        button.textContent = "R";
+        button.setAttribute('class', 'deviceRelayButton');
+        button.style.backgroundColor = relayStatus ? "#4682b4" : "gray";
+        button.onclick = function(e) {
+            e.stopPropagation();
+
+            if(button.style.backgroundColor == "gray")
+                sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "1");
+            else
+                sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "0");
+        };
+
+        newNode.appendChild(textNode);
+        newNode.appendChild(button);
+
         networkNodesList.appendChild(newNode);
     }
 
@@ -301,6 +321,8 @@ function processLogCommissionEntry(value)
 
     var newEntry = iframeDocument.createElement('li');
     newEntry.textContent = value;
+    if(value == "An error has occurred with the device...")
+        newEntry.style.color = "#C30101";
     logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
 }
 
@@ -931,9 +953,13 @@ function processDelOneDev(value, init)
     }
     else // Cuando termina el borrado
     {
-        //var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-        //selectedNode.remove();
+        var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+        selectedNode.remove();
 
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+
+        /**
         var networkNodesList = iframeDocument.getElementById('networkNodesList');
         networkNodesList.innerHTML = "";
 
@@ -943,6 +969,7 @@ function processDelOneDev(value, init)
             popup.style.visibility = "hidden";
             popupOverlay.style.visibility = "hidden";
         }, 3000);
+         */
     }
 }
 
@@ -1025,6 +1052,31 @@ function confirmShowTree(value)
     loadPage('arf.html');
 }
 
+function confirmSetRelay(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var parts = value.split("_");
+    var nodeNetAddress = parts[0];
+    var relayStatus = (parts[1] === "relayOn");
+    
+    var networkNodesList = iframeDocument.getElementById('networkNodesList');
+    if(networkNodesList) {
+        var items = networkNodesList.querySelectorAll('li.deviceNetwork');
+
+        items.forEach(function(item) {
+            var span = item.querySelector('span');
+            if (span && span.textContent.startsWith("Node " + nodeNetAddress + " -")) {
+                var button = item.querySelector('button.deviceRelayButton');
+                if (button) {
+                    button.style.backgroundColor = relayStatus ? "#4682b4" : "gray";
+                }
+            }
+        });
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1068,6 +1120,7 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
+    else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
 }
 
 function sendData(type, value) 

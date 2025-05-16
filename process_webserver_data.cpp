@@ -100,6 +100,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             qDebug() << "START COMMISSION";
 
             numberOfIterations = 0;
+            doneIterations = 0;
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured())
@@ -154,6 +155,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         {
             uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
+            /** 
             QList<QPair<uint16_t, uint16_t>> dependentNodes = database->getDependentNodesList(nodeAddress);
 
             // Ordenar los nodos hijos por el realAddress (descendentemente) para ir borrando sin problemas
@@ -171,7 +173,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 printf(" Net Address: %04X - RealAddress: %04X\n", dependentNodeNetAddress, dependentNodeAddress);
 
                 sendUartDelDevice(uartPort, dependentNodeAddress);
-                delay(SLEEP_DALI_TIME_MS);
+                delay(800);
 
                 // Device to delete added to log
                 insertDevToLog(dependentNodeNetAddress, database, LOG_DEVICE_REMOVED);
@@ -180,6 +182,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 meshDevice[(dependentNodeNetAddress - 1) / 64][(dependentNodeNetAddress - 1) % 64].deleteDevice();
                 database->deleteNode(dependentNodeAddress);
             }
+            */
 
             // Sacamos el número de hijos del padre del nodo que estamos borrando, para saber si tras borrar, debemos desactivar el relay del padre o no
             uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
@@ -383,6 +386,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
 
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
+    }
+    else if (type == WS_SET_RELAY_MODE) {
+        QStringList parts = value.split("_");
+        uint16_t netAddress = parts[0].toUInt();
+        bool enable = parts[1].toInt();
+
+        uint16_t realAddress = meshDevice[(netAddress - 1) / 64][(netAddress - 1) % 64].getRealAddress();
+
+        sendUartSetRelay(uartPort, realAddress, enable);
     }
     else if (type == WS_SET_IDENTIFY) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -812,13 +824,16 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
 
 void sendNodesFromDatabase(WebServer* webServer, Database* database)
 {
-    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
+    QList<QString> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
 
-    for (const QPair<uint16_t, QString>& node : nodeNetAddressAndSNList) {
-        uint16_t netAddress = node.first;
-        QString serialNumber = node.second;
+    for (const QString& nodeInfo : nodeNetAddressAndSNList) {
+        QStringList nodeInfoParts = nodeInfo.split("#");
 
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber + "_" + "false"; // el booleano indica que no se debe incrementar el contador del webserver
+        QString netAddress = nodeInfoParts[0];
+        QString serialNumber = nodeInfoParts[1];
+        bool relayStatus = nodeInfoParts[2].toInt() != 0;
+
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + netAddress + "_" + serialNumber + "_" + (relayStatus ? "relayOn" : "relayOff") + "_" + + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
@@ -1110,5 +1125,25 @@ void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled)
 {
     qDebug() << "Node Address:" << address << "- RELAY:" << (enabled ? "Enabled" : "Disabled");
+
     database->updateRelayMode(address, enabled);
+
+    uint16_t netAddress;
+    bool found = false;
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address) {
+                netAddress = i * 64 + j + 1;
+                found = true;
+                break;
+            }
+        }
+
+        if(found) { break; } // Evitar recorrer innecesariamente tras encontrar
+    }
+
+    QString message = QString(WS_SEND_CONFIRM_SET_RELAY) + "@" + QString::number(netAddress) + "_" + (enabled ? "relayOn" : "relayOff");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }

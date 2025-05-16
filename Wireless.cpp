@@ -341,6 +341,13 @@ void Wireless::addDeviceTimerHandler()
     //sendStartAddingDevices(_webServer);
 
     if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != 0x0001) {
+        if (numberOfIterations != 0 && !forceStopCommissioning) {
+            qDebug() << "NUEVO ESCANEO" << numberOfIterations;
+            numberOfIterations--;
+            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations));
+            doneIterations++;
+        }
+
         do {
             qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
             sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport);
@@ -369,7 +376,8 @@ void Wireless::addDeviceTimerHandler()
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "Starting new iteration from a node...");
+            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations));
+            doneIterations++;
             sendUartNewIteration(_uartPort);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
@@ -379,6 +387,7 @@ void Wireless::addDeviceTimerHandler()
             isCommissioning = false;
 
             numberOfIterations = 0;
+            doneIterations = 0;
 
             for (uint8_t i = 0; i < 20; i++) {
                 memset(scannedUUID[i].UUID, 0, sizeof(scannedUUID[i].UUID));

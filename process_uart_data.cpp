@@ -532,7 +532,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
                 meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
                 if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
-                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
+                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "relayOff" + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
                     if (webServer != nullptr) { webServer->sendData(message); }
                 }
                 break;
@@ -559,6 +559,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         // Recuperar la lista de nodos escaneados en scannedUUID
         memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
         numberOfIterations = 0;
+        doneIterations = 0;
         isManualAddingDevice = false;
 
         sendConfirmAddingDevice(webServer);
@@ -1033,7 +1034,7 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     */
 }
 
-void sendUartSetRelay(UartPort* _uartPort, uint16_t fatherNodeAddress, bool enable)
+void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
 {
     QByteArray frame;
     unsigned char length = 6;
@@ -1042,8 +1043,8 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t fatherNodeAddress, bool enab
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(SET_RELAY);
-    frame.append((fatherNodeAddress >> 8) & 0xFF);
-    frame.append(fatherNodeAddress & 0xFF);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
     frame.append(enable ? 0x01 : 0x00);
     frame.append(UART_END);
 
