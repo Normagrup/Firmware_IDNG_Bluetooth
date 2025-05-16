@@ -1042,3 +1042,20 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t fatherNodeAddress, bool enab
 
     _uartPort->sendData(frame);
 }
+
+void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
+{
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);                
+    frame.append(length);                     
+    frame.append(UART_CONFIG_FRAME_TYPE);    
+    frame.append(SCAN_FROM_NODE);           
+    frame.append((nodeRealAddress >> 8) & 0xFF);
+    frame.append(nodeRealAddress & 0xFF);
+    frame.append(UART_END);                   
+
+    qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
+    _uartPort->sendData(frame);
+}

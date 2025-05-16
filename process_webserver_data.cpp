@@ -30,6 +30,19 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         scannedDevicesMessages.clear();
         sendUartScannedDevices(uartPort);
     }
+    else if (type == WS_SET_SCAN_FROM_NODE) {
+        if(isCommissionInProgress(webServer)) { return; }
+
+        // value contiene la NetAddress del nodo desde el que queremos escanear
+        uint16_t nodeNetAddress = value.toUInt();
+        uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+
+        qDebug() << "Iniciando escaneo desde nodo realAddress:" << nodeRealAddress;
+
+        sendUartScanFromNode(uartPort, nodeRealAddress);
+        sendLogCommissionEntry(webServer, "Start scanning from node " + QString::number(nodeNetAddress));
+    }
+
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {
         sendStoredScannedDevices(webServer);
     }
