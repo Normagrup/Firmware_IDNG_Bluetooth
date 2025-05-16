@@ -43,7 +43,7 @@ QByteArray Pollings::getArrayConfiguredDevices(uint8_t subnet)
     frame.append(0xFF);
     frame.append(0xFF);
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured()) { frame.append(0x01); }
         else { frame.append((unsigned char)0x00); }
     }
@@ -63,7 +63,7 @@ QByteArray Pollings::getArrayDevicesType(uint8_t subnet)
     frame.append(this->getByteDeviceTypeConfigured(subnet, 1));
     frame.append(this->getByteDeviceTypeConfigured(subnet, 0));
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured()) { frame.append(0x01); } // EMERGENCY TYPE 0x01
         else { frame.append((unsigned char)0x00); }
     }
@@ -73,6 +73,7 @@ QByteArray Pollings::getArrayDevicesType(uint8_t subnet)
 
 QByteArray Pollings::getArrayComunicationFailure(uint8_t subnet)
 {
+    qDebug() << "I am inside getArrayCommunication";
     QByteArray frame;
     frame.append(this->getByteComunicationFailureConfigured(subnet, 7));
     frame.append(this->getByteComunicationFailureConfigured(subnet, 6));
@@ -83,7 +84,7 @@ QByteArray Pollings::getArrayComunicationFailure(uint8_t subnet)
     frame.append(this->getByteComunicationFailureConfigured(subnet, 1));
     frame.append(this->getByteComunicationFailureConfigured(subnet, 0));
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured() && meshDevice[subnet][i].getComunicationFailure()) { frame.append(0x01); }
         else { frame.append((unsigned char)0x00); }
     }
@@ -103,7 +104,7 @@ QByteArray Pollings::getArrayQueryActualLvl(uint8_t subnet)
     frame.append(this->getByteActualLvlConfigured(subnet, 1));
     frame.append(this->getByteActualLvlConfigured(subnet, 0));
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured()) {
             if (!meshDevice[subnet][i].getComunicationFailure()) { frame.append(meshDevice[subnet][i].getActualLvl()); }
             else { frame.append(0x80); }
@@ -126,7 +127,7 @@ QByteArray Pollings::getArrayQueryStatus(uint8_t subnet)
     frame.append(this->getByteStatusConfigured(subnet, 1));
     frame.append(this->getByteStatusConfigured(subnet, 0));
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured()) {
             if (meshDevice[subnet][i].getComunicationFailure()) { frame.append(0x80); }
             else { frame.append(0x40); }
@@ -149,7 +150,7 @@ QByteArray Pollings::getArrayQueryEmergencyMode(uint8_t subnet)
     frame.append(this->getByteEmergencyModeConfigured(subnet, 1));
     frame.append(this->getByteEmergencyModeConfigured(subnet, 0));
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured()) {
             if (!meshDevice[subnet][i].getComunicationFailure()) { frame.append(meshDevice[subnet][i].getEmergencyMode()); }
             else { frame.append(0x80); }
@@ -172,7 +173,7 @@ QByteArray Pollings::getArrayQueryFailureStatus(uint8_t subnet)
     frame.append(this->getByteFailureStatusConfigured(subnet, 1));
     frame.append(this->getByteFailureStatusConfigured(subnet, 0));
 
-    for (uint8_t i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
+    for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
         if (meshDevice[subnet][i].getIsConfigured()) {
             if (!meshDevice[subnet][i].getComunicationFailure()) { frame.append(meshDevice[subnet][i].getEmergencyFailureStatus()); }
             else { frame.append(0x80); }

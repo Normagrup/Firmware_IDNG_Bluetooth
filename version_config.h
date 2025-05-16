@@ -7,6 +7,6 @@
 #define FIRMWARE_VERSION_H      1
 #define FIRMWARE_VERSION_L      (unsigned char)0
 
-#define DEVICE_ID               0x03
+#define DEVICE_ID               0x08
 
 #endif // VERSION_CONFIG_H

@@ -400,6 +400,7 @@ void Database::loadNodesFromDatabase()
         meshDevice[subnetAddress][nodeSubnetAddress].setEmergencyFeatures(query.value("EmergencyFeatures").toUInt());
         meshDevice[subnetAddress][nodeSubnetAddress].setPhysicalMinLvl(query.value("PhysicalMinLvl").toUInt());
     }
+    polling.setConfiguredSubnets(); // polling for eth send data
 }
 
 void Database::loadTestsFromDatabase()

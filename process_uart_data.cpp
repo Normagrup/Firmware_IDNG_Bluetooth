@@ -406,6 +406,8 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
                 meshDevice[i][j].setIsConfigured(true);
 
+                polling.setConfiguredSubnets(); // polling for eth send
+
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
