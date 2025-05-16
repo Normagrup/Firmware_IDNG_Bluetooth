@@ -94,16 +94,15 @@
                 <div class="list">
                     <label> Scanned devices</label>
                     <ul id="scannedDevicesList"></ul>
+
+                    <div class="under-button-container" id="manualContainerScannedDevices">
+                        <button onclick="parent.getScannedDevices()"> Scan devices </button>
+                    </div>
                 </div>
                 <div class="list-button-container" id="manualContainer">
-                    <button onclick="parent.getScannedDevices()"> Scan devices </button>
-                    <button onclick="parent.addDevicePrev()"> Add device </button>
-                    <button onclick="parent.delDevicePrev()"> Remove device </button>
+                    <button onclick="parent.scanFromNode()"> Scan from network node </button>
+                    <button onclick="parent.addDevicePrev()"> Add scanned device </button>
                     <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
-
-                    <button onclick="parent.delAllDevicesPrev()" class="remove-all-btn">
-                        Remove all devices
-                    </button>
                 </div>
                 <div class="list-button-container" id="automaticContainer">
                     <button onclick="parent.startCommission()"> Start commission </button>
@@ -111,6 +110,11 @@
                 <div class="list">
                     <label> Network Nodes </label>
                     <ul id="networkNodesList"></ul>
+                    
+                    <div class="under-button-container" id="manualContainerNetworkNodes">
+                        <button onclick="parent.delDevicePrev()"> Remove device </button>
+                        <button onclick="parent.delAllDevicesPrev()"> Remove all devices </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -146,6 +150,10 @@
 
             var manualContainer = document.getElementById("manualContainer");
             manualContainer.style.display = "none";
+            var manualContainerSD = document.getElementById("manualContainerScannedDevices");
+            manualContainerSD.style.display = "none";
+            var manualContainerNN = document.getElementById("manualContainerNetworkNodes");
+            manualContainerNN.style.display = "none";
         };
 
         document.addEventListener('click', function(event) {

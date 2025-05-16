@@ -33,7 +33,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_SCAN_FROM_NODE) {
         if(isCommissionInProgress(webServer)) { return; }
 
-        uint16_t nodeNetAddress = value.toUInt();
+        uint16_t nodeNetAddress = getNodeNetAddress(value);
         uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
         qDebug() << "Iniciando escaneo desde nodo realAddress:" << nodeRealAddress;

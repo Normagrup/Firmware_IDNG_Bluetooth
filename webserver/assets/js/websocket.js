@@ -1215,6 +1215,33 @@ function getScannedDevices()
     sendData("SET_SCANNED_DEVICES", "");
 }
 
+function scanFromNode()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var networkErrorLabel = iframeDocument.getElementById('networkError');
+
+    // Seleccionar el nodo marcado en la lista de Network Nodes
+    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+
+    if(selectedNode) {
+        networkErrorLabel.style.visibility = "hidden";
+
+        var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+        scannedDevices.innerHTML = "";
+
+        var nodeText = selectedNode.querySelector('span').textContent;
+        var nodeId = nodeText.trim().split("-")[0]; // Obtener ID del nodo
+
+        // TODO: añadir popup
+
+        sendData("SET_SCAN_FROM_NODE", nodeId);
+    } else {
+        networkErrorLabel.style.visibility = "visible";
+        networkErrorLabel.innerText = "No network node selected";
+    }
+}
+
 function startCommission() 
 {
     var iframe = document.getElementById('mainframe');
@@ -1257,7 +1284,8 @@ function delDevice() {
 
     // Seleccionar el nodo marcado en la lista de Network Nodes
     var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-    var nodeId = selectedNode.textContent.trim().split("-")[0]; // Obtener ID del nodo
+    var nodeText = selectedNode.querySelector('span').textContent;
+    var nodeId = nodeText.trim().split("-")[0]; // Obtener ID del nodo
 
     console.log("Enviando comando SET_DELETE_DEVICE para nodeID:", nodeId);
     // Enviar comando al embebido para eliminar el nodo

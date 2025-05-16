@@ -358,10 +358,6 @@ label {
     100% { transform: rotate(360deg); }
 }
 
-.remove-all-btn {
-    margin-top: auto;
-}
-
 button {
     cursor: pointer;
     color: #fff;
@@ -391,4 +387,29 @@ button:hover {
 
 #popup .list ul {
     height: 100%;
+}
+
+.under-button-container {
+    display: flex;
+    flex-direction: row;         /* Distribuir horizontalmente */
+    justify-content: center;     /* Centrado horizontal */
+    align-items: center;         /* Centrado vertical */
+    gap: 10px;                   /* Espaciado opcional entre elementos */
+    width: auto;
+}
+
+.under-button-container button {
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    text-transform: uppercase;
+    width: 50%;
+    border: 0;
+    padding: 10px 0;
+    border-radius: 5px;
+    background: #4682b4;
+}
+
+.under-button-container button:hover {
+    color: #63e8f0;
 }

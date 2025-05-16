@@ -392,6 +392,8 @@ function switchMode()
     var manualLabel = iframeDocument.getElementById("manualLabel");
     var automaticContainer = iframeDocument.getElementById("automaticContainer");
     var manualContainer = iframeDocument.getElementById("manualContainer");
+    var manualContainerSD = iframeDocument.getElementById("manualContainerScannedDevices");
+    var manualContainerNN = iframeDocument.getElementById("manualContainerNetworkNodes");
 
     if (toggleMode.checked) {
         automaticLabel.style.color = "#999";
@@ -401,6 +403,8 @@ function switchMode()
         manualLabel.style.color = "#4682b4";
         manualLabel.style.fontWeight = "bold";
         manualContainer.style.display = "flex";
+        manualContainerSD.style.display = "flex";
+        manualContainerNN.style.display = "flex";
     }
     else {
         automaticLabel.style.color = "#4682b4";
@@ -410,6 +414,8 @@ function switchMode()
         manualLabel.style.color = "#999";
         manualLabel.style.fontWeight = "normal";
         manualContainer.style.display = "none";
+        manualContainerSD.style.display = "none";
+        manualContainerNN.style.display = "none";
     }
 }
 
@@ -543,7 +549,7 @@ function addDevicePrev()
     }
     else {
         networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerHTML = "No device selected";
+        networkErrorLabel.innerHTML = "No scanned device selected";
     }
 }
 
@@ -571,7 +577,7 @@ function delDevicePrev()
 
     } else {
         networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerText = "No node selected";
+        networkErrorLabel.innerText = "No network node selected";
     }
 }
 

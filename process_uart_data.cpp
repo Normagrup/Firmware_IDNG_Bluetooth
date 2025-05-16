@@ -267,7 +267,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case SCAN_NODE_NOT_FOUND:
                     {
-                        uint16_t nodeAddr = (receivedData.data[3] << 8) | receivedData.data[4];
+                        uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
                         qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
 
                         sendLogCommissionEntry(webServer, "Nodo 0x" + QString::number(nodeAddr, 16).toUpper() + " no encontrado en la base de datos");
