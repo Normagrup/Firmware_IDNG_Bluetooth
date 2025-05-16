@@ -270,9 +270,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
                         qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
 
-                        sendLogCommissionEntry(webServer, "Nodo 0x" + QString::number(nodeAddr, 16).toUpper() + " no encontrado en la base de datos");
-                        break;
+                        // TODO: Implementar mensaje de nodo no encontrado en base de datos del micro (opcional)
                     }
+                    break;
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];

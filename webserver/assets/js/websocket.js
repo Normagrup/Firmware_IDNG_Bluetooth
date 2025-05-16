@@ -1233,8 +1233,6 @@ function scanFromNode()
         var nodeText = selectedNode.querySelector('span').textContent;
         var nodeId = nodeText.trim().split("-")[0]; // Obtener ID del nodo
 
-        // TODO: añadir popup
-
         sendData("SET_SCAN_FROM_NODE", nodeId);
     } else {
         networkErrorLabel.style.visibility = "visible";
