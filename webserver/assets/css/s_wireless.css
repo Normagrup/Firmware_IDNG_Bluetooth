@@ -203,6 +203,12 @@ label {
     transition: background-color 0.5s ease;
 }
 
+.deviceNetwork {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .deviceScanned:last-child, 
 .deviceNetwork:last-child {
     border-bottom: none;
@@ -215,6 +221,18 @@ label {
 
 .selectedDevice {
     background-color: #a2f0f5;
+}
+
+.deviceRelayButton {
+    margin: 1px;
+    padding: 2px 2px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 30px;
+}
+
+.deviceRelayButton:hover {
+    color: #e2e9f2;
 }
 
 .popup-overlay { 

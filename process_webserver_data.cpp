@@ -380,6 +380,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QStringList parts = value.split("_");
         uint16_t netAddress = parts[0].toUInt();
         bool enable = parts[1].toInt();
+
         uint16_t realAddress = meshDevice[(netAddress - 1) / 64][(netAddress - 1) % 64].getRealAddress();
 
         sendUartSetRelay(uartPort, realAddress, enable);
@@ -812,13 +813,16 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
 
 void sendNodesFromDatabase(WebServer* webServer, Database* database)
 {
-    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
+    QList<QString> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
 
-    for (const QPair<uint16_t, QString>& node : nodeNetAddressAndSNList) {
-        uint16_t netAddress = node.first;
-        QString serialNumber = node.second;
+    for (const QString& nodeInfo : nodeNetAddressAndSNList) {
+        QStringList nodeInfoParts = nodeInfo.split("#");
 
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber + "_" + "false"; // el booleano indica que no se debe incrementar el contador del webserver
+        QString netAddress = nodeInfoParts[0];
+        QString serialNumber = nodeInfoParts[1];
+        bool relayStatus = nodeInfoParts[2].toInt() != 0;
+
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + netAddress + "_" + serialNumber + "_" + (relayStatus ? "relayOn" : "relayOff") + "_" + + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
         delay(WEBSERVER_SEND_TIME_MS);
     }
@@ -1110,5 +1114,25 @@ void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled)
 {
     qDebug() << "Node Address:" << address << "- RELAY:" << (enabled ? "Enabled" : "Disabled");
+
     database->updateRelayMode(address, enabled);
+
+    uint16_t netAddress;
+    bool found = false;
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address) {
+                netAddress = i * 64 + j + 1;
+                found = true;
+                break;
+            }
+        }
+
+        if(found) { break; } // Evitar recorrer innecesariamente tras encontrar
+    }
+
+    QString message = QString(WS_SEND_CONFIRM_SET_RELAY) + "@" + QString::number(netAddress) + "_" + (enabled ? "relayOn" : "relayOff");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
