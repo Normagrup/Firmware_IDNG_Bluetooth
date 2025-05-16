@@ -376,6 +376,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
+    else if (type == WS_SET_RELAY_MODE) {
+        QStringList parts = value.split("_");
+        uint16_t netAddress = parts[0].toUInt();
+        bool enable = parts[1].toInt();
+        uint16_t realAddress = meshDevice[(netAddress - 1) / 64][(netAddress - 1) % 64].getRealAddress();
+
+        sendUartSetRelay(uartPort, realAddress, enable);
+    }
     else if (type == WS_SET_IDENTIFY) {
         if(isCommissionInProgress(webServer)) { return; }
 

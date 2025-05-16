@@ -58,7 +58,7 @@
 #define WS_SET_FUNCTION_TEST                "SET_FUNCTION_TEST"
 #define WS_SET_DURATION_TEST                "SET_DURATION_TEST"
 #define WS_SET_STOP                         "SET_STOP"
-
+#define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
 #define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
