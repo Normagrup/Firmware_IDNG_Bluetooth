@@ -258,10 +258,17 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndRemoveOneNode(webServer);
                     break;
 
-                    case CONFIRM_ANTENNA_ADDRESS:
+                    case CONFIRM_GET_ANTENNA_ADDRESS:
                     {
-                        uint16_t newAntennaRealAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        updateAntennaAddress(webServer, database, newAntennaRealAddress);
+                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        reloadAntennaAddress(webServer, database, antennaAddress);
+                    }
+                    break;
+
+                    case CONFIRM_SET_ANTENNA_ADDRESS:
+                    {
+                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        updateAntennaAddress(webServer, database, antennaAddress);
                     }
                     break;
 
@@ -1075,7 +1082,21 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
     _uartPort->sendData(frame);
 }
 
-void sendAntennaNewAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress)
+void sendAntennaGetAddress(UartPort* _uartPort)
+{
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(GET_ANTENNA_ADDRESS);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress)
 {
     QByteArray frame;
     unsigned char length = 5;

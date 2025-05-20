@@ -628,16 +628,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         buildTreeAndSendConfirm(webServer, database);
     }
     else if (type == WS_GET_MASTER_REAL_ADDRESS) {
-        QString message = QString(WS_SEND_MASTER_REAL_ADDRESS) + "@" + QString::number(antennaRealAddress);
-
-        if (webServer != nullptr) { webServer->sendData(message); }
+        sendAntennaGetAddress(uartPort);
     }
     else if (type == WS_SET_MASTER_REAL_ADDRESS) {
         // Para que la antena núm. 1 sea la address 31768 (0x7C18), la núm. 2 sea la address 31769 (0x7C19), etc. Hasta la núm. 1000, que será la 32767 (0x7FFF)
         int numValue = value.toInt(nullptr, 10) + 31767;
         uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
 
-        sendAntennaNewAddress(uartPort, newAntennaRealAddress);
+        sendAntennaSetAddress(uartPort, newAntennaRealAddress);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -1160,12 +1158,22 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t newAntennaAddress)
+void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
 {
-    database->setMasterRealAddress(newAntennaAddress);
-    antennaRealAddress = newAntennaAddress;
+    database->setMasterRealAddress(antennaAddress);
+    antennaRealAddress = antennaAddress;
 
-    QString message = QString(WS_SEND_CONFIRM_ADDRESS_CHANGE) + "@" + "";
+    QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_GET) + "@" + QString::number(antennaAddress);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
+{
+    database->setMasterRealAddress(antennaAddress);
+    antennaRealAddress = antennaAddress;
+
+    QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_SET) + "@" + QString::number(antennaAddress);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

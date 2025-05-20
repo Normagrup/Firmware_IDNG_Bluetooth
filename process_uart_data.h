@@ -55,7 +55,9 @@
 #define SCAN_FROM_NODE                  0x67
 #define SCAN_NODE_NOT_FOUND             0x68
 #define SET_ANTENNA_ADDRESS             0x69
-#define CONFIRM_ANTENNA_ADDRESS         0x70
+#define CONFIRM_SET_ANTENNA_ADDRESS     0x70
+#define GET_ANTENNA_ADDRESS             0x71
+#define CONFIRM_GET_ANTENNA_ADDRESS     0x72
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -82,6 +84,7 @@ void requestMicroDatabase(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
-void sendAntennaNewAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
+void sendAntennaGetAddress(UartPort* _uartPort);
+void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
 
 #endif // PROCESS_UART_DATA_H

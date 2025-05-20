@@ -54,8 +54,6 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
-    antennaRealAddress = _database->getMasterRealAddress();
-
     pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;
