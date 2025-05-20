@@ -45,6 +45,8 @@
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
 #define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
+#define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
+#define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"
 
 #define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
@@ -61,6 +63,7 @@
 #define WS_SET_SCAN_FROM_NODE               "SET_SCAN_FROM_NODE"
 #define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
 #define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
+#define WS_SEND_MASTER_REAL_ADDRESS         "MASTER_REAL_ADDRESS"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -100,6 +103,7 @@
 #define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 #define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
+#define WS_SEND_CONFIRM_ADDRESS_CHANGE      "CONFIRM_ADDRESS_CHANGE"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -143,5 +147,6 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
+void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t newAntennaAddress);
 
 #endif // PROCESS_WEBSERVER_DATA_H

@@ -12,6 +12,8 @@ Pollings polling;
 Tests tests[MAX_TEST];
 QList<AntennaTestCheck> antennaTestCheckList;
 
+uint16_t antennaRealAddress = 0;
+
 bool isCommissioning = false; // logic to prevent new commands
 bool logsSavedToday = false;
 

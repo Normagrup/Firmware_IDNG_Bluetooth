@@ -412,7 +412,7 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
 
 void buildJsonTree()
 {
-    QJsonObject root = buildJsonTreeRecursively(1); // RealAddress 1 = raíz
+    QJsonObject root = buildJsonTreeRecursively(antennaRealAddress);
     QJsonDocument doc(root);
 
     QFile file(TREE_DATA_PATH);

@@ -54,6 +54,8 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
+    antennaRealAddress = _database->getMasterRealAddress();
+
     pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;
@@ -340,7 +342,7 @@ void Wireless::addDeviceTimerHandler()
     addDeviceTimer.stop();
     //sendStartAddingDevices(_webServer);
 
-    if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != 0x0001) {
+    if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != antennaRealAddress) {
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;

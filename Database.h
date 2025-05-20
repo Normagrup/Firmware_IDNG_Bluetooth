@@ -78,6 +78,9 @@ public:
     int getCountOfDirectChildren(uint16_t nodeAddress);
     QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
 
+    uint16_t getMasterRealAddress(void);
+    void setMasterRealAddress(uint16_t newAntennaAddress);
+
 signals:
 
 private:

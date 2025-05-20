@@ -25,6 +25,8 @@ extern Pollings polling;
 extern Tests tests[MAX_TEST];
 extern QList<AntennaTestCheck> antennaTestCheckList;
 
+extern uint16_t antennaRealAddress;
+
 extern bool isCommissioning; // logic to prevent new commands
 extern bool logsSavedToday; // to check if today´s log is saved
 

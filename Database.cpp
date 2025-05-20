@@ -87,7 +87,8 @@ void Database::initDatabase()
                "Submask TEXT, "
                "Gateway TEXT, "
                "BuildingName TEXT, "
-               "LineName TEXT);");
+               "LineName TEXT, "
+               "MasterAddress TEXT);");
 
     query.prepare("SELECT * FROM General");
 
@@ -99,12 +100,13 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Users:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName) VALUES (:ip, :submask, :gateway, :buildingName, :lineName)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
+            query.bindValue(":masterAddress", "7C17");
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in Users:" << query.lastError().text(); }
         }
@@ -1147,6 +1149,35 @@ QString Database::getNextNodeName(uint16_t doneIts)
     }
     else
         return "Node -";
+}
+
+uint16_t Database::getMasterRealAddress()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT MasterAddress FROM General");
+
+    if (!query.exec()) { return 0x7C17; }
+
+    if (query.next()) {
+        return static_cast<uint16_t>(query.value("MasterAddress").toString().toUInt(nullptr, 16));
+    }
+
+    return 0x7C17;
+}
+
+void Database::setMasterRealAddress(uint16_t newAntennaAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE General SET MasterAddress = :newAntennaAddress");
+    query.bindValue(":newAntennaAddress", newAntennaAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
+    } else {
+        qDebug() << "MasterAddress updated to" << newAntennaAddress;
+    }
 }
 
 void Database::editGroup(QString address, QString name)

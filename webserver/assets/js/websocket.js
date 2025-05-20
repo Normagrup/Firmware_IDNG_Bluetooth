@@ -118,6 +118,19 @@ function processDateTimeInfo(value)
     }
 }
 
+function processNeedOfMasterAddressConfig(value)
+{
+    if(value == 31767) {
+        closeLoginPopup();
+
+        var popup = document.getElementById('popup');
+	    var popupOverlay = document.getElementById('popupOverlay');
+
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+}
+
 function addDeviceToScannedList(value) 
 {
     var iframe = document.getElementById('mainframe');
@@ -1077,6 +1090,21 @@ function confirmSetRelay(value)
     }
 }
 
+function confirmAddressChange(value)
+{
+    var antennaNumberInput = document.getElementById('antennaNumber');
+    var antennaNumberButton = document.getElementById('antennaNumberButton');
+
+    antennaNumberInput.disabled = true;
+    antennaNumberButton.disabled = true;
+
+    setTimeout(() => {
+        sendData("SET_REBOOT_DEVICE", " ");
+        logoutApp();
+        window.location.href = "http://" + window.location.hostname;
+    }, 1000);
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1088,6 +1116,7 @@ function processReceivedData(data)
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
+    else if (type == 'MASTER_REAL_ADDRESS') { processNeedOfMasterAddressConfig(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
     else if (type == 'CONFIRM_START_SCAN') { confirmStartScan(value); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
@@ -1121,6 +1150,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
     else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
+    else if (type == "CONFIRM_ADDRESS_CHANGE") { confirmAddressChange(value); }
 }
 
 function sendData(type, value) 
@@ -1789,6 +1819,10 @@ function codeReaderChanged()
     codeReader.value = '';
 }
 
+function requestMasterRealAddress() {
+    sendData("GET_MASTER_REAL_ADDRESS", "");
+}
+
 function requestDevicesAndFailuresCount() {
     sendData("GET_DEVICES_COUNT", "");
     sendData("GET_FAILURES_COUNT", "");
@@ -1916,4 +1950,21 @@ function syncPOL() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
     }, 10000);
+}
+
+function setAntennaNumber() {
+    var antennaNumberInput = document.getElementById('antennaNumber');
+    var antennaNumber = parseInt(antennaNumberInput.value, 10);
+
+    var intervalErrorLabel = document.getElementById('intervalErrorLabel');
+
+    if(!antennaNumber || antennaNumber < 1 || antennaNumber > 1000) 
+    {
+        intervalErrorLabel.style.visibility = "visible";
+    }
+    else
+    {
+        intervalErrorLabel.style.visibility = "hidden";
+        sendData("SET_MASTER_REAL_ADDRESS", antennaNumber);
+    }
 }
