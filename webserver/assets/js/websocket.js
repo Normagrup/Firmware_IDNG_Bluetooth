@@ -1095,8 +1095,8 @@ function processNeedOfMasterAddressCompleted(value)
     var popup = document.getElementById('popup');
 	var popupOverlay = document.getElementById('popupOverlay');
 
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
 }
 
 function processReceivedData(data) 
