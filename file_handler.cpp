@@ -427,7 +427,7 @@ void buildJsonTree()
 QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
 {
     QString name;
-    if(realAddress != 1) // La raíz no tiene nombre (no es un nodo como tal, es la antena)
+    if(realAddress != antennaRealAddress) // La raíz no tiene nombre (no es un nodo como tal, es la antena)
     {
         const NodeInfo &node = nodesByRealAddress[realAddress];
         name = QString("Node %1 - %2")
