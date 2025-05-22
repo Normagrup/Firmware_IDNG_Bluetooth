@@ -306,3 +306,14 @@ void removeLogTestFromCheckList(uint16_t nodeAddress)
         }
     }
 }
+
+int getNodeSubnetFromDaliAddress(uint8_t daliAddr)
+{
+    if (daliAddr < 0 || daliAddr >= 127 || daliAddr % 2 == 0)
+        return 0; // Invalid DALI address
+
+    int id = daliAddr >> 1;
+    uint8_t nodesubnet = id % 64;
+
+    return nodesubnet;
+}

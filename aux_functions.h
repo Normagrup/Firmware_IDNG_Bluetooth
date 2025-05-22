@@ -29,5 +29,6 @@ int getUUIDIndexOfScanned(QString UUID);
 QString getUUIDAsString(uint8_t UUID[16]);
 
 void setTests(QStringList webServerParts, Database* database);
+int getNodeSubnetFromDaliAddress(uint8_t daliAddr);
 
 #endif // AUX_FUNCTIONS_H

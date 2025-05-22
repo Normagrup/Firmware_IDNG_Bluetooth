@@ -73,7 +73,6 @@ QByteArray Pollings::getArrayDevicesType(uint8_t subnet)
 
 QByteArray Pollings::getArrayComunicationFailure(uint8_t subnet)
 {
-    qDebug() << "I am inside getArrayCommunication";
     QByteArray frame;
     frame.append(this->getByteComunicationFailureConfigured(subnet, 7));
     frame.append(this->getByteComunicationFailureConfigured(subnet, 6));

@@ -1,6 +1,8 @@
 #include "frametype4_functions.h"
 #include "file_handler.h"
 #include <QDebug>
+#include "aux_functions.h"
+#include "time_functions.h"
 
 void setIPAddress(QByteArray data)
 {
@@ -102,3 +104,45 @@ void setMantenedorPassword(QByteArray data)
         setMantenedorPasswordFile(mantenedorPassword);
     }
 }
+
+void sendGroupNamesFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, uint8_t groupId, const QString& groupName, UdpSocket *_udpSocket)
+{
+    QByteArray frame;
+    uchar crc = 0;
+
+    QByteArray nameBytes = groupName.toUtf8();
+    uint8_t nameLength = nameBytes.size();
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_83);
+    frame.append(commandHigh);
+    frame.append(commandLow);
+    frame.append(1+nameLength);
+    frame.append(groupId);
+    frame.append(nameLength);
+    frame.append(nameBytes.left(nameLength));
+
+    for (int i = 3; i < frame.size(); ++i) crc += frame[i];
+    frame.append(crc);
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddress);
+
+    _udpSocket->sendData(dstAddress, frame);
+}
+
+void sendGroupNamesToNormalink(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
+{
+    Database* db;
+
+    QList<QPair<QString, QString>> groupList = db->getGroups();
+
+    for (int i = 0; i < groupList.size(); ++i) {
+        const QString& name = groupList[i].second;
+        sendGroupNamesFrame(rcvAddress, commandHigh, commandLow, static_cast<uint8_t>(i), name, _udpSocket);
+        delay(WEBSERVER_SEND_TIME_MS);
+    }
+}
+

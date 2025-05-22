@@ -764,23 +764,23 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0xE2: // TERMINATE
-            sendDaliSpecialCommand(subnet, TERMINATE, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, TERMINATE, IS_NORMAL);
             break;
 
         case 0xE5: // RANDOMISE
-            sendDaliSpecialCommand(subnet, RANDOMISE, IS_TWICE);
+            //sendDaliSpecialCommand(subnet, RANDOMISE, IS_TWICE);
             break;
 
         case 0xE6: // COMPARE
-            sendDaliSpecialCommand(subnet, COMPARE, IS_QUERY);
+            //sendDaliSpecialCommand(subnet, COMPARE, IS_QUERY);
             break;
 
         case 0xE7: // WITHDRAW
-            sendDaliSpecialCommand(subnet, WITHDRAW, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, WITHDRAW, IS_NORMAL);
             break;
 
         case 0xEF: // QUERY SHORT ADDRESS
-            sendDaliSpecialCommand(subnet, QUERY_SHORT_ADDRESS, IS_QUERY);
+            //sendDaliSpecialCommand(subnet, QUERY_SHORT_ADDRESS, IS_QUERY);
             break;
 
         default:
@@ -947,62 +947,64 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
     }
 }
 
-static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket)
+static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, UartPort* _uartPort)
 {
     uint8_t commandHigh = (unsigned char)data[8];
     uint8_t commandLow = (unsigned char)data[9];
 
     uint8_t subnet = (unsigned char)data[4];
+    uint8_t daliAddress = (unsigned char)data[7];
+    uint8_t value = (unsigned char)data[10];
 
     switch (commandHigh) {
     case 0x63:
         switch (commandLow) {
         case 0x00: // ARC POWER
-            sendDaliSpecialCommand(subnet, ARC_POWER_DAPC, IS_NORMAL);
+            sendDaliSpecialCommand(_uartPort, subnet, daliAddress, ARC_POWER_DAPC, value, IS_NORMAL);
             break;
 
         case 0xE3: // DTR0
-            sendDaliSpecialCommand(subnet, DTR_0, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, DTR_0, IS_NORMAL);
             break;
 
         case 0xE4: // INITIALISE
-            sendDaliSpecialCommand(subnet, INITIALISE, IS_TWICE);
+            //sendDaliSpecialCommand(subnet, INITIALISE, IS_TWICE);
             break;
 
         case 0xEA: // SEARCH ADDRESS HIGH
-            sendDaliSpecialCommand(subnet, SEARCH_ADDRESS_HIGH, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, SEARCH_ADDRESS_HIGH, IS_NORMAL);
             break;
 
         case 0xEB: // SEARCH ADDRESS MEDIUM
-            sendDaliSpecialCommand(subnet, SEARCH_ADDRESS_MEDIUM, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, SEARCH_ADDRESS_MEDIUM, IS_NORMAL);
             break;
 
         case 0xEC: // SEARCH ADDRESS LOW
-            sendDaliSpecialCommand(subnet, SEARCH_ADDRESS_LOW, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, SEARCH_ADDRESS_LOW, IS_NORMAL);
             break;
 
         case 0xED: // PROGRAM SHORT ADDRESS
-            sendDaliSpecialCommand(subnet, PROGRAM_SHORT_ADDRESS, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, PROGRAM_SHORT_ADDRESS, IS_NORMAL);
             break;
 
         case 0xEE: // VERIFY SHORT ADDRESS
-            sendDaliSpecialCommand(subnet, VERIFY_SHORT_ADDRESS, IS_QUERY);
+            //sendDaliSpecialCommand(subnet, VERIFY_SHORT_ADDRESS, IS_QUERY);
             break;
 
         case 0xF1: // ENABLE DEVICE TYPE
-            sendDaliSpecialCommand(subnet, ENABLE_DEVICE_TYPE, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, ENABLE_DEVICE_TYPE, IS_NORMAL);
             break;
 
         case 0xF2: // DTR1
-            sendDaliSpecialCommand(subnet, DTR_1, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, DTR_1, IS_NORMAL);
             break;
 
         case 0xF3: // DTR2
-            sendDaliSpecialCommand(subnet, DTR_2, IS_NORMAL);
+            //sendDaliSpecialCommand(subnet, DTR_2, IS_NORMAL);
             break;
 
         case 0xF4: // WRITE MEMORY LOCATION
-            sendDaliSpecialCommand(subnet, WRITE_MEMORY_LOCATION, IS_QUERY);
+            //sendDaliSpecialCommand(subnet, WRITE_MEMORY_LOCATION, IS_QUERY);
             break;
 
         default:
@@ -1102,7 +1104,9 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
         case 0x19: // READ GROUPS
             // ???????
             break;
-
+        case 0x20: // READ GROUPS NAMES
+            sendGroupNamesToNormalink(rcvAddress, commandHigh, commandLow, _udpSocket);
+            break;
         case 0x1A: // WRITE GROUPS
             // ???????
             break;
@@ -1260,7 +1264,7 @@ void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket,
         break;
 
     case 0x03:
-        processEthFrameType3(rcvAddress, data, _udpSocket);
+        processEthFrameType3(rcvAddress, data, _udpSocket, _uartPort);
         break;
 
     case 0x04:
