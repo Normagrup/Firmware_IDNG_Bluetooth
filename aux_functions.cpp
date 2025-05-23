@@ -272,14 +272,21 @@ void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateT
 
 void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType)
 {
-    int subnet = (nodeAddress - 1) / 64;
-    int node = (nodeAddress - 1) % 64;
+    int devId;
+    QString serial, devName;
+    if(eventType == "Commissioning"){
+        devId = nodeAddress;
+        serial = "FF.FF.FF.FF";
+        devName = QString("DEV ERR: %1").arg(devId);
+    } else {
+        int subnet = (nodeAddress - 1) / 64;
+        int node = (nodeAddress - 1) % 64;
+        Device &device = meshDevice[subnet][node];
+        devId = device.getRealAddress();
+        serial = device.serialNumberString();
+        devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+    }
 
-    Device &device = meshDevice[subnet][node];
-
-    int devId = device.getRealAddress();
-    QString serial = device.serialNumberString();
-    QString devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
     AntennaInfo info = getAntennaInfo(db);
 
     insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);

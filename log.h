@@ -3,7 +3,7 @@
 
 // Log events
 #define LOG_DEVICE_ADDED                      0xD1
-#define LOG_COMMISSION_ADD_DEVICE_FAIL        0xD2
+#define LOG_COMMISSION_DEVICE_ERROR           0xD2
 #define LOG_COMMISSION_FEATURES_FAIL          0xD3
 #define LOG_COMMISSION_DEVICE_TYPE_FAIL       0xD4
 #define LOG_COMMISSION_NET_ADDRESS_FAIL       0xD5

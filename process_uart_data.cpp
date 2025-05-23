@@ -207,18 +207,18 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendAddedDevices(dataChecked, webServer, database);
                     break;
                     case COMMISSION_FEATURES_FAIL:
-                        qDebug() << "I am receving features fail during commisioning device...";
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
+                        qDebug() << "I am receving features fail during commisioning devicewith nodeAddress: " << rcvNodeAddress;
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_FEATURES_FAIL, "Commissioning");
                         break;
                     case COMMISSION_DEVICE_TYPE_FAIL:
-                        qDebug() << "I am receving device type fail during commisioning device...";
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
+                        qDebug() << "I am receving device type fail during commisioning device with nodeAddress: " << rcvNodeAddress;
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_DEVICE_TYPE_FAIL, "Commissioning");
                         break;
                     case COMMISSION_NET_ADDRESS_FAIL:
-                        qDebug() << "I am receving net address fail during commisioning device...";
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
+                        qDebug() << "I am receving net address fail during commisioning device with nodeAddress: " << rcvNodeAddress;
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_NET_ADDRESS_FAIL, "Commissioning");
                         break;
 
@@ -227,7 +227,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendLogCommissionEntry(webServer, "An error has occurred with the device...");
                         uuidBytes = dataChecked.mid(3,16);
                         qDebug() << "I am adding device error to log....";
-                        insertComsErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_TYPE_FAIL);
+                        insertComsErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
                         sendDeviceError(dataChecked, uartPort, webServer);
                     break;
 
