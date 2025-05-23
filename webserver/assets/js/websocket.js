@@ -1005,6 +1005,25 @@ function processIsCommissionInProgress(value)
     }
 }
 
+function processIsAddManualInProgress(value)
+{
+    var isAddingManual = (value === "true");
+
+    if(isAddingManual) {
+        var iframe = document.getElementById('mainframe');
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var popupAdd = iframeDocument.getElementById('popupAddDevice');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+        popupAdd.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
+        var logAddManual = iframeDocument.getElementById('logAddManual');
+        logAddManual.innerHTML = "";
+    }
+}
+
 function processDelOneDev(value, init)
 {
     var iframe = document.getElementById('mainframe');
@@ -1183,6 +1202,7 @@ function processReceivedData(data)
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
+    else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }

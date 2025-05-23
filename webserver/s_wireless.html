@@ -133,11 +133,18 @@
 				parent.sendData("SET_IS_COMMISSION_IN_PROGRESS", "");
 			}, 10);
         }
+
+        function isAddingManualInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_ADD_MANUAL_IN_PROGRESS", "");
+			}, 10);
+        }
 		
 		window.onload = function() {
             getNodesFromDatabase();
             getScannedNodes();
             isCommissionInProgress();
+            isAddingManualInProgress();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";
