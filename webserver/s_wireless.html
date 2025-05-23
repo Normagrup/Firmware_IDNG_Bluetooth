@@ -31,21 +31,16 @@
         <br>
         <div class="loader"></div>
     </div>
-    <div class="popupManageDevices" id="popupAddDevice">
-        <div class="popup-container">
-            <div class="popup-subcontainer">
-                <label id="addingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to add the node to the network? </label>
-                <div class="popup-button-subcontainer">
-                    <button id="addingDeviceButton" onclick="parent.addDevice()"> Confirm </button>
-                </div>
-            </div>
-            
-            <div class="popup-subcontainer-small">
-                <span id="closeAddDev" class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
-            </div>
+    <div class="popupManageDevices1" id="popupAddDevice">
+        <h2> Adding node manually... </h2>
+        <br>
+        <div class="loader"></div>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logAddManual"></ul>
         </div>
     </div>
-    <div class="popupManageDevices" id="popupDelDevice">
+    <div class="popupManageDevices2" id="popupDelDevice">
         <div class="popup-container">
             <div class="popup-subcontainer">
                 <label id="deletingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the node from the network? </label>
@@ -60,7 +55,7 @@
             </div>
         </div>
     </div>
-    <div class="popupManageDevices" id="popupDelAllDevices">
+    <div class="popupManageDevices2" id="popupDelAllDevices">
         <div class="popup-container">
             <div class="popup-subcontainer">
                 <label id="deletingAllDevicesLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the nodes from the network? </label>
@@ -138,11 +133,18 @@
 				parent.sendData("SET_IS_COMMISSION_IN_PROGRESS", "");
 			}, 10);
         }
+
+        function isAddingManualInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_ADD_MANUAL_IN_PROGRESS", "");
+			}, 10);
+        }
 		
 		window.onload = function() {
             getNodesFromDatabase();
             getScannedNodes();
             isCommissionInProgress();
+            isAddingManualInProgress();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";

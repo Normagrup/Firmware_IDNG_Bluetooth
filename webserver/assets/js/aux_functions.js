@@ -536,16 +536,14 @@ function addDevicePrev()
 
         var popup = iframeDocument.getElementById('popupAddDevice');
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
-        var addingDeviceLabel = iframeDocument.getElementById('addingDeviceLabel');
-        var addingDeviceButton = iframeDocument.getElementById('addingDeviceButton');
 
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
-        addingDeviceLabel.textContent = "Do you want to add the node to the network?";
-        addingDeviceButton.classList.remove('button-disabled');
 
-        var closeAddDev = iframeDocument.getElementById('closeAddDev');
-        closeAddDev.setAttribute("onclick", "parent.closeWirelessPopup()");
+        var logAddManual = iframeDocument.getElementById('logAddManual');
+        logAddManual.innerHTML = "";
+
+        addDevice();
     }
     else {
         networkErrorLabel.style.visibility = "visible";
@@ -605,11 +603,18 @@ function closeWirelessPopup()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var popup = iframeDocument.getElementById('popup');
     var popupAdd = iframeDocument.getElementById('popupAddDevice');
     var popupDelete = iframeDocument.getElementById('popupDelDevice');
     var popupDeleteAll = iframeDocument.getElementById('popupDelAllDevices');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var loader1 = popup.querySelector('.loader');
+    loader1.style.animation = "spin 1.5s linear infinite";
+    var loader2 = popupAdd.querySelector('.loader');
+    loader2.style.animation = "spin 1.5s linear infinite";
     
+    if(popup) { popup.style.visibility = "hidden"; }
     if(popupAdd) { popupAdd.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
     if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
