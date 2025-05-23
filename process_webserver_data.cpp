@@ -44,11 +44,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {
         sendStoredScannedDevices(webServer);
     }
-    else if (type == WS_SET_LINE_SCAN) {
-        if(isCommissionInProgress(webServer)) { return; }
-        requestMicroDatabase(uartPort);
-        
-    }
     else if (type == WS_GET_IP_CONFIG) {
         QStringList messages = database->getInterfaceParameters();
         QString message = messages.join(" ");
@@ -606,6 +601,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         if(isCommissionInProgress(webServer)) { return; }
         clearSystemData(database, uartPort);
+    }
+    else if (type == WS_LINE_SCANNING) {
+        if(isCommissionInProgress(webServer)) { return; }
+        sendUartLineScanning(uartPort)
+
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
         sendGroupsWithPOL(webServer, database, value);

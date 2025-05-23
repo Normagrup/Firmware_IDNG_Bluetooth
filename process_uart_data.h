@@ -42,7 +42,7 @@
 #define CONFIRM_CHANGE_RELAY            0x31
 #define DEBUG                           0x90
 #define LINE_SCAN                       0x20
-#define LINE_SCAN_SEND                  0x22
+#define LINE_SCANNING                   0x22
 #define CONFIRM_START_SCAN              0x49
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
@@ -80,7 +80,6 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
-void requestMicroDatabase(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);

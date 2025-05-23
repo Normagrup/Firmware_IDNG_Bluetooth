@@ -1696,6 +1696,11 @@ function clearAllData()
     clearDataLabel.style.visibility = "visible";
 }
 
+function lineScanning()
+{
+    sendData("LINE_SCANNING", "");
+}
+
 function getLogs()
 {
     var iframe = document.getElementById('mainframe');

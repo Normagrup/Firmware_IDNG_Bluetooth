@@ -897,19 +897,39 @@ void sendUartClearAllData(UartPort* _uartPort)
     qDebug() << "[Embebido] Preparando frame de CLEAR_ALL_DATA para el micro...";
     unsigned char length = 3;
 
-    // Armar el frame en el mismo orden que tu protocolo
+
     frame.append(UART_HEADER);               
     frame.append(length);                   
     frame.append(UART_CONFIG_FRAME_TYPE);   
     frame.append(CLEAR_ALL_DATA);    
 
-    frame.append(UART_END);                  // Fin de frame
+    frame.append(UART_END);
 
     qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
 
-    // Enviar por la UART
     _uartPort->sendData(frame);
     qDebug() << "[Embebido] Frame de CLEAR_ALL_DATA enviado correctamente.";
+}
+
+void sendUartLineScanning(UartPort* _uartPort)
+{
+    QByteArray frame;
+
+    qDebug() << "UART LINE SCANNING";
+    qDebug() << "[Embebido] Enviando comando Line-Scanning";
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(LINE_SCANNING);
+
+    frame.append(UART_END);
+
+    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
+
+    _uartPort->sendData(frame);
+    qDebug() << "[Embebido] Frame de LINE_SCANNING enviado correctamente.";
 }
 
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)
@@ -971,21 +991,6 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-}
-
-void requestMicroDatabase(UartPort* uartPort)
-{
-    QByteArray frame;
-
-    unsigned char length = 3;
-
-    frame.append(UART_HEADER);               // 0x02, o lo que tengas definido
-    frame.append(length);                    // 3
-    frame.append(UART_CONFIG_FRAME_TYPE);    // 0x10, por ejemplo
-    frame.append(LINE_SCAN);                 // 0x20 (o el valor que hayas definido para "REQUEST_DB")
-    frame.append(UART_END);                  // 0x03, por ejemplo
-
-    uartPort->sendData(frame); 
 }
 
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)

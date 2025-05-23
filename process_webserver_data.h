@@ -41,6 +41,7 @@
 #define WS_GET_GROUP_INFO                   "GET_GROUP_INFO"
 #define WS_GET_TEST                         "GET_TEST"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
+#define WS_LINE_SCANNING                    "LINE_SCANNING"
 #define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
