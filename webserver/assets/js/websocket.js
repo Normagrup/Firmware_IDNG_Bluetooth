@@ -316,12 +316,16 @@ function processLogCommissionEntry(value)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var parts = value.split("_");
+    var commission_MSG = parts[0];
+    var errorType = parts[1] ;
     
     var logCommissionList = iframeDocument.getElementById('logCommission');
 
     var newEntry = iframeDocument.createElement('li');
-    newEntry.textContent = value;
-    if(value == "An error has occurred with the device...")
+    newEntry.textContent = commission_MSG;
+    if(errorType == "1")
         newEntry.style.color = "#C30101";
     logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
 }

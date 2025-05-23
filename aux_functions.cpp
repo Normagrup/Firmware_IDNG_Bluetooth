@@ -212,12 +212,12 @@ void setTests(QStringList webServerParts, Database *database)
     }
 }
 
-void insertLogEvent(Database *database, int devId, QString serialNum, QString devName, QString devIP, QDateTime dateTime, int eventCode, QString eventType)
+void insertLogEvent(Database *database, QString name, QString serialNum, int realAddress, QString devIP, QDateTime dateTime, int eventCode, QString eventType)
 {
     LogInfo log;
-    log.deviceId = devId;
+    log.devName = name;
     log.seriailNum = serialNum;
-    log.devName = devName;
+    log.realAddress = realAddress;
     log.devIP = devIP;
     log.timestamp = dateTime.toSecsSinceEpoch();
     log.event = eventCode;
@@ -228,16 +228,24 @@ void insertLogEvent(Database *database, int devId, QString serialNum, QString de
 
 void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QString& testType)
 {
+    uint8_t subnet, nodeSubnet;
+    uint16_t nodeNetAddress;
+    if(!isGroup){
+        subnet = (targetAddr - 1) / 64;
+        nodeSubnet = (targetAddr - 1) % 64;
+        nodeNetAddress = subnet * 64 + nodeSubnet + 1;
+    }
+
     QString serial = isGroup ? "FF.FF.FF.FF"
-                             : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].serialNumberString();
+                             : meshDevice[subnet][nodeSubnet].serialNumberString();
 
     QString devName = isGroup
-                          ? "Group: " + QString::number(targetAddr)
-                          : "SUB:" + QString::number((targetAddr - 1) / 64) + " ID:" + QString::number((targetAddr - 1) % 64);
+                          ? "Group: " + getGroupName(targetAddr)
+                          : "Node: " + QString::number(nodeNetAddress);
 
-    int devId = isGroup
+    int realAddress = isGroup
                     ? targetAddr
-                    : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].getRealAddress();
+                    : meshDevice[subnet][nodeSubnet].getRealAddress();
 
     AntennaInfo info = getAntennaInfo(db);
     QString eventType = "Test";
@@ -247,13 +255,13 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
     else if (testType == "DURATION") { logType = LOG_TEST_REQUESTED_DURATION; }
     else if (testType == "STOP") { logType = LOG_TEST_STOPPED; }
 
-    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, logType, eventType);
+    insertLogEvent(db, devName, serial, realAddress, info.ip, info.timestamp, logType, eventType);
 
     if (testType == "FUNCTIONAL" || testType == "DURATION") {
-        addTestToChecklist(devId, testType, info.timestamp);
+        addTestToChecklist(realAddress, testType, info.timestamp);
     }
     if (testType == "STOP"){
-        removeLogTestFromCheckList(devId);
+        removeLogTestFromCheckList(realAddress);
     }
 }
 
@@ -272,24 +280,21 @@ void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateT
 
 void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType)
 {
-    int devId;
+    int realAddress;
     QString serial, devName;
-    if(eventType == "Commissioning"){
-        devId = nodeAddress;
-        serial = "FF.FF.FF.FF";
-        devName = QString("DEV ERR: %1").arg(devId);
-    } else {
-        int subnet = (nodeAddress - 1) / 64;
-        int node = (nodeAddress - 1) % 64;
-        Device &device = meshDevice[subnet][node];
-        devId = device.getRealAddress();
-        serial = device.serialNumberString();
-        devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == nodeAddress) {
+                realAddress = nodeAddress;
+                serial = meshDevice[i][j].serialNumberString();
+                devName = "Node: " + QString::number(i*64+j+1);
+            }
+        }
     }
 
     AntennaInfo info = getAntennaInfo(db);
 
-    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
+    insertLogEvent(db, devName, serial, realAddress, info.ip, info.timestamp, eventCode, eventType);
 }
 
 AntennaInfo getAntennaInfo(Database *db)
@@ -324,9 +329,74 @@ void insertComsErrorToLog(const QByteArray& uuidArray, Database *db, int eventCo
                          .arg(static_cast<uint8_t>(uuidArray[12]), 2, 16, QChar('0'))
                          .toUpper();
 
-    QString devName = "Unprovisioned";
+    int devId = currentNodeAddress;
+    QString devName = QString("DEV ERR: %1").arg(currentNodeAddress);
     AntennaInfo info = getAntennaInfo(db);
     QString eventType = "Commissioning";
+    insertLogEvent(db, devName, serial, devId, info.ip, info.timestamp, eventCode, eventType);
+    currentNodeAddress = 0;
+}
 
-    insertLogEvent(db, -1, serial, devName, info.ip, info.timestamp, eventCode, eventType);
+QString getGroupName(uint16_t targetAddress)
+{
+    Database* database;
+    QList<QPair<QString, QString>> groupList = database->getGroups();
+    QString groupName;
+
+    if(targetAddress == 49152){
+        groupName = "Lighting";
+    } else if (targetAddress == 49153){
+        groupName = "Emergency";
+    } else if (targetAddress == 49154){
+        groupName = "Even";
+    } else if (targetAddress == 49155){
+        groupName = "Odd";
+    } else {
+        for (const QPair<QString, QString>& group : groupList) {
+            uint16_t groupAddress = group.first.toUInt(NULL, 16);
+            if(groupAddress == targetAddress) {
+                groupName = group.second;
+            }
+        }
+    }
+    return groupName;
+}
+
+QString getLogEventName(int eventCode)
+{
+    switch (eventCode) {
+    case 0xD1: return "Device Added";
+    case 0xD2: return "Device Error";
+    case 0xD3: return "Add to Group Failed";
+    case 0xD4: return "Device Type Failed";
+    case 0xD5: return "Net Address Failed";
+    case 0xD6: return "Device Removed";
+
+    case 0x01: return "Communication Failure";
+    case 0x10: return "Communication Recovered";
+
+    case 0x02: return "Battery Failure";
+    case 0x20: return "Battery Recovered";
+
+    case 0x03: return "Lamp Failure";
+    case 0x30: return "Lamp Recovered";
+
+    case 0x04: return "Duration Failure";
+    case 0x40: return "Duration Recovered";
+
+    case 0x08: return "Functional Test Requested";
+    case 0x09: return "Duration Test Requested";
+    case 0x0A: return "Test Stopped";
+
+    case 0x0B: return "Functional Test Completed";
+    case 0x0C: return "Duration Test Completed";
+
+    case 0xB1: return "Functional Test OK";
+    case 0xB2: return "Functional Test Failed";
+
+    case 0xC1: return "Duration Test OK";
+    case 0xC2: return "Duration Test Failed";
+
+    default: return "Unknown Event";
+    }
 }

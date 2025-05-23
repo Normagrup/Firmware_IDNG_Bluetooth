@@ -272,9 +272,9 @@ void Database::initDatabase()
      *                                                  *
      * **************************************************/
     query.exec("CREATE TABLE IF NOT EXISTS Log "
-        "(DeviceId INTEGER, "
+        "(Name TEXT, "
         "Serial TEXT, "
-        "Name TEXT, "
+        "RealAddress INTEGER, "
         "IP TEXT, "
         "Timestamp INTEGER, "
         "Event INTEGER, "
@@ -993,12 +993,12 @@ bool Database::insertLogEvent(const LogInfo log)
 {
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Log (DeviceId, Serial, Name, IP, Timestamp, Event, EventType) "
-                  "VALUES (:deviceId, :serial, :name, :ip, :timestamp, :event, :eventType)");
+    query.prepare("INSERT INTO Log (Name, Serial, RealAddress, IP, Timestamp, Event, EventType) "
+                  "VALUES (:name, :serial, :realaddress, :ip, :timestamp, :event, :eventType)");
 
-    query.bindValue(":deviceId", log.deviceId);
-    query.bindValue(":serial", log.seriailNum);
     query.bindValue(":name", log.devName);
+    query.bindValue(":serial", log.seriailNum);
+    query.bindValue(":realaddress", log.realAddress);
     query.bindValue(":ip", log.devIP);
     query.bindValue(":timestamp", log.timestamp);
     query.bindValue(":event", log.event);
@@ -1016,13 +1016,13 @@ QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, 
     QString queryStr;
 
     if (type.toLower() == "all") {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+        queryStr = "SELECT Name, Serial, RealAddress, IP, Timestamp, Event, EventType "
                    "FROM Log WHERE Timestamp BETWEEN :start AND :end";
         query.prepare(queryStr);
         query.bindValue(":start", startDate);
         query.bindValue(":end", endDate);
     } else {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+        queryStr = "SELECT Name, Serial, RealAddress, IP, Timestamp, Event, EventType "
                    "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end";
         query.prepare(queryStr);
         query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
@@ -1213,6 +1213,7 @@ void Database::clearAllData()
     if (!query.exec("DELETE FROM Nodes")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
     if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
     if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+    if (!query.exec("DELETE FROM Log")) { qDebug() << "Error executing DELETE query on Log:" << query.lastError().text(); }
     if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                     "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
 
