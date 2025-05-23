@@ -212,18 +212,32 @@ function confirmAddingDevice(value)
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var popup = iframeDocument.getElementById('popupAddDevice');
-	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var loader = popup.querySelector('.loader');
+    loader.style.animation = "none";
 
-    var networkNodesList = iframeDocument.getElementById("networkNodesList");
-    networkNodesList.innerHTML = "";
+    var logAddManualList = iframeDocument.getElementById('logAddManual');
 
-    sendData("SET_STORED_SCANNED_DEVICES", "");
-    sendData("SET_LOAD_NODES", "");
+    if(logAddManualList) {
+        var newEntry = iframeDocument.createElement('li');
+
+        var closeButton = iframeDocument.createElement('button');
+        closeButton.textContent = "Close popup";
+        closeButton.onclick = function () {
+            closeWirelessPopup();
+        };
+        newEntry.appendChild(closeButton);
+        
+        logAddManualList.insertBefore(newEntry, logAddManualList.firstChild);
+    }
 
     setTimeout(function() {
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 1000);
+        var networkNodesList = iframeDocument.getElementById("networkNodesList");
+        networkNodesList.innerHTML = "";
+
+        setTimeout(function() {
+            sendData("SET_LOAD_NODES", "");
+        }, 200);
+    }, 200);
 }
 
 function addDeviceToNetworkList(value) 
@@ -237,9 +251,17 @@ function addDeviceToNetworkList(value)
     // simplemente se añadirá a networkNodes pero no se eliminará nada de scannedDevices (ya que estará vacía)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     if(scannedDevicesList) {
-        var devices = scannedDevicesList.getElementsByTagName('li');
-        var firstDevice = devices[0];
-        if (firstDevice) { firstDevice.remove(); }
+        var selectedNode = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
+        // Si se hace el add desde el MANUAL
+        if(selectedNode) {
+            selectedNode.remove();
+        }
+        // Si se hace el add desde el COMMISSION
+        else {
+            var devices = scannedDevicesList.getElementsByTagName('li');
+            var firstDevice = devices[0];
+            if (firstDevice) { firstDevice.remove(); }
+        }
     }
 
     var parts = value.split("_");
@@ -288,28 +310,45 @@ function processDeviceError(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
-    if(scannedDevicesList) {
-        var devices = scannedDevicesList.getElementsByTagName('li');
-        var firstDevice = devices[0];
-        firstDevice.remove();
-    }
-    nodesScanned--;
-
     var popup = iframeDocument.getElementById('popup');
-    var labelCommissionNodes = popup.querySelector('label');
-    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+    var popupAdd = iframeDocument.getElementById('popupAddDevice');
 
-    // setTimeout(function() {
-    //     if (devices.length > 0) {
-    //         var firstDevice = devices[0];
-    //         var textDeviceSelected = firstDevice.textContent.trim();
-    //         sendData("SET_START_ACTION", textDeviceSelected);
-    //     }
-    //     else {
-    //         sendData("SET_NEW_COMMISSION_ITERATION", "");
-    //     }
-    // }, 5000);
+    // Si sale DEVICE ERROR durante commissioning
+    if(popup.style.visibility == "visible") {
+        var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
+        if(scannedDevicesList) {
+            var devices = scannedDevicesList.getElementsByTagName('li');
+            var firstDevice = devices[0];
+            firstDevice.remove();
+        }
+        nodesScanned--;
+
+        var labelCommissionNodes = popup.querySelector('label');
+        labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+    }
+    // Si sale DEVICE ERROR durante add manual
+    else if(popupAdd.style.visibility == "visible") {
+        var selectedNode = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
+        selectedNode.remove();
+
+        var loader = popupAdd.querySelector('.loader');
+        loader.style.animation = "none";
+
+        var logAddManualList = iframeDocument.getElementById('logAddManual');
+
+        if(logAddManualList) {
+            var newEntry = iframeDocument.createElement('li');
+
+            var closeButton = iframeDocument.createElement('button');
+            closeButton.textContent = "Close popup";
+            closeButton.onclick = function () {
+                closeWirelessPopup();
+            };
+            newEntry.appendChild(closeButton);
+            
+            logAddManualList.insertBefore(newEntry, logAddManualList.firstChild);
+        }
+    }
 }
 
 function processLogCommissionEntry(value)
@@ -319,11 +358,23 @@ function processLogCommissionEntry(value)
     
     var logCommissionList = iframeDocument.getElementById('logCommission');
 
-    var newEntry = iframeDocument.createElement('li');
-    newEntry.textContent = value;
-    if(value == "An error has occurred with the device...")
-        newEntry.style.color = "#C30101";
-    logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
+    if(logCommissionList) {
+        var newEntry1 = iframeDocument.createElement('li');
+        newEntry1.textContent = value;
+        if(value == "An error has occurred with the device...")
+            newEntry1.style.color = "#C30101";
+        logCommissionList.insertBefore(newEntry1, logCommissionList.firstChild);
+    }
+
+    var logAddManualList = iframeDocument.getElementById('logAddManual');
+
+    if(logAddManualList) {
+        var newEntry2 = iframeDocument.createElement('li');
+        newEntry2.textContent = value;
+        if(value == "An error has occurred with the device...")
+            newEntry2.style.color = "#C30101";
+        logAddManualList.insertBefore(newEntry2, logAddManualList.firstChild);
+    }
 }
 
 function processNodeInfo(value) 
@@ -798,10 +849,29 @@ function processEndAutoCommission(value)
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var popup = iframeDocument.getElementById('popup');
-	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = "Commission completed";
 
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    var loader = popup.querySelector('.loader');
+    loader.style.animation = "none";
+
+    var stopButton = iframeDocument.getElementById('stopCommissionButton');
+    stopButton.classList.add('button-disabled');
+
+    var logCommissionList = iframeDocument.getElementById('logCommission');
+
+    if(logCommissionList) {
+        var newEntry = iframeDocument.createElement('li');
+
+        var closeButton = iframeDocument.createElement('button');
+        closeButton.textContent = "Close popup";
+        closeButton.onclick = function () {
+            closeWirelessPopup();
+        };
+        newEntry.appendChild(closeButton);
+        
+        logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
+    }
 
     // Limpiar la lista de escaneados cuando se hace un stop forzado
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
@@ -1256,11 +1326,6 @@ function addDevice()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var popup = iframeDocument.getElementById('popupAddDevice');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-    var addingDeviceLabel = iframeDocument.getElementById('addingDeviceLabel');
-    var addingDeviceButton = iframeDocument.getElementById('addingDeviceButton');
-
     // Seleccionar el nodo marcado en la lista de Scanned Devices
     var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
     var scannedUUID = selectedDevice.textContent.trim(); 
@@ -1268,12 +1333,6 @@ function addDevice()
     // Enviar comando al embebido para añadir el nodo
     console.log("Enviando comando SET_ADD_DEVICE para nodeID:", scannedUUID);
     sendData("SET_ADD_DEVICE", scannedUUID);
-    
-    addingDeviceLabel.textContent = "Adding the node to the network...";
-    addingDeviceButton.classList.add('button-disabled');
-
-    var closeAddDev = iframeDocument.getElementById('closeAddDev');
-    closeAddDev.removeAttribute("onclick");
 }
 
 function delDevice() {
