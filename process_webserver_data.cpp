@@ -47,7 +47,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_LINE_SCAN) {
         if(isCommissionInProgress(webServer)) { return; }
         requestMicroDatabase(uartPort);
-        
     }
     else if (type == WS_GET_IP_CONFIG) {
         QStringList messages = database->getInterfaceParameters();
@@ -113,7 +112,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
             delay(300);
-            sendLogCommissionEntry(webServer, "Scanning devices...");
+            sendLogCommissionEntry(webServer, "Scanning devices...", false);
         }
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
@@ -143,9 +142,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured()) {
-                        uint16_t nodeNetAddr = i * 64 + j + 1;
-                        qDebug() << "I am adding device remove to log....";
-                        insertDevToLog(nodeNetAddr, database, LOG_DEVICE_REMOVED, "Device");
+                        insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_REMOVED, "Device");
                         meshDevice[i][j].deleteDevice();
                     }
                 }
@@ -194,9 +191,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             sendUartDelDevice(uartPort, nodeAddress);
 
-            qDebug() << "I am adding device remove to log....";
             // Device to delete added to log
-            insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED, "Device");
+            insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
 
             // Eliminar el nodo de la estructura interna
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
@@ -243,7 +239,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         scannedDevicesMessages.removeAt(uuidIndex);
 
         sendUartAddDevice(uartPort, scannedUUID[0]);
-        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID));
+        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), false);
     }  
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionInProgress(webServer)) { return; }
@@ -673,9 +669,9 @@ void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendLogCommissionEntry(WebServer* webServer, QString content)
+void sendLogCommissionEntry(WebServer* webServer, QString content, bool errorType)
 {
-    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + content;
+    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + content + "_" + (errorType ? "1" : "0");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -770,7 +766,7 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 
     qDebug() << "UART FRAME RECEIVED: ADDED DEVICE " << nodeAddress;
 
-    sendLogCommissionEntry(webServer, "The device has been added.");
+    sendLogCommissionEntry(webServer, "The device has been added.", false);
 
     //QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress[0] * 64 + netAddress[1] + 1);
 
@@ -813,7 +809,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[l].UUID[0], 2, 16, QChar('0')).toUpper();
             sendUartAddDevice(uartPort, scannedUUID[l]);
-            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID));
+            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID), false);
             confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
             break;
         }

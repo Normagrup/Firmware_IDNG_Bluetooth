@@ -22,11 +22,11 @@
 #define NEW_ITERATION                   0x05
 #define CHANGE_RELAY                    0x07
 #define ADD_DEVICE                      0x09
-#define COMMISSION_FEATURES_FAIL        0x10
-#define COMMISSION_DEVICE_TYPE_FAIL     0x12
-#define COMMISSION_NET_ADDRESS_FAIL     0x14
+#define COMMISSION_ADD_TO_GROUP_FAIL    0x10
 #define DEVICE_ERROR                    0x11
+#define COMMISSION_DEVICE_TYPE_FAIL     0x12
 #define DEL_DEVICES                     0x13
+#define COMMISSION_NET_ADDRESS_FAIL     0x14
 #define NODE_DELETED                    0x50
 #define ADD_GROUP                       0x15
 #define ADD_GROUP_MANUAL                0x16
@@ -61,6 +61,8 @@
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
+void continueCommissioningFlow(UartPort* uartPort, WebServer* webServer);
+void processNetAddressErrorFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);
