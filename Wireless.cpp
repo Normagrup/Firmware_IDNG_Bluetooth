@@ -54,6 +54,16 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
+    //reseteamos el estado de fallo de comunicaciones antes de empezar a hacer pollings
+    for (uint8_t s = 0; s < MAX_SUBNET; ++s) { // Recorre todos los índices de subredes
+        for (uint8_t n = 0; n < MAX_NODES_SUBNET; ++n) { //recorre todos los posibles nodos
+            Device &dev = meshDevice[s][n];
+            if (dev.getIsConfigured()) {
+                dev.resetCommunicationFailure();
+            }
+        }
+    }
+
     pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;
@@ -97,23 +107,30 @@ void Wireless::webServerReceivedData(QString data)
 
 void Wireless::pollingTimerHandler()
 {
-    if (pollingData.pollingInProgress){
+    if (pollingData.pollingInProgress) {
+
+        Device &dev = meshDevice[subnetCount][nodeSubnetCount];
+
         if (pollingData.pollingReceived) {
-            meshDevice[subnetCount][nodeSubnetCount].setCommunicationFailure(false);
+            // Reseteamos tanto el retry como los ciclos de fallo
             pollingData.pollingReceived = false;
             pollingData.pollingInProgress = false;
+            pollingData.retries = 0;
+            dev.resetCommunicationFailure();
             nodeSubnetCount++;
             goto sendNewPolling;
         }
         else if (pollingData.retries < 5) {
+            // Reintentos dentro del mismo ciclo
             pollingData.retries++;
-            sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
+            sendPollingFrame(_uartPort, dev.getRealAddress());
             return;
         }
-        else  {
+        else {
+            // Se han agotado los 5 reintentos de este ciclo
             pollingData.retries = 0;
-            meshDevice[subnetCount][nodeSubnetCount].setCommunicationFailure(true);
             pollingData.pollingInProgress = false;
+            dev.registerCommunicationFailureCycle();
             nodeSubnetCount++;
         }
     }
@@ -121,11 +138,10 @@ void Wireless::pollingTimerHandler()
 sendNewPolling:
     while (subnetCount < MAX_SUBNET) {
         while (nodeSubnetCount < MAX_NODES_SUBNET) {
-            if (meshDevice[subnetCount][nodeSubnetCount].getIsConfigured()) {
-                Device &device = meshDevice[subnetCount][nodeSubnetCount];
+            Device &device = meshDevice[subnetCount][nodeSubnetCount];
+            if (device.getIsConfigured()) {
                 updateLogsByPollings(device);
-
-                sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
+                sendPollingFrame(_uartPort, device.getRealAddress());
                 pollingData.pollingInProgress = true;
                 return;
             }
@@ -135,6 +151,7 @@ sendNewPolling:
         subnetCount++;
     }
 
+    // Cuando terminamos una vuelta completa a la red:
     nodeSubnetCount = 0;
     subnetCount = 0;
 }
