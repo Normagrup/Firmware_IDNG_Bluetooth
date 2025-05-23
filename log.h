@@ -2,8 +2,12 @@
 #define LOG_H
 
 // Log events
-#define LOG_DEVICE_ADDED                      0x05
-#define LOG_DEVICE_REMOVED                    0x06
+#define LOG_DEVICE_ADDED                      0xD1
+#define LOG_COMMISSION_ADD_DEVICE_FAIL        0xD2
+#define LOG_COMMISSION_FEATURES_FAIL          0xD3
+#define LOG_COMMISSION_DEVICE_TYPE_FAIL       0xD4
+#define LOG_COMMISSION_NET_ADDRESS_FAIL       0xD5
+#define LOG_DEVICE_REMOVED                    0xD6
 
 // Communication Failures
 #define LOG_COMMUNICATION_FAILURE             0x01

@@ -8,6 +8,8 @@
 
 QByteArray uartBuffer;
 static bool secondBufferRequired = false;
+uint16_t    rcvNodeAddress;
+QByteArray  uuidBytes;
 
 static bool checkCRC(QByteArray data)
 {
@@ -204,10 +206,28 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case ADD_DEVICE:
                         sendAddedDevices(dataChecked, webServer, database);
                     break;
+                    case COMMISSION_FEATURES_FAIL:
+                        qDebug() << "I am receving features fail during commisioning device...";
+                        rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
+                        insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_FEATURES_FAIL, "Commissioning");
+                        break;
+                    case COMMISSION_DEVICE_TYPE_FAIL:
+                        qDebug() << "I am receving device type fail during commisioning device...";
+                        rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
+                        insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_DEVICE_TYPE_FAIL, "Commissioning");
+                        break;
+                    case COMMISSION_NET_ADDRESS_FAIL:
+                        qDebug() << "I am receving net address fail during commisioning device...";
+                        rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
+                        insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_NET_ADDRESS_FAIL, "Commissioning");
+                        break;
 
                     case DEVICE_ERROR:
                         qDebug() << "DEVICE ERROR";
                         sendLogCommissionEntry(webServer, "An error has occurred with the device...");
+                        uuidBytes = dataChecked.mid(3,16);
+                        qDebug() << "I am adding device error to log....";
+                        insertComsErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_TYPE_FAIL);
                         sendDeviceError(dataChecked, uartPort, webServer);
                     break;
 
@@ -416,7 +436,8 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
-                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED);
+                qDebug() << "I amd adding device to log....";
+                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED, "Device");
                 delay(500);
                 
                 /*

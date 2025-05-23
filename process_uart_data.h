@@ -22,6 +22,9 @@
 #define NEW_ITERATION                   0x05
 #define CHANGE_RELAY                    0x07
 #define ADD_DEVICE                      0x09
+#define COMMISSION_FEATURES_FAIL        0x10
+#define COMMISSION_DEVICE_TYPE_FAIL     0x12
+#define COMMISSION_NET_ADDRESS_FAIL     0x14
 #define DEVICE_ERROR                    0x11
 #define DEL_DEVICES                     0x13
 #define NODE_DELETED                    0x50
