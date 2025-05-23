@@ -48,7 +48,6 @@
 #define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
 #define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"
 
-#define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
 #define WS_SET_MIN                          "SET_MIN"
