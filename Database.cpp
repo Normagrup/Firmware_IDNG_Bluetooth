@@ -1213,6 +1213,7 @@ void Database::clearAllData()
     if (!query.exec("DELETE FROM Nodes")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
     if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
     if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+    if (!query.exec("DELETE FROM Log")) { qDebug() << "Error executing DELETE query on Log:" << query.lastError().text(); }
     if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                     "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
 
