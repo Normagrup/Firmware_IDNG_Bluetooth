@@ -41,7 +41,6 @@
 #define CONFIRM_NEW_ITERATION           0x29
 #define CONFIRM_CHANGE_RELAY            0x31
 #define DEBUG                           0x90
-#define LINE_SCAN                       0x20
 #define LINE_SCANNING                   0x22
 #define CONFIRM_START_SCAN              0x49
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
