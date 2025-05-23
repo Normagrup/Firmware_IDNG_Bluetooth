@@ -74,6 +74,9 @@ bool Device::delGroupSubAddress(uint16_t groupAddress)
 void Device::setCommunicationFailure(bool comunicationFailure)
 {
     _comunicationFailure = comunicationFailure;
+    if (!comunicationFailure) {
+        _failureCycles = 0;
+    }
 }
 
 void Device::setDeviceType(uint8_t deviceType)
@@ -276,4 +279,18 @@ bool Device::isOnSubList(uint16_t groupAddress)
         if (_groupSubAddress[i] == groupAddress) { return true; }
     }
     return false;
+}
+
+void Device::resetCommunicationFailure()
+{
+    _comunicationFailure = false;
+    _failureCycles = 0;
+}
+
+void Device::registerCommunicationFailureCycle()
+{
+    _failureCycles++;
+    if (_failureCycles >= 5) {
+        _comunicationFailure = true;
+    }
 }
