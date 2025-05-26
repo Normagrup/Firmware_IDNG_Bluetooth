@@ -604,7 +604,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_LINE_SCANNING) {
         if(isCommissionInProgress(webServer)) { return; }
-        sendUartLineScanning(uartPort)
+        sendUartLineScanning(uartPort);
 
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
