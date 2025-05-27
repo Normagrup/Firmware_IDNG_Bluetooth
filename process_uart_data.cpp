@@ -279,6 +279,30 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         updateRelayStatus(webServer, database, nodeAddress, enabled);
                     }
                     break;
+                    case SEND_RECOVERY_NODE:
+                    {
+                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        //qDebug() << "LSC:" << lineScanningCounter << "- NodeAddress:" << QString::number(nodeAddress);
+
+                        database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress);
+
+                        lineScanningCounter++;
+                    }
+                    break;
+                    case CONFIRM_START_LINE_SCANNING:
+                    {
+                        lineScanningCounter = 0;
+                        for (int i = 0; i < MAX_SUBNET; i++) {
+                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                                meshDevice[i][j].deleteDevice();
+                            }
+                        }
+                    }
+                    case CONFIRM_END_LINE_SCANNING:
+                    {
+                        database->loadNodesFromDatabase();
+                    }
+                    break;
                     case SCAN_NODE_NOT_FOUND:
                     {
                         uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
@@ -302,54 +326,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmPowerOnLevel(webServer, powerOnLevel, groupAddress, database);
                     }
                     break;
-
-                    // case LINE_SCAN_SEND:
-                    // {
-                    //     // Esperamos 22 bytes mínimo
-                    //     if (dataChecked.size() < 22) {
-                    //         qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                    //         break;
-                    //     }
-                    
-                    //     // [3..4] => realAddress
-                    //     uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                    //     uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                    //     uint16_t realAddr = (highByte << 8) | lowByte;
-                    
-                    //     // [5..20] => 16 bytes de UUID binario
-                    //     QByteArray uuidBytes = dataChecked.mid(5, 16);
-                    //     // Convertir a string en hex para la DB
-                    //     QString uuidHex = QString(uuidBytes.toHex()).toUpper();
-                    
-                    //     // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                    //     // ...
-                    
-                    //     // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                    //     uint8_t subnetAddr = 0;
-                    //     uint8_t nodeSubnetAddr = 0;
-                    
-                    //     // Llamada a la DB
-                    //     database->addOrUpdateNode(
-                    //         subnetAddr,
-                    //         nodeSubnetAddr,
-                    //         realAddr,
-                    //         uuidHex,   // guardas el UUID en la columna “UUID”
-                    //         "",        // groupSub vacío
-                    //         0,         // deviceType
-                    //         0,         // ratedDuration
-                    //         0,         // emergencyFeatures
-                    //         0          // physicalMinLvl
-                    //     );
-                    //     database->loadNodesFromDatabase();
-                    //     qDebug() << "Insertado/actualizado nodo" 
-                    //              << QString::asprintf("%04X", realAddr)
-                    //              << " con UUID=" << uuidHex;
-                    // }
-                    // break;
                 }
-            // default:       
-            // break;
-
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(dataChecked, database, webServer);
             break;

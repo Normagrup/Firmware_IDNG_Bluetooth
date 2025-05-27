@@ -57,7 +57,7 @@ extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;
-
+extern uint16_t lineScanningCounter;
 extern QMap<uint16_t, NodeInfo> nodesByRealAddress;
 extern QMultiMap<uint16_t, uint16_t> childrenMap;
 
