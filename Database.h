@@ -80,7 +80,7 @@ public:
 
     uint16_t getMasterRealAddress(void);
     void setMasterRealAddress(uint16_t newAntennaAddress);
-    void setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress);
+    void setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID);
 signals:
 
 private:

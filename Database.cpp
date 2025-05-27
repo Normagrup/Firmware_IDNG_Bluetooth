@@ -500,15 +500,25 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }
 
-void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress)
+void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID)
 {
+    QString nodeUUIDText;
+    if (nodeUUID) {
+        for (int i = 15; i >= 0; i--) {
+            nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]);
+        }
+    } else {
+        nodeUUIDText = "";
+    }
+
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress)");
+    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid)");
 
     query.bindValue(":subnetAddress", subnetAddress);
     query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
     query.bindValue(":realAddress", realAddress);
+    query.bindValue(":uuid", nodeUUIDText);
 
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }

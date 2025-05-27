@@ -282,9 +282,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case SEND_RECOVERY_NODE:
                     {
                         uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        //qDebug() << "LSC:" << lineScanningCounter << "- NodeAddress:" << QString::number(nodeAddress);
 
-                        database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress);
+                        uint8_t uuid[16];
+                        memcpy(uuid,
+                               reinterpret_cast<const uint8_t*>(dataChecked.constData()) + 5,
+                               sizeof(uuid));
+
+                        database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
 
                         lineScanningCounter++;
                     }
