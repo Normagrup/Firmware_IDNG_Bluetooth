@@ -193,7 +193,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartDelDevice(uartPort, nodeAddress);
 
             // Device to delete added to log
-            insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED, "Device");
+            insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
 
             // Eliminar el nodo de la estructura interna
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
