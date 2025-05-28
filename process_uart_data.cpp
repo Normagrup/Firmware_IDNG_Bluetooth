@@ -228,23 +228,23 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case COMMISSION_FEATURES_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
-                        qDebug() << "ADDING FEATURES TO DEVICE FAIL: " << rcvNodeAddress;
-                        sendLogCommissionEntry(webServer, "Error loading features...");
-                        insertFeatureErrorLog(rcvNodeAddress, database, LOG_COMMISSION_FEATURES_FAIL, "Commissioning");
+                        qDebug() << "ADDING TO GROUPS FAIL: " << rcvNodeAddress;
+                        processGroupErrorFrame(dataChecked,uartPort, database, webServer);
+                        insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_FEATURES_FAIL, "Commissioning");
                         break;
 
                     case COMMISSION_DEVICE_TYPE_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
-                        qDebug() << "ASSIGN DEVICE TYPE TO GROUP FAIL: " << rcvNodeAddress;
-                        sendLogCommissionEntry(webServer, "Error assigning initial device type...");
+                        qDebug() << "ASSIGN DEVICE TYPE FAIL: " << rcvNodeAddress;
+                        sendLogCommissionEntry(webServer, "Error assigning device type...");
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_DEVICE_TYPE_FAIL, "Commissioning");
                         break;
 
                     case COMMISSION_NET_ADDRESS_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
-                        qDebug() << "ASSIGN INITIAL GROUP FAIL: " << rcvNodeAddress;
+                        qDebug() << "ASSIGN NET ADDRESS FAIL: " << rcvNodeAddress;
+                        sendLogCommissionEntry(webServer, "Error assigning net address ...");
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_NET_ADDRESS_FAIL, "Commissioning");
-                        processGroupErrorFrame(dataChecked,uartPort, database, webServer);
                         break;
 
                     case DEVICE_ERROR:

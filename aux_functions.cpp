@@ -328,19 +328,3 @@ void insertComsErrorToLog(const QByteArray& uuidArray, Database *db, int eventCo
     insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
     currentNodeAddress = 0;
 }
-
-void insertFeatureErrorLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType)
-{
-    int devId = nodeAddress;
-    QString serial = QString("%1.%2.%3.%4")
-                         .arg(scannedUUID[0].UUID[3], 2, 16, QChar('0'))
-                         .arg(scannedUUID[0].UUID[2], 2, 16, QChar('0'))
-                         .arg(scannedUUID[0].UUID[1], 2, 16, QChar('0'))
-                         .arg(scannedUUID[0].UUID[0], 2, 16, QChar('0'))
-                         .toUpper();
-    QString devName = QString("DEV ERR: %1").arg(devId);
-
-    AntennaInfo info = getAntennaInfo(db);
-
-    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
-}
