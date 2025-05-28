@@ -2014,7 +2014,26 @@ function saveCycles()
 
     var inputFailComCycles = iframeDocument.getElementById('failComCycles');
 
+    var saveButton = iframeDocument.getElementById('saveCycles');
+
     if(inputFailComCycles.value > 0) {
         sendData("SET_FAILCOM_CYCLES", inputFailComCycles.value);
+
+        if (saveButton) {
+            saveButton.style.backgroundColor = "green";
+
+            setTimeout(function () {
+                saveButton.style.backgroundColor = "#4682b4";
+            }, 500);
+        }
+    }
+    else {
+        if (saveButton) {
+            saveButton.style.backgroundColor = "red";
+
+            setTimeout(function () {
+                saveButton.style.backgroundColor = "#4682b4";
+            }, 500);
+        }
     }
 }
