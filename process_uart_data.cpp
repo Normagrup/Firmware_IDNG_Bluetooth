@@ -73,7 +73,7 @@ static QByteArray processUartFrame(QByteArray data)
                     return QByteArray();
                 }
             }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == COMMISSION_FEATURES_FAIL) {
+            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == COMMISSION_ADD_TO_GROUP_FAIL) {
                 if (data.size() != 6) {
                     secondBufferRequired = true;
                     return QByteArray();
@@ -226,11 +226,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendAddedDevices(dataChecked, webServer, database);
                     break;
 
-                    case COMMISSION_FEATURES_FAIL:
+                    case COMMISSION_ADD_TO_GROUP_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         qDebug() << "ADDING TO GROUPS FAIL: " << rcvNodeAddress;
                         processGroupErrorFrame(dataChecked,uartPort, database, webServer);
-                        insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_FEATURES_FAIL, "Commissioning");
+                        insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_ADD_TO_GROUP_FAIL, "Commissioning");
                         break;
 
                     case COMMISSION_DEVICE_TYPE_FAIL:
