@@ -504,7 +504,7 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
 {
     QString nodeUUIDText;
     if (nodeUUID) {
-        for (int i = 15; i >= 0; i--) {
+        for (int i = 0; i <= 15; i++) { // SE PROCESA EN ESTE ORDEN PORQUE SE ENVIA AL REVES DESDE EL MICRO Y NODOS
             nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]);
         }
     } else {
