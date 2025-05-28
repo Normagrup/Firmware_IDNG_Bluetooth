@@ -214,7 +214,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case FEATURES:
                         processFeaturesFrame(dataChecked, uartPort, database, webServer);
                     break;
-
+                    case SEND_FEATURES_STATUS:
+                        //TODO: función que almacene en BD
+                    break;
                     case GROUP_ADDED:
                         processGroupAddedFrame(dataChecked, uartPort, database, webServer);
                     break;
