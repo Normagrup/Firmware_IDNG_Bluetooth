@@ -185,23 +185,49 @@ function searchNode() {
 
   const path = [];
 
-  function findPath(node, target) {
+  // 1. Colapsar todo el árbol
+  function collapseAll(node) {
+    if (node.children) {
+      node.children.forEach(collapseAll);
+      node._children = node.children;
+      node.children = null;
+    } else if (node._children) {
+      node._children.forEach(collapseAll);
+    }
+  }
+
+  // 2. Buscar el nodo y construir el camino
+  function findPath(node) {
     path.push(node);
     const text = node.name.toLowerCase();
     if (text.includes(input.toLowerCase())) return true;
 
-    const children = node.children || node._children || [];
+    const children = node._children || node.children || [];
     for (const child of children) {
-      if (findPath(child, target)) return true;
+      if (findPath(child)) return true;
     }
 
     path.pop();
     return false;
   }
 
-  if (findPath(root, input)) {
+  collapseAll(root);  // Colapsar todo primero
+
+  if (findPath(root)) {
+    // 3. Expandir solo el camino hasta el nodo encontrado
+    for (let i = 0; i < path.length - 1; i++) {
+      const node = path[i];
+      const child = path[i + 1];
+      node.children = node.children || node._children;
+      node._children = null;
+    }
+
+    // 4. Mostrar el camino como texto
     const names = path.map(n => n.name);
-    document.getElementById("pathResult").textContent = "[ ROOT" + names.join(" ] → [ ") + " ]";
+    document.getElementById("pathResult").textContent =
+      "[ ROOT" + names.join(" ] → [ ") + " ]";
+
+    update(root);
   } else {
     document.getElementById("pathResult").textContent = "Not found.";
   }
