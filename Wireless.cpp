@@ -54,16 +54,6 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
-    //reseteamos el estado de fallo de comunicaciones antes de empezar a hacer pollings
-    for (uint8_t s = 0; s < MAX_SUBNET; ++s) { // Recorre todos los índices de subredes
-        for (uint8_t n = 0; n < MAX_NODES_SUBNET; ++n) { //recorre todos los posibles nodos
-            Device &dev = meshDevice[s][n];
-            if (dev.getIsConfigured()) {
-                dev.resetCommunicationFailure();
-            }
-        }
-    }
-
     pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;

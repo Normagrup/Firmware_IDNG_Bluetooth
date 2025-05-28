@@ -45,7 +45,7 @@ label {
     text-align: center;
 }
 
-.update-container {
+.general-config-container {
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -58,7 +58,7 @@ label {
     padding: 25px;
 }
 
-.update-container button {
+.general-config-container button {
     cursor: pointer;
     color: #fff;
     font-size: 16px;
@@ -70,7 +70,7 @@ label {
     background: #4682b4;
 }
 
-.update-container button:hover {
+.general-config-container button:hover {
     color: #63e8f0;
 }
 
