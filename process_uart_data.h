@@ -62,7 +62,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void continueCommissioningFlow(UartPort* uartPort, WebServer* webServer);
-void processGroupErrorFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
+void processNetAddressErrorFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);

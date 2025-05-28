@@ -229,7 +229,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case COMMISSION_ADD_TO_GROUP_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         qDebug() << "ADDING TO GROUPS FAIL: " << rcvNodeAddress;
-                        processGroupErrorFrame(dataChecked,uartPort, database, webServer);
+                        sendLogCommissionEntry(webServer, "Failed to assign group to Node: "+ QString::number(netAddress) + " ...");
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_ADD_TO_GROUP_FAIL, "Commissioning");
                         break;
 
@@ -244,6 +244,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         qDebug() << "ASSIGN NET ADDRESS FAIL: " << rcvNodeAddress;
                         sendLogCommissionEntry(webServer, "Error assigning net address ...");
+                        processNetAddressErrorFrame(dataChecked,uartPort, database, webServer);
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_NET_ADDRESS_FAIL, "Commissioning");
                         break;
 
@@ -1076,13 +1077,11 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
     _uartPort->sendData(frame);
 }
 
-void processGroupErrorFrame(QByteArray data, UartPort *uartPort, Database *database, WebServer *webServer)
+void processNetAddressErrorFrame(QByteArray data, UartPort *uartPort, Database *database, WebServer *webServer)
 {
     uint16_t nodeAddress ;
 
     nodeAddress = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
-
-    sendLogCommissionEntry(webServer, "Failed to assign group to Node: "+ QString::number(netAddress) + " ...");
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
