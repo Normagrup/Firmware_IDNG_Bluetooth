@@ -274,17 +274,14 @@ void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString e
 {
     int devId;
     QString serial, devName;
-    if(eventType == "Commissioning"){
-        devId = nodeAddress;
-        serial = "FF.FF.FF.FF";
-        devName = QString("DEV ERR: %1").arg(devId);
-    } else {
-        int subnet = (nodeAddress - 1) / 64;
-        int node = (nodeAddress - 1) % 64;
-        Device &device = meshDevice[subnet][node];
-        devId = device.getRealAddress();
-        serial = device.serialNumberString();
-        devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == nodeAddress) {
+                devId = nodeAddress;
+                serial = meshDevice[i][j].serialNumberString();
+                devName = "SUB:" + QString::number(i) + " ID:" + QString::number(j);
+            }
+        }
     }
 
     AntennaInfo info = getAntennaInfo(db);
@@ -324,9 +321,26 @@ void insertComsErrorToLog(const QByteArray& uuidArray, Database *db, int eventCo
                          .arg(static_cast<uint8_t>(uuidArray[12]), 2, 16, QChar('0'))
                          .toUpper();
 
-    QString devName = "Unprovisioned";
+    int devId = currentNodeAddress;
+    QString devName = QString("DEV ERR: %1").arg(currentNodeAddress);
     AntennaInfo info = getAntennaInfo(db);
     QString eventType = "Commissioning";
+    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
+    currentNodeAddress = 0;
+}
 
-    insertLogEvent(db, -1, serial, devName, info.ip, info.timestamp, eventCode, eventType);
+void insertFeatureErrorLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType)
+{
+    int devId = nodeAddress;
+    QString serial = QString("%1.%2.%3.%4")
+                         .arg(scannedUUID[0].UUID[3], 2, 16, QChar('0'))
+                         .arg(scannedUUID[0].UUID[2], 2, 16, QChar('0'))
+                         .arg(scannedUUID[0].UUID[1], 2, 16, QChar('0'))
+                         .arg(scannedUUID[0].UUID[0], 2, 16, QChar('0'))
+                         .toUpper();
+    QString devName = QString("DEV ERR: %1").arg(devId);
+
+    AntennaInfo info = getAntennaInfo(db);
+
+    insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
 }

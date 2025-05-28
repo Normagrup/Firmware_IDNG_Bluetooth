@@ -22,6 +22,7 @@ void insertLogEvent(Database* database, int devId, QString serialNum, QString de
 void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QString& testType);
 void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateTime& baseTime);
 void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType);
+void insertFeatureErrorLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType);
 void insertComsErrorToLog(const QByteArray& uuidArray, Database* db, int eventCode);
 AntennaInfo getAntennaInfo(Database* db);
 void removeLogTestFromCheckList(uint16_t nodeAddress);

@@ -143,9 +143,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured()) {
-                        uint16_t nodeNetAddr = i * 64 + j + 1;
-                        qDebug() << "I am adding device remove to log....";
-                        insertDevToLog(nodeNetAddr, database, LOG_DEVICE_REMOVED, "Device");
+                        insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_REMOVED, "Device");
                         meshDevice[i][j].deleteDevice();
                     }
                 }
@@ -194,7 +192,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             sendUartDelDevice(uartPort, nodeAddress);
 
-            qDebug() << "I am adding device remove to log....";
             // Device to delete added to log
             insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED, "Device");
 
