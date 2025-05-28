@@ -433,6 +433,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
                 database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
 
+                sendUartRecoverSubAddr(uartPort, address, i, j);
                 /*
                 QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(i * 64 + j + 1);
                 if (webServer != nullptr) { webServer->sendData(message); }
@@ -508,6 +509,30 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     }
 
     sendLogCommissionEntry(webServer, "The features have been loaded.");
+}
+
+void sendUartRecoverSubAddr(UartPort* _uartPort,
+                            uint16_t   nodeAddress,
+                            uint8_t    subnetAddress,
+                            uint8_t    nodeSubnetAddress)
+{
+    QByteArray frame;
+
+    const unsigned char length = 7;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(RECOVER_NODE_SUBADDR);
+
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
+
+    frame.append(subnetAddress);
+    frame.append(nodeSubnetAddress);
+
+    frame.append(UART_END);
+    _uartPort->sendData(frame);
 }
 
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)

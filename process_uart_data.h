@@ -61,6 +61,7 @@
 #define SEND_RECOVERY_NODE              0x73
 #define CONFIRM_END_LINE_SCANNING       0x74
 #define CONFIRM_START_LINE_SCANNING     0x75
+#define RECOVER_NODE_SUBADDR            0x76
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -89,4 +90,5 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
 void sendAntennaGetAddress(UartPort* _uartPort);
 void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
 void sendUartLineScanning(UartPort* _uartPort);
+void sendUartRecoverSubAddr(UartPort* _uartPort,uint16_t nodeAddress,uint8_t subnetAddress,uint8_t nodeSubnetAddress);
 #endif // PROCESS_UART_DATA_H
