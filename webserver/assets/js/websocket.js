@@ -1166,6 +1166,15 @@ function confirmSetRelay(value)
     }
 }
 
+function processFailComCycles(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var inputFailComCycles = iframeDocument.getElementById('failComCycles');
+    inputFailComCycles.value = value;
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1211,6 +1220,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
     else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
+    else if (type == "FAIL_COM_CYCLES") { processFailComCycles(value); }
 }
 
 function sendData(type, value) 
@@ -1995,4 +2005,16 @@ function syncPOL() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
     }, 10000);
+}
+
+function saveCycles()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var inputFailComCycles = iframeDocument.getElementById('failComCycles');
+
+    if(inputFailComCycles.value > 0) {
+        sendData("SET_FAILCOM_CYCLES", inputFailComCycles.value);
+    }
 }

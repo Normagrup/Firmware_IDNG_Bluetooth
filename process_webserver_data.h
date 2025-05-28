@@ -46,6 +46,8 @@
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
 #define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
+#define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
+#define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
 
 #define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
@@ -102,6 +104,7 @@
 #define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 #define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
+#define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -146,5 +149,6 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
+void sendFailComCycles(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

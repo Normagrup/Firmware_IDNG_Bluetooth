@@ -78,6 +78,9 @@ public:
     int getCountOfDirectChildren(uint16_t nodeAddress);
     QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
 
+    void loadFailComCycles(void);
+    void updateFailComCycles(uint8_t cycles);
+
 signals:
 
 private:

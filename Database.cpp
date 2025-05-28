@@ -87,7 +87,8 @@ void Database::initDatabase()
                "Submask TEXT, "
                "Gateway TEXT, "
                "BuildingName TEXT, "
-               "LineName TEXT);");
+               "LineName TEXT, "
+               "FailComCycles INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -99,12 +100,13 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Users:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName) VALUES (:ip, :submask, :gateway, :buildingName, :lineName)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :fcc)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
+            query.bindValue(":fcc", 5);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in Users:" << query.lastError().text(); }
         }
@@ -1147,6 +1149,29 @@ QString Database::getNextNodeName(uint16_t doneIts)
     }
     else
         return "Node -";
+}
+
+void Database::loadFailComCycles()
+{
+    QSqlQuery query;
+    if (!query.exec("SELECT FailComCycles FROM General")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    uint8_t cycles = 5;
+
+    if (query.next()) {
+        cycles = query.value("FailComCycles").toUInt();
+    }
+
+    failComCycles = cycles;
+}
+
+void Database::updateFailComCycles(uint8_t cycles)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE General SET FailComCycles = :fcc");
+    query.bindValue(":fcc", cycles);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in GENERAL" << query.lastError().text(); }
 }
 
 void Database::editGroup(QString address, QString name)
