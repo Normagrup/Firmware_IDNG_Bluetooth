@@ -325,7 +325,7 @@ function processLogCommissionEntry(value)
 
     var newEntry = iframeDocument.createElement('li');
     newEntry.textContent = commission_MSG;
-    if(errorType === "1")
+    if(errorType == "1")
         newEntry.style.color = "#C30101";
     logCommissionList.insertBefore(newEntry, logCommissionList.firstChild);
 }

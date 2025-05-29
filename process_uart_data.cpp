@@ -229,21 +229,21 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case COMMISSION_ADD_TO_GROUP_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         qDebug() << "ADDING TO GROUPS FAIL: " << rcvNodeAddress;
-                        sendLogCommissionEntry(webServer, "Failed to assign group to Node: "+ QString::number(netAddress) + " ...", true);
+                        sendLogCommissionEntry(webServer, "Error assigning node to group.", true);
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_ADD_TO_GROUP_FAIL, "Commissioning");
                         break;
 
                     case COMMISSION_DEVICE_TYPE_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         qDebug() << "ASSIGN DEVICE TYPE FAIL: " << rcvNodeAddress;
-                        sendLogCommissionEntry(webServer, "Error assigning device type...", true);
+                        sendLogCommissionEntry(webServer, "Error reading device type.", true);
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_DEVICE_TYPE_FAIL, "Commissioning");
                         break;
 
                     case COMMISSION_NET_ADDRESS_FAIL:
                         rcvNodeAddress =  ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         qDebug() << "ASSIGN NET ADDRESS FAIL: " << rcvNodeAddress;
-                        sendLogCommissionEntry(webServer, "Error assigning net address ...", true);
+                        sendLogCommissionEntry(webServer, "Error assigning net address.", true);
                         processNetAddressErrorFrame(dataChecked,uartPort, database, webServer);
                         insertDevToLog(rcvNodeAddress, database, LOG_COMMISSION_NET_ADDRESS_FAIL, "Commissioning");
                         break;
