@@ -259,3 +259,18 @@ button:disabled:hover {
     color: #666666;
     cursor: not-allowed;
 }
+
+.loader {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #4682b4;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1.5s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1764,6 +1764,22 @@ function clearAllData()
     popupOverlay.style.visibility = "hidden";
 }
 
+function lineScanning()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    sendData("LINE_SCANNING", "");
+
+    // TODO: Mover el mostrado del popup a la confirmación
+
+    var popupLineScanning = iframeDocument.getElementById('popupLineScanning');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popupLineScanning.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
 function getLogs()
 {
     var iframe = document.getElementById('mainframe');
