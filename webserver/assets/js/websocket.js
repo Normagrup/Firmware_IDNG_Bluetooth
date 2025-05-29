@@ -1751,14 +1751,17 @@ function clearAllData()
 
     sendData("SET_CLEAR_ALL_DATA", "");
 
+    var input = iframeDocument.getElementById('deleteConfirmInput');
+    input.value = "";
+
+    var button = iframeDocument.getElementById('deletingDataButton');
+    button.disabled = true;
+
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
-
-    var clearDataLabel = iframeDocument.getElementById('clearDataLabel');
-    clearDataLabel.style.visibility = "visible";
 }
 
 function getLogs()

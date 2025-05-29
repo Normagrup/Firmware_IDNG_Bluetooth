@@ -18,8 +18,10 @@
         <div class="popup-container">
             <div class="popup-subcontainer">
                 <label id="confirmDeleteData" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the data? </label>
+                <label id="warnDeleteData" style="margin-top: 10px; color: #C30101; font-size: 13px;"> The network will be erased and the data cannot be recovered. </label>
+                <input type="text" id="deleteConfirmInput" placeholder="Type DELETE to confirm">
                 <div class="popup-button-subcontainer">
-                    <button id="deletingDataButton" onclick="parent.clearAllData()"> Confirm </button>
+                    <button id="deletingDataButton" onclick="parent.clearAllData()" disabled> Confirm </button>
                 </div>
             </div>
             
@@ -31,23 +33,38 @@
 
     <div class="wrap-container">
         <div class="general-config-container">
-            <h2> General Configuration </h2>
-            <button onclick="parent.lineScanning()"> Line Scanning </button>
-            <div style="display: flex; align-items: center; justify-content: center; margin-top: 30px; gap: 10px;">
-                <label for="failComCycles" style="color: #4682b4;">FailCom Cycles:</label>
-                <input type="number" id="failComCycles" style="width: 80px; padding: 5px;">
-                <button id="saveCycles" onclick="parent.saveCycles()">
-                    <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
-                </button>
+            <div class="top-section">
+                <h2> General Configuration </h2>
+                <button onclick="parent.lineScanning()"> Line Scanning </button>
+                <div style="display: flex; align-items: center; justify-content: center; margin-top: 30px; gap: 10px;">
+                    <label for="failComCycles" style="color: #4682b4;">FailCom Cycles:</label>
+                    <input type="number" id="failComCycles" style="width: 80px; padding: 5px;">
+                    <button id="saveCycles" onclick="parent.saveCycles()">
+                        <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
+                    </button>
+                </div>
             </div>
-            <button onclick="parent.clearAllDataPrev()"> Clear All Data </button>
-            <label id="clearDataLabel" style="color: #4682b4; visibility: hidden; margin-top: 10px;"> <b> Data has been deleted! </b> </label>
+            <button class="clear-bottom-button" onclick="parent.clearAllDataPrev()"> Clear All Data </button>
         </div>
     </div>
 
     <script>
         window.onload = function () {
-            setTimeout(function() {
+            const input = document.getElementById('deleteConfirmInput');
+            const button = document.getElementById('deletingDataButton');
+
+            if (input && button) {
+                input.addEventListener('input', function () {
+                    const text = input.value.trim().toUpperCase();
+                    button.disabled = (text !== "DELETE");
+                });
+
+                // Reiniciar botón por si ya estaba abierto antes
+                input.value = "";
+                button.disabled = true;
+            }
+
+            setTimeout(function () {
                 parent.sendData("GET_FAILCOM_CYCLES", "");
             }, 10);
         };

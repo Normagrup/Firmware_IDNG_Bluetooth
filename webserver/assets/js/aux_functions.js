@@ -647,6 +647,9 @@ function closeManageDataPopup()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var input = iframeDocument.getElementById('deleteConfirmInput');
+    input.value = "";
+
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     
