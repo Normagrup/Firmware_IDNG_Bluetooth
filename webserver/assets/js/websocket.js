@@ -3,6 +3,11 @@ var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
 var isStoppingCommission = false;
+var logsData = [];
+var logsFilteredData = [];
+var logsPage = 0;
+var logsPerPage = 15;
+var showLogsCalled = false;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -1115,7 +1120,7 @@ function processReceivedData(data)
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
-    else if (type == 'LOG_DATA') { processLogData(value); }
+    else if (type == 'LOG_DATA') { if(showLogsCalled) { fetchCSVAndDisplay(value); } else { processLogData(value); }}
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
@@ -1676,41 +1681,46 @@ function clearAllData()
     clearDataLabel.style.visibility = "visible";
 }
 
-function getLogs()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+function validateAndBuildLogMessage(iframeDocument) {
+    const reportList = iframeDocument.getElementById('reportList');
+    const initialDatePicker = iframeDocument.getElementById('initialDatePicker');
+    const finalDatePicker = iframeDocument.getElementById('finalDatePicker');
+    const logErrorLabel = iframeDocument.getElementById('logError');
 
-    var reportList = iframeDocument.getElementById('reportList');
-    var reportListSelected = reportList.options[reportList.selectedIndex].value;
-    var initialDatePicker = iframeDocument.getElementById('initialDatePicker');
-    var finalDatePicker = iframeDocument.getElementById('finalDatePicker');
-    var logErrorLabel = iframeDocument.getElementById('logError');
-
-    var initialDate = new Date(initialDatePicker.value);
-    var finalDate = new Date(finalDatePicker.value);
+    const reportListSelected = reportList.options[reportList.selectedIndex].value;
+    const initialDate = new Date(initialDatePicker.value);
+    const finalDate = new Date(finalDatePicker.value);
     initialDate.setHours(0, 0, 0, 0);
     finalDate.setHours(0, 0, 0, 0);
 
-    if (reportListSelected != '-' && initialDatePicker.value && finalDatePicker.value) {
+    if (reportListSelected !== '-' && initialDatePicker.value && finalDatePicker.value) {
         if (initialDate <= finalDate) {
-            var message = reportListSelected + ' ' + initialDatePicker.value + ' ' + finalDatePicker.value
-
-            sendData("GET_LOGS", message);
-
-            logErrorLabel.style.color = "#4682b4";
-            logErrorLabel.innerHTML = "<b> Getting logs...! </b>";
-            logErrorLabel.style.visibility = "visible";
-        }
-        else {
+            const message = `${reportListSelected} ${initialDatePicker.value} ${finalDatePicker.value}`;
+            return { valid: true, message };
+        } else {
             logErrorLabel.style.color = "#C30101";
             logErrorLabel.innerHTML = "<b> Initial date is later than final date! </b>";
             logErrorLabel.style.visibility = "visible";
         }
-    }
-    else {
+    } else {
         logErrorLabel.style.color = "#C30101";
         logErrorLabel.innerHTML = "<b> Pick date and report type! </b>";
+        logErrorLabel.style.visibility = "visible";
+    }
+
+    return { valid: false };
+}
+
+function getLogs() {
+    const iframe = document.getElementById('mainframe');
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const logErrorLabel = iframeDocument.getElementById('logError');
+
+    const result = validateAndBuildLogMessage(iframeDocument);
+    if (result.valid) {
+        sendData("GET_LOGS", result.message);
+        logErrorLabel.style.color = "#4682b4";
+        logErrorLabel.innerHTML = "<b> Getting logs...! </b>";
         logErrorLabel.style.visibility = "visible";
     }
 }
@@ -1920,4 +1930,108 @@ function syncPOL() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
     }, 10000);
+}
+
+function showLogs() {
+    const iframe = document.getElementById('mainframe');
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const logErrorLabel = iframeDocument.getElementById('logError');
+
+    const result = validateAndBuildLogMessage(iframeDocument);
+    if (result.valid) {
+        showLogsCalled = true;
+        sendData("GET_LOGS", result.message);
+        logErrorLabel.style.color = "#4682b4";
+        logErrorLabel.innerHTML = "<b> Showing logs...! </b>";
+        logErrorLabel.style.visibility = "visible";
+    }
+}
+
+function cancelShowLogs() {
+    const iframe = document.getElementById('mainframe');
+    const iframeDocument= iframe.contentDocument || iframe.contentWindow.document;
+
+    iframeDocument.getElementById('logsTableContainer').style.display = 'none';
+    iframeDocument.getElementById('logControls').style.display = 'flex';
+     
+    var logErrorLabel = iframeDocument.getElementById('logError');
+    logErrorLabel.innerHTML = "";
+    logErrorLabel.style.visibility = "hidden";
+
+    const filterDropdown = iframeDocument.getElementById('eventTypeFilter');
+    filterDropdown.value = "All";
+    logsFilteredData = logsData.slice(1);
+    logsData = [];
+
+}
+
+function prevLogPage() {
+    if (logsPage > 0) {
+        logsPage--;
+        renderLogsTable();
+    }
+}
+
+function nextLogPage() {
+    if ((logsPage + 1) * logsPerPage < logsFilteredData.length) {
+        logsPage++;
+        renderLogsTable();
+    }
+}
+
+function applyEventTypeFilter() {
+    const iframe = document.getElementById('mainframe');
+    const iframeDocument= iframe.contentDocument || iframe.contentWindow.document;
+
+    const filterValue = iframeDocument.getElementById('eventTypeFilter').value;
+    logsFilteredData = (filterValue === "All")
+        ? logsData.slice(1)
+        : logsData.filter((row, index) => index !== 0 && row[6]?.trim().toLowerCase() === filterValue.toLowerCase());
+
+    logsPage = 0;
+    renderLogsTable();
+}
+
+function renderLogsTable() {
+    const iframe = document.getElementById('mainframe');
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    const table = iframeDocument.getElementById('logsTable');
+    const container = iframeDocument.getElementById('logsTableContainer');
+    const controls = iframeDocument.getElementById('logControls');
+    const pageLabel = iframeDocument.getElementById('pageInfoLabel');
+
+    controls.style.display = 'none';
+    container.style.display = 'block';
+
+    table.innerHTML = "";
+    const headers = logsData[0];
+    const headerRow = "<tr>" + headers.map((h, i) => `<th style='border-bottom:1px solid #ccc; padding: 5px${i === 0 ? "; padding-left: 20px" : ""};'>${h}</th>`).join("") + "</tr>";
+    table.innerHTML += headerRow;
+
+    const totalRows = logsFilteredData.length;
+    const start = logsPage * logsPerPage;
+    const end = Math.min(start + logsPerPage, totalRows);
+
+    for (let i = start; i < end; i++) {
+        const row = logsFilteredData[i];
+        const rowHTML = `<tr>${row.map((cell, index) => `<td style='padding: 5px${index === 0 ? "; padding-left: 20px" : ""};'>${cell}</td>`).join("")}</tr>`;
+        table.innerHTML += rowHTML;
+    }
+
+    const totalPages = Math.ceil(totalRows / logsPerPage);
+    pageLabel.textContent = `Page ${logsPage + 1} of ${totalPages}`;
+
+}
+
+function fetchCSVAndDisplay(csvUrl) {
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(text => {
+            logsData = text.trim().split('\n').map(line => line.split(';'));
+            logsFilteredData = logsData.slice(1);
+            logsPage = 0;
+            renderLogsTable();
+            showLogsCalled = false;
+        });
 }

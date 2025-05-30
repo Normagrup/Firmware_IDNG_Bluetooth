@@ -125,3 +125,28 @@ select:focus {
     margin-top: 5px;
     cursor: pointer;
 }
+
+#logHeader2 {
+    margin-bottom: 0px;
+}
+#topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-top: 25px ;
+    margin-bottom: 25px;
+}
+#backButton {
+    margin-top: 0px;
+    margin-left: 10px;
+}
+
+#logsTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    background: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    border-radius: 6px;
+}
