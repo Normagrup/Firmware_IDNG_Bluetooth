@@ -214,9 +214,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case FEATURES:
                         processFeaturesFrame(dataChecked, uartPort, database, webServer);
                     break;
-                    case SEND_FEATURES_STATUS:
-                        //TODO: función que almacene en BD
-                    break;
                     case GROUP_ADDED:
                         processGroupAddedFrame(dataChecked, uartPort, database, webServer);
                     break;
@@ -295,8 +292,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         lineScanningCounter++;
                     }
                     break;
+                    case SEND_FEATURES_STATUS:
+                        qDebug() << "SEND_FEATURES_STATUS";
+                        processRecoveryFeaturesFrame(dataChecked, database);
+                    break;
                     case CONFIRM_START_LINE_SCANNING:
                     {
+                        qDebug() << "CONFIRM_START_LINE_SCANNING";
                         lineScanningCounter = 0;
                         for (int i = 0; i < MAX_SUBNET; i++) {
                             for (int j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -510,6 +512,46 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     }
 
     sendLogCommissionEntry(webServer, "The features have been loaded.");
+}
+
+void processRecoveryFeaturesFrame(QByteArray data, Database* database)
+{
+
+    uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
+    uint16_t address;
+    uint16_t fatherAddress;
+    address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
+
+    deviceType = (unsigned char)data[21] == 0 ? 1 : (unsigned char)data[21]; // Por defecto, tipo 1 (emergencia)
+    ratedDuration = (unsigned char)data[22];
+    emergencyFeatures = (unsigned char)data[23];
+    physicalMinLvl = (unsigned char)data[24];
+    fatherAddress = ((unsigned char)data[25] << 8) + (unsigned char)data[26];
+
+
+    qDebug() << "FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (!meshDevice[i][j].getIsConfigured()) {
+                meshDevice[i][j].setRealAddress(address);
+                meshDevice[i][j].setDeviceType(deviceType);
+                meshDevice[i][j].setRatedDuration(ratedDuration);
+                meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
+                meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
+                meshDevice[i][j].setIsConfigured(true);
+
+                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
+
+                qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
+
+                delay(2000);
+
+                return;
+
+            }
+        }
+    }
 }
 
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
@@ -898,7 +940,6 @@ void sendUartLineScanning(UartPort* _uartPort)
 {
     QByteArray frame;
 
-    qDebug() << "UART LINE SCANNING";
     qDebug() << "[Embebido] Enviando comando Line-Scanning";
     unsigned char length = 3;
 

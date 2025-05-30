@@ -90,4 +90,5 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
 void sendAntennaGetAddress(UartPort* _uartPort);
 void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
 void sendUartLineScanning(UartPort* _uartPort);
+void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 #endif // PROCESS_UART_DATA_H
