@@ -140,6 +140,7 @@ select:focus {
 #backButton {
     margin-top: 0px;
     margin-left: 10px;
+    width: 70px;
 }
 
 #logsTable {
@@ -149,4 +150,20 @@ select:focus {
     background: white;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
     border-radius: 6px;
+}
+
+#previousButton {
+    width: 10%;
+    margin-right: 20px;
+}
+
+#pageInfoLabel {
+    font-weight: bold;
+    margin-left: 0px;
+    margin-top: 35px;
+}
+
+#nextButton {
+    width: 10%;
+    margin-left: 20px;
 }
