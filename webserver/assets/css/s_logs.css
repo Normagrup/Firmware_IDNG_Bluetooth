@@ -63,10 +63,10 @@ label {
     color: #fff;
     font-size: 16px;
     text-transform: uppercase;
-    width: 100%;
+    width: 200px;
     border: 0;
     padding: 10px 0;
-    margin-top: 25px;
+    margin: 25px 20px 0px 20px;
     border-radius: 5px;
     background: #4682b4;
 }

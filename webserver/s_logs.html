@@ -44,9 +44,12 @@
                 </div>
             </div>
 
-            <button onclick="parent.getLogs()" style="margin-top: 40px;"> Get logs </button>
-            <label id="logError" style="margin-top: 10px; color: #C30101; visibility: hidden;"> Default </label>
-            <button onclick="parent.showLogs()" style="margin-top: 10px;"> Show logs </button>
+            <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                <button onclick="parent.getLogs()">Get logs</button>
+                <button onclick="parent.showLogs()">Show logs</button>
+            </div>
+            <label id="logError" style="margin: 10px 20px; color: #C30101; visibility: hidden;"> Default </label>
+
         </div>
         <div class="log-container" id="logsTableContainer" style="display:none; width: 95%; margin: 0px 0px;">
             <h2 id="logHeader2"> Log Results </h2>
