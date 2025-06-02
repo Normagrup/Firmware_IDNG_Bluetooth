@@ -38,9 +38,9 @@ typedef struct {
 } CommissionData;
 
 typedef struct {
-    int deviceId;
-    QString seriailNum;
     QString devName;
+    QString seriailNum;
+    int realAddress;
     QString devIP;
     qint64 timestamp;
     int event;
