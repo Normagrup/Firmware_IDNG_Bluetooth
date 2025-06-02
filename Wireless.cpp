@@ -170,39 +170,39 @@ void Wireless::updateLogsByPollings(Device &device)
 
     int devId = device.getRealAddress();
     QString serialNum = device.serialNumberString();
-    QString devName = "SUB:" + QString::number(subnetCount) + " " + "ID:" + QString::number(nodeSubnetCount);
+    QString devName = "Node: " + QString::number(subnetCount *64 + nodeSubnetCount + 1);
     AntennaInfo info = getAntennaInfo(_database);
     QString eventType = "Fail";
 
     if (lampNow != lampPrev) {
         if (lampNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_LAMP_FAILURE, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_LAMP_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_LAMP_RECOVERED, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_LAMP_RECOVERED, eventType);
         }
         device.setPrevLampFail(lampNow);
     }
     if (batNow != batPrev) {
         if (batNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_BATTERY_FAILURE, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_BATTERY_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName,info.ip, info.timestamp, LOG_BATTERY_RECOVERED, eventType);
+            insertLogEvent(_database, devName, serialNum, devId,info.ip, info.timestamp, LOG_BATTERY_RECOVERED, eventType);
         }
         device.setPrevBatteryFail(batNow);
     }
     if (durNow != durPrev) {
         if (durNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_DURATION_FAILURE, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_DURATION_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_DURATION_RECOVERED, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_DURATION_RECOVERED, eventType);
         }
         device.setPrevDurationFail(durNow);
     }
     if (commNow != commPrev) {
         if (commNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_FAILURE, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_COMMUNICATION_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_RECOVERED, eventType);
+            insertLogEvent(_database, devName, serialNum, devId, info.ip, info.timestamp, LOG_COMMUNICATION_RECOVERED, eventType);
         }
         device.setPrevCommFail(commNow);
     }
@@ -212,11 +212,11 @@ void Wireless::updateLogsByTests(uint8_t i, uint8_t code)
 {
     int devId = tests[i].getGroupAddress().toUInt(NULL, 16);
     QString serailNum = "FF.FF.FF.FF";
-    QString devName = "Group: " + tests[i].getGroupAddress();
+    QString groupName = "Group: " + getGroupName(devId);
     QString eventType = "Test";
     AntennaInfo info = getAntennaInfo(_database);
 
-    insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, code, eventType);
+    insertLogEvent(_database, groupName, serailNum, devId, info.ip, info.timestamp, code, eventType);
 
     AntennaTestCheck testCheck;
     testCheck.groupId = devId;
@@ -327,15 +327,15 @@ void Wireless::checkTestResultsHandler()
                     AntennaInfo info = getAntennaInfo(_database);
                     int devId = realAddress;
                     QString serial = device.serialNumberString();
-                    QString name = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+                    QString name =  "Node: " + QString::number(subnet * 64 + node + 1);
 
                     if (check.testType == "FUNCTIONAL") {
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
+                        insertLogEvent(_database, name, serial, devId, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
+                        insertLogEvent(_database, name, serial, devId, info.ip, info.timestamp,
                                        failed ? LOG_TEST_FT_FAIL : LOG_TEST_FT_OK, eventType);
                     } else {
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_DURATION, eventType);
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
+                        insertLogEvent(_database, name, serial, devId, info.ip, info.timestamp, LOG_TEST_COMPLETED_DURATION, eventType);
+                        insertLogEvent(_database, name, serial, devId, info.ip, info.timestamp,
                                        failed ? LOG_TEST_DT_FAIL : LOG_TEST_DT_OK, eventType);
                     }
                 }

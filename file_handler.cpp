@@ -9,6 +9,7 @@
 #include "file_handler.h"
 #include "global_variables.h"
 #include "Device.h"
+#include "aux_functions.h"
 
 void setWebServerData(Database* database)
 {
@@ -402,9 +403,12 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) { qDebug() << "Failed to open log file"; return ""; }
 
     QTextStream out(&file);
-    out << "DeviceId;Serial;Name;IP;DateTime;Event;EventType\n";
+    out << "Name;Serial;RealAddress;IP;DateTime;Event;EventType\n";
     for (const QStringList &row : logs) {
-        out << row.join(";") << ";\n";
+        QStringList newRow = row;
+        int eventCode = row[5].toInt();
+        newRow[5] = getLogEventName(eventCode);
+        out << newRow.join(";") << ";\n";
     }
     file.close();
     return outputFileName;
