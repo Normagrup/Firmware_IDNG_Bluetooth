@@ -523,6 +523,16 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }
 
+void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET FatherRealAddress = :fra WHERE RealAddress = :nodeAddress");
+    query.bindValue(":fra", fatherRealAddress);
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
+}
+
 void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
 {
     QSqlQuery query;

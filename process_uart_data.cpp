@@ -298,7 +298,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case CONFIRM_START_LINE_SCANNING:
                     {
-                        qDebug() << "CONFIRM_START_LINE_SCANNING";
+                        // Mandar confirmación al webserver
+
                         lineScanningCounter = 0;
                         for (int i = 0; i < MAX_SUBNET; i++) {
                             for (int j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -309,6 +310,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case CONFIRM_END_LINE_SCANNING:
                     {
                         database->loadNodesFromDatabase();
+
+                        // Mandar confirmación al webserver
                     }
                     break;
                     case SCAN_NODE_NOT_FOUND:
@@ -516,20 +519,19 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
 void processRecoveryFeaturesFrame(QByteArray data, Database* database)
 {
-
-    uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
+    uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode;
     uint16_t address;
     uint16_t fatherAddress;
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
 
-    deviceType = (unsigned char)data[21] == 0 ? 1 : (unsigned char)data[21]; // Por defecto, tipo 1 (emergencia)
-    ratedDuration = (unsigned char)data[22];
-    emergencyFeatures = (unsigned char)data[23];
-    physicalMinLvl = (unsigned char)data[24];
-    fatherAddress = ((unsigned char)data[25] << 8) + (unsigned char)data[26];
+    deviceType = (unsigned char)data[5] == 0 ? 1 : (unsigned char)data[5]; // Por defecto, tipo 1 (emergencia)
+    ratedDuration = (unsigned char)data[6];
+    emergencyFeatures = (unsigned char)data[7];
+    physicalMinLvl = (unsigned char)data[8];
+    relayMode = (unsigned char)data[9];
+    fatherAddress = ((unsigned char)data[10] << 8) + (unsigned char)data[11];
 
-
-    qDebug() << "FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+    qDebug() << "EXT FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -541,14 +543,14 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database)
                 meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
                 meshDevice[i][j].setIsConfigured(true);
 
-                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
+                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
+                database->setFatherRealAddress(address, fatherAddress);
 
                 qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
 
                 delay(2000);
 
                 return;
-
             }
         }
     }
