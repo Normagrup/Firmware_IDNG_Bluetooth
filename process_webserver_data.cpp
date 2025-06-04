@@ -1207,3 +1207,19 @@ void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t ant
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+
+void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel)
+{
+    qDebug() << "Node Address:" << QString::number(nodeAddr) << "- PowerOnLevel:" << QString::number(powerOnLevel);
+
+    for(const QPair<uint16_t, QStringList> &par : crossedGroupAndNodes) {
+        if (par.first == nodeAddr) {
+            const QStringList &groupsList = par.second;
+
+            for (const QString &group : groupsList) {
+                database->setPowerOnLevel(group, powerOnLevel);
+            }
+            break;
+        }
+    }
+}

@@ -330,6 +330,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         // TODO: Implementar mensaje de nodo no encontrado en base de datos del micro (opcional)
                     }
                     break;
+                    case ANSWER_POWER_ON_LEVEL:
+                    {
+                        uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
+                        uint8_t powerOnLevel = (uint8_t)dataChecked[5];
+                        updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
+                    }
+                    break;
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
@@ -1071,20 +1078,24 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     //    qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
     //}
 
-    // TODO: Enviar a cada nodo de la estructura la pregunta de su POL, e implementar la respuesta y actualización de cada grupo
+    for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
+        uint16_t realAddress = crossedGroupAndNodes[i].first;
 
-    /**
-    QByteArray frame;
-    unsigned char length = 3;
+        QByteArray frame;
+        unsigned char length = 5;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(NEW_ITERATION);
-    frame.append(UART_END);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(ASK_POWER_ON_LEVEL);
+        frame.append((realAddress >> 8) & 0xFF);
+        frame.append(realAddress & 0xFF);
+        frame.append(UART_END);
 
-    _uartPort->sendData(frame);
-    */
+        _uartPort->sendData(frame);
+
+        delay(SLEEP_DALI_TIME_MS);
+    }
 }
 
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)

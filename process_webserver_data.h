@@ -160,5 +160,6 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
 void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void sendFailComCycles(WebServer* webServer);
+void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
 
 #endif // PROCESS_WEBSERVER_DATA_H
