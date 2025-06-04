@@ -280,6 +280,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case SEND_RECOVERY_NODE:
                     {
+                        isLineScanning = true;
                         uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
 
                         uint8_t uuid[16];
@@ -294,12 +295,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
+                        isLineScanning = true;
                         processRecoveryFeaturesFrame(dataChecked, database);
                     break;
                     case CONFIRM_START_LINE_SCANNING:
                     {
                         // Mandar confirmación al webserver
-
+                        isLineScanning = true;
                         lineScanningCounter = 0;
                         for (int i = 0; i < MAX_SUBNET; i++) {
                             for (int j = 0; j < MAX_NODES_SUBNET; j++) {
@@ -311,6 +313,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         database->loadNodesFromDatabase();
 
+                        isLineScanning = false;
                         // Mandar confirmación al webserver
                     }
                     break;
@@ -979,7 +982,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning || isManualAddingDevice || isScanning) { return; }
+    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning) { return; }
 
     QByteArray frame;
     unsigned char length = 4;

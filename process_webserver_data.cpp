@@ -26,12 +26,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         rebootDevice();
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
         scannedDevicesMessages.clear();
         sendUartScannedDevices(uartPort);
     }
     else if (type == WS_SET_SCAN_FROM_NODE) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
         uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -81,7 +81,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         setLocalDateTime(webServerParts);
     }
     else if (type == WS_SET_START_ACTION) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         //qDebug() << "ADDING NEW NODE";
         if (value != "0") {
@@ -126,7 +126,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "Mensaje de detención de COMMISSIONING recibido.";
     }
     else if (type == WS_SET_DELETE_DEVICE) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
 
@@ -201,7 +201,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_ADD_DEVICE) {
-        if (isCommissionInProgress(webServer)) { return; }
+        if (isCommissionOrLSInProgress(webServer)) { return; }
 
         // Extraer el índice del UUID correspondiente al nodo que queremos añadir
         int uuidIndex = getUUIDIndexOfScanned(value);
@@ -239,7 +239,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID));
     }  
     else if (type == WS_SET_ADD_GROUP) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -261,7 +261,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     }
     else if (type == WS_SET_DEL_GROUP) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -293,7 +293,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroupNodes(webServer, value);
     }
     else if (type == WS_SET_MAX) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -313,7 +313,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_OFF) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -333,7 +333,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_MIN) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -353,7 +353,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_RESET) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -392,7 +392,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartSetRelay(uartPort, realAddress, enable);
     }
     else if (type == WS_SET_IDENTIFY) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -404,7 +404,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FACTORY_SETTINGS) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -428,7 +428,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_REBOOT) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -452,7 +452,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FUNCTION_TEST) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -470,7 +470,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_DURATION_TEST) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -489,7 +489,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 
     else if (type == WS_SET_STOP) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -510,13 +510,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendNodesFromDatabase(webServer, database);
     }
     else if (type == WS_SET_IS_COMMISSION_IN_PROGRESS) {
-        sendIsCommissionInProgress(webServer);
+        sendisCommissionOrLSInProgress(webServer);
     }
     else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
         sendIsAddManualInProgress(webServer);
     }
     else if (type == WS_SET_TEST) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList webServerParts = value.split(" ");
         setTests(webServerParts, database);
@@ -602,11 +602,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendTest(webServer, database, value);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
         clearSystemData(database, uartPort);
     }
     else if (type == WS_LINE_SCANNING) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
         sendUartLineScanning(uartPort);
 
     }
@@ -614,7 +614,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroupsWithPOL(webServer, database, value);
     }
     else if (type == WS_SET_POWER_ON_LEVEL) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList parts = value.split("_");
         uint16_t groupAddress = parts[0].toUShort(nullptr, 16);
@@ -654,10 +654,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 }
 
-bool isCommissionInProgress(WebServer* webServer)
+bool isCommissionOrLSInProgress(WebServer* webServer)
 {
     if (isCommissioning) {
         QString message = QString(WS_SEND_ALERT_COMMISSION) + "@" + "Command blocked. Commissioning in progress.";
+        if (webServer != nullptr) { webServer->sendData(message); }
+        return true;
+    }
+    else if (isLineScanning) {
+        QString message = QString(WS_SEND_ALERT_LINE_SCANNING) + "@" + "Command blocked. Line Scanning in progress.";
         if (webServer != nullptr) { webServer->sendData(message); }
         return true;
     }
@@ -860,7 +865,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
     }
 }
 
-void sendIsCommissionInProgress(WebServer* webServer)
+void sendisCommissionOrLSInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_COMMISSION_IN_PROGRESS) + "@" + (isCommissioning ? "true" : "false");
 

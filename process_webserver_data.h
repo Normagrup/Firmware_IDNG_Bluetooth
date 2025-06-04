@@ -66,6 +66,7 @@
 #define WS_SET_SCAN_FROM_NODE               "SET_SCAN_FROM_NODE"
 #define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
 #define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
+#define WS_SEND_ALERT_LINE_SCANNING         "ALERT_LINE_SCANNING"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -114,7 +115,7 @@
 
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
-bool isCommissionInProgress(WebServer* webServer);
+bool isCommissionOrLSInProgress(WebServer* webServer);
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
@@ -130,7 +131,7 @@ void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
-void sendIsCommissionInProgress(WebServer* webServer);
+void sendisCommissionOrLSInProgress(WebServer* webServer);
 void sendIsAddManualInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);

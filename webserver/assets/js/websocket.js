@@ -17,6 +17,11 @@ function processAlertCommission(value)
     alert(value);
 }
 
+function processAlertLineScanning(value)
+{
+    alert(value);
+}
+
 function processLoginInfo(value) 
 {
     var signErrorLabel = document.getElementById('signError');
@@ -1204,6 +1209,7 @@ function processReceivedData(data)
     var value = dataArray[1];
     
     if(type == 'ALERT_COMMISSION') { processAlertCommission(value); }
+    else if (type == 'ALERT_LINE_SCANNING') { processAlertLineScanning(value); }
     else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }

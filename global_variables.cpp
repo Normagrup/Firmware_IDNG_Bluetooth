@@ -46,6 +46,7 @@ bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;
 uint16_t lineScanningCounter = 0;
+bool isLineScanning;
 
 QMap<uint16_t, NodeInfo> nodesByRealAddress;
 QMultiMap<uint16_t, uint16_t> childrenMap;

@@ -102,7 +102,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :fcc)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :fcc)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
@@ -111,7 +111,7 @@ void Database::initDatabase()
             query.bindValue(":masterAddress", "7C17");
             query.bindValue(":fcc", 5);
 
-            if (!query.exec()) { qDebug() << "Error executing INSERT query in Users:" << query.lastError().text(); }
+            if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
         }
     }
 
