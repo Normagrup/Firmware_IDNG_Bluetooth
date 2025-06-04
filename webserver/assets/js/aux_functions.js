@@ -113,7 +113,7 @@ function createSettingsButton()
     var settingsTests = document.createElement('li');
     var settingsPowerOnLevel = document.createElement('li');
     var settingsUpdateDevice = document.createElement('li');
-    var settingsManageData = document.createElement('li');
+    var settingsGeneralConfig = document.createElement('li');
 
     var settingsIPConfigLink = document.createElement('a');
     settingsIPConfigLink.onclick = function() { loadPage('s_ipconfig.html'); };
@@ -147,9 +147,9 @@ function createSettingsButton()
     settingsUpdateDeviceLink.onclick = function() { loadPage('s_update.html') };
     settingsUpdateDeviceLink.textContent = "Update Device";
      
-    var settingsManageDataLink = document.createElement('a');
-    settingsManageDataLink.onclick = function() { loadPage('s_data.html') };
-    settingsManageDataLink.textContent = "Manage Data";
+    var settingsGeneralConfigLink = document.createElement('a');
+    settingsGeneralConfigLink.onclick = function() { loadPage('s_general_config.html') };
+    settingsGeneralConfigLink.textContent = "General Config";
 
     settingsIPConfig.appendChild(settingsIPConfigLink);
     settingsTime.appendChild(settingsTimeLink);
@@ -159,7 +159,7 @@ function createSettingsButton()
     settingsTests.appendChild(settingsTestsLink);
     settingsPowerOnLevel.appendChild(settingsPowerOnLevelLink);
     settingsUpdateDevice.appendChild(settingsUpdateDeviceLink);
-    settingsManageData.appendChild(settingsManageDataLink);
+    settingsGeneralConfig.appendChild(settingsGeneralConfigLink);
 
     settingsButtonMenu.appendChild(settingsIPConfig);
     settingsButtonMenu.appendChild(settingsTime);
@@ -169,7 +169,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsTests);
     settingsButtonMenu.appendChild(settingsPowerOnLevel);
     settingsButtonMenu.appendChild(settingsUpdateDevice);
-    settingsButtonMenu.appendChild(settingsManageData);
+    settingsButtonMenu.appendChild(settingsGeneralConfig);
 
     settingsButtonLink.appendChild(settingsButtonMenu);
 
@@ -536,16 +536,14 @@ function addDevicePrev()
 
         var popup = iframeDocument.getElementById('popupAddDevice');
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
-        var addingDeviceLabel = iframeDocument.getElementById('addingDeviceLabel');
-        var addingDeviceButton = iframeDocument.getElementById('addingDeviceButton');
 
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
-        addingDeviceLabel.textContent = "Do you want to add the node to the network?";
-        addingDeviceButton.classList.remove('button-disabled');
 
-        var closeAddDev = iframeDocument.getElementById('closeAddDev');
-        closeAddDev.setAttribute("onclick", "parent.closeWirelessPopup()");
+        var logAddManual = iframeDocument.getElementById('logAddManual');
+        logAddManual.innerHTML = "";
+
+        addDevice();
     }
     else {
         networkErrorLabel.style.visibility = "visible";
@@ -605,11 +603,18 @@ function closeWirelessPopup()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var popup = iframeDocument.getElementById('popup');
     var popupAdd = iframeDocument.getElementById('popupAddDevice');
     var popupDelete = iframeDocument.getElementById('popupDelDevice');
     var popupDeleteAll = iframeDocument.getElementById('popupDelAllDevices');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var loader1 = popup.querySelector('.loader');
+    loader1.style.animation = "spin 1.5s linear infinite";
+    var loader2 = popupAdd.querySelector('.loader');
+    loader2.style.animation = "spin 1.5s linear infinite";
     
+    if(popup) { popup.style.visibility = "hidden"; }
     if(popupAdd) { popupAdd.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
     if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
@@ -641,6 +646,9 @@ function closeManageDataPopup()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var input = iframeDocument.getElementById('deleteConfirmInput');
+    input.value = "";
 
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');

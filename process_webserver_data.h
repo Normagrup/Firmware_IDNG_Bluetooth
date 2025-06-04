@@ -28,6 +28,7 @@
 #define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
+#define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -48,6 +49,8 @@
 #define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
 #define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
 #define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"
+#define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
+#define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -76,6 +79,7 @@
 #define WS_SEND_ADDED_DEVICES               "ADDED_DEVICE"
 #define WS_SEND_CONFIRM_ADD_DEVICE          "CONFIRM_ADD_DEVICE"
 #define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
+#define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
@@ -102,8 +106,12 @@
 #define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 #define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
+
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_CONFIRM_M_ADDRESS_SET       "CONFIRM_M_ADDRESS_SET"
+
+#define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
+
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionInProgress(WebServer* webServer);
@@ -123,6 +131,7 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendIsCommissionInProgress(WebServer* webServer);
+void sendIsAddManualInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
@@ -149,5 +158,6 @@ void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
 void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
+void sendFailComCycles(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

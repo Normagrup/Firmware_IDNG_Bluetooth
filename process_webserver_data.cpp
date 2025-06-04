@@ -512,6 +512,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_IS_COMMISSION_IN_PROGRESS) {
         sendIsCommissionInProgress(webServer);
     }
+    else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
+        sendIsAddManualInProgress(webServer);
+    }
     else if (type == WS_SET_TEST) {
         if(isCommissionInProgress(webServer)) { return; }
 
@@ -636,6 +639,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
 
         sendAntennaSetAddress(uartPort, newAntennaRealAddress);
+    }
+    else if (type == WS_GET_FAILCOM_CYCLES) {
+        sendFailComCycles(webServer);
+    }
+    else if (type == WS_SET_FAILCOM_CYCLES) {
+        uint8_t cycles = value.toUInt();
+        database->updateFailComCycles(cycles);
+        failComCycles = cycles;
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -852,6 +863,13 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
 void sendIsCommissionInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_COMMISSION_IN_PROGRESS) + "@" + (isCommissioning ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsAddManualInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_ADD_MANUAL_IN_PROGRESS) + "@" + (isManualAddingDevice ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1128,6 +1146,13 @@ void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
     buildJsonTree();
 
     QString message = QString(WS_SEND_CONFIRM_SHOW_TREE) + "@" + "";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendFailComCycles(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_FAIL_COM_CYCLES) + "@" + QString::number(failComCycles);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

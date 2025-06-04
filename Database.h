@@ -80,8 +80,12 @@ public:
 
     uint16_t getMasterRealAddress(void);
     void setMasterRealAddress(uint16_t newAntennaAddress);
+
     void setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID);
     void setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress);
+    void loadFailComCycles(void);
+    void updateFailComCycles(uint8_t cycles);
+
 signals:
 
 private:

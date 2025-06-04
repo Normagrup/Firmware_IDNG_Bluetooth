@@ -1,4 +1,5 @@
 #include "Device.h"
+#include "global_variables.h"
 
 Device::Device(QObject *parent)
     : QObject{parent}
@@ -276,4 +277,18 @@ bool Device::isOnSubList(uint16_t groupAddress)
         if (_groupSubAddress[i] == groupAddress) { return true; }
     }
     return false;
+}
+
+void Device::resetCommunicationFailure()
+{
+    _failureCycles = 0;
+    setCommunicationFailure(false);
+}
+
+void Device::registerCommunicationFailureCycle()
+{
+    _failureCycles++;
+    if (_failureCycles >= failComCycles) {
+        setCommunicationFailure(true);
+    }
 }

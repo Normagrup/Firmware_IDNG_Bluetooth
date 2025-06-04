@@ -61,4 +61,6 @@ extern uint16_t lineScanningCounter;
 extern QMap<uint16_t, NodeInfo> nodesByRealAddress;
 extern QMultiMap<uint16_t, uint16_t> childrenMap;
 
+extern uint8_t failComCycles;
+
 #endif // GLOBAL_VARIABLES_H

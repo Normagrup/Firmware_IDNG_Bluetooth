@@ -88,7 +88,8 @@ void Database::initDatabase()
                "Gateway TEXT, "
                "BuildingName TEXT, "
                "LineName TEXT, "
-               "MasterAddress TEXT);");
+               "MasterAddress TEXT, "
+               "FailComCycles INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -100,13 +101,15 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Users:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress)");
+
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :fcc)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
             query.bindValue(":masterAddress", "7C17");
+            query.bindValue(":fcc", 5);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in Users:" << query.lastError().text(); }
         }
@@ -1217,6 +1220,29 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
     } else {
         qDebug() << "MasterAddress updated to" << newAntennaAddress;
     }
+}
+
+void Database::loadFailComCycles()
+{
+    QSqlQuery query;
+    if (!query.exec("SELECT FailComCycles FROM General")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    uint8_t cycles = 5;
+
+    if (query.next()) {
+        cycles = query.value("FailComCycles").toUInt();
+    }
+
+    failComCycles = cycles;
+}
+
+void Database::updateFailComCycles(uint8_t cycles)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE General SET FailComCycles = :fcc");
+    query.bindValue(":fcc", cycles);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in GENERAL" << query.lastError().text(); }
 }
 
 void Database::editGroup(QString address, QString name)

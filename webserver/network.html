@@ -19,9 +19,6 @@
             <div class="popup-subcontainer">
                 <img id="deviceTypeIcon" src="images/defaultLightIcon.png" style="width: 30%; height: 40%;">
                 <h3> HOLA </h3>
-                <div class="popup-button-subcontainer">
-                    <button onclick="parent.facSettingsButton()"> Factory settings </button>
-                </div>
             </div>
             
             <div class="popup-subcontainer">
@@ -46,9 +43,9 @@
                 </div>
                 
                 <div class="popup-button-subcontainer">
-                    <button onclick="parent.identifyButton()" style="width: 32%;"> IDTFY </button>
-                    <button onclick="parent.resetButton()" style="width: 32%;"> RST </button>
-                    <button onclick="parent.rebootButton()" style="width: 32%;"> RBOOT </button>
+                    <button onclick="parent.funcTestButton()" style="width: 32%;"> F Test </button>
+                    <button onclick="parent.durTestButton()" style="width: 32%;"> D Test </button>
+                    <button onclick="parent.stopButton()" style="width: 32%;"> STOP </button>
                 </div>
                 
                 <div class="popup-button-subcontainer">
@@ -58,13 +55,7 @@
             
             <div class="popup-subcontainer" style="border-right: none;">
                 <div class="popup-button-subcontainer">
-                    <button onclick="parent.funcTestButton()"> Functional Test </button>
-                </div>
-                <div class="popup-button-subcontainer">
-                    <button onclick="parent.durTestButton()"> Duration Test </button>
-                </div>
-                <div class="popup-button-subcontainer">
-                    <button onclick="parent.stopButton()"> Stop </button>
+                    <button onclick="parent.identifyButton()"> IDENTIFY </button>
                 </div>
             </div>
             
