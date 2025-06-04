@@ -288,6 +288,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                reinterpret_cast<const uint8_t*>(dataChecked.constData()) + 5,
                                sizeof(uuid));
 
+                        while(configuredNodes.contains(lineScanningCounter + 1)) {
+                            lineScanningCounter++;
+                        }
+
                         database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
 
                         lineScanningCounter++;
@@ -302,6 +306,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         // Mandar confirmación al webserver
                         isLineScanning = true;
+                        configuredNodes = database->getConfiguredNodes();
                         lineScanningCounter = 0;
                         for (int i = 0; i < MAX_SUBNET; i++) {
                             for (int j = 0; j < MAX_NODES_SUBNET; j++) {
