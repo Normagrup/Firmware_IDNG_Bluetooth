@@ -1074,9 +1074,9 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     }
 
     // Para probar la creación correcta de la estructura que cruza (nodos) - (grupos en los que el nodo es el primero con comunicación)
-    //for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
-    //    qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
-    //}
+    for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
+        qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
+    }
 
     for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
         uint16_t realAddress = crossedGroupAndNodes[i].first;
@@ -1094,7 +1094,7 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
 
         _uartPort->sendData(frame);
 
-        delay(SLEEP_DALI_TIME_MS);
+        delay(SLEEP_DALI_TIME_MS * 2);
     }
 }
 
