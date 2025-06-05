@@ -46,6 +46,8 @@
 #define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
+#define WS_SET_GROUPS_LS                    "SET_GROUPS_LS"
+#define WS_GET_GROUPS_LS                    "GET_GROUPS_LS"
 #define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
 #define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
 #define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"

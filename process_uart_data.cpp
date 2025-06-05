@@ -322,6 +322,17 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         // Mandar confirmación al webserver
                     }
                     break;
+                    case CONFIRM_START_GROUPS_RECOVERY:
+                    {
+                        // TODO: CONFIRMACION DE EMPEZAR AL WEBSERVER
+
+                    }
+                    case CONFIRM_END_GROUPS_RECOVERY:
+                    {
+                        // TODO: CONFIRMACIÓN DE TERMINAR AL WEBSERVER
+                        // TODO: CARGA LOADNODESFROMDATABASE LS_GROUPS_RECOVERY
+                    }
+                    break;
                     case SCAN_NODE_NOT_FOUND:
                     {
                         uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
@@ -950,7 +961,7 @@ void sendUartLineScanning(UartPort* _uartPort)
 {
     QByteArray frame;
 
-    qDebug() << "[Embebido] Enviando comando Line-Scanning";
+    qDebug() << "[Embebido] Enviando comando Line Scanning";
     unsigned char length = 3;
 
     frame.append(UART_HEADER);
@@ -964,6 +975,26 @@ void sendUartLineScanning(UartPort* _uartPort)
 
     _uartPort->sendData(frame);
     qDebug() << "[Embebido] Frame de LINE_SCANNING enviado correctamente.";
+}
+
+void sendUartLSGroups(UartPort* _uartPort)
+{
+    QByteArray frame;
+
+    qDebug() << "[Embebido] Enviando comando de recuperación de GRUPOS tras Line Scanning";
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(LS_GROUPS_RECOVERY);
+
+    frame.append(UART_END);
+
+    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
+
+    _uartPort->sendData(frame);
+    qDebug() << "[Embebido] Frame de LS_GROUPS_RECOVERY enviado correctamente.";
 }
 
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)

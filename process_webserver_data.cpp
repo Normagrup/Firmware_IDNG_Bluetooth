@@ -627,6 +627,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_SYNC_POL) {
         sendUartPOLForUpdate(uartPort, database);
     }
+    else if (type == WS_SET_GROUPS_LS) {
+        sendUartLSGroups(uartPort);
+    }
     else if (type == WS_SET_RELOAD_TREE) {
         buildTreeAndSendConfirm(webServer, database);
     }
