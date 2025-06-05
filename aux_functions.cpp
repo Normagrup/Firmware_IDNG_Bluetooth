@@ -270,18 +270,26 @@ void addTestToChecklist(uint16_t realAddr, const QString& testType, const QDateT
     antennaTestCheckList.append(check);
 }
 
-void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode)
+void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString eventType)
 {
-    int subnet = (nodeAddress - 1) / 64;
-    int node = (nodeAddress - 1) % 64;
+    int devId;
+    QString serial, devName;
 
-    Device &device = meshDevice[subnet][node];
+    if(eventType == "Commissioning"){
+        devId = nodeAddress;
+        serial = "FF.FF.FF.FF";
+        devName = QString("DEV ERR: %1").arg(devId);
+    }
+    else {
+        int subnet = (nodeAddress - 1) / 64;
+        int node = (nodeAddress - 1) % 64;
+        Device &device = meshDevice[subnet][node];
+        devId = device.getRealAddress();
+        serial = device.serialNumberString();
+        devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+    }
 
-    int devId = device.getRealAddress();
-    QString serial = device.serialNumberString();
-    QString devName = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
     AntennaInfo info = getAntennaInfo(db);
-    QString eventType = "Device";
 
     insertLogEvent(db, devId, serial, devName, info.ip, info.timestamp, eventCode, eventType);
 }
@@ -305,4 +313,22 @@ void removeLogTestFromCheckList(uint16_t nodeAddress)
             ++i;
         }
     }
+}
+
+void insertCommissionErrorToLog(const QByteArray& uuidArray, Database *db, int eventCode)
+{
+    if (uuidArray.size() < 16) return;
+
+    QString serial = QString("%1.%2.%3.%4")
+                         .arg(static_cast<uint8_t>(uuidArray[15]), 2, 16, QChar('0'))
+                         .arg(static_cast<uint8_t>(uuidArray[14]), 2, 16, QChar('0'))
+                         .arg(static_cast<uint8_t>(uuidArray[13]), 2, 16, QChar('0'))
+                         .arg(static_cast<uint8_t>(uuidArray[12]), 2, 16, QChar('0'))
+                         .toUpper();
+
+    QString devName = "Unprovisioned";
+    AntennaInfo info = getAntennaInfo(db);
+    QString eventType = "Commissioning";
+
+    insertLogEvent(db, -1, serial, devName, info.ip, info.timestamp, eventCode, eventType);
 }

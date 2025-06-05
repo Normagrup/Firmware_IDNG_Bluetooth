@@ -212,9 +212,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
 
                     case DEVICE_ERROR:
+                    {
                         qDebug() << "DEVICE ERROR";
                         sendLogCommissionEntry(webServer, "An error has occurred with the device...", "ERROR");
+                        QByteArray uuidBytes = dataChecked.mid(3,16);
+                        insertCommissionErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
                         sendDeviceError(dataChecked, uartPort, webServer);
+                    }
                     break;
 
                     case COMMISSION_FAIL:
@@ -223,15 +227,15 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint8_t failType = (uint8_t)dataChecked[5];
                         if(failType == GROUP_FAIL) {
                             sendLogCommissionEntry(webServer, "Error assigning node to group...", "ERROR");
-                            // insertar en logs
+                            insertDevToLog(nodeAddress, database, LOG_COMMISSION_GROUP_FAIL, "Commissioning");
                         }
                         else if(failType == DEV_TYPE_FAIL) {
                             sendLogCommissionEntry(webServer, "Error reading device type...", "ERROR");
-                            // insertar en logs
+                            insertDevToLog(nodeAddress, database, LOG_COMMISSION_DEV_TYPE_FAIL, "Commissioning");
                         }
                         else if(failType == NET_ADDR_FAIL) {
                             sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
-                            // insertar en logs
+                            insertDevToLog(nodeAddress, database, LOG_COMMISSION_NET_ADDR_FAIL, "Commissioning");
                         }
                     }
                     break;
@@ -458,7 +462,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
-                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED);
+                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED, "Device");
                 delay(500);
                 
                 /*
