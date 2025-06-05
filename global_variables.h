@@ -43,6 +43,7 @@ extern uint8_t numberOfAddedNodes;
 extern uint16_t numberOfIterations;
 extern uint16_t doneIterations;
 extern uint16_t netAddress;
+extern uint16_t currentNodeAddress;
 
 extern QTimer pollingTimer;
 extern QTimer testResultCheckTimer;

@@ -39,6 +39,8 @@ uint8_t numberOfAddedNodes = 0;
 uint16_t numberOfIterations = 0;
 uint16_t doneIterations = 0;
 uint16_t netAddress = 0;
+uint16_t currentNodeAddress = 0;
+
 uint8_t subnetCount = 0, nodeSubnetCount = 0;
 
 QStringList scannedDevicesMessages;

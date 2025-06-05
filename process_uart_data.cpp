@@ -208,6 +208,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
 
                     case ADD_DEVICE:
+                        currentNodeAddress = ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         sendAddedDevices(dataChecked, webServer, database);
                     break;
 
@@ -462,7 +463,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
-                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED, "Device");
+                insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");
                 delay(500);
                 
                 /*
