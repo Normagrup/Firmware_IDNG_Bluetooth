@@ -2065,35 +2065,6 @@ function syncPOL() {
     }, 10000);
 }
 
-function syncGroupsLineScanning() {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var popup = iframeDocument.getElementById('popup');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-    
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
-
-    sendData("SET_GROUPS_LS", "");
-
-    setTimeout(function() {
-        var pageLabel = iframeDocument.getElementById("page");
-
-        if(pageLabel) {
-            var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
-            var currentPage = parseInt(currentPageStr, 10);
-
-            pageLabel.textContent = "Page: " + currentPage;
-
-            sendData("GET_GROUPS_LS", currentPage);
-        }
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 10000);
-}
-
 function setAntennaNumber() {
     var antennaNumberInput = document.getElementById('antennaNumber');
     var antennaNumber = parseInt(antennaNumberInput.value, 10);

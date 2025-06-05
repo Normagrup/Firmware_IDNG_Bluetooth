@@ -62,9 +62,6 @@
 #define CONFIRM_END_LINE_SCANNING       0x74
 #define CONFIRM_START_LINE_SCANNING     0x75
 #define SEND_FEATURES_STATUS            0x77
-#define LS_GROUPS_RECOVERY              0x79
-#define CONFIRM_START_GROUPS_RECOVERY   0x81
-#define CONFIRM_END_GROUPS_RECOVERY     0x83
 #define RECOVERY_GROUPS                 0x85
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -95,5 +92,4 @@ void sendAntennaGetAddress(UartPort* _uartPort);
 void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
 void sendUartLineScanning(UartPort* _uartPort);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
-void sendUartLSGroups(UartPort* _uartPort);
 #endif // PROCESS_UART_DATA_H
