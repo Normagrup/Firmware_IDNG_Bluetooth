@@ -1050,8 +1050,11 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
         for(int j = 0; j < MAX_NODES_SUBNET; j++) {
             Device& device = meshDevice[i][j];
             if(device.getIsConfigured() && !device.hasCommunicationFailure()) {
+                qDebug() << "Device" << QString::number(i * 64 + j + 1);
                 for(const QString &groupAddress : QSet<QString>(groupsSet)) {
                     if(device.isOnGroupSubAddress(groupAddress.toUShort(nullptr, 16))) {
+                        qDebug() << "MATCHING WITH" << groupAddress;
+
                         bool existingEntry = false;
 
                         for(QPair<uint16_t, QStringList> &par : crossedGroupAndNodes) {
