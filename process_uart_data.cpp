@@ -322,10 +322,28 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         // Mandar confirmación al webserver
                     }
                     break;
+                    case RECOVERY_GROUPS:
+                    {
+                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | (uint16_t)dataChecked[4];
+                        uint8_t validCount = (uint8_t)dataChecked[5];
+
+                        for (uint8_t i = 0; i < validCount; i++) {
+                            uint16_t groupAddr = (uint16_t)dataChecked[6 + 2*i]
+                                                 | ((uint16_t)dataChecked[7 + 2*i] << 8);
+
+                            database->setGroup(nodeAddress, groupAddr);
+
+                            qDebug() << "RECOVERY_GROUPS: nodo=0x"
+                                     << QString::asprintf("%04X", nodeAddress)
+                                     << "→ añadiendo grupo 0x"
+                                     << QString::asprintf("%04X", groupAddr);
+                        }
+                    break;
+                    }
                     case CONFIRM_START_GROUPS_RECOVERY:
                     {
                         // TODO: CONFIRMACION DE EMPEZAR AL WEBSERVER
-
+                    break;
                     }
                     case CONFIRM_END_GROUPS_RECOVERY:
                     {
