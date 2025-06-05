@@ -89,7 +89,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             //uuidScanned = compareDeviceUUID(value);
             //delay(500);
             //confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
-            //if (uuidScanned.UUID != nullptr) { sendUartAddDevice(uartPort, uuidScanned); sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(uuidScanned)); }
+            //if (uuidScanned.UUID != nullptr) { sendUartAddDevice(uartPort, uuidScanned); sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(uuidScanned), "INFO"); }
         }
         else {
             qDebug() << "START COMMISSION";
@@ -108,7 +108,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
             delay(300);
-            sendLogCommissionEntry(webServer, "Scanning devices...");
+            sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
         }
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
@@ -236,7 +236,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         scannedDevicesMessages.removeAt(uuidIndex);
 
         sendUartAddDevice(uartPort, scannedUUID[0]);
-        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID));
+        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
     }  
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
@@ -697,9 +697,9 @@ void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendLogCommissionEntry(WebServer* webServer, QString content)
+void sendLogCommissionEntry(WebServer* webServer, QString content, QString type)
 {
-    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + content;
+    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + content + "_" + type;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -794,7 +794,7 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 
     qDebug() << "UART FRAME RECEIVED: ADDED DEVICE " << nodeAddress;
 
-    sendLogCommissionEntry(webServer, "The device has been added.");
+    sendLogCommissionEntry(webServer, "The device has been added.", "INFO");
 
     //QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress[0] * 64 + netAddress[1] + 1);
 
@@ -837,7 +837,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[l].UUID[0], 2, 16, QChar('0')).toUpper();
             sendUartAddDevice(uartPort, scannedUUID[l]);
-            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID));
+            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID), "INFO");
             confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
             break;
         }

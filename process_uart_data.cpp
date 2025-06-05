@@ -77,6 +77,12 @@ static QByteArray processUartFrame(QByteArray data)
                     return QByteArray();
                 }
             }
+            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == COMMISSION_FAIL) {
+                if (data.size() != 7) {
+                    secondBufferRequired = true;
+                    return QByteArray();
+                }
+            }
             else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == FEATURES) {
                 if (data.size() != 28) {
                     secondBufferRequired = true;
@@ -177,14 +183,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_ADD_DEVICE:
                         qDebug() << "PARANDO TIMER ADD DEVICE";
-                        sendLogCommissionEntry(webServer, "Add device command received...");
+                        sendLogCommissionEntry(webServer, "Add device command received...", "INFO");
                         confirmAddDeviceTimer.stop();
                         //sendConfirmAddingDevice(webServer);
                     break;
 
                     case CONFIRM_GROUP_FRAME:
                         qDebug() << "PARANDO TIMER GROUP FRAME";
-                        sendLogCommissionEntry(webServer, "Adding node to groups...");
+                        sendLogCommissionEntry(webServer, "Adding node to groups...", "INFO");
                         groupFrameTimer.stop();
                     break;
 
@@ -197,7 +203,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_CHANGE_RELAY:
                         qDebug() << "CONFIRM CHANGE RELAY";
-                        sendLogCommissionEntry(webServer, "Confirm change relay...");
+                        sendLogCommissionEntry(webServer, "Confirm change relay...", "INFO");
                         commissionData.isChangeRelayConfirmed = true;
                     break;
 
@@ -207,8 +213,27 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case DEVICE_ERROR:
                         qDebug() << "DEVICE ERROR";
-                        sendLogCommissionEntry(webServer, "An error has occurred with the device...");
+                        sendLogCommissionEntry(webServer, "An error has occurred with the device...", "ERROR");
                         sendDeviceError(dataChecked, uartPort, webServer);
+                    break;
+
+                    case COMMISSION_FAIL:
+                    {
+                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+                        uint8_t failType = (uint8_t)dataChecked[5];
+                        if(failType == GROUP_FAIL) {
+                            sendLogCommissionEntry(webServer, "Error assigning node to group...", "ERROR");
+                            // insertar en logs
+                        }
+                        else if(failType == DEV_TYPE_FAIL) {
+                            sendLogCommissionEntry(webServer, "Error reading device type...", "ERROR");
+                            // insertar en logs
+                        }
+                        else if(failType == NET_ADDR_FAIL) {
+                            sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
+                            // insertar en logs
+                        }
+                    }
                     break;
 
                     case FEATURES:
@@ -388,7 +413,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
 {
-    sendLogCommissionEntry(webServer, "Start loading features...");
+    sendLogCommissionEntry(webServer, "Start loading features...", "INFO");
 
     uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
     uint8_t nodeUUID[16];
@@ -476,7 +501,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                     if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
                         qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[l].UUID[0], 2, 16, QChar('0')).toUpper();
                         sendUartAddDevice(uartPort, scannedUUID[l]);
-                        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID));
+                        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID, "INFO"));
                         confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
                         break;
                     }
@@ -529,7 +554,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
         }
     }
 
-    sendLogCommissionEntry(webServer, "The features have been loaded.");
+    sendLogCommissionEntry(webServer, "The features have been loaded.", "INFO");
 }
 
 void processRecoveryFeaturesFrame(QByteArray data, Database* database)
@@ -599,7 +624,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     netAddress = 0;
 
     qDebug()  << "NODO AÑADIDO";
-    sendLogCommissionEntry(webServer, "The groups have been setted.");
+    sendLogCommissionEntry(webServer, "The groups have been setted.", "INFO");
 
     delay(4000);
 
@@ -634,7 +659,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[i].UUID[0], 2, 16, QChar('0')).toUpper();
             sendUartAddDevice(uartPort, scannedUUID[i]);
-            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
+            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID), "INFO");
             confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
             break;
         }

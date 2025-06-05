@@ -358,6 +358,10 @@ function processDeviceError(value)
 
 function processLogCommissionEntry(value)
 {
+    var parts = value.split("_");
+    var content = parts[0];
+    var type = parts[1];
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     
@@ -365,9 +369,8 @@ function processLogCommissionEntry(value)
 
     if(logCommissionList) {
         var newEntry1 = iframeDocument.createElement('li');
-        newEntry1.textContent = value;
-        if(value == "An error has occurred with the device...")
-            newEntry1.style.color = "#C30101";
+        newEntry1.textContent = content;
+        if(type == "ERROR") { newEntry1.style.color = "#C30101"; }
         logCommissionList.insertBefore(newEntry1, logCommissionList.firstChild);
     }
 
@@ -375,9 +378,8 @@ function processLogCommissionEntry(value)
 
     if(logAddManualList) {
         var newEntry2 = iframeDocument.createElement('li');
-        newEntry2.textContent = value;
-        if(value == "An error has occurred with the device...")
-            newEntry2.style.color = "#C30101";
+        newEntry2.textContent = content;
+        if(type == "ERROR") { newEntry2.style.color = "#C30101"; }
         logAddManualList.insertBefore(newEntry2, logAddManualList.firstChild);
     }
 }

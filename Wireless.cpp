@@ -353,7 +353,7 @@ void Wireless::addDeviceTimerHandler()
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations));
+            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
             doneIterations++;
         }
 
@@ -369,14 +369,14 @@ void Wireless::addDeviceTimerHandler()
 
     if (commissionData.numberOfNodesScanned > 0 && !forceStopCommissioning) {
         qDebug() << "EMPEZAMOS A AÑADIR NODOS";
-        sendLogCommissionEntry(_webServer, "Start adding nodes...");
+        sendLogCommissionEntry(_webServer, "Start adding nodes...", "INFO");
         commissionData.isRelayNode = false;
         uint8_t emptyUUID[16] = {0};
         for (uint8_t i = 0; i < 16 ; i++) {
             if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
                 confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
                 sendUartAddDevice(_uartPort, scannedUUID[i]);
-                sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
+                sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID), "INFO");
                 break;
             }
         }
@@ -385,7 +385,7 @@ void Wireless::addDeviceTimerHandler()
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations));
+            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
             doneIterations++;
             sendUartNewIteration(_uartPort);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
@@ -417,7 +417,7 @@ void Wireless::confirmAddDeviceTimerHandler()
     for (uint8_t i = 0; i < 20; i++) {
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             sendUartAddDevice(_uartPort, scannedUUID[i]);
-            sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
+            sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID), "INFO");
             break;
         }
     }

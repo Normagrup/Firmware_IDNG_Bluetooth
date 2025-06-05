@@ -17,6 +17,11 @@
 #define UART_RSP_CHANGE_FRAME_TYPE      0x13
 #define UART_RSP_POLLING_FRAME_TYPE     0x14
 
+#define COMMISSION_FAIL                 0x84
+#define GROUP_FAIL                      0x01
+#define DEV_TYPE_FAIL                   0x02
+#define NET_ADDR_FAIL                   0x03
+
 #define SCAN_DEVICES                    0x01
 #define START_COMMISSION                0x03
 #define NEW_ITERATION                   0x05
