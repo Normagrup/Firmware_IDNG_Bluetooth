@@ -235,8 +235,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                             insertDevToLog(nodeAddress, database, LOG_COMMISSION_DEV_TYPE_FAIL, "Commissioning");
                         }
                         else if(failType == NET_ADDR_FAIL) {
-                            sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
-                            insertDevToLog(nodeAddress, database, LOG_COMMISSION_NET_ADDR_FAIL, "Commissioning");
+                            // No va a entrar por aquí porque el error de netAddress se procesa automáticamente en processGroupAddedFrame
+                            // Se detecta cuando esa función recibe dos 0 como direcciones de grupo. Se procesa ahí para permitir que acabe el commission
+                            //sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
+                            //insertDevToLog(nodeAddress, database, LOG_COMMISSION_NET_ADDR_FAIL, "Commissioning");
                         }
                     }
                     break;
@@ -610,18 +612,21 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     netAdressGroupAddress = ((unsigned char)data[7] << 8) + (unsigned char)data[8];
 
     qDebug() << "GROUP ADDED FRAME: " << nodeAddress << deviceTypeGroupAddress << netAdressGroupAddress;
-    database->setGroup(nodeAddress, deviceTypeGroupAddress);
+    if (deviceTypeGroupAddress != 0x0000) { database->setGroup(nodeAddress, deviceTypeGroupAddress); }
     if (netAdressGroupAddress != 0x0000) { database->setGroup(nodeAddress, netAdressGroupAddress); }
 
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == nodeAddress) {
-                meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
-                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "relayOff" + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
-                    if (webServer != nullptr) { webServer->sendData(message); }
+    if (deviceTypeGroupAddress != 0x0000) {
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == nodeAddress) {
+                    meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
+                    if (netAdressGroupAddress != 0x0000) { meshDevice[i][j].setGroupSubAddress(netAdressGroupAddress); }
+                    if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
+                        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "relayOff" + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
+                        if (webServer != nullptr) { webServer->sendData(message); }
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -629,7 +634,13 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     netAddress = 0;
 
     qDebug()  << "NODO AÑADIDO";
-    sendLogCommissionEntry(webServer, "The groups have been setted.", "INFO");
+    if(deviceTypeGroupAddress != 0x0000 || netAdressGroupAddress != 0x0000) {
+        sendLogCommissionEntry(webServer, "The groups have been setted.", "INFO");
+    }
+    else {
+        sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
+        insertDevToLog(nodeAddress, database, LOG_COMMISSION_NET_ADDR_FAIL, "Commissioning");
+    }
 
     delay(4000);
 
