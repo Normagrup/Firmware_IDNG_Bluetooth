@@ -83,6 +83,12 @@ static QByteArray processUartFrame(QByteArray data)
                     return QByteArray();
                 }
             }
+            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == LS_INFO) {
+                if (data.size() != 7) {
+                    secondBufferRequired = true;
+                    return QByteArray();
+                }
+            }
             else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == FEATURES) {
                 if (data.size() != 28) {
                     secondBufferRequired = true;
@@ -243,6 +249,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
 
+                    case LS_INFO:
+                    {
+                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+                        uint8_t phase = (uint8_t)dataChecked[5];
+                        sendLSInfo(webServer, nodeAddress, phase);
+                    }
+                    break;
+
                     case FEATURES:
                         processFeaturesFrame(dataChecked, uartPort, database, webServer);
                     break;
@@ -336,7 +350,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case CONFIRM_START_LINE_SCANNING:
                     {
-                        // Mandar confirmación al webserver
+                        sendConfirmStartLineScanning(webServer);
                         isLineScanning = true;
                         configuredNodes = database->getConfiguredNodes();
                         lineScanningCounter = 0;
@@ -346,12 +360,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                             }
                         }
                     }
+                    break;
                     case CONFIRM_END_LINE_SCANNING:
                     {
                         database->loadNodesFromDatabase();
 
                         isLineScanning = false;
-                        // Mandar confirmación al webserver
+                        sendConfirmEndLineScanning(webServer);
                     }
                     break;
                     case RECOVERY_GROUPS:

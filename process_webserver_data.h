@@ -29,6 +29,7 @@
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
 #define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
+#define WS_SET_IS_LS_IN_PROGRESS            "SET_IS_LS_IN_PROGRESS"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -81,6 +82,7 @@
 #define WS_SEND_CONFIRM_ADD_DEVICE          "CONFIRM_ADD_DEVICE"
 #define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
 #define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
+#define WS_SEND_IS_LS_IN_PROGRESS           "IS_LS_IN_PROGRESS"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
@@ -107,6 +109,9 @@
 #define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 #define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
+#define WS_SEND_CONFIRM_START_LS            "CONFIRM_START_LS"
+#define WS_SEND_CONFIRM_END_LS              "CONFIRM_END_LS"
+#define WS_SEND_LS_INFO                     "LS_INFO"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_CONFIRM_M_ADDRESS_SET       "CONFIRM_M_ADDRESS_SET"
@@ -131,8 +136,9 @@ void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
-void sendisCommissionOrLSInProgress(WebServer* webServer);
+void sendIsCommissionInProgress(WebServer* webServer);
 void sendIsAddManualInProgress(WebServer* webServer);
+void sendIsLSInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
@@ -161,5 +167,8 @@ void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t ant
 void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void sendFailComCycles(WebServer* webServer);
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
+void sendConfirmStartLineScanning(WebServer* webServer);
+void sendConfirmEndLineScanning(WebServer* webServer);
+void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
 
 #endif // PROCESS_WEBSERVER_DATA_H

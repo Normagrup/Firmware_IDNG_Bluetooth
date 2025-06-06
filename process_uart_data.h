@@ -17,7 +17,6 @@
 #define UART_RSP_CHANGE_FRAME_TYPE      0x13
 #define UART_RSP_POLLING_FRAME_TYPE     0x14
 
-#define COMMISSION_FAIL                 0x84
 #define GROUP_FAIL                      0x01
 #define DEV_TYPE_FAIL                   0x02
 #define NET_ADDR_FAIL                   0x03
@@ -69,7 +68,9 @@
 #define SEND_FEATURES_STATUS            0x77
 #define ASK_POWER_ON_LEVEL              0x80
 #define ANSWER_POWER_ON_LEVEL           0x82
+#define COMMISSION_FAIL                 0x84
 #define RECOVERY_GROUPS                 0x85
+#define LS_INFO                         0x86
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);

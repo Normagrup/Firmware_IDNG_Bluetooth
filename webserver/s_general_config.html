@@ -35,6 +35,8 @@
             <div class="popup-subcontainer">
                 <label id="confirmDeleteData" style="margin-top: 10px; color: #4682b4;"> Line Scanning in progress... </label>
                 <div class="loader"></div>
+                <label class="informer" id="informerLabel1" style="color: #000;"> </label>
+                <label class="informer" id="informerLabel2" style="color: #000;"> </label>
             </div>
         </div>
     </div>
@@ -57,7 +59,15 @@
     </div>
 
     <script>
+        function isLineScanningInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_LS_IN_PROGRESS", "");
+			}, 10);
+        }
+
         window.onload = function () {
+            isLineScanningInProgress();
+
             const input = document.getElementById('deleteConfirmInput');
             const button = document.getElementById('deletingDataButton');
 

@@ -1031,6 +1031,26 @@ function processIsAddManualInProgress(value)
     }
 }
 
+function processIsLSInProgress(value)
+{
+    var isLS = (value === "true");
+
+    if(isLS) {
+        var iframe = document.getElementById('mainframe');
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var popupLS = iframeDocument.getElementById('popupLineScanning');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+        var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+
+        popupLS.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+        informerLabel1.textContent = "Phase 1: Completed.";
+        informerLabel2.textContent = "Phase 2: Waiting...";
+    }
+}
+
 function processDelOneDev(value, init)
 {
     var iframe = document.getElementById('mainframe');
@@ -1204,6 +1224,57 @@ function processFailComCycles(value)
     inputFailComCycles.value = value;
 }
 
+function processConfirmStartLineScanning(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupLineScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+    var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    informerLabel1.textContent = "Phase 1: Starting...";
+    informerLabel2.textContent = "Phase 2: Waiting...";
+}
+
+function processConfirmEndLineScanning(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupLineScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}
+
+function processLSInfo(value)
+{
+    var parts = value.split("_");
+    var actualNode = parts[0];
+    var phase = parts[1];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    if(phase == "1") {
+        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+        informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+    }
+    else if(phase == "2") {
+        var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+        informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+    }
+    else if(phase == "0") {
+        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+        informerLabel1.textContent = "Phase 1: Completed.";
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1242,6 +1313,7 @@ function processReceivedData(data)
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
+    else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
@@ -1253,6 +1325,9 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_M_ADDRESS_GET') { processNeedOfMasterAddressConfig(value); }
     else if (type == "CONFIRM_M_ADDRESS_SET") { processNeedOfMasterAddressCompleted(value); }
     else if (type == "FAIL_COM_CYCLES") { processFailComCycles(value); }
+    else if (type == "CONFIRM_START_LS") { processConfirmStartLineScanning(value); }
+    else if (type == "CONFIRM_END_LS") { processConfirmEndLineScanning(value); }
+    else if (type == "LS_INFO") { processLSInfo(value); }
 }
 
 function sendData(type, value) 

@@ -509,10 +509,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendNodesFromDatabase(webServer, database);
     }
     else if (type == WS_SET_IS_COMMISSION_IN_PROGRESS) {
-        sendisCommissionOrLSInProgress(webServer);
+        sendIsCommissionInProgress(webServer);
     }
     else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
         sendIsAddManualInProgress(webServer);
+    }
+    else if (type == WS_SET_IS_LS_IN_PROGRESS) {
+        sendIsLSInProgress(webServer);
     }
     else if (type == WS_SET_TEST) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
@@ -864,7 +867,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
     }
 }
 
-void sendisCommissionOrLSInProgress(WebServer* webServer)
+void sendIsCommissionInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_COMMISSION_IN_PROGRESS) + "@" + (isCommissioning ? "true" : "false");
 
@@ -874,6 +877,13 @@ void sendisCommissionOrLSInProgress(WebServer* webServer)
 void sendIsAddManualInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_ADD_MANUAL_IN_PROGRESS) + "@" + (isManualAddingDevice ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsLSInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_LS_IN_PROGRESS) + "@" + (isLineScanning ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1221,4 +1231,27 @@ void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t node
             break;
         }
     }
+}
+
+void sendConfirmStartLineScanning(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_LS) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndLineScanning(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_LS) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase)
+{
+    QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
+
+    QString message = QString(WS_SEND_LS_INFO) + "@" + hexStr + "_" + QString::number(phase);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }

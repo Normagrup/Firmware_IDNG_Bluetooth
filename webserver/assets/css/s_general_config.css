@@ -45,6 +45,10 @@ label {
     text-align: center;
 }
 
+.informer {
+    font-size: 15px;
+}
+
 .general-config-container {
     z-index: 1;
     display: flex;
