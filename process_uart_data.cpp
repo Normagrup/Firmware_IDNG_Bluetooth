@@ -633,18 +633,16 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     if (deviceTypeGroupAddress != 0x0000) { database->setGroup(nodeAddress, deviceTypeGroupAddress); }
     if (netAdressGroupAddress != 0x0000) { database->setGroup(nodeAddress, netAdressGroupAddress); }
 
-    if (deviceTypeGroupAddress != 0x0000) {
-        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-                if (meshDevice[i][j].getRealAddress() == nodeAddress) {
-                    meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                    if (netAdressGroupAddress != 0x0000) { meshDevice[i][j].setGroupSubAddress(netAdressGroupAddress); }
-                    if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
-                        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "relayOff" + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
-                        if (webServer != nullptr) { webServer->sendData(message); }
-                    }
-                    break;
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == nodeAddress) {
+                if (deviceTypeGroupAddress != 0x0000) { meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress); }
+                if (netAdressGroupAddress != 0x0000) { meshDevice[i][j].setGroupSubAddress(netAdressGroupAddress); }
+                if(isCommissioning) {
+                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "relayOff" + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
+                    if (webServer != nullptr) { webServer->sendData(message); }
                 }
+                break;
             }
         }
     }
