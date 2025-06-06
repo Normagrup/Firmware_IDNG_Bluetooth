@@ -69,6 +69,7 @@
 #define SEND_FEATURES_STATUS            0x77
 #define ASK_POWER_ON_LEVEL              0x80
 #define ANSWER_POWER_ON_LEVEL           0x82
+#define RECOVERY_GROUPS                 0x85
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
