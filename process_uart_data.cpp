@@ -653,11 +653,6 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     if(deviceTypeGroupAddress != 0x0000 || netAdressGroupAddress != 0x0000) {
         sendLogCommissionEntry(webServer, "The groups have been setted.", "INFO");
     }
-    else {
-        sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
-        insertDevToLog(nodeAddress, database, LOG_COMMISSION_NET_ADDR_FAIL, "Commissioning");
-    }
-
     delay(4000);
 
     // PARA STOP_COMMISSION
