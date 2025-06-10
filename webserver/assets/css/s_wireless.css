@@ -223,14 +223,23 @@ label {
     background-color: #a2f0f5;
 }
 
+.deviceScanButton,
 .deviceRelayButton {
     margin: 1px;
-    padding: 2px 2px;
+    padding: 5px 10px;
     font-weight: bold;
     cursor: pointer;
-    width: 30px;
+    min-width: 70px;
+    height: 30px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4682b4;
+    color: white;
+    font-size: 14px;
+    text-transform: uppercase;
 }
 
+.deviceScanButton:hover,
 .deviceRelayButton:hover {
     color: #e2e9f2;
 }

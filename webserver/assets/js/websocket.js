@@ -284,21 +284,43 @@ function addDeviceToNetworkList(value)
         var textNode = iframeDocument.createElement('span');
         textNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
 
-        var button = iframeDocument.createElement('button');
-        button.textContent = "R";
-        button.setAttribute('class', 'deviceRelayButton');
-        button.style.backgroundColor = relayStatus ? "#4682b4" : "gray";
-        button.onclick = function(e) {
+        var scanButton = iframeDocument.createElement('button');
+        scanButton.textContent = "SCAN";
+        scanButton.setAttribute('class', 'deviceScanButton');
+        scanButton.style.backgroundColor = "#4682b4";
+        scanButton.onclick = function(e) {
             e.stopPropagation();
 
-            if(button.style.backgroundColor == "gray")
+            scanFromNode(textNode.textContent);
+        };
+
+        var relayButton = iframeDocument.createElement('button');
+        relayButton.textContent = "RELAY";
+        relayButton.setAttribute('class', 'deviceRelayButton');
+        relayButton.style.backgroundColor = relayStatus ? "#4682b4" : "gray";
+        relayButton.onclick = function(e) {
+            e.stopPropagation();
+
+            if(relayButton.style.backgroundColor == "gray")
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "1");
             else
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "0");
         };
 
+        newNode.style.display = 'flex';
+        newNode.style.justifyContent = 'space-between';
+        newNode.style.alignItems = 'center';
+
+        var buttonContainer = iframeDocument.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '5px';
+        buttonContainer.style.marginLeft = 'auto';
+
+        buttonContainer.appendChild(scanButton);
+        buttonContainer.appendChild(relayButton);
+
         newNode.appendChild(textNode);
-        newNode.appendChild(button);
+        newNode.appendChild(buttonContainer);
 
         networkNodesList.appendChild(newNode);
     }
@@ -1458,29 +1480,17 @@ function getScannedDevices()
     sendData("SET_SCANNED_DEVICES", "");
 }
 
-function scanFromNode()
+function scanFromNode(value)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
 
-    // Seleccionar el nodo marcado en la lista de Network Nodes
-    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+    var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
+    scannedDevices.innerHTML = "";
 
-    if(selectedNode) {
-        networkErrorLabel.style.visibility = "hidden";
+    var nodeId = value.trim().split("-")[0]; // Obtener ID del nodo
 
-        var scannedDevices = iframeDocument.getElementById('scannedDevicesList');
-        scannedDevices.innerHTML = "";
-
-        var nodeText = selectedNode.querySelector('span').textContent;
-        var nodeId = nodeText.trim().split("-")[0]; // Obtener ID del nodo
-
-        sendData("SET_SCAN_FROM_NODE", nodeId);
-    } else {
-        networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerText = "No network node selected";
-    }
+    sendData("SET_SCAN_FROM_NODE", nodeId);
 }
 
 function startCommission() 
