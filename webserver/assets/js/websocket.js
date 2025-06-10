@@ -130,7 +130,7 @@ function addDeviceToScannedList(value)
 
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     if(scannedDevicesList) {
-        var devices = scannedDevicesList.getElementsByTagName('li');
+        var devices = scannedDevicesList.getElementsByTagName('span');
 
         // Evitar duplicados
         for (var i = 0; i < devices.length; i++) {
@@ -138,9 +138,38 @@ function addDeviceToScannedList(value)
         }
 
         var newScanned = document.createElement('li');
-        newScanned.textContent = value;
         newScanned.setAttribute('class', 'deviceScanned');
         newScanned.setAttribute('onclick', 'parent.selectDevice(this)');
+
+        var textScanned = iframeDocument.createElement('span');
+        textScanned.textContent = value;
+        textScanned.style.pointerEvents = 'none';
+
+        var addButton = iframeDocument.createElement('button');
+        addButton.textContent = "ADD";
+        addButton.setAttribute('class', 'deviceAddButton');
+        addButton.style.backgroundColor = "#4682b4";
+        addButton.onclick = function(e) {
+            e.stopPropagation();
+
+            selectDevice(newScanned);
+            addDevicePrev(textScanned.textContent);
+        };
+
+        newScanned.style.display = 'flex';
+        newScanned.style.justifyContent = 'space-between';
+        newScanned.style.alignItems = 'center';
+
+        var buttonContainer = iframeDocument.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '5px';
+        buttonContainer.style.marginLeft = 'auto';
+
+        buttonContainer.appendChild(addButton);
+
+        newScanned.appendChild(textScanned);
+        newScanned.appendChild(buttonContainer);
+
         scannedDevicesList.appendChild(newScanned);
     }
     nodesScanned++;
@@ -201,7 +230,7 @@ function startAddingDevices(value)
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
-    var devices = scannedDevicesList.getElementsByTagName('li');
+    var devices = scannedDevicesList.getElementsByTagName('span');
 
     if (devices.length > 0) {
         var firstDevice = devices[0];
@@ -283,6 +312,7 @@ function addDeviceToNetworkList(value)
 
         var textNode = iframeDocument.createElement('span');
         textNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
+        textNode.style.pointerEvents = 'none';
 
         var scanButton = iframeDocument.createElement('button');
         scanButton.textContent = "SCAN";
@@ -291,6 +321,7 @@ function addDeviceToNetworkList(value)
         scanButton.onclick = function(e) {
             e.stopPropagation();
 
+            selectDevice(newNode);
             scanFromNode(textNode.textContent);
         };
 
@@ -301,6 +332,7 @@ function addDeviceToNetworkList(value)
         relayButton.onclick = function(e) {
             e.stopPropagation();
 
+            selectDevice(newNode);
             if(relayButton.style.backgroundColor == "gray")
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "1");
             else
@@ -837,7 +869,7 @@ function processEndNodeConfiguration(value)
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
-    var devices = scannedDevicesList.getElementsByTagName('li');
+    var devices = scannedDevicesList.getElementsByTagName('span');
 
     setTimeout(function() {
         if (devices.length > 0) {
@@ -1504,18 +1536,11 @@ function startCommission()
     sendData("SET_START_ACTION", "0");
 }
 
-function addDevice() 
+function addDevice(value) 
 {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    // Seleccionar el nodo marcado en la lista de Scanned Devices
-    var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
-    var scannedUUID = selectedDevice.textContent.trim(); 
-
     // Enviar comando al embebido para añadir el nodo
-    console.log("Enviando comando SET_ADD_DEVICE para nodeID:", scannedUUID);
-    sendData("SET_ADD_DEVICE", scannedUUID);
+    console.log("Enviando comando SET_ADD_DEVICE para nodeID:", value);
+    sendData("SET_ADD_DEVICE", value);
 }
 
 function delDevice() {

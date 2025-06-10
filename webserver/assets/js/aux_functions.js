@@ -522,33 +522,21 @@ function delFromGroupPrev()
     deletingNodeButton.classList.remove('button-disabled');
 }
 
-function addDevicePrev()
+function addDevicePrev(value)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
 
-    // Seleccionar el nodo marcado en la lista de Scanned Devices
-    var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
+    var popup = iframeDocument.getElementById('popupAddDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    if (selectedDevice) {
-        networkErrorLabel.style.visibility = "hidden";
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 
-        var popup = iframeDocument.getElementById('popupAddDevice');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var logAddManual = iframeDocument.getElementById('logAddManual');
+    logAddManual.innerHTML = "";
 
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-
-        var logAddManual = iframeDocument.getElementById('logAddManual');
-        logAddManual.innerHTML = "";
-
-        addDevice();
-    }
-    else {
-        networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerHTML = "No scanned device selected";
-    }
+    addDevice(value);
 }
 
 function delDevicePrev()

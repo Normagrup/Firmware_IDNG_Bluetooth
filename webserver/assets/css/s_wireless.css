@@ -223,6 +223,7 @@ label {
     background-color: #a2f0f5;
 }
 
+.deviceAddButton,
 .deviceScanButton,
 .deviceRelayButton {
     margin: 1px;
@@ -239,6 +240,7 @@ label {
     text-transform: uppercase;
 }
 
+.deviceAddButton:hover,
 .deviceScanButton:hover,
 .deviceRelayButton:hover {
     color: #e2e9f2;
