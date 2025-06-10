@@ -66,4 +66,8 @@ extern QMultiMap<uint16_t, uint16_t> childrenMap;
 extern bool isLineScanning;
 extern uint8_t failComCycles;
 
+extern QString reportType;
+extern QString startDate;
+extern QString endDate;
+
 #endif // GLOBAL_VARIABLES_H

@@ -9,43 +9,151 @@
 </head>
 
 <body>
-	<div class="background-container">
+    <div class="background-container">
         <img src="images/background.png">
     </div>
 
-    <div class="wrap-container">
-        <div class="log-container">
-            <h2> Log Results </h2>
-            
-            <div class="features-container">
-                <label> Report type: </label>
-                <select id="reportList" style="height: 50%; width: 40%; margin-left: 15px; margin-right: 18%;">
-                    <option value="-"> ---- </option>
-                    <option value="fail"> Fails report </option>
-                    <option value="test"> Tests report </option>
-                    <option value="all"> All </option>
-                </select>
-            </div>
+    <!-- Barra superior con filtros -->
+    <div class="top-bar">
+        <div class="field-group-horizontal">
+            <label for="reportList">Report type:</label>
+            <select id="reportList">
+                <option value="-">----</option>
+                <option value="fail">Fails report</option>
+                <option value="test">Tests report</option>
+                <option value="all">All</option>
+            </select>
+        </div>
 
-            <div class="features-container" style="justify-content: space-between; margin-top: 40px;">
-                <div class="field-container">
-                    <img src="images/datePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
-                    <div class="date">
-                        <label> Set initial date </label>
-                        <input id="initialDatePicker" type="date">
-                    </div>
-                </div>
-                <div class="field-container">
-                    <img src="images/datePickerIcon.png" style="height: 50px; width: 50px; margin-top: 10px;">
-                    <div class="date">
-                        <label> Set final date </label>
-                        <input id="finalDatePicker" type="date">
-                    </div>
-                </div>
-            </div>
+        <div class="field-group-horizontal">
+            <label for="initialDatePicker">Initial date:</label>
+            <input id="initialDatePicker" type="date">
+        </div>
 
-            <button onclick="parent.getLogs()" style="margin-top: 40px;"> Get logs </button>
-            <label id="logError" style="margin-top: 10px; color: #C30101; visibility: hidden;"> Default </label>
+        <div class="field-group-horizontal">
+            <label for="finalDatePicker">Final date:</label>
+            <input id="finalDatePicker" type="date">
+        </div>
+
+        <div class="field-group-horizontal">
+            <!-- Etiqueta vacía para alinear -->
+            <button id="showLogs" onclick="parent.getLogs()">Show</button>
+            <button id="exportLogs" onclick="parent.downloadLogs()">Export</button>
+        </div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="log-table-container">
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th style="width: 13%">Name</th>
+                    <th style="width: 12%">Serial</th>
+                    <th style="width: 12%">BT Address</th>
+                    <th style="width: 13%">IP</th>
+                    <th style="width: 20%">DateTime</th>
+                    <th style="width: 16%">Event</th>
+                    <th style="width: 14%">EventType</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="log-row-0">
+                    <td id="log-name-0">-</td>
+                    <td id="log-serial-0">-</td>
+                    <td id="log-btaddr-0">-</td>
+                    <td id="log-ip-0">-</td>
+                    <td id="log-datetime-0">-</td>
+                    <td id="log-event-0">-</td>
+                    <td id="log-type-0">-</td>
+                </tr>
+                <tr id="log-row-1">
+                    <td id="log-name-1">-</td>
+                    <td id="log-serial-1">-</td>
+                    <td id="log-btaddr-1">-</td>
+                    <td id="log-ip-1">-</td>
+                    <td id="log-datetime-1">-</td>
+                    <td id="log-event-1">-</td>
+                    <td id="log-type-1">-</td>
+                </tr>
+                <tr id="log-row-2">
+                    <td id="log-name-2">-</td>
+                    <td id="log-serial-2">-</td>
+                    <td id="log-btaddr-2">-</td>
+                    <td id="log-ip-2">-</td>
+                    <td id="log-datetime-2">-</td>
+                    <td id="log-event-2">-</td>
+                    <td id="log-type-2">-</td>
+                </tr>
+                <tr id="log-row-3">
+                    <td id="log-name-3">-</td>
+                    <td id="log-serial-3">-</td>
+                    <td id="log-btaddr-3">-</td>
+                    <td id="log-ip-3">-</td>
+                    <td id="log-datetime-3">-</td>
+                    <td id="log-event-3">-</td>
+                    <td id="log-type-3">-</td>
+                </tr>
+                <tr id="log-row-4">
+                    <td id="log-name-4">-</td>
+                    <td id="log-serial-4">-</td>
+                    <td id="log-btaddr-4">-</td>
+                    <td id="log-ip-4">-</td>
+                    <td id="log-datetime-4">-</td>
+                    <td id="log-event-4">-</td>
+                    <td id="log-type-4">-</td>
+                </tr>
+                <tr id="log-row-5">
+                    <td id="log-name-5">-</td>
+                    <td id="log-serial-5">-</td>
+                    <td id="log-btaddr-5">-</td>
+                    <td id="log-ip-5">-</td>
+                    <td id="log-datetime-5">-</td>
+                    <td id="log-event-5">-</td>
+                    <td id="log-type-5">-</td>
+                </tr>
+                <tr id="log-row-6">
+                    <td id="log-name-6">-</td>
+                    <td id="log-serial-6">-</td>
+                    <td id="log-btaddr-6">-</td>
+                    <td id="log-ip-6">-</td>
+                    <td id="log-datetime-6">-</td>
+                    <td id="log-event-6">-</td>
+                    <td id="log-type-6">-</td>
+                </tr>
+                <tr id="log-row-7">
+                    <td id="log-name-7">-</td>
+                    <td id="log-serial-7">-</td>
+                    <td id="log-btaddr-7">-</td>
+                    <td id="log-ip-7">-</td>
+                    <td id="log-datetime-7">-</td>
+                    <td id="log-event-7">-</td>
+                    <td id="log-type-7">-</td>
+                </tr>
+                <tr id="log-row-8">
+                    <td id="log-name-8">-</td>
+                    <td id="log-serial-8">-</td>
+                    <td id="log-btaddr-8">-</td>
+                    <td id="log-ip-8">-</td>
+                    <td id="log-datetime-8">-</td>
+                    <td id="log-event-8">-</td>
+                    <td id="log-type-8">-</td>
+                </tr>
+                <tr id="log-row-9">
+                    <td id="log-name-9">-</td>
+                    <td id="log-serial-9">-</td>
+                    <td id="log-btaddr-9">-</td>
+                    <td id="log-ip-9">-</td>
+                    <td id="log-datetime-9">-</td>
+                    <td id="log-event-9">-</td>
+                    <td id="log-type-9">-</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            <button onclick="parent.previousLogPage()"> &#8592; </button>
+            <span id="pageIndicator">Page: 0</span>
+            <button onclick="parent.nextLogPage()"> &#8594; </button>
         </div>
     </div>
 </body>

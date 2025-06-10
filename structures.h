@@ -39,7 +39,7 @@ typedef struct {
 
 typedef struct {
     int deviceId;
-    QString seriailNum;
+    QString serialNum;
     QString devName;
     QString devIP;
     qint64 timestamp;

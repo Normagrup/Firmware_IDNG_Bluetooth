@@ -972,7 +972,42 @@ function processIsConfig(value)
     }
 }
 
-function processLogData(value){
+function processLogData(value) {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var logs = value.split("#");
+
+    for(var i = 0; i < 10; i++) {
+        var parts = logs[i].split("|");
+        var name = parts[2];
+        var serial = parts[1];
+        var btAddress = parts[0];
+        var IP = parts[3];
+        var dateTime = parts[4];
+        var event = parts[5];
+        var eventType = parts[6];
+
+        // Actualizar fila en la tabla
+        var tableName = iframeDocument.getElementById("log-name-" + i);
+        var tableSerial = iframeDocument.getElementById("log-serial-" + i);
+        var tableBtAddress = iframeDocument.getElementById("log-btaddr-" + i);
+        var tableIP = iframeDocument.getElementById("log-ip-" + i);
+        var tableDateTime = iframeDocument.getElementById("log-datetime-" + i);
+        var tableEvent = iframeDocument.getElementById("log-event-" + i);
+        var tableType = iframeDocument.getElementById("log-type-" + i);
+
+        tableName.textContent = name;
+        tableSerial.textContent = serial;
+        tableBtAddress.textContent = btAddress;
+        tableIP.textContent = IP;
+        tableDateTime.textContent = dateTime;
+        tableEvent.textContent = event;
+        tableType.textContent = eventType;
+    }
+}
+
+function processLogFile(value) {
     let link = document.createElement("a");
     link.href = value;
     link.download = value.split('/').pop();
@@ -1311,6 +1346,7 @@ function processReceivedData(data)
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
+    else if (type == 'LOG_FILE') { processLogFile(value); }
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
     else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
@@ -1901,33 +1937,117 @@ function getLogs()
     var reportListSelected = reportList.options[reportList.selectedIndex].value;
     var initialDatePicker = iframeDocument.getElementById('initialDatePicker');
     var finalDatePicker = iframeDocument.getElementById('finalDatePicker');
-    var logErrorLabel = iframeDocument.getElementById('logError');
 
     var initialDate = new Date(initialDatePicker.value);
     var finalDate = new Date(finalDatePicker.value);
     initialDate.setHours(0, 0, 0, 0);
     finalDate.setHours(0, 0, 0, 0);
 
+    var showButton = iframeDocument.getElementById("showLogs");
+
     if (reportListSelected != '-' && initialDatePicker.value && finalDatePicker.value) {
         if (initialDate <= finalDate) {
             var message = reportListSelected + ' ' + initialDatePicker.value + ' ' + finalDatePicker.value
 
             sendData("GET_LOGS", message);
+            showButton.style.backgroundColor = "green";
+            setTimeout(function () {
+                showButton.style.backgroundColor = "#4682b4";
+            }, 500);
 
-            logErrorLabel.style.color = "#4682b4";
-            logErrorLabel.innerHTML = "<b> Getting logs...! </b>";
-            logErrorLabel.style.visibility = "visible";
+            var pageLabel = iframeDocument.getElementById("pageIndicator");
+            pageLabel.textContent = "Page: 1";
         }
         else {
-            logErrorLabel.style.color = "#C30101";
-            logErrorLabel.innerHTML = "<b> Initial date is later than final date! </b>";
-            logErrorLabel.style.visibility = "visible";
+            showButton.style.backgroundColor = "red";
+            setTimeout(function () {
+                showButton.style.backgroundColor = "#4682b4";
+            }, 500);
         }
     }
     else {
-        logErrorLabel.style.color = "#C30101";
-        logErrorLabel.innerHTML = "<b> Pick date and report type! </b>";
-        logErrorLabel.style.visibility = "visible";
+        showButton.style.backgroundColor = "red";
+        setTimeout(function () {
+            showButton.style.backgroundColor = "#4682b4";
+        }, 500);
+    }
+}
+
+function previousLogPage() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var pageLabel = iframeDocument.getElementById("pageIndicator");
+    
+    if(pageLabel.textContent.trim() === "Page: 0") { return; } // Si no hay datos cargados
+    if(pageLabel.textContent.trim() === "Page: 1") { return; } // Si es la primera página
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+    currentPage--;
+    pageLabel.textContent = "Page: " + currentPage;
+
+    sendData("GET_LOGS_PAGED", currentPage);
+}
+
+function nextLogPage() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var pageLabel = iframeDocument.getElementById("pageIndicator");
+    var tableNameLast = iframeDocument.getElementById("log-name-9");
+    var tableSerialLast = iframeDocument.getElementById("log-serial-9");
+
+    if(pageLabel.textContent.trim() === "Page: 0") { return; } // Si no hay datos cargados
+    if(tableNameLast.textContent.trim() === "-" || tableSerialLast.textContent.trim() === "-") { return; } // Si es la última página
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+    currentPage++;
+    pageLabel.textContent = "Page: " + currentPage;
+
+    sendData("GET_LOGS_PAGED", currentPage);
+}
+
+function downloadLogs()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var reportList = iframeDocument.getElementById('reportList');
+    var reportListSelected = reportList.options[reportList.selectedIndex].value;
+    var initialDatePicker = iframeDocument.getElementById('initialDatePicker');
+    var finalDatePicker = iframeDocument.getElementById('finalDatePicker');
+
+    var initialDate = new Date(initialDatePicker.value);
+    var finalDate = new Date(finalDatePicker.value);
+    initialDate.setHours(0, 0, 0, 0);
+    finalDate.setHours(0, 0, 0, 0);
+
+    var exportButton = iframeDocument.getElementById("exportLogs");
+
+    if (reportListSelected != '-' && initialDatePicker.value && finalDatePicker.value) {
+        if (initialDate <= finalDate) {
+            var message = reportListSelected + ' ' + initialDatePicker.value + ' ' + finalDatePicker.value
+
+            sendData("DOWNLOAD_LOGS", message);
+            exportButton.style.backgroundColor = "green";
+            setTimeout(function () {
+                exportButton.style.backgroundColor = "#4682b4";
+            }, 500);
+        }
+        else {
+            exportButton.style.backgroundColor = "red";
+            setTimeout(function () {
+                exportButton.style.backgroundColor = "#4682b4";
+            }, 500);
+        }
+    }
+    else {
+        exportButton.style.backgroundColor = "red";
+        setTimeout(function () {
+            exportButton.style.backgroundColor = "#4682b4";
+        }, 500);
     }
 }
 
@@ -2088,7 +2208,6 @@ function goToNextPage() {
     pageLabel.textContent = "Page: " + currentPage;
 
     sendData("GET_POWER_ON_LVL", currentPage);
-
 }
 
 function setPowerOnLevel(){

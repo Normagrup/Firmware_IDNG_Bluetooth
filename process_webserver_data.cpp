@@ -529,15 +529,48 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_LOGS) {
         qDebug() << "GETTING LOGS " << value;
         QStringList webServerParts = value.split(" ");
+        reportType = webServerParts[0];
+        startDate = webServerParts[1];
+        endDate = webServerParts[2];
+
+        QDate startQDate = QDate::fromString(startDate, "yyyy-MM-dd");
+        QDate endQDate = QDate::fromString(endDate, "yyyy-MM-dd");
+        QDateTime startDT(startQDate, QTime(0, 0, 0));
+        QDateTime endDT(endQDate, QTime(23, 59, 59));
+        qint64 start = startDT.toSecsSinceEpoch();
+        qint64 end = endDT.toSecsSinceEpoch();
+
+        QList<QStringList> logs = database->getLogEventPaged(reportType, start, end, 1);
+        transformEventCodes(&logs);
+
+        sendLogData(webServer, logs);
+    }
+    else if (type == WS_GET_LOGS_PAGED) {
+        int page = value.toInt();
+
+        QDate startQDate = QDate::fromString(startDate, "yyyy-MM-dd");
+        QDate endQDate = QDate::fromString(endDate, "yyyy-MM-dd");
+        QDateTime startDT(startQDate, QTime(0, 0, 0));
+        QDateTime endDT(endQDate, QTime(23, 59, 59));
+        qint64 start = startDT.toSecsSinceEpoch();
+        qint64 end = endDT.toSecsSinceEpoch();
+
+        QList<QStringList> logs = database->getLogEventPaged(reportType, start, end, page);
+        transformEventCodes(&logs);
+
+        sendLogData(webServer, logs);
+    }
+    else if (type == WS_DOWNLOAD_LOGS) {
+        qDebug() << "DOWNLOADING LOGS " << value;
+        QStringList webServerParts = value.split(" ");
         QString reportType = webServerParts[0];
         QString startDate = webServerParts[1];
         QString endDate = webServerParts[2];
-        QString downloadPath;
 
-        downloadPath = exportLogToCSV(database, reportType, startDate, endDate);
-        QStringList ConfigInfo = database -> getInterfaceParameters();
-        QString serverIP = ConfigInfo.first();
-        QString fileUrl = "http://" + serverIP + "/logs/" + downloadPath;
+        QString fileName = exportLogToCSV(database, reportType, startDate, endDate);
+        QStringList configInfo = database -> getInterfaceParameters();
+        QString serverIP = configInfo.first();
+        QString fileUrl = "http://" + serverIP + "/logs/" + fileName;
         sendLogFile(webServer, fileUrl);
     }
     else if (type == WS_GET_NODE_INFO) {
@@ -1067,9 +1100,24 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendLogData(WebServer *webServer, QList<QStringList> logs)
+{
+    QString content;
+    for(QStringList log : logs) {
+        for(QString data : log) {
+            content += (data + "|");
+        }
+        content += ("#");
+    }
+
+    QString message = QString(WS_SEND_LOG_DATA) + "@" + content;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendLogFile(WebServer *webServer, QString fileDir)
 {
-    QString message = QString(WS_SEND_LOG_DATA) + "@" + fileDir;
+    QString message = QString(WS_SEND_LOG_FILE) + "@" + fileDir;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

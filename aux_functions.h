@@ -30,5 +30,6 @@ int getUUIDIndexOfScanned(QString UUID);
 QString getUUIDAsString(uint8_t UUID[16]);
 
 void setTests(QStringList webServerParts, Database* database);
+void transformEventCodes(QList<QStringList>* logs);
 
 #endif // AUX_FUNCTIONS_H

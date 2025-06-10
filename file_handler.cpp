@@ -395,6 +395,7 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
     qint64 end = endDT.toSecsSinceEpoch();
 
     QList<QStringList> logs = db->getLogEvent(type, start, end);
+    transformEventCodes(&logs);
 
     QString outputFileName = type + "_report_" + startDate + "_to_" + endDate + ".csv";
     QString filePath = QString(LOG_DATA_PATH) + outputFileName;
@@ -402,7 +403,7 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) { qDebug() << "Failed to open log file"; return ""; }
 
     QTextStream out(&file);
-    out << "DeviceId;Serial;Name;IP;DateTime;Event;EventType\n";
+    out << "Name;Serial;BTAddress;IP;DateTime;Event;EventType\n";
     for (const QStringList &row : logs) {
         out << row.join(";") << ";\n";
     }

@@ -212,11 +212,50 @@ void setTests(QStringList webServerParts, Database *database)
     }
 }
 
+void transformEventCodes(QList<QStringList>* logs)
+{
+    for (QStringList& entry : *logs) {
+        QString& event = entry[5];  // Campo Event
+
+        if (event == "209") { event = "DEVICE ADDED"; }
+        else if (event == "210") { event = "DEVICE ERROR"; }
+        else if (event == "211") { event = "GROUP FAIL"; }
+        else if (event == "212") { event = "DEV TYPE FAIL"; }
+        else if (event == "213") { event = "NET ADDR FAIL"; }
+        else if (event == "214") { event = "DEVICE REMOVED"; }
+
+        else if (event == "1") { event = "COMMUNICATION FAIL"; }
+        else if (event == "16") { event = "COMMUNICATION RECOVERY"; }
+
+        else if (event == "2") { event = "BATTERY FAIL"; }
+        else if (event == "32") { event = "BATTERY RECOVERY"; }
+
+        else if (event == "3") { event = "LAMP FAIL"; }
+        else if (event == "48") { event = "LAMP RECOVERY"; }
+
+        else if (event == "4") { event = "DURATION FAIL"; }
+        else if (event == "64") { event = "DURATION RECOVERY"; }
+
+        else if (event == "8") { event = "FUN TEST REQUESTED"; }
+        else if (event == "9") { event = "DUR TEST REQUESTED"; }
+        else if (event == "10") { event = "TEST STOPPED"; }
+
+        else if (event == "11") { event = "FUN TEST COMPLETED"; }
+        else if (event == "12") { event = "DUR TEST COMPLETED"; }
+
+        else if (event == "177") { event = "FUN TEST OK"; }
+        else if (event == "178") { event = "FUN TEST FAIL"; }
+
+        else if (event == "193") { event = "DUR TEST OK"; }
+        else if (event == "194") { event = "DUR TEST FAIL"; }
+    }
+}
+
 void insertLogEvent(Database *database, int devId, QString serialNum, QString devName, QString devIP, QDateTime dateTime, int eventCode, QString eventType)
 {
     LogInfo log;
     log.deviceId = devId;
-    log.seriailNum = serialNum;
+    log.serialNum = serialNum;
     log.devName = devName;
     log.devIP = devIP;
     log.timestamp = dateTime.toSecsSinceEpoch();
@@ -231,9 +270,13 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
     QString serial = isGroup ? "FF.FF.FF.FF"
                              : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].serialNumberString();
 
-    QString devName = isGroup
-                          ? "Group: " + QString::number(targetAddr)
-                          : "SUB:" + QString::number((targetAddr - 1) / 64) + " ID:" + QString::number((targetAddr - 1) % 64);
+    QString devName;
+    if(isGroup) {
+        QString hexAddr = QString("%1").arg(targetAddr, 4, 16, QChar('0')).toUpper();
+        devName = db->getGroupName(hexAddr) + " [G]";
+    } else {
+        devName = "SUB:" + QString::number((targetAddr - 1) / 64) + " ID:" + QString::number((targetAddr - 1) % 64);
+    }
 
     int devId = isGroup
                     ? targetAddr

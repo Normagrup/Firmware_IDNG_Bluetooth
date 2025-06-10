@@ -1041,7 +1041,7 @@ bool Database::insertLogEvent(const LogInfo log)
                   "VALUES (:deviceId, :serial, :name, :ip, :timestamp, :event, :eventType)");
 
     query.bindValue(":deviceId", log.deviceId);
-    query.bindValue(":serial", log.seriailNum);
+    query.bindValue(":serial", log.serialNum);
     query.bindValue(":name", log.devName);
     query.bindValue(":ip", log.devIP);
     query.bindValue(":timestamp", log.timestamp);
@@ -1060,21 +1060,21 @@ QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, 
     QString queryStr;
 
     if (type.toLower() == "all") {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
-                   "FROM Log WHERE Timestamp BETWEEN :start AND :end";
+        queryStr = "SELECT Name, Serial, DeviceId, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE Timestamp BETWEEN :start AND :end ORDER BY Timestamp DESC";
         query.prepare(queryStr);
         query.bindValue(":start", startDate);
         query.bindValue(":end", endDate);
     } else {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
-                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end";
+        queryStr = "SELECT Name, Serial, DeviceId, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end ORDER BY Timestamp DESC";
         query.prepare(queryStr);
         query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
         query.bindValue(":start", startDate);
         query.bindValue(":end", endDate);
     }
 
-    if (!query.exec()) { qDebug() << "Error in getLogData:" << query.lastError().text(); return results; }
+    if (!query.exec()) { qDebug() << "Error in getLogEvent:" << query.lastError().text(); return results; }
 
     while (query.next()) {
         QStringList row;
@@ -1088,6 +1088,64 @@ QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, 
         row << query.value(6).toString();  
         results.append(row);
     }
+    return results;
+}
+
+QList<QStringList> Database::getLogEventPaged(const QString &type, qint64 startDate, qint64 endDate, int page)
+{
+    QList<QStringList> results;
+    QSqlQuery query;
+    QString queryStr;
+
+    int pageSize = 10;
+    int offset = (page - 1) * pageSize;
+
+    int resultsCounter = 0;
+
+    if (type.toLower() == "all") {
+        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE Timestamp BETWEEN :start AND :end "
+                   "ORDER BY Timestamp DESC LIMIT :limit OFFSET :offset";
+        query.prepare(queryStr);
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+        query.bindValue(":limit", pageSize);
+        query.bindValue(":offset", offset);
+    } else {
+        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end "
+                   "ORDER BY Timestamp DESC LIMIT :limit OFFSET :offset";
+        query.prepare(queryStr);
+        query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+        query.bindValue(":limit", pageSize);
+        query.bindValue(":offset", offset);
+    }
+
+    if (!query.exec()) { qDebug() << "Error in getLogEventPaged:" << query.lastError().text(); return results; }
+
+    while (query.next()) {
+        resultsCounter++;
+        QStringList row;
+        row << query.value(0).toString();
+        row << query.value(1).toString();
+        row << query.value(2).toString();
+        row << query.value(3).toString();
+        QDateTime dt = QDateTime::fromSecsSinceEpoch(query.value(4).toLongLong());
+        row << dt.toString("yyyy-MM-dd HH:mm:ss");
+        row << query.value(5).toString();
+        row << query.value(6).toString();
+        results.append(row);
+    }
+
+    while(resultsCounter < pageSize) {
+        QStringList row;
+        for(int i = 0; i < 7; i++) { row << "-"; } // 7 porque hay 7 columnas en la tabla logs
+        results.append(row);
+        resultsCounter++;
+    }
+
     return results;
 }
 
@@ -1253,6 +1311,23 @@ void Database::editGroup(QString address, QString name)
     query.bindValue(":address", address);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in GROUPS" << query.lastError().text(); }
+}
+
+QString Database::getGroupName(QString groupAddress)
+{
+    QSqlQuery query;
+
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("SELECT GroupName FROM FixedGroups WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("SELECT GroupName FROM Groups WHERE GroupAddress = :groupAddress");
+
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return "Group -"; }
+
+    if(query.next()) { return query.value("GroupName").toString(); }
+    else { return "Group -"; }
 }
 
 void Database::setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel)

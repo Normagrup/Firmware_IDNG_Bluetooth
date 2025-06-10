@@ -204,7 +204,7 @@ void Wireless::updateLogsByTests(uint8_t i, uint8_t code)
 {
     int devId = tests[i].getGroupAddress().toUInt(NULL, 16);
     QString serailNum = "FF.FF.FF.FF";
-    QString devName = "Group: " + tests[i].getGroupAddress();
+    QString devName = _database->getGroupName(tests[i].getGroupAddress()) + " [G]";
     QString eventType = "Test";
     AntennaInfo info = getAntennaInfo(_database);
 

@@ -55,3 +55,7 @@ QMap<uint16_t, NodeInfo> nodesByRealAddress;
 QMultiMap<uint16_t, uint16_t> childrenMap;
 
 uint8_t failComCycles;
+
+QString reportType;
+QString startDate;
+QString endDate;

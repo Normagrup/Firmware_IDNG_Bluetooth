@@ -49,6 +49,7 @@ public:
     void removeGroup(QString address);
     void removeTestEntry(QString address);
     void editGroup(QString address, QString name);
+    QString getGroupName(QString groupAddress);
     void setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel);
     QStringList getPowerOnLevel(int page);
 
@@ -70,6 +71,7 @@ public:
 
     bool insertLogEvent(const LogInfo log);
     QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
+    QList<QStringList> getLogEventPaged(const QString &type, qint64 startDate, qint64 endDate, int page);
     QList<QStringList> getAllTestLogs();
 
     void readNodesForTree();

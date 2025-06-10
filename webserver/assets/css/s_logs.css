@@ -8,6 +8,11 @@
     font-family: 'Poppins', sans-serif;
 }
 
+body {
+    background-color: #f8f9fc;
+}
+
+/* Fondo */
 .background-container {
     position: absolute;
     bottom: 0;
@@ -17,111 +22,120 @@
     z-index: -1;
 }
 
-.wrap-container {
+/* Barra superior con filtros */
+.top-bar {
     position: absolute;
-    top: 50%;
+    top: 5%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: 90%;
+    transform: translateX(-50%);
     width: 90%;
-}
-
-h2 {
-    text-align: center;
-    border-bottom: 2px solid #4682b4;
-    padding-bottom: 10px;
-    margin-bottom: 25px;
-    color: #4682b4;
-}
-
-label {
-    color: #999;
-    font-size: 18px;
-    text-align: center;
-}
-
-.log-container {
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: auto;
-    width: 40%;
-    background-color: #fff;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(70, 130, 180, 0.3);
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(70, 130, 180, 0.5);
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.top-bar select,
+.top-bar input[type="date"] {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #4682b4;
+    border-radius: 6px;
+    color: #4682b4;
+    width: 160px;
+}
+
+.top-bar button {
+    background-color: #4682b4;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.top-bar button:hover {
+    background-color: #5a9fd6;
+}
+
+/* Tabla de logs */
+.log-table-container {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(70, 130, 180, 0.2);
     padding: 25px;
 }
 
-.log-container button {
-    cursor: pointer;
-    color: #fff;
-    font-size: 16px;
-    text-transform: uppercase;
+table {
     width: 100%;
-    border: 0;
-    padding: 10px 0;
-    margin-top: 25px;
-    border-radius: 5px;
-    background: #4682b4;
-}
-
-.log-container button:hover {
-    color: #63e8f0;
-}
-
-.features-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-}
-
-select {
-    border: 2px solid #4682b4;
-    border-radius: 8px;
-    padding: 5px;
-    font-size: 16px;
-    color: #4682b4;
-    cursor: pointer;
-}
-
-select:focus {
-    outline: 2px solid #63e8f0;
-}
-
-.field-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 45%;
-}
-
-.date {
-    display: flex;
-    flex-direction: column;
-    align-items: baseline;
-    width: 70%;
-    margin-left: 15px;
-}
-
-.date input {
-    display: block;
-    border-radius: 5px;
+    border-collapse: collapse;
     font-size: 14px;
-    background: white;
-    width: 100%;
-    border: 1px solid #4682b4;
-    padding: 10px 10px;
-    margin-top: 5px;
+}
+
+thead {
+    background-color: #4682b4;
+    color: white;
+}
+
+th, td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #dddddd;
+    text-align: left;
+}
+
+tbody tr:hover {
+    background-color: #f1f9ff;
+}
+
+/* Paginación */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.pagination button {
+    background-color: #4682b4;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
     cursor: pointer;
+}
+
+.pagination button:hover {
+    background-color: #5a9fd6;
+}
+
+#pageIndicator {
+    font-weight: bold;
+    color: #4682b4;
+}
+
+.field-group-horizontal {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.field-group-horizontal label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #4682b4;
+    min-width: 90px; /* o ajusta según tu preferencia */
+    text-align: right;
 }
