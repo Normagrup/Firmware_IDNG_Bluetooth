@@ -49,7 +49,7 @@
 				<div class="popup-subcontainer">
 					<h2> It's necessary to configure the address of the Antenna </h2>
 					<label id="intervalLabel" style="margin-top: 10px; color: #4682b4;"> Type an Antenna Number </label>
-					<input type="number" id="antennaNumber" placeholder="Antenna Number">
+					<input type="number" id="antennaNumber" placeholder="Antenna Number" min="1" max="1000">
 					<label id="intervalErrorLabel" style="margin-top: 10px; color: #C30101; visibility: hidden;"> It must be between 1 and 1000 </label>
 					<div class="popup-button-subcontainer" id="confirmAddressContainer">
 						<button id="antennaNumberButton" onclick="parent.setAntennaNumber()"> CONFIRM </button>

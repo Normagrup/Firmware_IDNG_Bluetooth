@@ -78,6 +78,7 @@ public:
     void updateRelayMode(uint16_t nodeAddress, bool enabled);
     uint16_t getFatherRealAddress(uint16_t nodeAddress);
     int getCountOfDirectChildren(uint16_t nodeAddress);
+    QList<uint16_t> getChildrenRealAddresses(uint16_t nodeAddress);
     QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
 
     uint16_t getMasterRealAddress(void);

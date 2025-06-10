@@ -1231,6 +1231,23 @@ int Database::getCountOfDirectChildren(uint16_t nodeAddress)
         return 0;
 }
 
+QList<uint16_t> Database::getChildrenRealAddresses(uint16_t nodeAddress)
+{
+    QList<uint16_t> childrenRealAddresses;
+
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes WHERE FatherRealAddress = :fra");
+    query.bindValue(":fra", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return childrenRealAddresses; }
+
+    while (query.next()) {
+        childrenRealAddresses.append(static_cast<uint16_t>(query.value("RealAddress").toUInt(nullptr)));
+    }
+
+    return childrenRealAddresses;
+}
+
 QString Database::getNextNodeName(uint16_t doneIts)
 {
     QSqlQuery query;

@@ -179,11 +179,19 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             */
 
             // Sacamos el número de hijos del padre del nodo que estamos borrando, para saber si tras borrar, debemos desactivar el relay del padre o no
-            uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
-            int numberOfChildren = database->getCountOfDirectChildren(fatherNodeAddress);
+            //uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
+            //int numberOfChildren = database->getCountOfDirectChildren(fatherNodeAddress);
 
             // Borrado del dispositivo elegido
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
+
+            uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
+            QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(nodeAddress);
+            for(uint16_t childRealAddress : childrenRealAddresses) {
+                sendUartChangeFather(uartPort, childRealAddress, fatherNodeAddress);
+                database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
+                delay(150);
+            }
 
             sendUartDelDevice(uartPort, nodeAddress);
 
@@ -195,8 +203,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             database->deleteNode(nodeAddress);
 
             // Si tenía solo un hijo, al haberlo eliminado, ahora tiene 0 y por tanto, se le desactiva el relay
-            if(fatherNodeAddress != antennaRealAddress && numberOfChildren <= 1)
-                sendUartSetRelay(uartPort, fatherNodeAddress, false);
+            //if(fatherNodeAddress != antennaRealAddress && numberOfChildren <= 1)
+            //    sendUartSetRelay(uartPort, fatherNodeAddress, false);
         }
     }
     else if (type == WS_SET_ADD_DEVICE) {

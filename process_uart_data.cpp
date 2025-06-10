@@ -1040,6 +1040,24 @@ void sendUartLineScanning(UartPort* _uartPort)
     qDebug() << "[Embebido] Frame de LINE_SCANNING enviado correctamente.";
 }
 
+void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)
+{
+    QByteArray frame;
+    unsigned char length = 7;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(CHANGE_FATHER);
+    frame.append((childRealAddress >> 8) & 0xFF);
+    frame.append(childRealAddress & 0xFF);
+    frame.append((fatherRealAddress >> 8) & 0xFF);
+    frame.append(fatherRealAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)
 {
     QByteArray frame;

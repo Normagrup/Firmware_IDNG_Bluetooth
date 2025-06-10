@@ -71,6 +71,7 @@
 #define COMMISSION_FAIL                 0x84
 #define RECOVERY_GROUPS                 0x85
 #define LS_INFO                         0x86
+#define CHANGE_FATHER                   0x87
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -99,5 +100,7 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
 void sendAntennaGetAddress(UartPort* _uartPort);
 void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
 void sendUartLineScanning(UartPort* _uartPort);
+void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
+
 #endif // PROCESS_UART_DATA_H
