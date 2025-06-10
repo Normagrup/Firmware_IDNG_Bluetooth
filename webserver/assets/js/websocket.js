@@ -980,9 +980,9 @@ function processLogData(value) {
 
     for(var i = 0; i < 10; i++) {
         var parts = logs[i].split("|");
-        var name = parts[2];
+        var name = parts[0];
         var serial = parts[1];
-        var btAddress = parts[0];
+        var btAddress = parts[2];
         var IP = parts[3];
         var dateTime = parts[4];
         var event = parts[5];

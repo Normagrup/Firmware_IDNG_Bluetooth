@@ -277,9 +277,9 @@ void Database::initDatabase()
      *                                                  *
      * **************************************************/
     query.exec("CREATE TABLE IF NOT EXISTS Log "
-        "(DeviceId INTEGER, "
+        "(Name TEXT, "
         "Serial TEXT, "
-        "Name TEXT, "
+        "BtAddress INTEGER, "
         "IP TEXT, "
         "Timestamp INTEGER, "
         "Event INTEGER, "
@@ -1037,12 +1037,12 @@ bool Database::insertLogEvent(const LogInfo log)
 {
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Log (DeviceId, Serial, Name, IP, Timestamp, Event, EventType) "
-                  "VALUES (:deviceId, :serial, :name, :ip, :timestamp, :event, :eventType)");
+    query.prepare("INSERT INTO Log (Name, Serial, BtAddress, IP, Timestamp, Event, EventType) "
+                  "VALUES (:name, :serial, :btAddress, :ip, :timestamp, :event, :eventType)");
 
-    query.bindValue(":deviceId", log.deviceId);
+    query.bindValue(":name", log.name);
     query.bindValue(":serial", log.serialNum);
-    query.bindValue(":name", log.devName);
+    query.bindValue(":btAddress", log.btAddress);
     query.bindValue(":ip", log.devIP);
     query.bindValue(":timestamp", log.timestamp);
     query.bindValue(":event", log.event);
@@ -1060,13 +1060,13 @@ QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, 
     QString queryStr;
 
     if (type.toLower() == "all") {
-        queryStr = "SELECT Name, Serial, DeviceId, IP, Timestamp, Event, EventType "
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
                    "FROM Log WHERE Timestamp BETWEEN :start AND :end ORDER BY Timestamp DESC";
         query.prepare(queryStr);
         query.bindValue(":start", startDate);
         query.bindValue(":end", endDate);
     } else {
-        queryStr = "SELECT Name, Serial, DeviceId, IP, Timestamp, Event, EventType "
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
                    "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end ORDER BY Timestamp DESC";
         query.prepare(queryStr);
         query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
@@ -1103,7 +1103,7 @@ QList<QStringList> Database::getLogEventPaged(const QString &type, qint64 startD
     int resultsCounter = 0;
 
     if (type.toLower() == "all") {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
                    "FROM Log WHERE Timestamp BETWEEN :start AND :end "
                    "ORDER BY Timestamp DESC LIMIT :limit OFFSET :offset";
         query.prepare(queryStr);
@@ -1112,7 +1112,7 @@ QList<QStringList> Database::getLogEventPaged(const QString &type, qint64 startD
         query.bindValue(":limit", pageSize);
         query.bindValue(":offset", offset);
     } else {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
                    "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end "
                    "ORDER BY Timestamp DESC LIMIT :limit OFFSET :offset";
         query.prepare(queryStr);
