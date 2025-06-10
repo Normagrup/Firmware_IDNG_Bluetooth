@@ -288,8 +288,8 @@ void Database::initDatabase()
     query.prepare("SELECT * FROM Log");
 
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Log:" << query.lastError().text(); }
-    query.exec("CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Log(Timestamp);");
-    query.exec("CREATE INDEX IF NOT EXISTS idx_log_eventType ON Log(EventType);");
+    //query.exec("CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Log(Timestamp);");
+    //query.exec("CREATE INDEX IF NOT EXISTS idx_log_eventType ON Log(EventType);");
 }
 
 bool Database::openDatabase()
@@ -1398,17 +1398,84 @@ void Database::clearAllData()
 {
     QSqlQuery query;
 
+    // CONSTRUCCIÓN BASE DE TABLA NODES
     if (!query.exec("DELETE FROM Nodes")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("DELETE FROM Log")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
-                    "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
 
-    // FixedGroups
-    setPowerOnLevel("C000", 255); setPowerOnLevel("C001", 255); setPowerOnLevel("C002", 255); setPowerOnLevel("C003", 255);
-    // FixedTest
-    setTestEnable("C000", false, false); setTestEnable("C001", false, false); setTestEnable("C002", false, false); setTestEnable("C003", false, false);
-    setFunctionalTest("C000", " ", "00:00"); setFunctionalTest("C001", " ", "00:00"); setFunctionalTest("C002", " ", "00:00"); setFunctionalTest("C003", " ", "00:00");
-    setDurationTest("C000", "0", "0000-00-00", "00:00"); setDurationTest("C001", "0", "0000-00-00", "00:00"); setDurationTest("C002", "0", "0000-00-00", "00:00"); setDurationTest("C003", "0", "0000-00-00", "00:00");
+    // CONSTRUCCIÓN BASE DE TABLA GROUPS
+    if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses1 = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+    query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
+
+    int groupNumber = 1;
+    foreach (const QString &groupAddress, groupAddresses1) {
+        query.bindValue(":groupAddress", groupAddress);
+        query.bindValue(":groupName", "Group " + QString::number(groupNumber));
+        query.bindValue(":powerOnLevel", 255);
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in Groups:" << query.lastError().text(); }
+
+        groupNumber++;
+    }
+
+    // CONSTRUCCIÓN BASE DE TABLA TEST
+    if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses2 = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+    query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                  "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
+
+    foreach (const QString &groupAddress, groupAddresses2) {
+        query.bindValue(":groupAddress", groupAddress);
+        query.bindValue(":functionalEnable", 0);
+        query.bindValue(":durationEnable", 0);
+        query.bindValue(":functionalDays", " ");
+        query.bindValue(":functionalTime", "00:00");
+        query.bindValue(":durationPeriodicity", "0");
+        query.bindValue(":durationDate", "0000-00-00");
+        query.bindValue(":durationTime", "00:00");
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in Test:" << query.lastError().text(); }
+    }
+
+    // CONSTRUCCIÓN BASE DE TABLA LOG
+    if (!query.exec("DELETE FROM Log")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    // CONSTRUCCIÓN BASE DE TABLA FIXEDGROUPS
+    if (!query.exec("DELETE FROM FixedGroups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses3 = {"C000", "C001", "C002", "C003"};
+    QStringList groupNames = {"Lighting", "Emergency", "Even", "Odd"};
+
+    query.prepare("INSERT INTO FixedGroups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
+
+    for (int i = 0; i < groupAddresses3.size(); ++i) {
+        query.bindValue(":groupAddress", groupAddresses3[i]);
+        query.bindValue(":groupName", groupNames[i]);
+        query.bindValue(":powerOnLevel", 255);
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedGroups:" << query.lastError().text(); }
+    }
+
+    // CONSTRUCCIÓN BASE DE TABLA FIXEDTEST
+    if (!query.exec("DELETE FROM FixedTest")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses4 = {"C000", "C001", "C002", "C003"};
+
+    query.prepare("INSERT INTO FixedTest (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                  "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
+
+    foreach (const QString &groupAddress, groupAddresses4) {
+        query.bindValue(":groupAddress", groupAddress);
+        query.bindValue(":functionalEnable", 0);
+        query.bindValue(":durationEnable", 0);
+        query.bindValue(":functionalDays", " ");
+        query.bindValue(":functionalTime", "00:00");
+        query.bindValue(":durationPeriodicity", "0");
+        query.bindValue(":durationDate", "0000-00-00");
+        query.bindValue(":durationTime", "00:00");
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedTest:" << query.lastError().text(); }
+    }
+
 }
