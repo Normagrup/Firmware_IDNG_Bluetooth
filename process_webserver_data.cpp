@@ -242,6 +242,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         // Eliminar la entrada del dispositivo que añadimos de la lista de dispositivos escaneados que se muestra en el webserver
         scannedDevicesMessages.removeAt(uuidIndex);
 
+        sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+        delay(SLEEP_DALI_TIME_MS);
         sendUartAddDevice(uartPort, scannedUUID[0]);
         sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
     }  
