@@ -54,7 +54,6 @@ extern QTimer confirmAddDeviceTimer;
 extern QTimer newIterationTimer;
 extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 
-extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;

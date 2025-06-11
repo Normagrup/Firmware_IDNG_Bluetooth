@@ -43,7 +43,6 @@ uint16_t currentNodeAddress = 0;
 
 uint8_t subnetCount = 0, nodeSubnetCount = 0;
 
-QStringList scannedDevicesMessages;
 bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;

@@ -27,11 +27,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
-        scannedDevicesMessages.clear();
+
+        memset(scannedUUID, 0, sizeof(scannedUUID));
+
         sendUartScannedDevices(uartPort);
     }
     else if (type == WS_SET_SCAN_FROM_NODE) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+
+        memset(scannedUUID, 0, sizeof(scannedUUID));
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
         uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
@@ -102,10 +106,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                         numberOfIterations++;
                 }
             }
+            memset(scannedUUID, 0, sizeof(scannedUUID));
 
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
             delay(300);
             sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
@@ -238,9 +242,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 scannedUUIDBackup[i].nodeAddressReport = 0;
             }
         }
-
-        // Eliminar la entrada del dispositivo que añadimos de la lista de dispositivos escaneados que se muestra en el webserver
-        scannedDevicesMessages.removeAt(uuidIndex);
 
         sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
         delay(SLEEP_DALI_TIME_MS);
@@ -821,16 +822,25 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
 
     qDebug() << "NODE SCANNED: " << value <<  " - REPORT ADDRESS: " << reportAddress;
 
-    if(!isCommissioning)
-        scannedDevicesMessages.append(message);
-
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendStoredScannedDevices(WebServer* webServer)
 {
-    for(QString message : scannedDevicesMessages)
-        if (webServer != nullptr) { webServer->sendData(message); }
+    uint8_t emptyUUID[16] = {0};
+    QString value;
+
+    for(uint8_t i = 0; i < 20; i++) {
+        if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
+            value = "";
+
+            for (uint8_t j = 0; j < 16 ; j++) { value += QString::asprintf("%02X", scannedUUID[i].UUID[j]); }
+
+            QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value;
+
+            if (webServer != nullptr) { webServer->sendData(message); }
+        }
+    }
 }
 
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)

@@ -281,10 +281,6 @@ function addDeviceToNetworkList(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    // Si llega la info de un nodo en red y estamos durante un commissioning, 
-    // se elimina uno de los elementos de scannedDevices y se añade uno a networkNodes 
-    // Si llega la info de un nodo en red y no estamos durante un commissioning, 
-    // simplemente se añadirá a networkNodes pero no se eliminará nada de scannedDevices (ya que estará vacía)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     if(scannedDevicesList) {
         var selectedNode = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
