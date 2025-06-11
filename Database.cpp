@@ -1479,3 +1479,14 @@ void Database::clearAllData()
     }
 
 }
+
+void Database::changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress WHERE RealAddress = :nodeAddress");
+    query.bindValue(":subnetAddress", subnetAddress);
+    query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
+    query.bindValue(":nodeAddress", realAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in changePosition:" << query.lastError().text(); }
+}

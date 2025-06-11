@@ -686,3 +686,31 @@ function closeManageDataPopup()
     if(popup) { popup.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
 }
+
+function changeNodes() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popup = iframeDocument.getElementById('popupChangeNodes');
+
+    popupOverlay.style.visibility = "visible";
+    popup.style.visibility = "visible";
+
+    var positionInput1 = iframeDocument.getElementById('positionInput1');
+    var positionInput2 = iframeDocument.getElementById('positionInput2');
+
+    positionInput1.value = "1";
+    positionInput2.value = "2";
+}
+
+function closeSwap() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popup = iframeDocument.getElementById('popupChangeNodes');
+
+    popupOverlay.style.visibility = "hidden";
+    popup.style.visibility = "hidden";
+}

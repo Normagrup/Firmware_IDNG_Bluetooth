@@ -2352,3 +2352,37 @@ function saveCycles()
         }
     }
 }
+
+function confirmSwap()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var position1 = parseInt(iframeDocument.getElementById('positionInput1').value, 10);
+    var position2 = parseInt(iframeDocument.getElementById('positionInput2').value, 10);
+
+    var confirmSwapButton = iframeDocument.getElementById('confirmSwapButton');
+
+    if(position1 < 1 || position1 > 2048 || position2 < 1 || position2 > 2048 || position1 == position2) {
+        confirmSwapButton.style.backgroundColor = "red";
+        confirmSwapButton.style.color = "white";
+        setTimeout(function () {
+            confirmSwapButton.style.backgroundColor = "";
+            confirmSwapButton.style.color = "";
+        }, 500);
+    }
+    else {
+        sendData("CHANGE_NODES", position1 + "_" + position2),
+
+        confirmSwapButton.style.backgroundColor = "green";
+        confirmSwapButton.style.color = "white";
+        setTimeout(function () {
+            confirmSwapButton.style.backgroundColor = "";
+            confirmSwapButton.style.color = "";
+        }, 500);
+
+        setTimeout(function() {
+            updateAllDisplayedButtons();
+        }, 1000);
+    }
+}

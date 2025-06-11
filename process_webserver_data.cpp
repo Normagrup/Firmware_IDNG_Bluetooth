@@ -693,6 +693,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->updateFailComCycles(cycles);
         failComCycles = cycles;
     }
+    else if (type == WS_CHANGE_NODES) {
+        QStringList positions = value.split("_");
+        uint16_t position1 = positions[0].toUInt();
+        uint16_t position2 = positions[1].toUInt();
+        changePositions(database, position1, position2);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -1312,4 +1318,28 @@ void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase)
     QString message = QString(WS_SEND_LS_INFO) + "@" + hexStr + "_" + QString::number(phase);
 
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void changePositions(Database* database, uint16_t pos1, uint16_t pos2)
+{
+    uint16_t indexIPos1 = (pos1 - 1) / 64;
+    uint16_t indexJPos1 = (pos1 - 1) % 64;
+    uint16_t indexIPos2 = (pos2 - 1) / 64;
+    uint16_t indexJPos2 = (pos2 - 1) % 64;
+
+    Device &dev1 = meshDevice[indexIPos1][indexJPos1];
+    Device &dev2 = meshDevice[indexIPos2][indexJPos2];
+
+    uint16_t realAddressDev1 = dev1.getRealAddress();
+    uint16_t realAddressDev2 = dev2.getRealAddress();
+
+    // Reemplazo en el modelo
+    Device temp;
+    temp.copyFrom(dev1); // dev1 -> temp
+    dev1.copyFrom(dev2); // dev1 <- dev2
+    dev2.copyFrom(temp); // dev2 <- temp
+
+    // Reemplazo en la base de datos
+    if(realAddressDev1 != 0x0000) { database->changePosition(indexIPos2, indexJPos2, realAddressDev1); }
+    if(realAddressDev2 != 0x0000) { database->changePosition(indexIPos1, indexJPos1, realAddressDev2); }
 }

@@ -54,6 +54,7 @@
 #define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"
 #define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
 #define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
+#define WS_CHANGE_NODES                     "CHANGE_NODES"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -174,5 +175,6 @@ void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t node
 void sendConfirmStartLineScanning(WebServer* webServer);
 void sendConfirmEndLineScanning(WebServer* webServer);
 void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
+void changePositions(Database* database, uint16_t pos1, uint16_t pos2);
 
 #endif // PROCESS_WEBSERVER_DATA_H

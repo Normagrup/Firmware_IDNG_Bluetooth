@@ -66,6 +66,8 @@ public:
     void setPrevBatteryFail(bool value) { _prevBatteryFail = value; }
     void setPrevDurationFail(bool value) { _prevDurationFail = value; }
 
+    void copyFrom(const Device& other);
+
 private:
     bool _isConfigured;
     uint8_t _UUID[16];

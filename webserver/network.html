@@ -64,6 +64,22 @@
             </div>
         </div>
     </div>
+    <div class="popupChangeNodes" id="popupChangeNodes">
+        <h2> Swap positions </h2>
+        <br>
+        <div class="position-row">
+            <label for="positionInput1">Position</label>
+            <input id="positionInput1" type="number" min="1" max="2048" required>
+        </div>
+        <div class="position-row">
+            <label for="positionInput2">Position</label>
+            <input id="positionInput2" type="number" min="1" max="2048" required>
+        </div>
+        <div class="position-row">
+            <button id="closeSwapButton" onclick="parent.closeSwap()">Cancel</button>
+            <button id="confirmSwapButton" onclick="parent.confirmSwap()">Confirm</button>
+        </div>
+    </div>
     <div class="popupTree" id="popupTree">
         <h2> Loading tree... </h2>
         <br>
@@ -140,6 +156,10 @@
                         <option value="32"> Part 32: 1985-2048 </option>
                     </select>
                     <div class="tree-container">
+                        <button id="changeNodes" onclick="parent.changeNodes()" style="margin-right: 5px;">
+                            <img src="images/changeNodes.png" alt="ChangeNodes" class="button-icon">
+                            Change nodes
+                        </button>
                         <button id="showTree" onclick="parent.showTree()">
                             <img src="images/tree.png" alt="Tree" class="button-icon">
                             Show tree

@@ -89,6 +89,8 @@ public:
     void loadFailComCycles(void);
     void updateFailComCycles(uint8_t cycles);
 
+    void changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress);
+
 signals:
 
 private:
