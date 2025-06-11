@@ -395,6 +395,12 @@ function switchMode()
     var manualContainerSD = iframeDocument.getElementById("manualContainerScannedDevices");
     var manualContainerNN = iframeDocument.getElementById("manualContainerNetworkNodes");
 
+    var addButtons = iframeDocument.querySelectorAll('.deviceAddButton');
+    var scanButtons = iframeDocument.querySelectorAll('.deviceScanButton');
+    var relayButtons = iframeDocument.querySelectorAll('.deviceRelayButton');
+
+    var allButtons = [...addButtons, ...scanButtons, ...relayButtons];
+
     if (toggleMode.checked) {
         automaticLabel.style.color = "#999";
         automaticLabel.style.fontWeight = "normal";
@@ -405,6 +411,11 @@ function switchMode()
         manualContainer.style.display = "flex";
         manualContainerSD.style.display = "flex";
         manualContainerNN.style.display = "flex";
+
+        allButtons.forEach(function(button) {
+            button.style.display = "inline-block";
+            button.disabled = false;
+        });
     }
     else {
         automaticLabel.style.color = "#4682b4";
@@ -416,6 +427,37 @@ function switchMode()
         manualContainer.style.display = "none";
         manualContainerSD.style.display = "none";
         manualContainerNN.style.display = "none";
+
+        allButtons.forEach(function(button) {
+            button.style.display = "none";
+            button.disabled = true;
+        });
+    }
+}
+
+function updateAddScanRelayButtons() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var toggleMode = iframeDocument.getElementById("toggleMode");
+
+    var addButtons = iframeDocument.querySelectorAll('.deviceAddButton');
+    var scanButtons = iframeDocument.querySelectorAll('.deviceScanButton');
+    var relayButtons = iframeDocument.querySelectorAll('.deviceRelayButton');
+
+    var allButtons = [...addButtons, ...scanButtons, ...relayButtons];
+
+    if (toggleMode.checked) {
+        allButtons.forEach(function(button) {
+            button.style.display = "inline-block";
+            button.disabled = false;
+        });
+    }
+    else {
+        allButtons.forEach(function(button) {
+            button.style.display = "none";
+            button.disabled = true;
+        });
     }
 }
 

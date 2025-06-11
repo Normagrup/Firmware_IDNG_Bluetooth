@@ -177,6 +177,8 @@ function addDeviceToScannedList(value)
     var popup = iframeDocument.getElementById('popup');
     var labelCommissionNodes = popup.querySelector('label');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+    updateAddScanRelayButtons();
 }
 
 function confirmStartScan(value) 
@@ -362,6 +364,8 @@ function addDeviceToNetworkList(value)
     var popup = iframeDocument.getElementById('popup');
     var labelCommissionNodes = popup.querySelector('label');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+    updateAddScanRelayButtons();
 }
 
 function processDeviceError(value) 
