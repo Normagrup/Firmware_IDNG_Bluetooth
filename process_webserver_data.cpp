@@ -912,7 +912,6 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
 
         QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + netAddress + "_" + serialNumber + "_" + (relayStatus ? "relayOn" : "relayOff") + "_" + + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
-        delay(WEBSERVER_SEND_TIME_MS);
     }
 }
 
@@ -964,7 +963,6 @@ void sendGroups(WebServer* webServer, Database* database) {
 
         QString message = QString(WS_SEND_GROUP) + "@" + groupAddress + "_" + groupName;
         if (webServer != nullptr) { webServer->sendData(message); }
-        delay(WEBSERVER_SEND_TIME_MS);
     }
 }
 
