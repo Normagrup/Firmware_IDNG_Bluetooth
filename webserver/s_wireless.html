@@ -97,7 +97,7 @@
                 <div class="list-button-container" id="manualContainer">
                     <!-- <button onclick="parent.scanFromNode()"> Scan from network node </button> -->
                     <!-- <button onclick="parent.addDevicePrev()"> Add scanned device </button> -->
-                    <!-- <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label> -->
+                    <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
                 </div>
                 <div class="list-button-container" id="automaticContainer">
                     <button onclick="parent.startCommission()"> Start commission </button>
@@ -159,13 +159,15 @@
         };
 
         document.addEventListener('click', function(event) {
+            var popupOverlay = document.getElementById('popupOverlay');
+
             var scannedDevicesList = document.getElementById('scannedDevicesList');
             var networkNodesList = document.getElementById('networkNodesList');
 
             var scannedDevices = scannedDevicesList.getElementsByTagName('li');
             var networkDevices = networkNodesList.getElementsByTagName('li');
 
-            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI') { return; }
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI' || popupOverlay.style.visibility == "visible") { return; }
 
             for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
             for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
