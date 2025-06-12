@@ -777,6 +777,13 @@ void sendConfirmAddingDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendDevError(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_DEVICE_ERROR) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendStartAddingDevices(WebServer* webServer)
 {
     QString message = QString(WS_SEND_START_ADDING_DEVICES) + "@" + " ";
@@ -884,15 +891,38 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         }
     }
 
+    sendLogCommissionEntry(webServer, "An error has occurred with the device...", "ERROR");
+    sendDevError(webServer); // mensaje de error de añadir device para add manual y commission
+
     delay(5000);
+
+    // PARA STOP_COMMISSION
+    if(forceStopCommissioning)
+    {
+        commissionData.numberOfNodesScanned = commissionData.numberOfNodesAdded;
+    }
+
+    // PARA ADD_DEVICE MANUAL
+    if(isManualAddingDevice)
+    {
+        // Recuperar la lista de nodos escaneados en scannedUUID
+        memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
+        numberOfIterations = 0;
+        doneIterations = 0;
+        isManualAddingDevice = false;
+
+        return;
+    }
 
     uint8_t emptyUUID[16] = {0};
     for (uint8_t l = 0; l < 20; l++) {
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            sendUartNewIteration(uartPort);
-            newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            if(!forceStopCommissioning) {
+                sendUartNewIteration(uartPort);
+                newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            }
             break;
         }
         if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
@@ -903,10 +933,6 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
             break;
         }
     }
-
-    QString message = QString(WS_SEND_DEVICE_ERROR) + "@" + "";
-
-    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendNodesFromDatabase(WebServer* webServer, Database* database)

@@ -221,7 +221,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case DEVICE_ERROR:
                     {
                         qDebug() << "DEVICE ERROR";
-                        sendLogCommissionEntry(webServer, "An error has occurred with the device...", "ERROR");
                         QByteArray uuidBytes = dataChecked.mid(3,16);
                         insertCommissionErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
                         sendDeviceError(dataChecked, uartPort, webServer);
@@ -685,7 +684,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         doneIterations = 0;
         isManualAddingDevice = false;
 
-        sendConfirmAddingDevice(webServer);
+        sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
         return;
     }
 
@@ -694,8 +693,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            sendUartNewIteration(uartPort);
-            newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            if(!forceStopCommissioning) {
+                sendUartNewIteration(uartPort);
+                newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            }
             break;
         }
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {

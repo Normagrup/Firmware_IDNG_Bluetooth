@@ -134,6 +134,7 @@ void sendLogCommissionEntry(WebServer* webServer, QString content, QString type)
 void sendConfirmStartScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
+void sendDevError(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);
 void sendScannedDevices(QByteArray data, WebServer* webServer);
 void sendStoredScannedDevices(WebServer* webServer);
