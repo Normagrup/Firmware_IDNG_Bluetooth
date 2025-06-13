@@ -693,10 +693,8 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            if(!forceStopCommissioning) {
-                sendUartNewIteration(uartPort);
-                newIterationTimer.start(NEW_ITERATION_TIMER_MS);
-            }
+            sendUartNewIteration(uartPort);
+            newIterationTimer.start(NEW_ITERATION_TIMER_MS);
             break;
         }
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {

@@ -125,6 +125,10 @@ function processDateTimeInfo(value)
 
 function addDeviceToScannedList(value) 
 {
+    var parts = value.split("_");
+    var uuid = parts[0];
+    var counterIncrement = (parts[1] === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -134,7 +138,7 @@ function addDeviceToScannedList(value)
 
         // Evitar duplicados
         for (var i = 0; i < devices.length; i++) {
-            if (devices[i].textContent === value) { return; }
+            if (devices[i].textContent === uuid) { return; }
         }
 
         var newScanned = document.createElement('li');
@@ -142,7 +146,7 @@ function addDeviceToScannedList(value)
         newScanned.setAttribute('onclick', 'parent.selectDevice(this)');
 
         var textScanned = iframeDocument.createElement('span');
-        textScanned.textContent = value;
+        textScanned.textContent = uuid;
         textScanned.style.pointerEvents = 'none';
 
         var addButton = iframeDocument.createElement('button');
@@ -172,7 +176,8 @@ function addDeviceToScannedList(value)
 
         scannedDevicesList.appendChild(newScanned);
     }
-    nodesScanned++;
+
+    if(counterIncrement) { nodesScanned++; }
 
     var popup = iframeDocument.getElementById('popup');
     var labelCommissionNodes = popup.querySelector('label');
@@ -272,6 +277,10 @@ function confirmAddingDevice(value)
 
         setTimeout(function() {
             sendData("SET_LOAD_NODES", "");
+
+            setTimeout(function() {
+                sendData("SET_STORED_SCANNED_DEVICES", "");
+            }, 200);
         }, 200);
     }, 200);
 }

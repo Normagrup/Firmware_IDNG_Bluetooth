@@ -825,7 +825,7 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
 */
     QString value = "";
     for (uint8_t i = 0; i < 16 ; i++) { value += QString::asprintf("%02X", uuid[i]); }
-    QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value;
+    QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value + "_" + "true";
 
     qDebug() << "NODE SCANNED: " << value <<  " - REPORT ADDRESS: " << reportAddress;
 
@@ -843,7 +843,7 @@ void sendStoredScannedDevices(WebServer* webServer)
 
             for (uint8_t j = 0; j < 16 ; j++) { value += QString::asprintf("%02X", scannedUUID[i].UUID[j]); }
 
-            QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value;
+            QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value + "_" + "false";
 
             if (webServer != nullptr) { webServer->sendData(message); }
         }
@@ -919,10 +919,8 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            if(!forceStopCommissioning) {
-                sendUartNewIteration(uartPort);
-                newIterationTimer.start(NEW_ITERATION_TIMER_MS);
-            }
+            sendUartNewIteration(uartPort);
+            newIterationTimer.start(NEW_ITERATION_TIMER_MS);
             break;
         }
         if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
