@@ -802,6 +802,13 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
     for (uint8_t i = 0; i < 16; i++) { uuid[i] = (unsigned char)data[i + 5]; }
     reportAddress = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
 
+    // Evitar que se añadar UUIDs duplicados
+    for (uint8_t i = 0; i < 20; i++) {
+        if (memcmp(scannedUUID[i].UUID, uuid, sizeof(uuid)) == 0) {
+            return;
+        }
+    }
+
     commissionData.numberOfNodesScanned++;
     commissionData.isRelayNode = true;
 
