@@ -167,7 +167,7 @@ void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 void sendConfirmStartRemoveOneNode(WebServer* webServer);
 void sendConfirmEndRemoveOneNode(WebServer* webServer);
-void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database);
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, bool added, Database* database);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);

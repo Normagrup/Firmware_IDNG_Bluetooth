@@ -409,7 +409,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
                         uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
-                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, database);
+                        bool added = ((uint8_t)dataChecked[7] != 0);
+                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
                     }
                     break;
 

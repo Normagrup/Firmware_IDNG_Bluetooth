@@ -1229,17 +1229,19 @@ void sendConfirmEndRemoveOneNode(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database)
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, bool added, Database* database)
 {
-    // Añadir grupo en la BBDD
-    database->setGroup(address, deviceTypeGroupAddress);
+    if(added) {
+        // Añadir grupo en la BBDD
+        database->setGroup(address, deviceTypeGroupAddress);
 
-    // Añadir al modelo  
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == address) {
-                meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                break;
+        // Añadir al modelo
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == address) {
+                    meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
+                    break;
+                }
             }
         }
     }
