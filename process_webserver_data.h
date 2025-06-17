@@ -55,6 +55,7 @@
 #define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
 #define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
 #define WS_CHANGE_NODES                     "CHANGE_NODES"
+#define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -116,6 +117,7 @@
 #define WS_SEND_CONFIRM_START_LS            "CONFIRM_START_LS"
 #define WS_SEND_CONFIRM_END_LS              "CONFIRM_END_LS"
 #define WS_SEND_LS_INFO                     "LS_INFO"
+#define WS_SEND_LS_FOUNDED                  "LS_FOUNDED"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_CONFIRM_M_ADDRESS_SET       "CONFIRM_M_ADDRESS_SET"
@@ -176,6 +178,7 @@ void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t node
 void sendConfirmStartLineScanning(WebServer* webServer);
 void sendConfirmEndLineScanning(WebServer* webServer);
 void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
+void sendFoundNodes(WebServer* webServer, uint16_t nodesCount);
 void changePositions(Database* database, uint16_t pos1, uint16_t pos2);
 
 #endif // PROCESS_WEBSERVER_DATA_H

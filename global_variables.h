@@ -57,7 +57,8 @@ extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;
-extern uint16_t lineScanningCounter;
+extern uint16_t lineScanningCounter; // para calcular la posición del siguiente nodo escaneado
+extern uint16_t scannedNodesCounter; // para mostrar en el WS la cantidad de nodos encontrados
 extern QList<uint16_t> configuredNodes;
 extern QMap<uint16_t, NodeInfo> nodesByRealAddress;
 extern QMultiMap<uint16_t, uint16_t> childrenMap;

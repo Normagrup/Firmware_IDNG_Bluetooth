@@ -700,6 +700,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t position2 = positions[1].toUInt();
         changePositions(database, position1, position2);
     }
+    else if (type == WS_GET_LINE_SCANNED_NODES) {
+        sendFoundNodes(webServer, scannedNodesCounter);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -1348,6 +1351,13 @@ void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase)
     QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
 
     QString message = QString(WS_SEND_LS_INFO) + "@" + hexStr + "_" + QString::number(phase);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendFoundNodes(WebServer* webServer, uint16_t nodesCount)
+{
+    QString message = QString(WS_SEND_LS_FOUNDED) + "@" + QString::number(nodesCount);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

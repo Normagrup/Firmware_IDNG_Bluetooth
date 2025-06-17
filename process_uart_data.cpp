@@ -340,6 +340,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
 
                         lineScanningCounter++;
+                        scannedNodesCounter++;
+
+                        sendFoundNodes(webServer, scannedNodesCounter);
                     }
                     break;
                     case SEND_FEATURES_STATUS:
@@ -353,6 +356,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         isLineScanning = true;
                         configuredNodes = database->getConfiguredNodes();
                         lineScanningCounter = 0;
+                        scannedNodesCounter = 0;
                         for (int i = 0; i < MAX_SUBNET; i++) {
                             for (int j = 0; j < MAX_NODES_SUBNET; j++) {
                                 meshDevice[i][j].deleteDevice();

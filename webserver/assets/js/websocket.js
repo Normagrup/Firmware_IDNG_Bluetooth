@@ -1140,12 +1140,16 @@ function processIsLSInProgress(value)
         var popupLS = iframeDocument.getElementById('popupLineScanning');
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
         var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+        var informerTotal = iframeDocument.getElementById('informerTotal');
         var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
         popupLS.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
         informerLabel1.textContent = "Phase 1: Completed.";
+        informerTotal.textContent = "FOUNDED NODES: ...";
         informerLabel2.textContent = "Phase 2: Waiting...";
+
+        sendData("GET_LINE_SCANNED_NODES", "");
     }
 }
 
@@ -1330,11 +1334,13 @@ function processConfirmStartLineScanning(value)
     var popup = iframeDocument.getElementById('popupLineScanning');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+    var informerTotal = iframeDocument.getElementById('informeTotal');
     var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     informerLabel1.textContent = "Phase 1: Starting...";
+    informerTotal.textContent = "FOUNDED NODES: ...";
     informerLabel2.textContent = "Phase 2: Waiting...";
 }
 
@@ -1371,6 +1377,16 @@ function processLSInfo(value)
         var informerLabel1 = iframeDocument.getElementById('informerLabel1');
         informerLabel1.textContent = "Phase 1: Completed.";
     }
+}
+
+function processLSFounded(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var informerTotal = iframeDocument.getElementById('informerTotal');
+    if(informerTotal)
+        informerTotal.textContent = "FOUNDED NODES: " + value;
 }
 
 function processReceivedData(data) 
@@ -1427,6 +1443,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_START_LS") { processConfirmStartLineScanning(value); }
     else if (type == "CONFIRM_END_LS") { processConfirmEndLineScanning(value); }
     else if (type == "LS_INFO") { processLSInfo(value); }
+    else if (type == "LS_FOUNDED") { processLSFounded(value); }
 }
 
 function sendData(type, value) 
