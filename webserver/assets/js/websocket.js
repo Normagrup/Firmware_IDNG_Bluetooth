@@ -431,19 +431,31 @@ function processLogCommissionEntry(value)
     var logCommissionList = iframeDocument.getElementById('logCommission');
 
     if(logCommissionList) {
-        var newEntry1 = iframeDocument.createElement('li');
-        newEntry1.textContent = content;
-        if(type == "ERROR") { newEntry1.style.color = "#C30101"; }
-        logCommissionList.insertBefore(newEntry1, logCommissionList.firstChild);
+        var firstEntry1 = logCommissionList.firstChild;
+        if(!firstEntry1 || firstEntry1.textContent != content) {
+            var newEntry1 = iframeDocument.createElement('li');
+            newEntry1.textContent = content;
+            if(type == "ERROR") { newEntry1.style.color = "#C30101"; }
+            logCommissionList.insertBefore(newEntry1, firstEntry1);
+        }
+        else if(firstEntry1 && firstEntry1.textContent == content) {
+            console.log("ENTRADA DUPLICADA: " + content);
+        }
     }
 
     var logAddManualList = iframeDocument.getElementById('logAddManual');
 
     if(logAddManualList) {
-        var newEntry2 = iframeDocument.createElement('li');
-        newEntry2.textContent = content;
-        if(type == "ERROR") { newEntry2.style.color = "#C30101"; }
-        logAddManualList.insertBefore(newEntry2, logAddManualList.firstChild);
+        var firstEntry2 = logAddManualList.firstChild;
+        if(!firstEntry2 || firstEntry2.textContent != content) {
+            var newEntry2 = iframeDocument.createElement('li');
+            newEntry2.textContent = content;
+            if(type == "ERROR") { newEntry2.style.color = "#C30101"; }
+            logAddManualList.insertBefore(newEntry2, firstEntry2);
+        }
+        else if(firstEntry2 && firstEntry2.textContent == content) {
+            console.log("ENTRADA DUPLICADA: " + content);
+        }
     }
 }
 
