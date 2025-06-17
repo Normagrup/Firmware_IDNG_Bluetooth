@@ -1401,6 +1401,15 @@ function processLSFounded(value)
         informerTotal.textContent = "FOUNDED NODES: " + value;
 }
 
+function processConfirmEndClearAll(value)
+{
+    var popup = iframeDocument.getElementById('popup');
+	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1456,6 +1465,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_END_LS") { processConfirmEndLineScanning(value); }
     else if (type == "LS_INFO") { processLSInfo(value); }
     else if (type == "LS_FOUNDED") { processLSFounded(value); }
+    else if (type == "CONFIRM_END_CLEAR_ALL") { processConfirmEndClearAll(value); }
 }
 
 function sendData(type, value) 
@@ -1973,11 +1983,8 @@ function clearAllData()
     var button = iframeDocument.getElementById('deletingDataButton');
     button.disabled = true;
 
-    var popup = iframeDocument.getElementById('popup');
-	var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
+    confirmDeleteData.textContent = "Deleting ALL data. Don't leave this screen";
 }
 
 function lineScanning()

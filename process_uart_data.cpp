@@ -421,6 +421,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmPowerOnLevel(webServer, powerOnLevel, groupAddress, database);
                     }
                     break;
+
+                    case CONFIRM_END_CLEAR_ALL_DATA:
+                    {
+                        sendConfirmEndClearAllData(webServer);
+                    }
+                    break;
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(dataChecked, database, webServer);

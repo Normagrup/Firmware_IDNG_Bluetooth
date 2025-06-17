@@ -72,6 +72,7 @@
 #define RECOVERY_GROUPS                 0x85
 #define LS_INFO                         0x86
 #define CHANGE_FATHER                   0x87
+#define CONFIRM_END_CLEAR_ALL_DATA      0x88
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);

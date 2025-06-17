@@ -1394,3 +1394,10 @@ void changePositions(Database* database, uint16_t pos1, uint16_t pos2)
     if(realAddressDev1 != 0x0000) { database->changePosition(indexIPos2, indexJPos2, realAddressDev1); }
     if(realAddressDev2 != 0x0000) { database->changePosition(indexIPos1, indexJPos1, realAddressDev2); }
 }
+
+void sendConfirmEndClearAllData(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_CLEAR_ALL) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}

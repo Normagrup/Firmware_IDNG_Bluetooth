@@ -118,6 +118,7 @@
 #define WS_SEND_CONFIRM_END_LS              "CONFIRM_END_LS"
 #define WS_SEND_LS_INFO                     "LS_INFO"
 #define WS_SEND_LS_FOUNDED                  "LS_FOUNDED"
+#define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_CONFIRM_M_ADDRESS_SET       "CONFIRM_M_ADDRESS_SET"
@@ -180,5 +181,6 @@ void sendConfirmEndLineScanning(WebServer* webServer);
 void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
 void sendFoundNodes(WebServer* webServer, uint16_t nodesCount);
 void changePositions(Database* database, uint16_t pos1, uint16_t pos2);
+void sendConfirmEndClearAllData(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

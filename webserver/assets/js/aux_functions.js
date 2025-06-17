@@ -667,9 +667,11 @@ function clearAllDataPrev()
 
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+    confirmDeleteData.textContent = "Do you want to delete ALL the data?";
 }
 
 function closeManageDataPopup()
