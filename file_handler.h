@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include "Device.h"
 #include "Database.h"
+#include "aux_functions.h"
 
 #define WEB_SERVER_DATA_PATH        "/normagrup/www/webserver.txt"
 #define MAC_ADDRESS_PATH            "/sys/class/net/eth0/address"

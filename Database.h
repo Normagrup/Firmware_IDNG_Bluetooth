@@ -40,7 +40,7 @@ public:
     void setDurationTest(QString groupAddress, QString durationPeriodicity, QString durationDate, QString durationTime);
 
     QList<uint16_t> getConfiguredNodes(void);
-    QList<QPair<uint16_t,QString>> getConfiguredNodesAndSerialNumbers(void);
+    QList<QString> getConfiguredNodesAndSerialNumbers(void);
     QList<QPair<uint16_t, uint16_t>> getDependentNodesList(uint16_t realAddress);
 
     QList<QPair<QString, QString>> getGroups(void);
@@ -49,6 +49,7 @@ public:
     void removeGroup(QString address);
     void removeTestEntry(QString address);
     void editGroup(QString address, QString name);
+    QString getGroupName(QString groupAddress);
     void setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel);
     QStringList getPowerOnLevel(int page);
 
@@ -70,10 +71,25 @@ public:
 
     bool insertLogEvent(const LogInfo log);
     QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
+    QList<QStringList> getLogEventPaged(const QString &type, qint64 startDate, qint64 endDate, int page);
     QList<QStringList> getAllTestLogs();
 
     void readNodesForTree();
     void updateRelayMode(uint16_t nodeAddress, bool enabled);
+    uint16_t getFatherRealAddress(uint16_t nodeAddress);
+    int getCountOfDirectChildren(uint16_t nodeAddress);
+    QList<uint16_t> getChildrenRealAddresses(uint16_t nodeAddress);
+    QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
+
+    uint16_t getMasterRealAddress(void);
+    void setMasterRealAddress(uint16_t newAntennaAddress);
+
+    void setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID);
+    void setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress);
+    void loadFailComCycles(void);
+    void updateFailComCycles(uint8_t cycles);
+
+    void changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress);
 
 signals:
 

@@ -26,17 +26,27 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         rebootDevice();
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
-        if(isCommissionInProgress(webServer)) { return; }
-        scannedDevicesMessages.clear();
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+
+        memset(scannedUUID, 0, sizeof(scannedUUID));
+
         sendUartScannedDevices(uartPort);
     }
+    else if (type == WS_SET_SCAN_FROM_NODE) {
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+
+        memset(scannedUUID, 0, sizeof(scannedUUID));
+
+        uint16_t nodeNetAddress = getNodeNetAddress(value);
+        uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
+
+        qDebug() << "Iniciando escaneo desde nodo realAddress:" << nodeRealAddress;
+
+        sendUartScanFromNode(uartPort, nodeRealAddress);
+    }
+
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {
         sendStoredScannedDevices(webServer);
-    }
-    else if (type == WS_SET_LINE_SCAN) {
-        if(isCommissionInProgress(webServer)) { return; }
-        requestMicroDatabase(uartPort);
-        
     }
     else if (type == WS_GET_IP_CONFIG) {
         QStringList messages = database->getInterfaceParameters();
@@ -75,7 +85,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         setLocalDateTime(webServerParts);
     }
     else if (type == WS_SET_START_ACTION) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         //qDebug() << "ADDING NEW NODE";
         if (value != "0") {
@@ -83,25 +93,26 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             //uuidScanned = compareDeviceUUID(value);
             //delay(500);
             //confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
-            //if (uuidScanned.UUID != nullptr) { sendUartAddDevice(uartPort, uuidScanned); sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(uuidScanned)); }
+            //if (uuidScanned.UUID != nullptr) { sendUartAddDevice(uartPort, uuidScanned); sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(uuidScanned), "INFO"); }
         }
         else {
             qDebug() << "START COMMISSION";
 
             numberOfIterations = 0;
+            doneIterations = 0;
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured())
                         numberOfIterations++;
                 }
             }
+            memset(scannedUUID, 0, sizeof(scannedUUID));
 
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            scannedDevicesMessages.clear();
             sendUartStartCommission(uartPort);
             delay(300);
-            sendLogCommissionEntry(webServer, "Scanning devices...");
+            sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
         }
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
@@ -119,7 +130,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "Mensaje de detención de COMMISSIONING recibido.";
     }
     else if (type == WS_SET_DELETE_DEVICE) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
 
@@ -131,8 +142,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             for(int i = 0; i < MAX_SUBNET; i++){
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured()) {
-                        uint16_t nodeNetAddr = i * 64 + j + 1;
-                        insertDevToLog(nodeNetAddr, database, LOG_DEVICE_REMOVED);
+                        insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_REMOVED, "Device");
                         meshDevice[i][j].deleteDevice();
                     }
                 }
@@ -143,6 +153,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         {
             uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
+            /** 
             QList<QPair<uint16_t, uint16_t>> dependentNodes = database->getDependentNodesList(nodeAddress);
 
             // Ordenar los nodos hijos por el realAddress (descendentemente) para ir borrando sin problemas
@@ -160,7 +171,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 printf(" Net Address: %04X - RealAddress: %04X\n", dependentNodeNetAddress, dependentNodeAddress);
 
                 sendUartDelDevice(uartPort, dependentNodeAddress);
-                delay(SLEEP_DALI_TIME_MS);
+                delay(800);
 
                 // Device to delete added to log
                 insertDevToLog(dependentNodeNetAddress, database, LOG_DEVICE_REMOVED);
@@ -169,22 +180,39 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 meshDevice[(dependentNodeNetAddress - 1) / 64][(dependentNodeNetAddress - 1) % 64].deleteDevice();
                 database->deleteNode(dependentNodeAddress);
             }
+            */
+
+            // Sacamos el número de hijos del padre del nodo que estamos borrando, para saber si tras borrar, debemos desactivar el relay del padre o no
+            //uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
+            //int numberOfChildren = database->getCountOfDirectChildren(fatherNodeAddress);
 
             // Borrado del dispositivo elegido
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
+            uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
+            QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(nodeAddress);
+            for(uint16_t childRealAddress : childrenRealAddresses) {
+                sendUartChangeFather(uartPort, childRealAddress, fatherNodeAddress);
+                database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
+                delay(150);
+            }
+
             sendUartDelDevice(uartPort, nodeAddress);
 
             // Device to delete added to log
-            insertDevToLog(nodeNetAddress, database, LOG_DEVICE_REMOVED);
+            insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
 
             // Eliminar el nodo de la estructura interna
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
             database->deleteNode(nodeAddress);
+
+            // Si tenía solo un hijo, al haberlo eliminado, ahora tiene 0 y por tanto, se le desactiva el relay
+            //if(fatherNodeAddress != antennaRealAddress && numberOfChildren <= 1)
+            //    sendUartSetRelay(uartPort, fatherNodeAddress, false);
         }
     }
     else if (type == WS_SET_ADD_DEVICE) {
-        if (isCommissionInProgress(webServer)) { return; }
+        if (isCommissionOrLSInProgress(webServer)) { return; }
 
         // Extraer el índice del UUID correspondiente al nodo que queremos añadir
         int uuidIndex = getUUIDIndexOfScanned(value);
@@ -215,14 +243,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             }
         }
 
-        // Eliminar la entrada del dispositivo que añadimos de la lista de dispositivos escaneados que se muestra en el webserver
-        scannedDevicesMessages.removeAt(uuidIndex);
-
+        sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+        delay(SLEEP_DALI_TIME_MS);
         sendUartAddDevice(uartPort, scannedUUID[0]);
-        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID));
+        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
     }  
     else if (type == WS_SET_ADD_GROUP) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -244,7 +271,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     }
     else if (type == WS_SET_DEL_GROUP) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -276,7 +303,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroupNodes(webServer, value);
     }
     else if (type == WS_SET_MAX) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -296,7 +323,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_OFF) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -316,7 +343,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_MIN) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -336,7 +363,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_RESET) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -365,8 +392,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
+    else if (type == WS_SET_RELAY_MODE) {
+        QStringList parts = value.split("_");
+        uint16_t netAddress = parts[0].toUInt();
+        bool enable = parts[1].toInt();
+
+        uint16_t realAddress = meshDevice[(netAddress - 1) / 64][(netAddress - 1) % 64].getRealAddress();
+
+        sendUartSetRelay(uartPort, realAddress, enable);
+    }
     else if (type == WS_SET_IDENTIFY) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -378,7 +414,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FACTORY_SETTINGS) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -402,7 +438,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_REBOOT) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -426,7 +462,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FUNCTION_TEST) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -444,7 +480,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_DURATION_TEST) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -463,7 +499,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 
     else if (type == WS_SET_STOP) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -486,8 +522,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_IS_COMMISSION_IN_PROGRESS) {
         sendIsCommissionInProgress(webServer);
     }
+    else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
+        sendIsAddManualInProgress(webServer);
+    }
+    else if (type == WS_SET_IS_LS_IN_PROGRESS) {
+        sendIsLSInProgress(webServer);
+    }
     else if (type == WS_SET_TEST) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList webServerParts = value.split(" ");
         setTests(webServerParts, database);
@@ -498,15 +540,48 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_LOGS) {
         qDebug() << "GETTING LOGS " << value;
         QStringList webServerParts = value.split(" ");
+        reportType = webServerParts[0];
+        startDate = webServerParts[1];
+        endDate = webServerParts[2];
+
+        QDate startQDate = QDate::fromString(startDate, "yyyy-MM-dd");
+        QDate endQDate = QDate::fromString(endDate, "yyyy-MM-dd");
+        QDateTime startDT(startQDate, QTime(0, 0, 0));
+        QDateTime endDT(endQDate, QTime(23, 59, 59));
+        qint64 start = startDT.toSecsSinceEpoch();
+        qint64 end = endDT.toSecsSinceEpoch();
+
+        QList<QStringList> logs = database->getLogEventPaged(reportType, start, end, 1);
+        transformEventCodes(&logs);
+
+        sendLogData(webServer, logs);
+    }
+    else if (type == WS_GET_LOGS_PAGED) {
+        int page = value.toInt();
+
+        QDate startQDate = QDate::fromString(startDate, "yyyy-MM-dd");
+        QDate endQDate = QDate::fromString(endDate, "yyyy-MM-dd");
+        QDateTime startDT(startQDate, QTime(0, 0, 0));
+        QDateTime endDT(endQDate, QTime(23, 59, 59));
+        qint64 start = startDT.toSecsSinceEpoch();
+        qint64 end = endDT.toSecsSinceEpoch();
+
+        QList<QStringList> logs = database->getLogEventPaged(reportType, start, end, page);
+        transformEventCodes(&logs);
+
+        sendLogData(webServer, logs);
+    }
+    else if (type == WS_DOWNLOAD_LOGS) {
+        qDebug() << "DOWNLOADING LOGS " << value;
+        QStringList webServerParts = value.split(" ");
         QString reportType = webServerParts[0];
         QString startDate = webServerParts[1];
         QString endDate = webServerParts[2];
-        QString downloadPath;
 
-        downloadPath = exportLogToCSV(database, reportType, startDate, endDate);
-        QStringList ConfigInfo = database -> getInterfaceParameters();
-        QString serverIP = ConfigInfo.first();
-        QString fileUrl = "http://" + serverIP + "/logs/" + downloadPath;
+        QString fileName = exportLogToCSV(database, reportType, startDate, endDate);
+        QStringList configInfo = database -> getInterfaceParameters();
+        QString serverIP = configInfo.first();
+        QString fileUrl = "http://" + serverIP + "/logs/" + fileName;
         sendLogFile(webServer, fileUrl);
     }
     else if (type == WS_GET_NODE_INFO) {
@@ -573,14 +648,19 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendTest(webServer, database, value);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
         clearSystemData(database, uartPort);
+    }
+    else if (type == WS_LINE_SCANNING) {
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+        sendUartLineScanning(uartPort);
+
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
         sendGroupsWithPOL(webServer, database, value);
     }
     else if (type == WS_SET_POWER_ON_LEVEL) {
-        if(isCommissionInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
 
         QStringList parts = value.split("_");
         uint16_t groupAddress = parts[0].toUShort(nullptr, 16);
@@ -596,16 +676,48 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_RELOAD_TREE) {
         buildTreeAndSendConfirm(webServer, database);
     }
+    else if (type == WS_GET_MASTER_REAL_ADDRESS) {
+        sendAntennaGetAddress(uartPort);
+    }
+    else if (type == WS_SET_MASTER_REAL_ADDRESS) {
+        // Para que la antena núm. 1 sea la address 31768 (0x7C18), la núm. 2 sea la address 31769 (0x7C19), etc. Hasta la núm. 1000, que será la 32767 (0x7FFF)
+        int numValue = value.toInt(nullptr, 10) + 31767;
+        uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
+
+        sendAntennaSetAddress(uartPort, newAntennaRealAddress);
+    }
+    else if (type == WS_GET_FAILCOM_CYCLES) {
+        sendFailComCycles(webServer);
+    }
+    else if (type == WS_SET_FAILCOM_CYCLES) {
+        uint8_t cycles = value.toUInt();
+        database->updateFailComCycles(cycles);
+        failComCycles = cycles;
+    }
+    else if (type == WS_CHANGE_NODES) {
+        QStringList positions = value.split("_");
+        uint16_t position1 = positions[0].toUInt();
+        uint16_t position2 = positions[1].toUInt();
+        changePositions(database, position1, position2);
+    }
+    else if (type == WS_GET_LINE_SCANNED_NODES) {
+        sendFoundNodes(webServer, scannedNodesCounter);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
     }
 }
 
-bool isCommissionInProgress(WebServer* webServer)
+bool isCommissionOrLSInProgress(WebServer* webServer)
 {
     if (isCommissioning) {
         QString message = QString(WS_SEND_ALERT_COMMISSION) + "@" + "Command blocked. Commissioning in progress.";
+        if (webServer != nullptr) { webServer->sendData(message); }
+        return true;
+    }
+    else if (isLineScanning) {
+        QString message = QString(WS_SEND_ALERT_LINE_SCANNING) + "@" + "Command blocked. Line Scanning in progress.";
         if (webServer != nullptr) { webServer->sendData(message); }
         return true;
     }
@@ -640,9 +752,9 @@ void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendLogCommissionEntry(WebServer* webServer, QString content)
+void sendLogCommissionEntry(WebServer* webServer, QString content, QString type)
 {
-    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + content;
+    QString message = QString(WS_SEND_LOG_COMMISSION_ENTRY) + "@" + content + "_" + type;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -668,6 +780,13 @@ void sendConfirmAddingDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendDevError(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_DEVICE_ERROR) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendStartAddingDevices(WebServer* webServer)
 {
     QString message = QString(WS_SEND_START_ADDING_DEVICES) + "@" + " ";
@@ -682,6 +801,13 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
 
     for (uint8_t i = 0; i < 16; i++) { uuid[i] = (unsigned char)data[i + 5]; }
     reportAddress = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
+
+    // Evitar que se añadar UUIDs duplicados
+    for (uint8_t i = 0; i < 20; i++) {
+        if (memcmp(scannedUUID[i].UUID, uuid, sizeof(uuid)) == 0) {
+            return;
+        }
+    }
 
     commissionData.numberOfNodesScanned++;
     commissionData.isRelayNode = true;
@@ -709,20 +835,29 @@ void sendScannedDevices(QByteArray data, WebServer* webServer)
 */
     QString value = "";
     for (uint8_t i = 0; i < 16 ; i++) { value += QString::asprintf("%02X", uuid[i]); }
-    QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value;
+    QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value + "_" + "true";
 
     qDebug() << "NODE SCANNED: " << value <<  " - REPORT ADDRESS: " << reportAddress;
-
-    if(!isCommissioning)
-        scannedDevicesMessages.append(message);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendStoredScannedDevices(WebServer* webServer)
 {
-    for(QString message : scannedDevicesMessages)
-        if (webServer != nullptr) { webServer->sendData(message); }
+    uint8_t emptyUUID[16] = {0};
+    QString value;
+
+    for(uint8_t i = 0; i < 20; i++) {
+        if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
+            value = "";
+
+            for (uint8_t j = 0; j < 16 ; j++) { value += QString::asprintf("%02X", scannedUUID[i].UUID[j]); }
+
+            QString message = QString(WS_SEND_SCANNED_DEVICES) + "@" + value + "_" + "false";
+
+            if (webServer != nullptr) { webServer->sendData(message); }
+        }
+    }
 }
 
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
@@ -737,7 +872,7 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 
     qDebug() << "UART FRAME RECEIVED: ADDED DEVICE " << nodeAddress;
 
-    sendLogCommissionEntry(webServer, "The device has been added.");
+    sendLogCommissionEntry(webServer, "The device has been added.", "INFO");
 
     //QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress[0] * 64 + netAddress[1] + 1);
 
@@ -766,7 +901,28 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         }
     }
 
+    sendLogCommissionEntry(webServer, "An error has occurred with the device...", "ERROR");
+    sendDevError(webServer); // mensaje de error de añadir device para add manual y commission
+
     delay(5000);
+
+    // PARA STOP_COMMISSION
+    if(forceStopCommissioning)
+    {
+        commissionData.numberOfNodesScanned = commissionData.numberOfNodesAdded;
+    }
+
+    // PARA ADD_DEVICE MANUAL
+    if(isManualAddingDevice)
+    {
+        // Recuperar la lista de nodos escaneados en scannedUUID
+        memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
+        numberOfIterations = 0;
+        doneIterations = 0;
+        isManualAddingDevice = false;
+
+        return;
+    }
 
     uint8_t emptyUUID[16] = {0};
     for (uint8_t l = 0; l < 20; l++) {
@@ -780,34 +936,46 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[l].UUID[0], 2, 16, QChar('0')).toUpper();
             sendUartAddDevice(uartPort, scannedUUID[l]);
-            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID));
+            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID), "INFO");
             confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
             break;
         }
     }
-
-    QString message = QString(WS_SEND_DEVICE_ERROR) + "@" + "";
-
-    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendNodesFromDatabase(WebServer* webServer, Database* database)
 {
-    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
+    QList<QString> nodeNetAddressAndSNList = database->getConfiguredNodesAndSerialNumbers();
 
-    for (const QPair<uint16_t, QString>& node : nodeNetAddressAndSNList) {
-        uint16_t netAddress = node.first;
-        QString serialNumber = node.second;
+    for (const QString& nodeInfo : nodeNetAddressAndSNList) {
+        QStringList nodeInfoParts = nodeInfo.split("#");
 
-        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + serialNumber + "_" + "false"; // el booleano indica que no se debe incrementar el contador del webserver
+        QString netAddress = nodeInfoParts[0];
+        QString serialNumber = nodeInfoParts[1];
+        bool relayStatus = nodeInfoParts[2].toInt() != 0;
+
+        QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + netAddress + "_" + serialNumber + "_" + (relayStatus ? "relayOn" : "relayOff") + "_" + + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
-        delay(WEBSERVER_SEND_TIME_MS);
     }
 }
 
 void sendIsCommissionInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_COMMISSION_IN_PROGRESS) + "@" + (isCommissioning ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsAddManualInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_ADD_MANUAL_IN_PROGRESS) + "@" + (isManualAddingDevice ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsLSInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_LS_IN_PROGRESS) + "@" + (isLineScanning ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -839,7 +1007,6 @@ void sendGroups(WebServer* webServer, Database* database) {
 
         QString message = QString(WS_SEND_GROUP) + "@" + groupAddress + "_" + groupName;
         if (webServer != nullptr) { webServer->sendData(message); }
-        delay(WEBSERVER_SEND_TIME_MS);
     }
 }
 
@@ -991,9 +1158,24 @@ void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bo
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendLogData(WebServer *webServer, QList<QStringList> logs)
+{
+    QString content;
+    for(QStringList log : logs) {
+        for(QString data : log) {
+            content += (data + "|");
+        }
+        content += ("#");
+    }
+
+    QString message = QString(WS_SEND_LOG_DATA) + "@" + content;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendLogFile(WebServer *webServer, QString fileDir)
 {
-    QString message = QString(WS_SEND_LOG_DATA) + "@" + fileDir;
+    QString message = QString(WS_SEND_LOG_FILE) + "@" + fileDir;
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1047,17 +1229,19 @@ void sendConfirmEndRemoveOneNode(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database)
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, bool added, Database* database)
 {
-    // Añadir grupo en la BBDD
-    database->setGroup(address, deviceTypeGroupAddress);
+    if(added) {
+        // Añadir grupo en la BBDD
+        database->setGroup(address, deviceTypeGroupAddress);
 
-    // Añadir al modelo  
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == address) {
-                meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                break;
+        // Añadir al modelo
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == address) {
+                    meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
+                    break;
+                }
             }
         }
     }
@@ -1088,8 +1272,132 @@ void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendFailComCycles(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_FAIL_COM_CYCLES) + "@" + QString::number(failComCycles);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled)
 {
     qDebug() << "Node Address:" << address << "- RELAY:" << (enabled ? "Enabled" : "Disabled");
+
     database->updateRelayMode(address, enabled);
+
+    uint16_t netAddress;
+    bool found = false;
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address) {
+                netAddress = i * 64 + j + 1;
+                found = true;
+                break;
+            }
+        }
+
+        if(found) { break; } // Evitar recorrer innecesariamente tras encontrar
+    }
+
+    QString message = QString(WS_SEND_CONFIRM_SET_RELAY) + "@" + QString::number(netAddress) + "_" + (enabled ? "relayOn" : "relayOff");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
+{
+    database->setMasterRealAddress(antennaAddress);
+    antennaRealAddress = antennaAddress;
+
+    QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_GET) + "@" + QString::number(antennaAddress);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
+{
+    database->setMasterRealAddress(antennaAddress);
+    antennaRealAddress = antennaAddress;
+
+    QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_SET) + "@" + QString::number(antennaAddress);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel)
+{
+    qDebug() << "Node Address:" << QString::number(nodeAddr) << "- PowerOnLevel:" << QString::number(powerOnLevel);
+
+    for(const QPair<uint16_t, QStringList> &par : crossedGroupAndNodes) {
+        if (par.first == nodeAddr) {
+            const QStringList &groupsList = par.second;
+
+            for (const QString &group : groupsList) {
+                database->setPowerOnLevel(group, powerOnLevel);
+            }
+            break;
+        }
+    }
+}
+
+void sendConfirmStartLineScanning(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_LS) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndLineScanning(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_LS) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase)
+{
+    QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
+
+    QString message = QString(WS_SEND_LS_INFO) + "@" + hexStr + "_" + QString::number(phase);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendFoundNodes(WebServer* webServer, uint16_t nodesCount)
+{
+    QString message = QString(WS_SEND_LS_FOUNDED) + "@" + QString::number(nodesCount);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void changePositions(Database* database, uint16_t pos1, uint16_t pos2)
+{
+    uint16_t indexIPos1 = (pos1 - 1) / 64;
+    uint16_t indexJPos1 = (pos1 - 1) % 64;
+    uint16_t indexIPos2 = (pos2 - 1) / 64;
+    uint16_t indexJPos2 = (pos2 - 1) % 64;
+
+    Device &dev1 = meshDevice[indexIPos1][indexJPos1];
+    Device &dev2 = meshDevice[indexIPos2][indexJPos2];
+
+    uint16_t realAddressDev1 = dev1.getRealAddress();
+    uint16_t realAddressDev2 = dev2.getRealAddress();
+
+    // Reemplazo en el modelo
+    Device temp;
+    temp.copyFrom(dev1); // dev1 -> temp
+    dev1.copyFrom(dev2); // dev1 <- dev2
+    dev2.copyFrom(temp); // dev2 <- temp
+
+    // Reemplazo en la base de datos
+    if(realAddressDev1 != 0x0000) { database->changePosition(indexIPos2, indexJPos2, realAddressDev1); }
+    if(realAddressDev2 != 0x0000) { database->changePosition(indexIPos1, indexJPos1, realAddressDev2); }
+}
+
+void sendConfirmEndClearAllData(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_CLEAR_ALL) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }

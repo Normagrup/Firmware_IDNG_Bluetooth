@@ -28,9 +28,13 @@
 #define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
+#define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
+#define WS_SET_IS_LS_IN_PROGRESS            "SET_IS_LS_IN_PROGRESS"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
+#define WS_GET_LOGS_PAGED                   "GET_LOGS_PAGED"
+#define WS_DOWNLOAD_LOGS                    "DOWNLOAD_LOGS"
 #define WS_GET_NODE_INFO                    "GET_NODE_INFO"
 #define WS_SET_CLOSE_CONTROL                "SET_CLOSE_CONTROL"
 #define WS_SET_READ_ID_CODE                 "SET_READ_ID_CODE"
@@ -41,12 +45,18 @@
 #define WS_GET_GROUP_INFO                   "GET_GROUP_INFO"
 #define WS_GET_TEST                         "GET_TEST"
 #define WS_SET_CLEAR_ALL_DATA               "SET_CLEAR_ALL_DATA"
+#define WS_LINE_SCANNING                    "LINE_SCANNING"
 #define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
 #define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
+#define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
+#define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"
+#define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
+#define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
+#define WS_CHANGE_NODES                     "CHANGE_NODES"
+#define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
 
-#define WS_SET_LINE_SCAN                    "SET_LINE_SCAN"
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
 #define WS_SET_MIN                          "SET_MIN"
@@ -58,8 +68,10 @@
 #define WS_SET_FUNCTION_TEST                "SET_FUNCTION_TEST"
 #define WS_SET_DURATION_TEST                "SET_DURATION_TEST"
 #define WS_SET_STOP                         "SET_STOP"
-
+#define WS_SET_SCAN_FROM_NODE               "SET_SCAN_FROM_NODE"
+#define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
 #define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
+#define WS_SEND_ALERT_LINE_SCANNING         "ALERT_LINE_SCANNING"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -73,6 +85,8 @@
 #define WS_SEND_ADDED_DEVICES               "ADDED_DEVICE"
 #define WS_SEND_CONFIRM_ADD_DEVICE          "CONFIRM_ADD_DEVICE"
 #define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
+#define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
+#define WS_SEND_IS_LS_IN_PROGRESS           "IS_LS_IN_PROGRESS"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
@@ -93,23 +107,37 @@
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 #define WS_SEND_LOG_DATA                    "LOG_DATA"
+#define WS_SEND_LOG_FILE                    "LOG_FILE"
 #define WS_SEND_CONFIRM_START_DEL_ALL_DEV   "CONFIRM_START_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_START_DEL_ONE_DEV   "CONFIRM_START_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
+#define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
+#define WS_SEND_CONFIRM_START_LS            "CONFIRM_START_LS"
+#define WS_SEND_CONFIRM_END_LS              "CONFIRM_END_LS"
+#define WS_SEND_LS_INFO                     "LS_INFO"
+#define WS_SEND_LS_FOUNDED                  "LS_FOUNDED"
+#define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
+
+#define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
+#define WS_SEND_CONFIRM_M_ADDRESS_SET       "CONFIRM_M_ADDRESS_SET"
+
+#define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
+
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
-bool isCommissionInProgress(WebServer* webServer);
+bool isCommissionOrLSInProgress(WebServer* webServer);
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
-void sendLogCommissionEntry(WebServer* webServer, QString content);
+void sendLogCommissionEntry(WebServer* webServer, QString content, QString type);
 void sendConfirmStartScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
+void sendDevError(WebServer* webServer);
 void sendStartAddingDevices(WebServer* webServer);
 void sendScannedDevices(QByteArray data, WebServer* webServer);
 void sendStoredScannedDevices(WebServer* webServer);
@@ -117,6 +145,8 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendIsCommissionInProgress(WebServer* webServer);
+void sendIsAddManualInProgress(WebServer* webServer);
+void sendIsLSInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
@@ -130,6 +160,7 @@ void sendEndAutoCommission(WebServer* webServer);
 void sendFactoryIDWrote(WebServer* webServer);
 void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
+void sendLogData(WebServer* webServer, QList<QStringList> logs);
 void sendLogFile(WebServer* webServer, QString fileDir);
 void clearSystemData(Database* database,UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
@@ -137,9 +168,19 @@ void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 void sendConfirmStartRemoveOneNode(WebServer* webServer);
 void sendConfirmEndRemoveOneNode(WebServer* webServer);
-void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, Database* database);
+void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, bool added, Database* database);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
+void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
+void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
+void sendFailComCycles(WebServer* webServer);
+void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
+void sendConfirmStartLineScanning(WebServer* webServer);
+void sendConfirmEndLineScanning(WebServer* webServer);
+void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
+void sendFoundNodes(WebServer* webServer, uint16_t nodesCount);
+void changePositions(Database* database, uint16_t pos1, uint16_t pos2);
+void sendConfirmEndClearAllData(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

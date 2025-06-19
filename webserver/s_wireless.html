@@ -31,25 +31,20 @@
         <br>
         <div class="loader"></div>
     </div>
-    <div class="popupManageDevices" id="popupAddDevice">
-        <div class="popup-container">
-            <div class="popup-subcontainer">
-                <label id="addingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to add the node to the network? </label>
-                <div class="popup-button-subcontainer">
-                    <button id="addingDeviceButton" onclick="parent.addDevice()"> Confirm </button>
-                </div>
-            </div>
-            
-            <div class="popup-subcontainer-small">
-                <span id="closeAddDev" class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
-            </div>
+    <div class="popupManageDevices1" id="popupAddDevice">
+        <h2> Adding node manually... </h2>
+        <br>
+        <div class="loader"></div>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logAddManual"></ul>
         </div>
     </div>
-    <div class="popupManageDevices" id="popupDelDevice">
+    <div class="popupManageDevices2" id="popupDelDevice">
         <div class="popup-container">
             <div class="popup-subcontainer">
                 <label id="deletingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the node from the network? </label>
-                <span id="warningDeleting" style="text-align: center; color: #C30101;">WARN: If the node has dependencies, its children will also be deleted</span>
+                <span id="warningDeleting" style="text-align: center; color: #C30101;">WARN: If the node has dependencies, its children could be out of communication</span>
                 <div class="popup-button-subcontainer">
                     <button id="deletingDeviceButton" onclick="parent.delDevice()"> Confirm </button>
                 </div>
@@ -60,7 +55,7 @@
             </div>
         </div>
     </div>
-    <div class="popupManageDevices" id="popupDelAllDevices">
+    <div class="popupManageDevices2" id="popupDelAllDevices">
         <div class="popup-container">
             <div class="popup-subcontainer">
                 <label id="deletingAllDevicesLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the nodes from the network? </label>
@@ -94,16 +89,15 @@
                 <div class="list">
                     <label> Scanned devices</label>
                     <ul id="scannedDevicesList"></ul>
+
+                    <div class="under-button-container" id="manualContainerScannedDevices">
+                        <button onclick="parent.getScannedDevices()"> Scan devices </button>
+                    </div>
                 </div>
                 <div class="list-button-container" id="manualContainer">
-                    <button onclick="parent.getScannedDevices()"> Scan devices </button>
-                    <button onclick="parent.addDevicePrev()"> Add device </button>
-                    <button onclick="parent.delDevicePrev()"> Remove device </button>
+                    <!-- <button onclick="parent.scanFromNode()"> Scan from network node </button> -->
+                    <!-- <button onclick="parent.addDevicePrev()"> Add scanned device </button> -->
                     <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
-
-                    <button onclick="parent.delAllDevicesPrev()" class="remove-all-btn">
-                        Remove all devices
-                    </button>
                 </div>
                 <div class="list-button-container" id="automaticContainer">
                     <button onclick="parent.startCommission()"> Start commission </button>
@@ -111,6 +105,11 @@
                 <div class="list">
                     <label> Network Nodes </label>
                     <ul id="networkNodesList"></ul>
+                    
+                    <div class="under-button-container" id="manualContainerNetworkNodes">
+                        <button onclick="parent.delDevicePrev()"> Remove device </button>
+                        <button onclick="parent.delAllDevicesPrev()"> Remove all devices </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,11 +133,18 @@
 				parent.sendData("SET_IS_COMMISSION_IN_PROGRESS", "");
 			}, 10);
         }
+
+        function isAddingManualInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_ADD_MANUAL_IN_PROGRESS", "");
+			}, 10);
+        }
 		
 		window.onload = function() {
             getNodesFromDatabase();
             getScannedNodes();
             isCommissionInProgress();
+            isAddingManualInProgress();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";
@@ -146,16 +152,22 @@
 
             var manualContainer = document.getElementById("manualContainer");
             manualContainer.style.display = "none";
+            var manualContainerSD = document.getElementById("manualContainerScannedDevices");
+            manualContainerSD.style.display = "none";
+            var manualContainerNN = document.getElementById("manualContainerNetworkNodes");
+            manualContainerNN.style.display = "none";
         };
 
         document.addEventListener('click', function(event) {
+            var popupOverlay = document.getElementById('popupOverlay');
+
             var scannedDevicesList = document.getElementById('scannedDevicesList');
             var networkNodesList = document.getElementById('networkNodesList');
 
             var scannedDevices = scannedDevicesList.getElementsByTagName('li');
             var networkDevices = networkNodesList.getElementsByTagName('li');
 
-            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI') { return; }
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI' || popupOverlay.style.visibility == "visible") { return; }
 
             for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
             for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }

@@ -113,7 +113,7 @@ function createSettingsButton()
     var settingsTests = document.createElement('li');
     var settingsPowerOnLevel = document.createElement('li');
     var settingsUpdateDevice = document.createElement('li');
-    var settingsManageData = document.createElement('li');
+    var settingsGeneralConfig = document.createElement('li');
 
     var settingsIPConfigLink = document.createElement('a');
     settingsIPConfigLink.onclick = function() { loadPage('s_ipconfig.html'); };
@@ -147,9 +147,9 @@ function createSettingsButton()
     settingsUpdateDeviceLink.onclick = function() { loadPage('s_update.html') };
     settingsUpdateDeviceLink.textContent = "Update Device";
      
-    var settingsManageDataLink = document.createElement('a');
-    settingsManageDataLink.onclick = function() { loadPage('s_data.html') };
-    settingsManageDataLink.textContent = "Manage Data";
+    var settingsGeneralConfigLink = document.createElement('a');
+    settingsGeneralConfigLink.onclick = function() { loadPage('s_general_config.html') };
+    settingsGeneralConfigLink.textContent = "General Config";
 
     settingsIPConfig.appendChild(settingsIPConfigLink);
     settingsTime.appendChild(settingsTimeLink);
@@ -159,7 +159,7 @@ function createSettingsButton()
     settingsTests.appendChild(settingsTestsLink);
     settingsPowerOnLevel.appendChild(settingsPowerOnLevelLink);
     settingsUpdateDevice.appendChild(settingsUpdateDeviceLink);
-    settingsManageData.appendChild(settingsManageDataLink);
+    settingsGeneralConfig.appendChild(settingsGeneralConfigLink);
 
     settingsButtonMenu.appendChild(settingsIPConfig);
     settingsButtonMenu.appendChild(settingsTime);
@@ -169,7 +169,7 @@ function createSettingsButton()
     settingsButtonMenu.appendChild(settingsTests);
     settingsButtonMenu.appendChild(settingsPowerOnLevel);
     settingsButtonMenu.appendChild(settingsUpdateDevice);
-    settingsButtonMenu.appendChild(settingsManageData);
+    settingsButtonMenu.appendChild(settingsGeneralConfig);
 
     settingsButtonLink.appendChild(settingsButtonMenu);
 
@@ -392,6 +392,14 @@ function switchMode()
     var manualLabel = iframeDocument.getElementById("manualLabel");
     var automaticContainer = iframeDocument.getElementById("automaticContainer");
     var manualContainer = iframeDocument.getElementById("manualContainer");
+    var manualContainerSD = iframeDocument.getElementById("manualContainerScannedDevices");
+    var manualContainerNN = iframeDocument.getElementById("manualContainerNetworkNodes");
+
+    var addButtons = iframeDocument.querySelectorAll('.deviceAddButton');
+    var scanButtons = iframeDocument.querySelectorAll('.deviceScanButton');
+    var relayButtons = iframeDocument.querySelectorAll('.deviceRelayButton');
+
+    var allButtons = [...addButtons, ...scanButtons, ...relayButtons];
 
     if (toggleMode.checked) {
         automaticLabel.style.color = "#999";
@@ -401,6 +409,13 @@ function switchMode()
         manualLabel.style.color = "#4682b4";
         manualLabel.style.fontWeight = "bold";
         manualContainer.style.display = "flex";
+        manualContainerSD.style.display = "flex";
+        manualContainerNN.style.display = "flex";
+
+        allButtons.forEach(function(button) {
+            button.style.display = "inline-block";
+            button.disabled = false;
+        });
     }
     else {
         automaticLabel.style.color = "#4682b4";
@@ -410,6 +425,39 @@ function switchMode()
         manualLabel.style.color = "#999";
         manualLabel.style.fontWeight = "normal";
         manualContainer.style.display = "none";
+        manualContainerSD.style.display = "none";
+        manualContainerNN.style.display = "none";
+
+        allButtons.forEach(function(button) {
+            button.style.display = "none";
+            button.disabled = true;
+        });
+    }
+}
+
+function updateAddScanRelayButtons() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var toggleMode = iframeDocument.getElementById("toggleMode");
+
+    var addButtons = iframeDocument.querySelectorAll('.deviceAddButton');
+    var scanButtons = iframeDocument.querySelectorAll('.deviceScanButton');
+    var relayButtons = iframeDocument.querySelectorAll('.deviceRelayButton');
+
+    var allButtons = [...addButtons, ...scanButtons, ...relayButtons];
+
+    if (toggleMode.checked) {
+        allButtons.forEach(function(button) {
+            button.style.display = "inline-block";
+            button.disabled = false;
+        });
+    }
+    else {
+        allButtons.forEach(function(button) {
+            button.style.display = "none";
+            button.disabled = true;
+        });
     }
 }
 
@@ -516,35 +564,21 @@ function delFromGroupPrev()
     deletingNodeButton.classList.remove('button-disabled');
 }
 
-function addDevicePrev()
+function addDevicePrev(value)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    var networkErrorLabel = iframeDocument.getElementById('networkError');
 
-    // Seleccionar el nodo marcado en la lista de Scanned Devices
-    var selectedDevice = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
+    var popup = iframeDocument.getElementById('popupAddDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    if (selectedDevice) {
-        networkErrorLabel.style.visibility = "hidden";
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 
-        var popup = iframeDocument.getElementById('popupAddDevice');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-        var addingDeviceLabel = iframeDocument.getElementById('addingDeviceLabel');
-        var addingDeviceButton = iframeDocument.getElementById('addingDeviceButton');
+    var logAddManual = iframeDocument.getElementById('logAddManual');
+    logAddManual.innerHTML = "";
 
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-        addingDeviceLabel.textContent = "Do you want to add the node to the network?";
-        addingDeviceButton.classList.remove('button-disabled');
-
-        var closeAddDev = iframeDocument.getElementById('closeAddDev');
-        closeAddDev.setAttribute("onclick", "parent.closeWirelessPopup()");
-    }
-    else {
-        networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerHTML = "No device selected";
-    }
+    addDevice(value);
 }
 
 function delDevicePrev()
@@ -571,7 +605,7 @@ function delDevicePrev()
 
     } else {
         networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerText = "No node selected";
+        networkErrorLabel.innerText = "No network node selected";
     }
 }
 
@@ -599,11 +633,18 @@ function closeWirelessPopup()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var popup = iframeDocument.getElementById('popup');
     var popupAdd = iframeDocument.getElementById('popupAddDevice');
     var popupDelete = iframeDocument.getElementById('popupDelDevice');
     var popupDeleteAll = iframeDocument.getElementById('popupDelAllDevices');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var loader1 = popup.querySelector('.loader');
+    loader1.style.animation = "spin 1.5s linear infinite";
+    var loader2 = popupAdd.querySelector('.loader');
+    loader2.style.animation = "spin 1.5s linear infinite";
     
+    if(popup) { popup.style.visibility = "hidden"; }
     if(popupAdd) { popupAdd.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
     if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
@@ -626,9 +667,11 @@ function clearAllDataPrev()
 
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+    confirmDeleteData.textContent = "Do you want to delete ALL the data?";
 }
 
 function closeManageDataPopup()
@@ -636,9 +679,40 @@ function closeManageDataPopup()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var input = iframeDocument.getElementById('deleteConfirmInput');
+    input.value = "";
+
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     
     if(popup) { popup.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
+}
+
+function changeNodes() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popup = iframeDocument.getElementById('popupChangeNodes');
+
+    popupOverlay.style.visibility = "visible";
+    popup.style.visibility = "visible";
+
+    var positionInput1 = iframeDocument.getElementById('positionInput1');
+    var positionInput2 = iframeDocument.getElementById('positionInput2');
+
+    positionInput1.value = "1";
+    positionInput2.value = "2";
+}
+
+function closeSwap() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popup = iframeDocument.getElementById('popupChangeNodes');
+
+    popupOverlay.style.visibility = "hidden";
+    popup.style.visibility = "hidden";
 }

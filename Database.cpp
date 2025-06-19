@@ -87,7 +87,9 @@ void Database::initDatabase()
                "Submask TEXT, "
                "Gateway TEXT, "
                "BuildingName TEXT, "
-               "LineName TEXT);");
+               "LineName TEXT, "
+               "MasterAddress TEXT, "
+               "FailComCycles INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -99,14 +101,17 @@ void Database::initDatabase()
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Users:" << query.lastError().text(); }
     else {
         if (!query.next()) {
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName) VALUES (:ip, :submask, :gateway, :buildingName, :lineName)");
+
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :fcc)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
+            query.bindValue(":masterAddress", "7C17");
+            query.bindValue(":fcc", 5);
 
-            if (!query.exec()) { qDebug() << "Error executing INSERT query in Users:" << query.lastError().text(); }
+            if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
         }
     }
 
@@ -272,9 +277,9 @@ void Database::initDatabase()
      *                                                  *
      * **************************************************/
     query.exec("CREATE TABLE IF NOT EXISTS Log "
-        "(DeviceId INTEGER, "
+        "(Name TEXT, "
         "Serial TEXT, "
-        "Name TEXT, "
+        "BtAddress INTEGER, "
         "IP TEXT, "
         "Timestamp INTEGER, "
         "Event INTEGER, "
@@ -283,8 +288,8 @@ void Database::initDatabase()
     query.prepare("SELECT * FROM Log");
 
     if (!query.exec()) { qDebug() << "Error executing SELECT query in Log:" << query.lastError().text(); }
-    query.exec("CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Log(Timestamp);");
-    query.exec("CREATE INDEX IF NOT EXISTS idx_log_eventType ON Log(EventType);");
+    //query.exec("CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Log(Timestamp);");
+    //query.exec("CREATE INDEX IF NOT EXISTS idx_log_eventType ON Log(EventType);");
 }
 
 bool Database::openDatabase()
@@ -459,8 +464,15 @@ void Database::loadTestsFromDatabase()
 
 void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID, uint16_t fatherRealAddress)
 {
+
     QString nodeUUIDText;
-    for (int8_t i = 15; i >= 0; i--) { nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]); }
+    if (nodeUUID) {
+        for (int i = 15; i >= 0; i--) {
+            nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]);
+        }
+    } else {
+        nodeUUIDText = "";
+    }
 
     QSqlQuery query;
 
@@ -492,6 +504,38 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }
 
+void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID)
+{
+    QString nodeUUIDText;
+    if (nodeUUID) {
+        for (int i = 0; i <= 15; i++) { // SE PROCESA EN ESTE ORDEN PORQUE SE ENVIA AL REVES DESDE EL MICRO Y NODOS
+            nodeUUIDText += QString::asprintf("%02X", nodeUUID[i]);
+        }
+    } else {
+        nodeUUIDText = "";
+    }
+
+    QSqlQuery query;
+
+    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid)");
+
+    query.bindValue(":subnetAddress", subnetAddress);
+    query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
+    query.bindValue(":realAddress", realAddress);
+    query.bindValue(":uuid", nodeUUIDText);
+
+    if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
+}
+
+void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET FatherRealAddress = :fra WHERE RealAddress = :nodeAddress");
+    query.bindValue(":fra", fatherRealAddress);
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
+}
 
 void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
 {
@@ -820,23 +864,25 @@ bool Database::isNodeInDatabase(uint16_t nodeAddress) {
     return false;
 }
 
-QList<QPair<uint16_t, QString>> Database::getConfiguredNodesAndSerialNumbers()
+QList<QString> Database::getConfiguredNodesAndSerialNumbers()
 {
     QSqlQuery query;
-    QList<QPair<uint16_t, QString>> nodeNetAddressAndSNList;
-    if (!query.exec("SELECT * FROM Nodes")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+    QList<QString> nodeNetAddressAndSNList;
+    if (!query.exec("SELECT SubnetAddress, NodeSubnetAddress, UUID, RelayMode FROM Nodes")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
 
     while (query.next()) {
         uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
         uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
-
         uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
 
         QString UUID = query.value("UUID").toString();
         QString nums = UUID.right(8);
         QString serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
 
-        nodeNetAddressAndSNList.append(qMakePair(nodeNetAddress, serialNumber));
+        uint8_t relayStatus = query.value("RelayMode").toUInt();
+
+        QString nodeInfo = QString("%1#%2#%3").arg(nodeNetAddress).arg(serialNumber).arg(relayStatus);
+        nodeNetAddressAndSNList.append(nodeInfo);
     }
 
     return nodeNetAddressAndSNList;
@@ -992,12 +1038,12 @@ bool Database::insertLogEvent(const LogInfo log)
 {
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Log (DeviceId, Serial, Name, IP, Timestamp, Event, EventType) "
-                  "VALUES (:deviceId, :serial, :name, :ip, :timestamp, :event, :eventType)");
+    query.prepare("INSERT INTO Log (Name, Serial, BtAddress, IP, Timestamp, Event, EventType) "
+                  "VALUES (:name, :serial, :btAddress, :ip, :timestamp, :event, :eventType)");
 
-    query.bindValue(":deviceId", log.deviceId);
-    query.bindValue(":serial", log.seriailNum);
-    query.bindValue(":name", log.devName);
+    query.bindValue(":name", log.name);
+    query.bindValue(":serial", log.serialNum);
+    query.bindValue(":btAddress", log.btAddress);
     query.bindValue(":ip", log.devIP);
     query.bindValue(":timestamp", log.timestamp);
     query.bindValue(":event", log.event);
@@ -1015,21 +1061,21 @@ QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, 
     QString queryStr;
 
     if (type.toLower() == "all") {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
-                   "FROM Log WHERE Timestamp BETWEEN :start AND :end";
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE Timestamp BETWEEN :start AND :end ORDER BY Timestamp DESC";
         query.prepare(queryStr);
         query.bindValue(":start", startDate);
         query.bindValue(":end", endDate);
     } else {
-        queryStr = "SELECT DeviceId, Serial, Name, IP, Timestamp, Event, EventType "
-                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end";
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end ORDER BY Timestamp DESC";
         query.prepare(queryStr);
         query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
         query.bindValue(":start", startDate);
         query.bindValue(":end", endDate);
     }
 
-    if (!query.exec()) { qDebug() << "Error in getLogData:" << query.lastError().text(); return results; }
+    if (!query.exec()) { qDebug() << "Error in getLogEvent:" << query.lastError().text(); return results; }
 
     while (query.next()) {
         QStringList row;
@@ -1043,6 +1089,64 @@ QList<QStringList> Database::getLogEvent(const QString &type, qint64 startDate, 
         row << query.value(6).toString();  
         results.append(row);
     }
+    return results;
+}
+
+QList<QStringList> Database::getLogEventPaged(const QString &type, qint64 startDate, qint64 endDate, int page)
+{
+    QList<QStringList> results;
+    QSqlQuery query;
+    QString queryStr;
+
+    int pageSize = 10;
+    int offset = (page - 1) * pageSize;
+
+    int resultsCounter = 0;
+
+    if (type.toLower() == "all") {
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE Timestamp BETWEEN :start AND :end "
+                   "ORDER BY Timestamp DESC LIMIT :limit OFFSET :offset";
+        query.prepare(queryStr);
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+        query.bindValue(":limit", pageSize);
+        query.bindValue(":offset", offset);
+    } else {
+        queryStr = "SELECT Name, Serial, BtAddress, IP, Timestamp, Event, EventType "
+                   "FROM Log WHERE EventType = :type AND Timestamp BETWEEN :start AND :end "
+                   "ORDER BY Timestamp DESC LIMIT :limit OFFSET :offset";
+        query.prepare(queryStr);
+        query.bindValue(":type", type.left(1).toUpper() + type.mid(1).toLower());  // Normalize (e.g., "fail" → "Fail")
+        query.bindValue(":start", startDate);
+        query.bindValue(":end", endDate);
+        query.bindValue(":limit", pageSize);
+        query.bindValue(":offset", offset);
+    }
+
+    if (!query.exec()) { qDebug() << "Error in getLogEventPaged:" << query.lastError().text(); return results; }
+
+    while (query.next()) {
+        resultsCounter++;
+        QStringList row;
+        row << query.value(0).toString();
+        row << query.value(1).toString();
+        row << query.value(2).toString();
+        row << query.value(3).toString();
+        QDateTime dt = QDateTime::fromSecsSinceEpoch(query.value(4).toLongLong());
+        row << dt.toString("yyyy-MM-dd HH:mm:ss");
+        row << query.value(5).toString();
+        row << query.value(6).toString();
+        results.append(row);
+    }
+
+    while(resultsCounter < pageSize) {
+        QStringList row;
+        for(int i = 0; i < 7; i++) { row << "-"; } // 7 porque hay 7 columnas en la tabla logs
+        results.append(row);
+        resultsCounter++;
+    }
+
     return results;
 }
 
@@ -1100,6 +1204,123 @@ void Database::updateRelayMode(uint16_t nodeAddress, bool enabled)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in NODES" << query.lastError().text(); }
 }
 
+uint16_t Database::getFatherRealAddress(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT FatherRealAddress FROM Nodes WHERE RealAddress = :nodeAddress");
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 1; }
+
+    if(query.next())
+        return query.value("FatherRealAddress").toUInt();
+    else
+        return 1;
+}
+
+int Database::getCountOfDirectChildren(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM Nodes WHERE FatherRealAddress = :fatherNodeAddress");
+    query.bindValue(":fatherNodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0; }
+
+    if (query.next())
+        return query.value(0).toInt();
+    else
+        return 0;
+}
+
+QList<uint16_t> Database::getChildrenRealAddresses(uint16_t nodeAddress)
+{
+    QList<uint16_t> childrenRealAddresses;
+
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes WHERE FatherRealAddress = :fra");
+    query.bindValue(":fra", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return childrenRealAddresses; }
+
+    while (query.next()) {
+        childrenRealAddresses.append(static_cast<uint16_t>(query.value("RealAddress").toUInt(nullptr)));
+    }
+
+    return childrenRealAddresses;
+}
+
+QString Database::getNextNodeName(uint16_t doneIts)
+{
+    QSqlQuery query;
+    query.prepare("SELECT SubnetAddress, NodeSubnetAddress FROM Nodes ORDER BY RealAddress ASC LIMIT 1 OFFSET :offset");
+    query.bindValue(":offset", doneIts);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return "Node -"; }
+
+    if (query.next()) {
+        uint8_t subnetAddress = query.value("SubnetAddress").toUInt();
+        uint8_t nodeSubnetAddress = query.value("NodeSubnetAddress").toUInt();
+
+        uint16_t nodeNetAddress = subnetAddress * 64 + nodeSubnetAddress + 1;
+
+        return QString("Node %1").arg(nodeNetAddress);
+    }
+    else
+        return "Node -";
+}
+
+uint16_t Database::getMasterRealAddress()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT MasterAddress FROM General");
+
+    if (!query.exec()) { return 0x7C17; }
+
+    if (query.next()) {
+        return static_cast<uint16_t>(query.value("MasterAddress").toString().toUInt(nullptr, 16));
+    }
+
+    return 0x7C17;
+}
+
+void Database::setMasterRealAddress(uint16_t newAntennaAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE General SET MasterAddress = :newAntennaAddress");
+    query.bindValue(":newAntennaAddress", newAntennaAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
+    } else {
+        qDebug() << "MasterAddress updated to" << newAntennaAddress;
+    }
+}
+
+void Database::loadFailComCycles()
+{
+    QSqlQuery query;
+    if (!query.exec("SELECT FailComCycles FROM General")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    uint8_t cycles = 5;
+
+    if (query.next()) {
+        cycles = query.value("FailComCycles").toUInt();
+    }
+
+    failComCycles = cycles;
+}
+
+void Database::updateFailComCycles(uint8_t cycles)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE General SET FailComCycles = :fcc");
+    query.bindValue(":fcc", cycles);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in GENERAL" << query.lastError().text(); }
+}
+
 void Database::editGroup(QString address, QString name)
 {
     QSqlQuery query;
@@ -1108,6 +1329,23 @@ void Database::editGroup(QString address, QString name)
     query.bindValue(":address", address);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in GROUPS" << query.lastError().text(); }
+}
+
+QString Database::getGroupName(QString groupAddress)
+{
+    QSqlQuery query;
+
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("SELECT GroupName FROM FixedGroups WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("SELECT GroupName FROM Groups WHERE GroupAddress = :groupAddress");
+
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return "Group -"; }
+
+    if(query.next()) { return query.value("GroupName").toString(); }
+    else { return "Group -"; }
 }
 
 void Database::setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel)
@@ -1161,16 +1399,95 @@ void Database::clearAllData()
 {
     QSqlQuery query;
 
+    // CONSTRUCCIÓN BASE DE TABLA NODES
     if (!query.exec("DELETE FROM Nodes")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
-    if (!query.exec("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
-                    "VALUES ('FFFF', 0, 0, ' ', '00:00', '0', '0000-00-00', '00:00')")) { qDebug() << "Error executing INSERT query:" << query.lastError().text(); }
 
-    // FixedGroups
-    setPowerOnLevel("C000", 255); setPowerOnLevel("C001", 255); setPowerOnLevel("C002", 255); setPowerOnLevel("C003", 255);
-    // FixedTest
-    setTestEnable("C000", false, false); setTestEnable("C001", false, false); setTestEnable("C002", false, false); setTestEnable("C003", false, false);
-    setFunctionalTest("C000", " ", "00:00"); setFunctionalTest("C001", " ", "00:00"); setFunctionalTest("C002", " ", "00:00"); setFunctionalTest("C003", " ", "00:00");
-    setDurationTest("C000", "0", "0000-00-00", "00:00"); setDurationTest("C001", "0", "0000-00-00", "00:00"); setDurationTest("C002", "0", "0000-00-00", "00:00"); setDurationTest("C003", "0", "0000-00-00", "00:00");
+    // CONSTRUCCIÓN BASE DE TABLA GROUPS
+    if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses1 = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+    query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
+
+    int groupNumber = 1;
+    foreach (const QString &groupAddress, groupAddresses1) {
+        query.bindValue(":groupAddress", groupAddress);
+        query.bindValue(":groupName", "Group " + QString::number(groupNumber));
+        query.bindValue(":powerOnLevel", 255);
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in Groups:" << query.lastError().text(); }
+
+        groupNumber++;
+    }
+
+    // CONSTRUCCIÓN BASE DE TABLA TEST
+    if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses2 = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+    query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                  "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
+
+    foreach (const QString &groupAddress, groupAddresses2) {
+        query.bindValue(":groupAddress", groupAddress);
+        query.bindValue(":functionalEnable", 0);
+        query.bindValue(":durationEnable", 0);
+        query.bindValue(":functionalDays", " ");
+        query.bindValue(":functionalTime", "00:00");
+        query.bindValue(":durationPeriodicity", "0");
+        query.bindValue(":durationDate", "0000-00-00");
+        query.bindValue(":durationTime", "00:00");
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in Test:" << query.lastError().text(); }
+    }
+
+    // CONSTRUCCIÓN BASE DE TABLA LOG
+    if (!query.exec("DELETE FROM Log")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    // CONSTRUCCIÓN BASE DE TABLA FIXEDGROUPS
+    if (!query.exec("DELETE FROM FixedGroups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses3 = {"C000", "C001", "C002", "C003"};
+    QStringList groupNames = {"Lighting", "Emergency", "Even", "Odd"};
+
+    query.prepare("INSERT INTO FixedGroups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
+
+    for (int i = 0; i < groupAddresses3.size(); ++i) {
+        query.bindValue(":groupAddress", groupAddresses3[i]);
+        query.bindValue(":groupName", groupNames[i]);
+        query.bindValue(":powerOnLevel", 255);
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedGroups:" << query.lastError().text(); }
+    }
+
+    // CONSTRUCCIÓN BASE DE TABLA FIXEDTEST
+    if (!query.exec("DELETE FROM FixedTest")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
+
+    QStringList groupAddresses4 = {"C000", "C001", "C002", "C003"};
+
+    query.prepare("INSERT INTO FixedTest (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
+                  "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
+
+    foreach (const QString &groupAddress, groupAddresses4) {
+        query.bindValue(":groupAddress", groupAddress);
+        query.bindValue(":functionalEnable", 0);
+        query.bindValue(":durationEnable", 0);
+        query.bindValue(":functionalDays", " ");
+        query.bindValue(":functionalTime", "00:00");
+        query.bindValue(":durationPeriodicity", "0");
+        query.bindValue(":durationDate", "0000-00-00");
+        query.bindValue(":durationTime", "00:00");
+
+        if (!query.exec()) { qDebug() << "Error executing INSERT query in FixedTest:" << query.lastError().text(); }
+    }
+
+}
+
+void Database::changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress WHERE RealAddress = :nodeAddress");
+    query.bindValue(":subnetAddress", subnetAddress);
+    query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
+    query.bindValue(":nodeAddress", realAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in changePosition:" << query.lastError().text(); }
 }

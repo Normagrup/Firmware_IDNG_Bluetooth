@@ -25,6 +25,8 @@ extern Pollings polling;
 extern Tests tests[MAX_TEST];
 extern QList<AntennaTestCheck> antennaTestCheckList;
 
+extern uint16_t antennaRealAddress;
+
 extern bool isCommissioning; // logic to prevent new commands
 extern bool logsSavedToday; // to check if today´s log is saved
 
@@ -39,7 +41,9 @@ extern ScannedUUID scannedUUID[20];
 extern ScannedUUID scannedUUIDBackup[20];
 extern uint8_t numberOfAddedNodes;
 extern uint16_t numberOfIterations;
+extern uint16_t doneIterations;
 extern uint16_t netAddress;
+extern uint16_t currentNodeAddress;
 
 extern QTimer pollingTimer;
 extern QTimer testResultCheckTimer;
@@ -50,12 +54,20 @@ extern QTimer confirmAddDeviceTimer;
 extern QTimer newIterationTimer;
 extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 
-extern QStringList scannedDevicesMessages;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;
-
+extern uint16_t lineScanningCounter; // para calcular la posición del siguiente nodo escaneado
+extern uint16_t scannedNodesCounter; // para mostrar en el WS la cantidad de nodos encontrados
+extern QList<uint16_t> configuredNodes;
 extern QMap<uint16_t, NodeInfo> nodesByRealAddress;
 extern QMultiMap<uint16_t, uint16_t> childrenMap;
+
+extern bool isLineScanning;
+extern uint8_t failComCycles;
+
+extern QString reportType;
+extern QString startDate;
+extern QString endDate;
 
 #endif // GLOBAL_VARIABLES_H

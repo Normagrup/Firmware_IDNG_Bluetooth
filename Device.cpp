@@ -1,4 +1,5 @@
 #include "Device.h"
+#include "global_variables.h"
 
 Device::Device(QObject *parent)
     : QObject{parent}
@@ -276,4 +277,41 @@ bool Device::isOnSubList(uint16_t groupAddress)
         if (_groupSubAddress[i] == groupAddress) { return true; }
     }
     return false;
+}
+
+void Device::resetCommunicationFailure()
+{
+    _failureCycles = 0;
+    setCommunicationFailure(false);
+}
+
+void Device::registerCommunicationFailureCycle()
+{
+    _failureCycles++;
+    if (_failureCycles >= failComCycles) {
+        setCommunicationFailure(true);
+    }
+}
+
+void Device::copyFrom(const Device& other)
+{
+    _isConfigured = other._isConfigured;
+    _realAddress = other._realAddress;
+    _comunicationFailure = other._comunicationFailure;
+    _failureCycles = other._failureCycles;
+    _deviceType = other._deviceType;
+    _ratedDuration = other._ratedDuration;
+    _controlGearStatus = other._controlGearStatus;
+    _emergencyFeatures = other._emergencyFeatures;
+    _physicalMinLvl = other._physicalMinLvl;
+    _actualLvl = other._actualLvl;
+    _emergencyMode = other._emergencyMode;
+    _emergencyFailureStatus = other._emergencyFailureStatus;
+    _prevLampFail = other._prevLampFail;
+    _prevCommFail = other._prevCommFail;
+    _prevBatteryFail = other._prevBatteryFail;
+    _prevDurationFail = other._prevDurationFail;
+
+    memcpy(_UUID, other._UUID, sizeof(_UUID));
+    memcpy(_groupSubAddress, other._groupSubAddress, sizeof(_groupSubAddress));
 }

@@ -123,13 +123,15 @@
         };
 
         document.addEventListener('click', function(event) {
+            var popupOverlay = document.getElementById('popupOverlay');
+
             var includedNodesList = document.getElementById('includedNodesList');
             var notIncludedNodesList = document.getElementById('notIncludedNodesList');
 
             var includedNodes = includedNodesList.getElementsByTagName('li');
             var notIncludedNodes = notIncludedNodesList.getElementsByTagName('li');
 
-            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI') { return; }
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI' || popupOverlay.style.visibility == "visible") { return; }
 
             for (var i = 0; i < includedNodes.length; i++) { includedNodes[i].classList.remove('selectedDevice'); }
             for (var i = 0; i < notIncludedNodes.length; i++) { notIncludedNodes[i].classList.remove('selectedDevice'); }

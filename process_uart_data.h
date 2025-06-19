@@ -17,6 +17,10 @@
 #define UART_RSP_CHANGE_FRAME_TYPE      0x13
 #define UART_RSP_POLLING_FRAME_TYPE     0x14
 
+#define GROUP_FAIL                      0x01
+#define DEV_TYPE_FAIL                   0x02
+#define NET_ADDR_FAIL                   0x03
+
 #define SCAN_DEVICES                    0x01
 #define START_COMMISSION                0x03
 #define NEW_ITERATION                   0x05
@@ -41,8 +45,8 @@
 #define CONFIRM_NEW_ITERATION           0x29
 #define CONFIRM_CHANGE_RELAY            0x31
 #define DEBUG                           0x90
-#define LINE_SCAN                       0x20
-#define LINE_SCAN_SEND                  0x22
+#define LINE_SCANNING                   0x22
+#define LINE_SCAN_SEND                  0x24
 #define CONFIRM_START_SCAN              0x49
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
@@ -51,6 +55,24 @@
 #define CONFIRM_START_REMOVE_ONE_NODE   0x59
 #define CONFIRM_END_REMOVE_ONE_NODE     0x61
 #define RELAY_STATUS                    0x63
+#define SET_RELAY                       0x65
+#define SCAN_FROM_NODE                  0x67
+#define SCAN_NODE_NOT_FOUND             0x68
+#define SET_ANTENNA_ADDRESS             0x69
+#define CONFIRM_SET_ANTENNA_ADDRESS     0x70
+#define GET_ANTENNA_ADDRESS             0x71
+#define CONFIRM_GET_ANTENNA_ADDRESS     0x72
+#define SEND_RECOVERY_NODE              0x73
+#define CONFIRM_END_LINE_SCANNING       0x74
+#define CONFIRM_START_LINE_SCANNING     0x75
+#define SEND_FEATURES_STATUS            0x77
+#define ASK_POWER_ON_LEVEL              0x80
+#define ANSWER_POWER_ON_LEVEL           0x82
+#define COMMISSION_FAIL                 0x84
+#define RECOVERY_GROUPS                 0x85
+#define LS_INFO                         0x86
+#define CHANGE_FATHER                   0x87
+#define CONFIRM_END_CLEAR_ALL_DATA      0x88
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
@@ -73,7 +95,13 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
-void requestMicroDatabase(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
+void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
+void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
+void sendAntennaGetAddress(UartPort* _uartPort);
+void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
+void sendUartLineScanning(UartPort* _uartPort);
+void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
+void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 
 #endif // PROCESS_UART_DATA_H

@@ -19,9 +19,6 @@
             <div class="popup-subcontainer">
                 <img id="deviceTypeIcon" src="images/defaultLightIcon.png" style="width: 30%; height: 40%;">
                 <h3> HOLA </h3>
-                <div class="popup-button-subcontainer">
-                    <button onclick="parent.facSettingsButton()"> Factory settings </button>
-                </div>
             </div>
             
             <div class="popup-subcontainer">
@@ -46,9 +43,9 @@
                 </div>
                 
                 <div class="popup-button-subcontainer">
-                    <button onclick="parent.identifyButton()" style="width: 32%;"> IDTFY </button>
-                    <button onclick="parent.resetButton()" style="width: 32%;"> RST </button>
-                    <button onclick="parent.rebootButton()" style="width: 32%;"> RBOOT </button>
+                    <button onclick="parent.funcTestButton()" style="width: 32%;"> F Test </button>
+                    <button onclick="parent.durTestButton()" style="width: 32%;"> D Test </button>
+                    <button onclick="parent.stopButton()" style="width: 32%;"> STOP </button>
                 </div>
                 
                 <div class="popup-button-subcontainer">
@@ -58,19 +55,29 @@
             
             <div class="popup-subcontainer" style="border-right: none;">
                 <div class="popup-button-subcontainer">
-                    <button onclick="parent.funcTestButton()"> Functional Test </button>
-                </div>
-                <div class="popup-button-subcontainer">
-                    <button onclick="parent.durTestButton()"> Duration Test </button>
-                </div>
-                <div class="popup-button-subcontainer">
-                    <button onclick="parent.stopButton()"> Stop </button>
+                    <button onclick="parent.identifyButton()"> IDENTIFY </button>
                 </div>
             </div>
             
             <div class="popup-subcontainer-small">
                 <span class="closeWindow" onclick="parent.closeNodeControl()"> &times; </span>
             </div>
+        </div>
+    </div>
+    <div class="popupChangeNodes" id="popupChangeNodes">
+        <h2> Swap positions </h2>
+        <br>
+        <div class="position-row">
+            <label for="positionInput1">Position</label>
+            <input id="positionInput1" type="number" min="1" max="2048" required>
+        </div>
+        <div class="position-row">
+            <label for="positionInput2">Position</label>
+            <input id="positionInput2" type="number" min="1" max="2048" required>
+        </div>
+        <div class="position-row">
+            <button id="closeSwapButton" onclick="parent.closeSwap()">Cancel</button>
+            <button id="confirmSwapButton" onclick="parent.confirmSwap()">Confirm</button>
         </div>
     </div>
     <div class="popupTree" id="popupTree">
@@ -149,6 +156,10 @@
                         <option value="32"> Part 32: 1985-2048 </option>
                     </select>
                     <div class="tree-container">
+                        <button id="changeNodes" onclick="parent.changeNodes()" style="margin-right: 5px;">
+                            <img src="images/changeNodes.png" alt="ChangeNodes" class="button-icon">
+                            Change nodes
+                        </button>
                         <button id="showTree" onclick="parent.showTree()">
                             <img src="images/tree.png" alt="Tree" class="button-icon">
                             Show tree

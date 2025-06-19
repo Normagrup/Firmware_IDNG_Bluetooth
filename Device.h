@@ -50,6 +50,8 @@ public:
     bool hasBatteryDurationFailure(void);
     int getTotalFailures(void);
     bool isEmergencyModeActive(void);
+    void resetCommunicationFailure();
+    void registerCommunicationFailureCycle();
 
     void deleteDevice(void);
 
@@ -64,12 +66,15 @@ public:
     void setPrevBatteryFail(bool value) { _prevBatteryFail = value; }
     void setPrevDurationFail(bool value) { _prevDurationFail = value; }
 
+    void copyFrom(const Device& other);
+
 private:
     bool _isConfigured;
     uint8_t _UUID[16];
     uint16_t _realAddress;
     uint16_t _groupSubAddress[MESH_GROUP_COUNT];
-    bool _comunicationFailure;
+    bool _comunicationFailure = false;
+    uint8_t _failureCycles = 0;
     uint8_t _deviceType;
     uint8_t _ratedDuration;
     uint8_t _controlGearStatus;

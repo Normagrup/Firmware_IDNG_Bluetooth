@@ -54,6 +54,8 @@ void Wireless::runNetwork()
     _database->loadNodesFromDatabase();
     _database->loadTestsFromDatabase();
 
+    _database->loadFailComCycles();
+
     pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;
@@ -97,23 +99,30 @@ void Wireless::webServerReceivedData(QString data)
 
 void Wireless::pollingTimerHandler()
 {
-    if (pollingData.pollingInProgress){
+    if (pollingData.pollingInProgress) {
+
+        Device &dev = meshDevice[subnetCount][nodeSubnetCount];
+
         if (pollingData.pollingReceived) {
-            meshDevice[subnetCount][nodeSubnetCount].setCommunicationFailure(false);
+            // Reseteamos tanto el retry como los ciclos de fallo
             pollingData.pollingReceived = false;
             pollingData.pollingInProgress = false;
+            pollingData.retries = 0;
+            dev.resetCommunicationFailure();
             nodeSubnetCount++;
             goto sendNewPolling;
         }
         else if (pollingData.retries < 5) {
+            // Reintentos dentro del mismo ciclo
             pollingData.retries++;
-            sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
+            sendPollingFrame(_uartPort, dev.getRealAddress());
             return;
         }
-        else  {
+        else {
+            // Se han agotado los 5 reintentos de este ciclo
             pollingData.retries = 0;
-            meshDevice[subnetCount][nodeSubnetCount].setCommunicationFailure(true);
             pollingData.pollingInProgress = false;
+            dev.registerCommunicationFailureCycle();
             nodeSubnetCount++;
         }
     }
@@ -121,11 +130,10 @@ void Wireless::pollingTimerHandler()
 sendNewPolling:
     while (subnetCount < MAX_SUBNET) {
         while (nodeSubnetCount < MAX_NODES_SUBNET) {
-            if (meshDevice[subnetCount][nodeSubnetCount].getIsConfigured()) {
-                Device &device = meshDevice[subnetCount][nodeSubnetCount];
+            Device &device = meshDevice[subnetCount][nodeSubnetCount];
+            if (device.getIsConfigured()) {
                 updateLogsByPollings(device);
-
-                sendPollingFrame(_uartPort, meshDevice[subnetCount][nodeSubnetCount].getRealAddress());
+                sendPollingFrame(_uartPort, device.getRealAddress());
                 pollingData.pollingInProgress = true;
                 return;
             }
@@ -135,6 +143,7 @@ sendNewPolling:
         subnetCount++;
     }
 
+    // Cuando terminamos una vuelta completa a la red:
     nodeSubnetCount = 0;
     subnetCount = 0;
 }
@@ -151,41 +160,41 @@ void Wireless::updateLogsByPollings(Device &device)
     bool commNow = device.hasCommunicationFailure();
     bool commPrev = device.getPrevCommFail();
 
-    int devId = device.getRealAddress();
+    QString name = "SUB:" + QString::number(subnetCount) + " " + "ID:" + QString::number(nodeSubnetCount);
     QString serialNum = device.serialNumberString();
-    QString devName = "SUB:" + QString::number(subnetCount) + " " + "ID:" + QString::number(nodeSubnetCount);
+    int btAddress = device.getRealAddress();
     AntennaInfo info = getAntennaInfo(_database);
     QString eventType = "Fail";
 
     if (lampNow != lampPrev) {
         if (lampNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_LAMP_FAILURE, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_LAMP_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_LAMP_RECOVERED, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_LAMP_RECOVERED, eventType);
         }
         device.setPrevLampFail(lampNow);
     }
     if (batNow != batPrev) {
         if (batNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_BATTERY_FAILURE, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_BATTERY_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName,info.ip, info.timestamp, LOG_BATTERY_RECOVERED, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress,info.ip, info.timestamp, LOG_BATTERY_RECOVERED, eventType);
         }
         device.setPrevBatteryFail(batNow);
     }
     if (durNow != durPrev) {
         if (durNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_DURATION_FAILURE, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DURATION_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_DURATION_RECOVERED, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DURATION_RECOVERED, eventType);
         }
         device.setPrevDurationFail(durNow);
     }
     if (commNow != commPrev) {
         if (commNow) {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_FAILURE, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_COMMUNICATION_FAILURE, eventType);
         } else {
-            insertLogEvent(_database, devId, serialNum, devName, info.ip, info.timestamp, LOG_COMMUNICATION_RECOVERED, eventType);
+            insertLogEvent(_database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_COMMUNICATION_RECOVERED, eventType);
         }
         device.setPrevCommFail(commNow);
     }
@@ -193,16 +202,16 @@ void Wireless::updateLogsByPollings(Device &device)
 
 void Wireless::updateLogsByTests(uint8_t i, uint8_t code)
 {
-    int devId = tests[i].getGroupAddress().toUInt(NULL, 16);
+    QString name = _database->getGroupName(tests[i].getGroupAddress()) + " [G]";
     QString serailNum = "FF.FF.FF.FF";
-    QString devName = "Group: " + tests[i].getGroupAddress();
+    int btAddress = tests[i].getGroupAddress().toUInt(NULL, 16);
     QString eventType = "Test";
     AntennaInfo info = getAntennaInfo(_database);
 
-    insertLogEvent(_database, devId, serailNum, devName, info.ip, info.timestamp, code, eventType);
+    insertLogEvent(_database, name, serailNum, btAddress, info.ip, info.timestamp, code, eventType);
 
     AntennaTestCheck testCheck;
-    testCheck.groupId = devId;
+    testCheck.groupId = btAddress;
     testCheck.testType = code == LOG_TEST_REQUESTED_FUNCTIONAL ? "FUNCTIONAL" : "DURATION";
     testCheck.checkTime = info.timestamp.time().addSecs(LOG_TEST_REQUESTED_FUNCTIONAL ? 900 : 43200);
 
@@ -308,17 +317,17 @@ void Wireless::checkTestResultsHandler()
 
                     QString eventType = "Test";
                     AntennaInfo info = getAntennaInfo(_database);
-                    int devId = realAddress;
-                    QString serial = device.serialNumberString();
                     QString name = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+                    QString serial = device.serialNumberString();
+                    int btAddress = realAddress;
 
                     if (check.testType == "FUNCTIONAL") {
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
+                        insertLogEvent(_database, name, serial, btAddress, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
+                        insertLogEvent(_database, name, serial, btAddress, info.ip, info.timestamp,
                                        failed ? LOG_TEST_FT_FAIL : LOG_TEST_FT_OK, eventType);
                     } else {
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp, LOG_TEST_COMPLETED_DURATION, eventType);
-                        insertLogEvent(_database, devId, serial, name, info.ip, info.timestamp,
+                        insertLogEvent(_database, name, serial, btAddress, info.ip, info.timestamp, LOG_TEST_COMPLETED_DURATION, eventType);
+                        insertLogEvent(_database, name, serial, btAddress, info.ip, info.timestamp,
                                        failed ? LOG_TEST_DT_FAIL : LOG_TEST_DT_OK, eventType);
                     }
                 }
@@ -340,7 +349,14 @@ void Wireless::addDeviceTimerHandler()
     addDeviceTimer.stop();
     //sendStartAddingDevices(_webServer);
 
-    if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != 0x0001) {
+    if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != antennaRealAddress) {
+        if (numberOfIterations != 0 && !forceStopCommissioning) {
+            qDebug() << "NUEVO ESCANEO" << numberOfIterations;
+            numberOfIterations--;
+            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
+            doneIterations++;
+        }
+
         do {
             qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
             sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport);
@@ -353,14 +369,14 @@ void Wireless::addDeviceTimerHandler()
 
     if (commissionData.numberOfNodesScanned > 0 && !forceStopCommissioning) {
         qDebug() << "EMPEZAMOS A AÑADIR NODOS";
-        sendLogCommissionEntry(_webServer, "Start adding nodes...");
+        sendLogCommissionEntry(_webServer, "Start adding nodes...", "INFO");
         commissionData.isRelayNode = false;
         uint8_t emptyUUID[16] = {0};
         for (uint8_t i = 0; i < 16 ; i++) {
             if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
                 confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
                 sendUartAddDevice(_uartPort, scannedUUID[i]);
-                sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
+                sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID), "INFO");
                 break;
             }
         }
@@ -369,7 +385,8 @@ void Wireless::addDeviceTimerHandler()
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "Starting new iteration from a node...");
+            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
+            doneIterations++;
             sendUartNewIteration(_uartPort);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
@@ -379,6 +396,7 @@ void Wireless::addDeviceTimerHandler()
             isCommissioning = false;
 
             numberOfIterations = 0;
+            doneIterations = 0;
 
             for (uint8_t i = 0; i < 20; i++) {
                 memset(scannedUUID[i].UUID, 0, sizeof(scannedUUID[i].UUID));
@@ -399,7 +417,7 @@ void Wireless::confirmAddDeviceTimerHandler()
     for (uint8_t i = 0; i < 20; i++) {
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             sendUartAddDevice(_uartPort, scannedUUID[i]);
-            sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
+            sendLogCommissionEntry(_webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID), "INFO");
             break;
         }
     }

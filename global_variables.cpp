@@ -12,6 +12,8 @@ Pollings polling;
 Tests tests[MAX_TEST];
 QList<AntennaTestCheck> antennaTestCheckList;
 
+uint16_t antennaRealAddress = 0;
+
 bool isCommissioning = false; // logic to prevent new commands
 bool logsSavedToday = false;
 
@@ -35,14 +37,25 @@ uint16_t timerGroupAddress[3] = {0};
 CommissionData commissionData = {0};
 uint8_t numberOfAddedNodes = 0;
 uint16_t numberOfIterations = 0;
+uint16_t doneIterations = 0;
 uint16_t netAddress = 0;
+uint16_t currentNodeAddress = 0;
 
 uint8_t subnetCount = 0, nodeSubnetCount = 0;
 
-QStringList scannedDevicesMessages;
 bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;
+uint16_t lineScanningCounter = 0;
+uint16_t scannedNodesCounter = 0;
+QList<uint16_t> configuredNodes;
+bool isLineScanning;
 
 QMap<uint16_t, NodeInfo> nodesByRealAddress;
 QMultiMap<uint16_t, uint16_t> childrenMap;
+
+uint8_t failComCycles;
+
+QString reportType;
+QString startDate;
+QString endDate;

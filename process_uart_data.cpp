@@ -77,6 +77,18 @@ static QByteArray processUartFrame(QByteArray data)
                     return QByteArray();
                 }
             }
+            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == COMMISSION_FAIL) {
+                if (data.size() != 7) {
+                    secondBufferRequired = true;
+                    return QByteArray();
+                }
+            }
+            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == LS_INFO) {
+                if (data.size() != 7) {
+                    secondBufferRequired = true;
+                    return QByteArray();
+                }
+            }
             else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == FEATURES) {
                 if (data.size() != 28) {
                     secondBufferRequired = true;
@@ -177,14 +189,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_ADD_DEVICE:
                         qDebug() << "PARANDO TIMER ADD DEVICE";
-                        sendLogCommissionEntry(webServer, "Add device command received...");
+                        sendLogCommissionEntry(webServer, "Add device command received...", "INFO");
                         confirmAddDeviceTimer.stop();
                         //sendConfirmAddingDevice(webServer);
                     break;
 
                     case CONFIRM_GROUP_FRAME:
                         qDebug() << "PARANDO TIMER GROUP FRAME";
-                        sendLogCommissionEntry(webServer, "Adding node to groups...");
+                        sendLogCommissionEntry(webServer, "Adding node to groups...", "INFO");
                         groupFrameTimer.stop();
                     break;
 
@@ -197,24 +209,56 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_CHANGE_RELAY:
                         qDebug() << "CONFIRM CHANGE RELAY";
-                        sendLogCommissionEntry(webServer, "Confirm change relay...");
+                        sendLogCommissionEntry(webServer, "Confirm change relay...", "INFO");
                         commissionData.isChangeRelayConfirmed = true;
                     break;
 
                     case ADD_DEVICE:
+                        currentNodeAddress = ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
                         sendAddedDevices(dataChecked, webServer, database);
                     break;
 
                     case DEVICE_ERROR:
+                    {
                         qDebug() << "DEVICE ERROR";
-                        sendLogCommissionEntry(webServer, "An error has occurred with the device...");
+                        QByteArray uuidBytes = dataChecked.mid(3,16);
+                        insertCommissionErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
                         sendDeviceError(dataChecked, uartPort, webServer);
+                    }
+                    break;
+
+                    case COMMISSION_FAIL:
+                    {
+                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+                        uint8_t failType = (uint8_t)dataChecked[5];
+                        if(failType == GROUP_FAIL) {
+                            sendLogCommissionEntry(webServer, "Error assigning node to group...", "ERROR");
+                            insertDevToLog(nodeAddress, database, LOG_COMMISSION_GROUP_FAIL, "Commissioning");
+                        }
+                        else if(failType == DEV_TYPE_FAIL) {
+                            sendLogCommissionEntry(webServer, "Error reading device type...", "ERROR");
+                            insertDevToLog(nodeAddress, database, LOG_COMMISSION_DEV_TYPE_FAIL, "Commissioning");
+                        }
+                        else if(failType == NET_ADDR_FAIL) {
+                            // No va a entrar por aquí porque el error de netAddress se procesa automáticamente en processGroupAddedFrame
+                            // Se detecta cuando esa función recibe dos 0 como direcciones de grupo. Se procesa ahí para permitir que acabe el commission
+                            //sendLogCommissionEntry(webServer, "Error assigning net address...", "ERROR");
+                            //insertDevToLog(nodeAddress, database, LOG_COMMISSION_NET_ADDR_FAIL, "Commissioning");
+                        }
+                    }
+                    break;
+
+                    case LS_INFO:
+                    {
+                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+                        uint8_t phase = (uint8_t)dataChecked[5];
+                        sendLSInfo(webServer, nodeAddress, phase);
+                    }
                     break;
 
                     case FEATURES:
                         processFeaturesFrame(dataChecked, uartPort, database, webServer);
                     break;
-
                     case GROUP_ADDED:
                         processGroupAddedFrame(dataChecked, uartPort, database, webServer);
                     break;
@@ -258,6 +302,20 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndRemoveOneNode(webServer);
                     break;
 
+                    case CONFIRM_GET_ANTENNA_ADDRESS:
+                    {
+                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        reloadAntennaAddress(webServer, database, antennaAddress);
+                    }
+                    break;
+
+                    case CONFIRM_SET_ANTENNA_ADDRESS:
+                    {
+                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        updateAntennaAddress(webServer, database, antennaAddress);
+                    }
+                    break;
+
                     case RELAY_STATUS:
                     {
                         uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
@@ -265,12 +323,94 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         updateRelayStatus(webServer, database, nodeAddress, enabled);
                     }
                     break;
+                    case SEND_RECOVERY_NODE:
+                    {
+                        isLineScanning = true;
+                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
 
+                        uint8_t uuid[16];
+                        memcpy(uuid,
+                               reinterpret_cast<const uint8_t*>(dataChecked.constData()) + 5,
+                               sizeof(uuid));
+
+                        while(configuredNodes.contains(lineScanningCounter + 1)) {
+                            lineScanningCounter++;
+                        }
+
+                        database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
+
+                        lineScanningCounter++;
+                        scannedNodesCounter++;
+
+                        sendFoundNodes(webServer, scannedNodesCounter);
+                    }
+                    break;
+                    case SEND_FEATURES_STATUS:
+                        qDebug() << "SEND_FEATURES_STATUS";
+                        isLineScanning = true;
+                        processRecoveryFeaturesFrame(dataChecked, database);
+                    break;
+                    case CONFIRM_START_LINE_SCANNING:
+                    {
+                        sendConfirmStartLineScanning(webServer);
+                        isLineScanning = true;
+                        configuredNodes = database->getConfiguredNodes();
+                        lineScanningCounter = 0;
+                        scannedNodesCounter = 0;
+                        for (int i = 0; i < MAX_SUBNET; i++) {
+                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                                meshDevice[i][j].deleteDevice();
+                            }
+                        }
+                    }
+                    break;
+                    case CONFIRM_END_LINE_SCANNING:
+                    {
+                        database->loadNodesFromDatabase();
+
+                        isLineScanning = false;
+                        sendConfirmEndLineScanning(webServer);
+                    }
+                    break;
+                    case RECOVERY_GROUPS:
+                    {
+                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | (uint16_t)dataChecked[4];
+                        uint8_t validCount = (uint8_t)dataChecked[5];
+
+                        for (uint8_t i = 0; i < validCount; i++) {
+                            uint16_t groupAddr = (uint16_t)dataChecked[6 + 2*i]
+                                                 | ((uint16_t)dataChecked[7 + 2*i] << 8);
+
+                            database->setGroup(nodeAddress, groupAddr);
+
+                            qDebug() << "RECOVERY_GROUPS: nodo=0x"
+                                     << QString::asprintf("%04X", nodeAddress)
+                                     << "→ añadiendo grupo 0x"
+                                     << QString::asprintf("%04X", groupAddr);
+                        }
+                    break;
+                    }
+                    case SCAN_NODE_NOT_FOUND:
+                    {
+                        uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
+                        qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
+
+                        // TODO: Implementar mensaje de nodo no encontrado en base de datos del micro (opcional)
+                    }
+                    break;
+                    case ANSWER_POWER_ON_LEVEL:
+                    {
+                        uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
+                        uint8_t powerOnLevel = (uint8_t)dataChecked[5];
+                        updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
+                    }
+                    break;
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
                         uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
                         uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
-                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, database);
+                        bool added = ((uint8_t)dataChecked[7] != 0);
+                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
                     }
                     break;
 
@@ -282,53 +422,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
 
-                    // case LINE_SCAN_SEND:
-                    // {
-                    //     // Esperamos 22 bytes mínimo
-                    //     if (dataChecked.size() < 22) {
-                    //         qDebug() << "Frame demasiado corto para LINE_SCAN_SEND mínimo (22 bytes)";
-                    //         break;
-                    //     }
-                    
-                    //     // [3..4] => realAddress
-                    //     uint8_t highByte = static_cast<unsigned char>(dataChecked[3]);
-                    //     uint8_t lowByte  = static_cast<unsigned char>(dataChecked[4]);
-                    //     uint16_t realAddr = (highByte << 8) | lowByte;
-                    
-                    //     // [5..20] => 16 bytes de UUID binario
-                    //     QByteArray uuidBytes = dataChecked.mid(5, 16);
-                    //     // Convertir a string en hex para la DB
-                    //     QString uuidHex = QString(uuidBytes.toHex()).toUpper();
-                    
-                    //     // (Opcional) Revisar el CRC en dataChecked[21], etc. si quieres validarlo
-                    //     // ...
-                    
-                    //     // SubnetAddress = 0, NodeSubnetAddress = 0 (si no los tienes)
-                    //     uint8_t subnetAddr = 0;
-                    //     uint8_t nodeSubnetAddr = 0;
-                    
-                    //     // Llamada a la DB
-                    //     database->addOrUpdateNode(
-                    //         subnetAddr,
-                    //         nodeSubnetAddr,
-                    //         realAddr,
-                    //         uuidHex,   // guardas el UUID en la columna “UUID”
-                    //         "",        // groupSub vacío
-                    //         0,         // deviceType
-                    //         0,         // ratedDuration
-                    //         0,         // emergencyFeatures
-                    //         0          // physicalMinLvl
-                    //     );
-                    //     database->loadNodesFromDatabase();
-                    //     qDebug() << "Insertado/actualizado nodo" 
-                    //              << QString::asprintf("%04X", realAddr)
-                    //              << " con UUID=" << uuidHex;
-                    // }
-                    // break;
+                    case CONFIRM_END_CLEAR_ALL_DATA:
+                    {
+                        sendConfirmEndClearAllData(webServer);
+                    }
+                    break;
                 }
-            // default:       
-            // break;
-
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(dataChecked, database, webServer);
             break;
@@ -364,7 +463,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
 {
-    sendLogCommissionEntry(webServer, "Start loading features...");
+    sendLogCommissionEntry(webServer, "Start loading features...", "INFO");
 
     uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
     uint8_t nodeUUID[16];
@@ -411,7 +510,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
-                insertDevToLog(i * 64 + j + 1, database, LOG_DEVICE_ADDED);
+                insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");
                 delay(500);
                 
                 /*
@@ -454,7 +553,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                     if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
                         qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[l].UUID[0], 2, 16, QChar('0')).toUpper();
                         sendUartAddDevice(uartPort, scannedUUID[l]);
-                        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID));
+                        sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[l].UUID, "INFO"));
                         confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
                         break;
                     }
@@ -507,7 +606,46 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
         }
     }
 
-    sendLogCommissionEntry(webServer, "The features have been loaded.");
+    sendLogCommissionEntry(webServer, "The features have been loaded.", "INFO");
+}
+
+void processRecoveryFeaturesFrame(QByteArray data, Database* database)
+{
+    uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode;
+    uint16_t address;
+    uint16_t fatherAddress;
+    address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
+
+    deviceType = (unsigned char)data[5] == 0 ? 1 : (unsigned char)data[5]; // Por defecto, tipo 1 (emergencia)
+    ratedDuration = (unsigned char)data[6];
+    emergencyFeatures = (unsigned char)data[7];
+    physicalMinLvl = (unsigned char)data[8];
+    relayMode = (unsigned char)data[9];
+    fatherAddress = ((unsigned char)data[10] << 8) + (unsigned char)data[11];
+
+    qDebug() << "EXT FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (!meshDevice[i][j].getIsConfigured()) {
+                meshDevice[i][j].setRealAddress(address);
+                meshDevice[i][j].setDeviceType(deviceType);
+                meshDevice[i][j].setRatedDuration(ratedDuration);
+                meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
+                meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
+                meshDevice[i][j].setIsConfigured(true);
+
+                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
+                database->setFatherRealAddress(address, fatherAddress);
+
+                qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
+
+                delay(2000);
+
+                return;
+            }
+        }
+    }
 }
 
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
@@ -519,15 +657,16 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     netAdressGroupAddress = ((unsigned char)data[7] << 8) + (unsigned char)data[8];
 
     qDebug() << "GROUP ADDED FRAME: " << nodeAddress << deviceTypeGroupAddress << netAdressGroupAddress;
-    database->setGroup(nodeAddress, deviceTypeGroupAddress);
+    if (deviceTypeGroupAddress != 0x0000) { database->setGroup(nodeAddress, deviceTypeGroupAddress); }
     if (netAdressGroupAddress != 0x0000) { database->setGroup(nodeAddress, netAdressGroupAddress); }
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
-                meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                if(isCommissioning) { // TODO revisar cuando se implemente el add device manual
-                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
+                if (deviceTypeGroupAddress != 0x0000) { meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress); }
+                if (netAdressGroupAddress != 0x0000) { meshDevice[i][j].setGroupSubAddress(netAdressGroupAddress); }
+                if(isCommissioning) {
+                    QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(netAddress) + "_" + meshDevice[i][j].serialNumberString() + "_" + "relayOff" + "_" + "true"; // el booleano indica que se debe incrementar el contador del webserver
                     if (webServer != nullptr) { webServer->sendData(message); }
                 }
                 break;
@@ -538,8 +677,9 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
     netAddress = 0;
 
     qDebug()  << "NODO AÑADIDO";
-    sendLogCommissionEntry(webServer, "The groups have been setted.");
-
+    if(deviceTypeGroupAddress != 0x0000 || netAdressGroupAddress != 0x0000) {
+        sendLogCommissionEntry(webServer, "The groups have been setted.", "INFO");
+    }
     delay(4000);
 
     // PARA STOP_COMMISSION
@@ -554,9 +694,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         // Recuperar la lista de nodos escaneados en scannedUUID
         memcpy(scannedUUID, scannedUUIDBackup, sizeof(scannedUUIDBackup));
         numberOfIterations = 0;
+        doneIterations = 0;
         isManualAddingDevice = false;
 
-        sendConfirmAddingDevice(webServer);
+        sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
         return;
     }
 
@@ -572,7 +713,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
             qDebug() << "ADDING NEW NODE UUID" << QString("0x%1").arg(scannedUUID[i].UUID[0], 2, 16, QChar('0')).toUpper();
             sendUartAddDevice(uartPort, scannedUUID[i]);
-            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID));
+            sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[i].UUID), "INFO");
             confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
             break;
         }
@@ -877,19 +1018,56 @@ void sendUartClearAllData(UartPort* _uartPort)
     qDebug() << "[Embebido] Preparando frame de CLEAR_ALL_DATA para el micro...";
     unsigned char length = 3;
 
-    // Armar el frame en el mismo orden que tu protocolo
+
     frame.append(UART_HEADER);               
     frame.append(length);                   
     frame.append(UART_CONFIG_FRAME_TYPE);   
     frame.append(CLEAR_ALL_DATA);    
 
-    frame.append(UART_END);                  // Fin de frame
+    frame.append(UART_END);
 
     qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
 
-    // Enviar por la UART
     _uartPort->sendData(frame);
     qDebug() << "[Embebido] Frame de CLEAR_ALL_DATA enviado correctamente.";
+}
+
+void sendUartLineScanning(UartPort* _uartPort)
+{
+    QByteArray frame;
+
+    qDebug() << "[Embebido] Enviando comando Line Scanning";
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(LINE_SCANNING);
+
+    frame.append(UART_END);
+
+    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
+
+    _uartPort->sendData(frame);
+    qDebug() << "[Embebido] Frame de LINE_SCANNING enviado correctamente.";
+}
+
+void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)
+{
+    QByteArray frame;
+    unsigned char length = 7;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(CHANGE_FATHER);
+    frame.append((childRealAddress >> 8) & 0xFF);
+    frame.append(childRealAddress & 0xFF);
+    frame.append((fatherRealAddress >> 8) & 0xFF);
+    frame.append(fatherRealAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }
 
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)
@@ -913,7 +1091,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning || isManualAddingDevice || isScanning) { return; }
+    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning) { return; }
 
     QByteArray frame;
     unsigned char length = 4;
@@ -953,21 +1131,6 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
     _uartPort->sendData(frame);
 }
 
-void requestMicroDatabase(UartPort* uartPort)
-{
-    QByteArray frame;
-
-    unsigned char length = 3;
-
-    frame.append(UART_HEADER);               // 0x02, o lo que tengas definido
-    frame.append(length);                    // 3
-    frame.append(UART_CONFIG_FRAME_TYPE);    // 0x10, por ejemplo
-    frame.append(LINE_SCAN);                 // 0x20 (o el valor que hayas definido para "REQUEST_DB")
-    frame.append(UART_END);                  // 0x03, por ejemplo
-
-    uartPort->sendData(frame); 
-}
-
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
 {
     // Se genera un SET con todas las direcciones de los grupos existentes (los 4 por defecto y los creados manualmente)
@@ -984,8 +1147,11 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
         for(int j = 0; j < MAX_NODES_SUBNET; j++) {
             Device& device = meshDevice[i][j];
             if(device.getIsConfigured() && !device.hasCommunicationFailure()) {
+                qDebug() << "Device" << QString::number(i * 64 + j + 1);
                 for(const QString &groupAddress : QSet<QString>(groupsSet)) {
                     if(device.isOnGroupSubAddress(groupAddress.toUShort(nullptr, 16))) {
+                        qDebug() << "MATCHING WITH" << groupAddress;
+
                         bool existingEntry = false;
 
                         for(QPair<uint16_t, QStringList> &par : crossedGroupAndNodes) {
@@ -1008,22 +1174,90 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     }
 
     // Para probar la creación correcta de la estructura que cruza (nodos) - (grupos en los que el nodo es el primero con comunicación)
-    //for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
-    //    qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
-    //}
+    for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
+        qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
+    }
 
-    // TODO: Enviar a cada nodo de la estructura la pregunta de su POL, e implementar la respuesta y actualización de cada grupo
+    for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
+        uint16_t realAddress = crossedGroupAndNodes[i].first;
 
-    /**
+        QByteArray frame;
+        unsigned char length = 5;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(ASK_POWER_ON_LEVEL);
+        frame.append((realAddress >> 8) & 0xFF);
+        frame.append(realAddress & 0xFF);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(SLEEP_DALI_TIME_MS * 2);
+    }
+}
+
+void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
+{
+    QByteArray frame;
+    unsigned char length = 6;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SET_RELAY);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
+    frame.append(enable ? 0x01 : 0x00);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
+{
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);                
+    frame.append(length);                     
+    frame.append(UART_CONFIG_FRAME_TYPE);    
+    frame.append(SCAN_FROM_NODE);           
+    frame.append((nodeRealAddress >> 8) & 0xFF);
+    frame.append(nodeRealAddress & 0xFF);
+    frame.append(UART_END);                   
+
+    qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
+    _uartPort->sendData(frame);
+}
+
+void sendAntennaGetAddress(UartPort* _uartPort)
+{
     QByteArray frame;
     unsigned char length = 3;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(NEW_ITERATION);
+    frame.append(GET_ANTENNA_ADDRESS);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    */
+}
+
+void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress)
+{
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SET_ANTENNA_ADDRESS);
+    frame.append((newAntennaRealAddress >> 8) & 0xFF);
+    frame.append(newAntennaRealAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }
