@@ -1346,7 +1346,7 @@ function processConfirmStartLineScanning(value)
     var popup = iframeDocument.getElementById('popupLineScanning');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var informerLabel1 = iframeDocument.getElementById('informerLabel1');
-    var informerTotal = iframeDocument.getElementById('informeTotal');
+    var informerTotal = iframeDocument.getElementById('informerTotal');
     var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
     popup.style.visibility = "visible";
@@ -1403,6 +1403,9 @@ function processLSFounded(value)
 
 function processConfirmEndClearAll(value)
 {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
     var popup = iframeDocument.getElementById('popup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
@@ -1985,22 +1988,6 @@ function clearAllData()
 
     var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
     confirmDeleteData.textContent = "Deleting ALL data. Don't leave this screen";
-}
-
-function lineScanning()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    sendData("LINE_SCANNING", "");
-
-    // TODO: Mover el mostrado del popup a la confirmación
-
-    var popupLineScanning = iframeDocument.getElementById('popupLineScanning');
-	var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-    popupLineScanning.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
 }
 
 function lineScanning()
