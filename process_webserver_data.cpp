@@ -207,7 +207,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             database->deleteNode(nodeAddress);
 
             // Si tenía solo un hijo, al haberlo eliminado, ahora tiene 0 y por tanto, se le desactiva el relay
-            //if(fatherNodeAddress != antennaRealAddress && numberOfChildren <= 1)
+            //if(fatherNodeAddress != 0xC00F && numberOfChildren <= 1)
             //    sendUartSetRelay(uartPort, fatherNodeAddress, false);
         }
     }

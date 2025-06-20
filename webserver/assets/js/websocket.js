@@ -1309,7 +1309,14 @@ function confirmSetRelay(value)
 
 function processMasterAddressGet(value)
 {
-    // añadir al textfield
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var decimalValue = parseInt(value, 10);
+    var id = decimalValue - 31767;
+
+    var inputAntennaID = iframeDocument.getElementById('antennaID');
+    inputAntennaID.value = id;
 }
 
 function processFailComCycles(value)
@@ -2307,17 +2314,34 @@ function syncPOL() {
 }
 
 function setAntennaNumber() {
-    var antennaNumberInput = document.getElementById('antennaNumber');
-    var antennaNumber = parseInt(antennaNumberInput.value, 10);
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    if(antennaNumber && antennaNumber >= 1 && antennaNumber <= 1000) 
+    var inputAntennaNumber = iframeDocument.getElementById('antennaID');
+
+    var saveButton = iframeDocument.getElementById('saveAntennaID');
+
+    if(inputAntennaNumber && inputAntennaNumber.value >= 1 && inputAntennaNumber.value <= 1000) 
     {
-        antennaNumberInput.disabled = true;
-        
-        var antennaNumberButton = document.getElementById('antennaNumberButton');
-        antennaNumberButton.disabled = true;
+        var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+        if (isTrue) {
+            sendData("SET_MASTER_REAL_ADDRESS", inputAntennaNumber.value);
 
-        sendData("SET_MASTER_REAL_ADDRESS", antennaNumber); 
+            setTimeout(function () {
+                sendData("SET_REBOOT_DEVICE", " ");
+                logoutApp();
+                window.location.href = "http://" + window.location.hostname;
+            }, 1000);
+        }
+    }
+    else {
+        if (saveButton) {
+            saveButton.style.backgroundColor = "red";
+
+            setTimeout(function () {
+                saveButton.style.backgroundColor = "#4682b4";
+            }, 500);
+        }
     }
 }
 
