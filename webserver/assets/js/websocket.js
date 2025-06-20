@@ -1307,26 +1307,9 @@ function confirmSetRelay(value)
     }
 }
 
-function processNeedOfMasterAddressConfig(value)
+function processMasterAddressGet(value)
 {
-    if(value == 0) {
-        closeLoginPopup();
-
-        var popup = document.getElementById('popup');
-	    var popupOverlay = document.getElementById('popupOverlay');
-
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-    }
-}
-
-function processNeedOfMasterAddressCompleted(value)
-{
-    var popup = document.getElementById('popup');
-	var popupOverlay = document.getElementById('popupOverlay');
-
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    // añadir al textfield
 }
 
 function processFailComCycles(value)
@@ -1461,8 +1444,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
     else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
-    else if (type == 'CONFIRM_M_ADDRESS_GET') { processNeedOfMasterAddressConfig(value); }
-    else if (type == "CONFIRM_M_ADDRESS_SET") { processNeedOfMasterAddressCompleted(value); }
+    else if (type == 'CONFIRM_M_ADDRESS_GET') { processMasterAddressGet(value); }
     else if (type == "FAIL_COM_CYCLES") { processFailComCycles(value); }
     else if (type == "CONFIRM_START_LS") { processConfirmStartLineScanning(value); }
     else if (type == "CONFIRM_END_LS") { processConfirmEndLineScanning(value); }
@@ -2196,10 +2178,6 @@ function codeReaderChanged()
     codeReader.value = '';
 }
 
-function requestMasterRealAddress() {
-    sendData("GET_MASTER_REAL_ADDRESS", "");
-}
-
 function requestDevicesAndFailuresCount() {
     sendData("GET_DEVICES_COUNT", "");
     sendData("GET_FAILURES_COUNT", "");
@@ -2332,21 +2310,14 @@ function setAntennaNumber() {
     var antennaNumberInput = document.getElementById('antennaNumber');
     var antennaNumber = parseInt(antennaNumberInput.value, 10);
 
-    var intervalErrorLabel = document.getElementById('intervalErrorLabel');
-
-    if(!antennaNumber || antennaNumber < 1 || antennaNumber > 1000) 
-    {
-        intervalErrorLabel.style.visibility = "visible";
-    }
-    else
+    if(antennaNumber && antennaNumber >= 1 && antennaNumber <= 1000) 
     {
         antennaNumberInput.disabled = true;
         
         var antennaNumberButton = document.getElementById('antennaNumberButton');
         antennaNumberButton.disabled = true;
 
-        intervalErrorLabel.style.visibility = "hidden";
-        sendData("SET_MASTER_REAL_ADDRESS", antennaNumber);
+        sendData("SET_MASTER_REAL_ADDRESS", antennaNumber); 
     }
 }
 

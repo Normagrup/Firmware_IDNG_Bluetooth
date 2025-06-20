@@ -56,6 +56,8 @@ void Wireless::runNetwork()
 
     _database->loadFailComCycles();
 
+    sendAntennaGetAddress(_uartPort);
+
     pollingTimer.start(POLLING_TIMER_MS);
 /*
     QByteArray data;

@@ -309,13 +309,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
 
-                    case CONFIRM_SET_ANTENNA_ADDRESS:
-                    {
-                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        updateAntennaAddress(webServer, database, antennaAddress);
-                    }
-                    break;
-
                     case RELAY_STATUS:
                     {
                         uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
