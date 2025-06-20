@@ -66,4 +66,10 @@ typedef struct {
     QString serialNumber;
 } NodeInfo;
 
+typedef struct {
+    uint8_t groupId;
+    uint8_t subnetId;
+    QByteArray bitmap;
+} GroupBitmap;
+
 #endif // STRUCTURES_H

@@ -1102,10 +1102,10 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x19: // READ GROUPS
-            // ???????
+            sendGroupDataToEth(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
         case 0x20: // READ GROUPS NAMES
-            sendGroupNamesToNormalink(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendGroupNamesToEth(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
         case 0x1A: // WRITE GROUPS
             // ???????

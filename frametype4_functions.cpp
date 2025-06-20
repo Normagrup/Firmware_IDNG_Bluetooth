@@ -131,18 +131,108 @@ void sendGroupNamesFrame(QString rcvAddress, uint8_t commandHigh, uint8_t comman
     dstAddress.setAddress(rcvAddress);
 
     _udpSocket->sendData(dstAddress, frame);
+
 }
 
-void sendGroupNamesToNormalink(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
+void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
 {
-    Database* db;
+    Database *_database;
 
-    QList<QPair<QString, QString>> groupList = db->getGroups();
+    QList<QPair<QString, QString>> groupList = _database->getGroups();
 
     for (int i = 0; i < groupList.size(); ++i) {
         const QString& name = groupList[i].second;
         sendGroupNamesFrame(rcvAddress, commandHigh, commandLow, static_cast<uint8_t>(i), name, _udpSocket);
-        delay(WEBSERVER_SEND_TIME_MS);
+        delay(ETH_SEND_TIME_MS);
     }
 }
 
+QList<GroupBitmap> collectGroupBitmaps()
+{
+    QList<GroupBitmap> result;
+    Database *db;
+    uint16_t groupAddress;
+
+    int totalGroups = 4 + db->getGroups().size();
+
+    for (int groupId = 0; groupId < totalGroups; ++groupId)
+    {
+        if (groupId < 4) {
+            groupAddress = 0xC000 + groupId;
+        } else {
+            groupAddress = 0xC010 + (groupId - 4);
+        }
+
+        for (uint8_t subnet = 0; subnet < MAX_SUBNET; ++subnet)
+        {
+            if (!polling.isSubnetConfigured(subnet))
+                continue;
+            QByteArray bitmap(8, 0x00);
+
+            for (int i = 0; i < MAX_NODES_SUBNET; ++i)
+            {
+                if (meshDevice[subnet][i].getIsConfigured() &&
+                    db->deviceIsInGroup(meshDevice[subnet][i].getRealAddress(), groupAddress))
+                {
+                    int byteIndex = i / 8;
+                    int bitIndex = i % 8;
+
+                    bitmap[byteIndex] = static_cast<uchar>(bitmap[byteIndex]) | (1 << bitIndex);
+                }
+            }
+
+            if (std::any_of(bitmap.begin(), bitmap.end(), [](char b){ return b != 0x00; }))
+            {
+                result.append({(uint8_t)groupId, subnet, bitmap});
+            }
+        }
+    }
+    return result;
+}
+
+void sendGroupDataFrame(const QString& rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, const GroupBitmap& gb)
+{
+    QByteArray frame;
+    uchar crc = 0;
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_83);
+    frame.append(commandHigh);
+    frame.append(commandLow);
+    frame.append(10);  // 1 groupId + 1 subnet + 8 bytes
+
+    frame.append(gb.groupId);
+    frame.append(gb.subnetId);
+    frame.append(gb.bitmap);
+
+    for (int i = 3; i < frame.size(); ++i) crc += frame[i];
+    frame.append(crc);
+
+    QHostAddress dst;
+    dst.setAddress(rcvAddress);
+    _udpSocket->sendData(dst, frame);
+}
+
+void sendGroupDataToEth(const QString &rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket)
+{
+    QList<GroupBitmap> list = collectGroupBitmaps();
+
+    for (const GroupBitmap& gb : list)
+    {
+        sendGroupDataFrame(rcvAddress, commandHigh, commandLow, _udpSocket, gb);
+        delay(ETH_SEND_TIME_MS);
+    }
+}
+
+void SaveGroupFromEth(QByteArray data)
+{
+    Database *_database;
+    uint8_t groupId = static_cast<int>(data[10]);
+    QByteArray nameBytes = data.mid(11, 8);
+    QString newName = QString::fromUtf8(nameBytes).trimmed();
+
+    QString groupAddress =  QString("0x%1").arg(getMaskedGroupId(groupId), 4, 16, QLatin1Char('0')).toUpper();
+    _database->editGroup(groupAddress, newName);
+}

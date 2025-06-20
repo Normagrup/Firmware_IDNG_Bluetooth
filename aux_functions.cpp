@@ -384,3 +384,25 @@ int getNodeSubnetFromDaliAddress(uint8_t daliAddr)
 
     return nodesubnet;
 }
+
+uint16_t getGroupAddressFromDaliAddress(uint8_t daliAddress)
+{
+    switch (daliAddress) {
+    case 129: return 0xC000;
+    case 131: return 0xC001;
+    case 133: return 0xC002;
+    case 135: return 0xC003;
+    default:
+        int baseDali = 137;
+        int index = (daliAddress - baseDali) / 2;
+        return 0xC010 + index;
+    }
+}
+
+uint16_t getMaskedGroupId(uint8_t groupId)
+{
+    if (groupId < 4)
+        return 0xC000 + groupId; // Fixed groups: C000–C003
+    else
+        return 0xC010 + (groupId - 4); // Dynamic groups: C010, C011, ...
+}
