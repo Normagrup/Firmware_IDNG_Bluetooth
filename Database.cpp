@@ -1287,13 +1287,15 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
 {
     QSqlQuery query;
 
+    QString hexString = QString("%1").arg(newAntennaAddress, 4, 16, QChar('0')).toUpper();
+
     query.prepare("UPDATE General SET MasterAddress = :newAntennaAddress");
-    query.bindValue(":newAntennaAddress", newAntennaAddress);
+    query.bindValue(":newAntennaAddress", hexString);
 
     if (!query.exec()) {
         qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
     } else {
-        qDebug() << "MasterAddress updated to" << newAntennaAddress;
+        qDebug() << "MasterAddress updated to" << hexString;
     }
 }
 
