@@ -686,6 +686,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         int numValue = value.toInt(nullptr, 10) + 31767;
         uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
 
+        uint16_t actualAntennaRealAddress = database->getMasterRealAddress();
+        if(newAntennaRealAddress == actualAntennaRealAddress) { return; }
+
+        database->setMasterRealAddress(newAntennaRealAddress);
+        antennaRealAddress = newAntennaRealAddress;
+
         sendAntennaSetAddress(uartPort, newAntennaRealAddress);
     }
     else if (type == WS_GET_FAILCOM_CYCLES) {

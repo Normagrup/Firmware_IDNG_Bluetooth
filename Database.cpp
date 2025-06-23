@@ -108,7 +108,7 @@ void Database::initDatabase()
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
-            query.bindValue(":masterAddress", "7C17");
+            query.bindValue(":masterAddress", "7C18");
             query.bindValue(":fcc", 5);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
@@ -1274,13 +1274,13 @@ uint16_t Database::getMasterRealAddress()
 
     query.prepare("SELECT MasterAddress FROM General");
 
-    if (!query.exec()) { return 0x7C17; }
+    if (!query.exec()) { return 0x0000; }
 
     if (query.next()) {
         return static_cast<uint16_t>(query.value("MasterAddress").toString().toUInt(nullptr, 16));
     }
 
-    return 0x7C17;
+    return 0x0000;
 }
 
 void Database::setMasterRealAddress(uint16_t newAntennaAddress)

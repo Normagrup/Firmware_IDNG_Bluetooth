@@ -56,6 +56,8 @@ void Wireless::runNetwork()
 
     _database->loadFailComCycles();
 
+    sendAntennaAddress(_uartPort, _database);
+    delay(2000);
     sendAntennaGetAddress(_uartPort);
 
     pollingTimer.start(POLLING_TIMER_MS);
