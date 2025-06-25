@@ -725,6 +725,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->setNetKey(value);
         database->clearAllData();
 
+        saveNetKey(getLocalDate(), getLocalTime(), value);
+
         sendAntennaNetKeyChange(uartPort);
     }
 

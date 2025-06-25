@@ -15,6 +15,7 @@
 #define MAC_ADDRESS_PATH            "/sys/class/net/eth0/address"
 #define INTERFACES_PATH             "/etc/network/interfaces"
 #define LOG_DATA_PATH               "/normagrup/logs/"
+#define NET_KEYS_PATH               "/normagrup/netkeys/"
 #define TREE_DATA_PATH              "/normagrup/www/assets/data/arf.json"
 
 void setWebServerData(Database* database);
@@ -44,6 +45,7 @@ void setLocalDateTime(QStringList dateTime);
 void setAdminPasswordFile(QString adminPassword);
 void setMantenedorPasswordFile(QString mantenedorPassword);
 QString exportLogToCSV(Database *db, const QString &type, QString startDate, QString endDate);
+void saveNetKey(QString date, QString time, QString key);
 void buildJsonTree();
 QJsonObject buildJsonTreeRecursively(uint16_t realAddress);
 

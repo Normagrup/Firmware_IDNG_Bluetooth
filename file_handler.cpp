@@ -411,6 +411,24 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
     return outputFileName;
 }
 
+void saveNetKey(QString date, QString time, QString key)
+{
+    QString fileName = "key_" + date + "_" + time + ".txt";
+    QString filePath = QString(NET_KEYS_PATH) + fileName;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) { qDebug() << "Failed to open key file"; return; }
+
+    QTextStream out(&file);
+    if(key.size() == 32) {
+        out << "Custom NetKey: " << key << "\n";
+    }
+    else {
+        out << "NetKey " << key << "\n";
+    }
+    file.close();
+}
+
 void buildJsonTree()
 {
     QJsonObject root = buildJsonTreeRecursively(0xC00F);
