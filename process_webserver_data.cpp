@@ -207,7 +207,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             database->deleteNode(nodeAddress);
 
             // Si tenía solo un hijo, al haberlo eliminado, ahora tiene 0 y por tanto, se le desactiva el relay
-            //if(fatherNodeAddress != antennaRealAddress && numberOfChildren <= 1)
+            //if(fatherNodeAddress != 0xC00F && numberOfChildren <= 1)
             //    sendUartSetRelay(uartPort, fatherNodeAddress, false);
         }
     }
@@ -677,12 +677,20 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         buildTreeAndSendConfirm(webServer, database);
     }
     else if (type == WS_GET_MASTER_REAL_ADDRESS) {
-        sendAntennaGetAddress(uartPort);
+        QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_GET) + "@" + QString::number(antennaRealAddress);
+
+        if (webServer != nullptr) { webServer->sendData(message); }
     }
     else if (type == WS_SET_MASTER_REAL_ADDRESS) {
         // Para que la antena núm. 1 sea la address 31768 (0x7C18), la núm. 2 sea la address 31769 (0x7C19), etc. Hasta la núm. 1000, que será la 32767 (0x7FFF)
         int numValue = value.toInt(nullptr, 10) + 31767;
         uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
+
+        uint16_t actualAntennaRealAddress = database->getMasterRealAddress();
+        if(newAntennaRealAddress == actualAntennaRealAddress) { return; }
+
+        database->setMasterRealAddress(newAntennaRealAddress);
+        antennaRealAddress = newAntennaRealAddress;
 
         sendAntennaSetAddress(uartPort, newAntennaRealAddress);
     }
@@ -1309,20 +1317,6 @@ void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t ant
 {
     database->setMasterRealAddress(antennaAddress);
     antennaRealAddress = antennaAddress;
-
-    QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_GET) + "@" + QString::number(antennaAddress);
-
-    if (webServer != nullptr) { webServer->sendData(message); }
-}
-
-void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
-{
-    database->setMasterRealAddress(antennaAddress);
-    antennaRealAddress = antennaAddress;
-
-    QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_SET) + "@" + QString::number(antennaAddress);
-
-    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel)

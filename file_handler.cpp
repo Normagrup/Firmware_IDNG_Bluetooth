@@ -413,7 +413,7 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
 
 void buildJsonTree()
 {
-    QJsonObject root = buildJsonTreeRecursively(antennaRealAddress);
+    QJsonObject root = buildJsonTreeRecursively(0xC00F);
     QJsonDocument doc(root);
 
     QFile file(TREE_DATA_PATH);
@@ -428,7 +428,7 @@ void buildJsonTree()
 QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
 {
     QString name;
-    if(realAddress != antennaRealAddress) // La raíz no tiene nombre (no es un nodo como tal, es la antena)
+    if(realAddress != 0xC00F) // La raíz no tiene nombre (no es un nodo como tal, es la antena)
     {
         const NodeInfo &node = nodesByRealAddress[realAddress];
         name = QString("Node %1 - %2")

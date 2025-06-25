@@ -121,7 +121,6 @@
 #define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
-#define WS_SEND_CONFIRM_M_ADDRESS_SET       "CONFIRM_M_ADDRESS_SET"
 
 #define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
 
@@ -173,7 +172,6 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
 void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
-void updateAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void sendFailComCycles(WebServer* webServer);
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
 void sendConfirmStartLineScanning(WebServer* webServer);

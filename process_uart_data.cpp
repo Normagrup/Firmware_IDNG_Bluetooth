@@ -309,13 +309,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
 
-                    case CONFIRM_SET_ANTENNA_ADDRESS:
-                    {
-                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        updateAntennaAddress(webServer, database, antennaAddress);
-                    }
-                    break;
-
                     case RELAY_STATUS:
                     {
                         uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
@@ -1229,6 +1222,24 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
     frame.append(UART_END);                   
 
     qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
+    _uartPort->sendData(frame);
+}
+
+void sendAntennaAddress(UartPort* _uartPort, Database* database)
+{
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
+
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SEND_ANTENNA_ADDRESS);
+    frame.append((masterStoredAddress >> 8) & 0xFF);
+    frame.append(masterStoredAddress & 0xFF);
+    frame.append(UART_END);
+
     _uartPort->sendData(frame);
 }
 
