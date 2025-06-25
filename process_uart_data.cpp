@@ -1223,6 +1223,35 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
     _uartPort->sendData(frame);
 }
 
+void sendNetKey(UartPort* _uartPort, Database* database)
+{
+    QString netKey = database->getNetKey();
+    uint8_t netKeyBytes[16];
+
+    if(netKey.size() == 32) {
+        for(uint8_t i = 0; i < 16; i++) {
+            QString byteString = netKey.mid(i * 2, 2);
+            netKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
+        }
+    } else {
+        memcpy(netKeyBytes, netKeys[netKey.toInt()], 16);
+    }
+
+    QByteArray frame;
+    unsigned char length = 19;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SEND_NET_KEY);
+    for(uint8_t j = 0; j < 16; j++) {
+        frame.append(netKeyBytes[j]);
+    }
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
 void sendAntennaAddress(UartPort* _uartPort, Database* database)
 {
     uint16_t masterStoredAddress = database->getMasterRealAddress();
@@ -1266,6 +1295,20 @@ void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress)
     frame.append(SET_ANTENNA_ADDRESS);
     frame.append((newAntennaRealAddress >> 8) & 0xFF);
     frame.append(newAntennaRealAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendAntennaNetKeyChange(UartPort* _uartPort)
+{
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SET_NET_KEY_CHANGE);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);

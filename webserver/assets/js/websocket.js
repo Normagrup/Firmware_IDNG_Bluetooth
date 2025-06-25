@@ -1403,6 +1403,24 @@ function processConfirmEndClearAll(value)
     popupOverlay.style.visibility = "hidden";
 }
 
+function processNetKeyGet(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var netKeySelector = iframeDocument.getElementById("netKey");
+    netKeySelector.value = value;
+
+    var changeNetKeyImg = iframeDocument.getElementById("changeNetKeyImg");
+
+    if(value == "16") { // si es la Custom NetKey
+        changeNetKeyImg.src = "images/edit.png";
+    }
+    else { // si es una NetKey por defecto
+        changeNetKeyImg.src = "images/save.png";
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1458,6 +1476,7 @@ function processReceivedData(data)
     else if (type == "LS_INFO") { processLSInfo(value); }
     else if (type == "LS_FOUNDED") { processLSFounded(value); }
     else if (type == "CONFIRM_END_CLEAR_ALL") { processConfirmEndClearAll(value); }
+    else if (type == "NET_KEY_GET") { processNetKeyGet(value); }
 }
 
 function sendData(type, value) 
@@ -2407,5 +2426,64 @@ function confirmSwap()
         setTimeout(function() {
             updateAllDisplayedButtons();
         }, 1000);
+    }
+}
+
+function changeNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var netKeySelector = iframeDocument.getElementById("netKey");
+
+    if(netKeySelector.value != "16") {
+        var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+        if (isTrue) {
+            sendData("CHANGE_NET_KEY", netKeySelector.value);
+
+            setTimeout(function () {
+                sendData("SET_REBOOT_DEVICE", " ");
+                logoutApp();
+                window.location.href = "http://" + window.location.hostname;
+            }, 1500);
+        }
+    }
+    else {
+        var popup = iframeDocument.getElementById("popupChangeNetKey");
+        var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+}
+
+function changeCustomNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var netKeyStr = '';
+
+    for(var i = 0; i < 16; i++) {
+        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const value = input.value.trim().toUpperCase();
+
+        if (!/^[0-9A-F]{2}$/.test(value)) {
+            alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
+            return null;
+        }
+
+        netKeyStr += value;
+    }
+
+    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+    if (isTrue) {
+        sendData("CHANGE_NET_KEY", netKeyStr);
+
+        setTimeout(function () {
+            sendData("SET_REBOOT_DEVICE", " ");
+            logoutApp();
+            window.location.href = "http://" + window.location.hostname;
+        }, 1500);
     }
 }

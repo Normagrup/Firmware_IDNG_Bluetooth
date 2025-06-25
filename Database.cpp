@@ -89,6 +89,7 @@ void Database::initDatabase()
                "BuildingName TEXT, "
                "LineName TEXT, "
                "MasterAddress TEXT, "
+               "NetKey TEXT, "
                "FailComCycles INTEGER);");
 
     query.prepare("SELECT * FROM General");
@@ -102,13 +103,14 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :fcc)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
             query.bindValue(":masterAddress", "7C18");
+            query.bindValue(":nk", "1");
             query.bindValue(":fcc", 5);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
@@ -1296,6 +1298,35 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
         qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
     } else {
         qDebug() << "MasterAddress updated to" << hexString;
+    }
+}
+
+QString Database::getNetKey()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT NetKey FROM General");
+
+    if (!query.exec()) { return "0"; }
+
+    if (query.next()) {
+        return query.value("NetKey").toString();
+    }
+
+    return "0";
+}
+
+void Database::setNetKey(QString netKey)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE General SET NetKey = :newNetKey");
+    query.bindValue(":newNetKey", netKey);
+
+    if (!query.exec()) {
+        qDebug() << "Failed to update NetKey:" << query.lastError().text();
+    } else {
+        qDebug() << "NetKey updated to" << netKey;
     }
 }
 

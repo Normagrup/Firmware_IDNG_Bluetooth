@@ -41,6 +41,37 @@
             </div>
         </div>
     </div>
+    <div class="popup" id="popupChangeNetKey" style="width: 50%; height: 40%;">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="changeNetKeyLabel" style="margin-top: 10px; color: #4682b4;"> Set the NetKey you want to use for the Bluetooth network </label>
+                <div id="netKeyInputsContainer" style="display: flex; gap: 5px; margin-top: 15px;">
+                    <input type="text" id="netKeyByte0" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte1" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte2" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte3" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte4" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte5" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte6" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte7" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte8" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte9" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte10" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte11" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte12" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte13" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte14" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="netKeyByte15" maxlength="2" style="width: 50px; text-align: center;" />
+                </div>
+                <label id="changeNetKeyAdv" style="margin-top: 10px; color: #C30101; font-size: 14px;"> Store the NetKey safely, once set it cannot be recovered </label>
+                <div style="display: flex; gap: 10px; margin-top: 0px; justify-content: center;">
+                    <button onclick="parent.closeCustomNetKey()">Close</button>
+                    <button onclick="parent.randomizeNetKey()">Randomize</button>
+                    <button onclick="parent.changeCustomNetKey()">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="wrap-container">
         <div class="general-config-container">
@@ -51,6 +82,29 @@
                     <input type="number" id="antennaID" style="width: 80px; padding: 5px; padding-left: 10px;" min="1" max="1000">
                     <button id="saveAntennaID" onclick="parent.setAntennaNumber()">
                         <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
+                    </button>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px; width: 100%;">
+                    <select id="netKey" class="selector" onchange="parent.updateNetKeyButtons()">
+                        <option value="1">NetKey 1</option>
+                        <option value="2">NetKey 2</option>
+                        <option value="3">NetKey 3</option>
+                        <option value="4">NetKey 4</option>
+                        <option value="5">NetKey 5</option>
+                        <option value="6">NetKey 6</option>
+                        <option value="7">NetKey 7</option>
+                        <option value="8">NetKey 8</option>
+                        <option value="9">NetKey 9</option>
+                        <option value="10">NetKey 10</option>
+                        <option value="11">NetKey 11</option>
+                        <option value="12">NetKey 12</option>
+                        <option value="13">NetKey 13</option>
+                        <option value="14">NetKey 14</option>
+                        <option value="15">NetKey 15</option>
+                        <option value="16">Custom NetKey</option>
+                    </select>
+                    <button id="changeNetKey" onclick="parent.changeNetKey()">
+                        <img id="changeNetKeyImg" src="images/save.png" alt="Change" style="width: 25px; height: 25px; padding-left: 1px;">
                     </button>
                 </div>
                 <button onclick="parent.lineScanning()"> Line Scanning </button>
@@ -92,6 +146,7 @@
 
             setTimeout(function () {
                 parent.sendData("GET_FAILCOM_CYCLES", "");
+                parent.sendData("GET_NET_KEY", "");
                 parent.sendData("GET_MASTER_REAL_ADDRESS", "");
             }, 10);
         };

@@ -56,6 +56,8 @@ void Wireless::runNetwork()
 
     _database->loadFailComCycles();
 
+    sendNetKey(_uartPort, _database);
+    delay(1000);
     sendAntennaAddress(_uartPort, _database);
     delay(2000);
     sendAntennaGetAddress(_uartPort);

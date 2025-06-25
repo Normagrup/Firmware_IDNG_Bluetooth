@@ -54,8 +54,11 @@
 #define WS_SET_MASTER_REAL_ADDRESS          "SET_MASTER_REAL_ADDRESS"
 #define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
 #define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
+#define WS_GET_NET_KEY                      "GET_NET_KEY"
+#define WS_SET_NET_KEY                      "SET_NET_KEY"
 #define WS_CHANGE_NODES                     "CHANGE_NODES"
 #define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
+#define WS_CHANGE_NET_KEY                   "CHANGE_NET_KEY"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -121,6 +124,7 @@
 #define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
+#define WS_SEND_NET_KEY_GET                 "NET_KEY_GET"
 
 #define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
 

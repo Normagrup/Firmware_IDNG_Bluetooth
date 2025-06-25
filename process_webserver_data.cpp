@@ -681,6 +681,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if (webServer != nullptr) { webServer->sendData(message); }
     }
+    else if (type == WS_GET_NET_KEY) {
+        QString netKey = database->getNetKey();
+
+        QString message = QString(WS_SEND_NET_KEY_GET) + "@" + (netKey.size() == 32 ? "16" : netKey);
+
+        if (webServer != nullptr) { webServer->sendData(message); }
+    }
     else if (type == WS_SET_MASTER_REAL_ADDRESS) {
         // Para que la antena núm. 1 sea la address 31768 (0x7C18), la núm. 2 sea la address 31769 (0x7C19), etc. Hasta la núm. 1000, que será la 32767 (0x7FFF)
         int numValue = value.toInt(nullptr, 10) + 31767;
@@ -710,6 +717,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_GET_LINE_SCANNED_NODES) {
         sendFoundNodes(webServer, scannedNodesCounter);
+    }
+    else if (type == WS_CHANGE_NET_KEY) {
+        QString actualNetKey = database->getNetKey();
+        if(value == actualNetKey) { return; }
+
+        database->setNetKey(value);
+        database->clearAllData();
+
+        sendAntennaNetKeyChange(uartPort);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
