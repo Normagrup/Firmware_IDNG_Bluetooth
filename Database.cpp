@@ -1188,7 +1188,8 @@ void Database::readNodesForTree()
         node.realAddress = static_cast<uint16_t>(query.value(2).toInt());
         QString nums = query.value(3).toString().right(8);
         node.serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
-        node.fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
+        uint16_t fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
+        node.fatherRealAddress = fatherRealAddress > 31767 ? 0xC00F : fatherRealAddress; // si el padre es la antena, seteamos la dirección del grupo de antenas
 
         nodesByRealAddress[node.realAddress] = node;
         childrenMap.insert(node.fatherRealAddress, node.realAddress);
