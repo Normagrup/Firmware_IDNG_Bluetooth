@@ -699,6 +699,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->setMasterRealAddress(newAntennaRealAddress);
         antennaRealAddress = newAntennaRealAddress;
 
+        QString netKey = database->getNetKey();
+        saveNetKeyAndMasterAddress(getLocalDate(), getLocalTime(), netKey, antennaRealAddress);
+
+        delay(100);
         sendAntennaSetAddress(uartPort, newAntennaRealAddress);
     }
     else if (type == WS_GET_FAILCOM_CYCLES) {
@@ -725,8 +729,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->setNetKey(value);
         database->clearAllData();
 
-        saveNetKey(getLocalDate(), getLocalTime(), value);
+        uint16_t masterRealAddress = database->getMasterRealAddress();
+        saveNetKeyAndMasterAddress(getLocalDate(), getLocalTime(), value, masterRealAddress);
 
+        delay(100);
         sendAntennaNetKeyChange(uartPort);
     }
 
