@@ -140,6 +140,9 @@ void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t comman
 
     QList<QPair<QString, QString>> groupList = _database->getGroups();
 
+    if(groupList.isEmpty()){
+        sendGroupNamesFrame(rcvAddress, commandHigh, commandLow, 0, 0, _udpSocket);
+    }
     for (int i = 0; i < groupList.size(); ++i) {
         const QString& name = groupList[i].second;
         sendGroupNamesFrame(rcvAddress, commandHigh, commandLow, static_cast<uint8_t>(i), name, _udpSocket);
@@ -226,13 +229,52 @@ void sendGroupDataToEth(const QString &rcvAddress, uint8_t commandHigh, uint8_t 
     }
 }
 
-void SaveGroupFromEth(QByteArray data)
+void saveGroupFromEth(QByteArray data)
 {
     Database *_database;
     uint8_t groupId = static_cast<int>(data[10]);
-    QByteArray nameBytes = data.mid(11, 8);
+    uint8_t nameLength = static_cast<int>(data[9]);
+    QByteArray nameBytes = data.mid(11, nameLength);
     QString newName = QString::fromUtf8(nameBytes).trimmed();
 
-    QString groupAddress =  QString("0x%1").arg(getMaskedGroupId(groupId), 4, 16, QLatin1Char('0')).toUpper();
+    uint16_t groupValue = getMaskedGroupId(groupId);
+    QString groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
     _database->editGroup(groupAddress, newName);
+}
+
+void updateGroupsDataFromEth(QByteArray data, UartPort* _uartPort)
+{
+    Database *_database;
+    uint8_t groupId = data[10];
+    uint8_t subnet = data[11];
+    QByteArray bitmap = data.mid(12, 8);
+
+    uint16_t groupAddress = getMaskedGroupId(groupId);
+
+    for (int node = 0; node < MAX_NODES_SUBNET; ++node)
+    {
+        Device &dev = meshDevice[subnet][node];
+
+        if (!dev.getIsConfigured())
+            continue;
+
+        int byteIndex = node / 8;
+        int bitIndex  = node % 8;
+
+        bool shouldBeInGroup = (bitmap[byteIndex] >> bitIndex) & 0x01;
+        uint16_t realAddress = dev.getRealAddress();
+        bool isInGroup = _database->deviceIsInGroup(realAddress, groupAddress);
+
+        if (shouldBeInGroup && !isInGroup) {
+            //_database->setGroup(realAddress, groupAddress);
+            uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
+            sendUartAddGroupManual(_uartPort, address);
+            delay(SLEEP_DALI_TIME_MS);
+        }
+        else if (!shouldBeInGroup && isInGroup) {
+            uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
+            sendUartDelGroup(_uartPort, address, _database);
+            delay(SLEEP_DALI_TIME_MS);
+        }
+    }
 }

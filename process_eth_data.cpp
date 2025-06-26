@@ -1017,7 +1017,7 @@ static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket*
     }
 }
 
-static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket)
+static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, UartPort* _uartPort)
 {
     uint8_t commandHigh = (unsigned char)data[7];
     uint8_t commandLow = (unsigned char)data[8];
@@ -1108,11 +1108,15 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             sendGroupNamesToEth(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
         case 0x1A: // WRITE GROUPS
-            // ???????
+            updateGroupsDataFromEth(data, _uartPort);
             break;
 
         case 0x1B: // SAVE CONFIG IN MEMORY
             // ???????
+            break;
+
+        case 0x1C: // WRITE GROUP NAMES
+            saveGroupFromEth(data);
             break;
 
         case 0x64: // READ TIMERS 0-16
@@ -1268,7 +1272,7 @@ void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket,
         break;
 
     case 0x04:
-        processEthFrameType4(rcvAddress, data, _udpSocket);
+        processEthFrameType4(rcvAddress, data, _udpSocket, _uartPort);
         break;
 
     default:

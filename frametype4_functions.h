@@ -6,6 +6,8 @@
 #include "eth_frames.h"
 #include "Database.h"
 #include "Pollings.h"
+#include "process_uart_data.h"
+
 
 void setIPAddress(QByteArray data);
 void setSubmaskAddress(QByteArray data);
@@ -21,6 +23,8 @@ void sendGroupDataFrame(const QString& rcvAddress, uint8_t commandHigh, uint8_t 
 QList<GroupBitmap> collectGroupBitmaps();
 void sendGroupDataToEth(const QString& rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
-void SaveGroupFromEth(QByteArray data);
+void saveGroupFromEth(QByteArray data);
+void updateGroupsDataFromEth(QByteArray data, UartPort* _uartPort);
+void sendAckForPacket(QString rcvAddress, uint8_t packetID, uint8_t status, UdpSocket* _udpSocket);
 
 #endif // FRAMETYPE4_FUNCTIONS_H
