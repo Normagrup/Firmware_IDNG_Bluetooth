@@ -70,4 +70,6 @@ extern QString reportType;
 extern QString startDate;
 extern QString endDate;
 
+extern uint8_t netKeys[15][16];
+
 #endif // GLOBAL_VARIABLES_H

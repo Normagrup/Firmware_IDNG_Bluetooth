@@ -716,3 +716,50 @@ function closeSwap() {
     popupOverlay.style.visibility = "hidden";
     popup.style.visibility = "hidden";
 }
+
+function updateNetKeyButtons()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var netKeySelector = iframeDocument.getElementById("netKey");
+
+    var changeNetKeyImg = iframeDocument.getElementById("changeNetKeyImg");
+
+    if(netKeySelector.value == "16") { // si es la Custom NetKey
+        changeNetKeyImg.src = "images/edit.png";
+    }
+    else { // si es una NetKey por defecto
+        changeNetKeyImg.src = "images/save.png";
+    }
+}
+
+function closeCustomNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    for (var i = 0; i < 16; i++) {
+        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        if (input) input.value = "";
+    }
+
+    var popup = iframeDocument.getElementById("popupChangeNetKey");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}
+
+function randomizeNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    for (var i = 0; i < 16; i++) {
+        const randByte = Math.floor(Math.random() * 256);
+        const hex = randByte.toString(16).toUpperCase().padStart(2, '0');
+        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        if (input) input.value = hex;
+    }
+}

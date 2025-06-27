@@ -411,6 +411,25 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
     return outputFileName;
 }
 
+void saveNetKeyAndMasterAddress(QString date, QString time, QString key, uint16_t masterRealAddress)
+{
+    QString fileName = "config_global.txt";
+    QString filePath = QString(GENERAL_CONFIG_PATH) + fileName;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::Append | QIODevice::Text)) { qDebug() << "Failed to open config file"; return; }
+
+    QTextStream out(&file);
+    out << date << " " << time;
+    out << " - ";
+    out << "Antenna ID: " << (masterRealAddress - 31767) << " [" << masterRealAddress << "]";
+    out << " - ";
+    out << (key.size() == 32 ? "Custom NetKey: " : "NetKey ") << key;
+    out << "\n";
+
+    file.close();
+}
+
 void buildJsonTree()
 {
     QJsonObject root = buildJsonTreeRecursively(0xC00F);

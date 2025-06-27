@@ -89,6 +89,7 @@ void Database::initDatabase()
                "BuildingName TEXT, "
                "LineName TEXT, "
                "MasterAddress TEXT, "
+               "NetKey TEXT, "
                "FailComCycles INTEGER);");
 
     query.prepare("SELECT * FROM General");
@@ -102,13 +103,14 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :fcc)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
             query.bindValue(":masterAddress", "7C18");
+            query.bindValue(":nk", "1");
             query.bindValue(":fcc", 5);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
@@ -1187,7 +1189,8 @@ void Database::readNodesForTree()
         node.realAddress = static_cast<uint16_t>(query.value(2).toInt());
         QString nums = query.value(3).toString().right(8);
         node.serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
-        node.fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
+        uint16_t fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
+        node.fatherRealAddress = fatherRealAddress > 31767 ? 0xC00F : fatherRealAddress; // si el padre es la antena, seteamos la dirección del grupo de antenas
 
         nodesByRealAddress[node.realAddress] = node;
         childrenMap.insert(node.fatherRealAddress, node.realAddress);
@@ -1297,6 +1300,35 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
         qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
     } else {
         qDebug() << "MasterAddress updated to" << hexString;
+    }
+}
+
+QString Database::getNetKey()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT NetKey FROM General");
+
+    if (!query.exec()) { return "0"; }
+
+    if (query.next()) {
+        return query.value("NetKey").toString();
+    }
+
+    return "0";
+}
+
+void Database::setNetKey(QString netKey)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE General SET NetKey = :newNetKey");
+    query.bindValue(":newNetKey", netKey);
+
+    if (!query.exec()) {
+        qDebug() << "Failed to update NetKey:" << query.lastError().text();
+    } else {
+        qDebug() << "NetKey updated to" << netKey;
     }
 }
 
