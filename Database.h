@@ -38,6 +38,7 @@ public:
     void setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable);
     void setFunctionalTest(QString groupAddress, QString functionalDays, QString functionalTime);
     void setDurationTest(QString groupAddress, QString durationPeriodicity, QString durationDate, QString durationTime);
+    bool groupExistsInTestTable(QString groupAddress);
 
     QList<uint16_t> getConfiguredNodes(void);
     QList<QString> getConfiguredNodesAndSerialNumbers(void);

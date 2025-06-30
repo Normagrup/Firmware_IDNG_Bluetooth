@@ -19,12 +19,15 @@ void setRtcDateTime(QByteArray data);
 void setAdminPassword(QByteArray data);
 void setMantenedorPassword(QByteArray data);
 void sendGroupNamesFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, uint8_t groupId, const QString& groupName, UdpSocket* _udpSocket);
-void sendGroupDataFrame(const QString& rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, const GroupBitmap& gb);
-QList<GroupBitmap> collectGroupBitmaps();
-void sendGroupDataToEth(const QString& rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
-void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
-void saveGroupFromEth(QByteArray data);
-void updateGroupsDataFromEth(QByteArray data, UartPort* _uartPort);
-void sendAckForPacket(QString rcvAddress, uint8_t packetID, uint8_t status, UdpSocket* _udpSocket);
+void sendGroupDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, const GroupBitmap& gb);
+QList<GroupBitmap> collectGroupBitmaps( Database* _database);
+void sendGroupDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, Database* database, UdpSocket* _udpSocket);
+void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, Database* _database, UdpSocket* _udpSocket);
+void saveGroupFromEth(QByteArray data,  Database* _database);
+void updateGroupsDataFromEth(QByteArray data, Database* _database, UartPort* _uartPort);
+
+void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, QByteArray data);
+void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database, QByteArray data);
+void setTestDataFromEth(QByteArray data, Database* _database);
 
 #endif // FRAMETYPE4_FUNCTIONS_H

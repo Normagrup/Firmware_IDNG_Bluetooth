@@ -1017,7 +1017,7 @@ static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket*
     }
 }
 
-static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, UartPort* _uartPort)
+static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, Database* _database, UartPort* _uartPort)
 {
     uint8_t commandHigh = (unsigned char)data[7];
     uint8_t commandLow = (unsigned char)data[8];
@@ -1102,13 +1102,14 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x19: // READ GROUPS
-            sendGroupDataToEth(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendGroupDataToEth(rcvAddress, commandHigh, commandLow, _database, _udpSocket);
             break;
         case 0x20: // READ GROUPS NAMES
-            sendGroupNamesToEth(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendGroupNamesToEth(rcvAddress, commandHigh, commandLow, _database, _udpSocket);
             break;
         case 0x1A: // WRITE GROUPS
-            updateGroupsDataFromEth(data, _uartPort);
+            updateGroupsDataFromEth(data,  _database, _uartPort);
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x1B: // SAVE CONFIG IN MEMORY
@@ -1116,7 +1117,8 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x1C: // WRITE GROUP NAMES
-            saveGroupFromEth(data);
+            saveGroupFromEth(data, _database);
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x64: // READ TIMERS 0-16
@@ -1128,11 +1130,12 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x84: // READ TEST 0-16
-            // ???????
+            sendTestDataToEth(rcvAddress, commandHigh, commandLow, _udpSocket, _database, data);
             break;
 
-        case 0x58: // WRITE TEST 0-16
-            // ???????
+        case 0x85: // WRITE TEST 0-16
+            setTestDataFromEth(data, _database);
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         default:
@@ -1254,7 +1257,7 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
     }
 }
 
-void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, UartPort* _uartPort)
+void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, Database* _database, UartPort* _uartPort)
 {
     uint8_t frameType = (unsigned char)data[3];
 
@@ -1272,7 +1275,7 @@ void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket,
         break;
 
     case 0x04:
-        processEthFrameType4(rcvAddress, data, _udpSocket, _uartPort);
+        processEthFrameType4(rcvAddress, data, _udpSocket, _database, _uartPort);
         break;
 
     default:

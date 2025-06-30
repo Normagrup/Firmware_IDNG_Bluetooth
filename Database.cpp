@@ -831,6 +831,23 @@ void Database::setDurationTest(QString groupAddress, QString durationPeriodicity
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
+bool Database::groupExistsInTestTable(QString groupAddress)
+{
+    QSqlQuery query;
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("SELECT 1 FROM FixedTest WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("SELECT 1 FROM Test WHERE GroupAddress = :groupAddress");
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error checking if group exists in Test table:" << query.lastError().text();
+        return false;
+    }
+
+    return query.next();
+}
+
 QList<uint16_t> Database::getConfiguredNodes()
 {
     QSqlQuery query;

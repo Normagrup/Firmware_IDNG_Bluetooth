@@ -89,7 +89,7 @@ void Wireless::udpReceivedData(QQueue <QPair <QString, QByteArray> >* rcvData)
     QByteArray dataBuffer = data.second;
 
     if (checkFrameHeader(dataBuffer) && checkCRC(dataBuffer) && checkRcvAddress(rcvAddress)) {
-        processEthFrame(rcvAddress, dataBuffer, _udpSocket, _uartPort);
+        processEthFrame(rcvAddress, dataBuffer, _udpSocket, _database, _uartPort);
     }
 }
 

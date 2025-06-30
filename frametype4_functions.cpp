@@ -134,10 +134,8 @@ void sendGroupNamesFrame(QString rcvAddress, uint8_t commandHigh, uint8_t comman
 
 }
 
-void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
+void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, Database* _database, UdpSocket* _udpSocket)
 {
-    Database *_database;
-
     QList<QPair<QString, QString>> groupList = _database->getGroups();
 
     if(groupList.isEmpty()){
@@ -150,13 +148,13 @@ void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t comman
     }
 }
 
-QList<GroupBitmap> collectGroupBitmaps()
+QList<GroupBitmap> collectGroupBitmaps(Database* _database)
 {
     QList<GroupBitmap> result;
-    Database *db;
+
     uint16_t groupAddress;
 
-    int totalGroups = 4 + db->getGroups().size();
+    int totalGroups = 4 +  _database->getGroups().size();
 
     for (int groupId = 0; groupId < totalGroups; ++groupId)
     {
@@ -175,7 +173,7 @@ QList<GroupBitmap> collectGroupBitmaps()
             for (int i = 0; i < MAX_NODES_SUBNET; ++i)
             {
                 if (meshDevice[subnet][i].getIsConfigured() &&
-                    db->deviceIsInGroup(meshDevice[subnet][i].getRealAddress(), groupAddress))
+                     _database->deviceIsInGroup(meshDevice[subnet][i].getRealAddress(), groupAddress))
                 {
                     int byteIndex = i / 8;
                     int bitIndex = i % 8;
@@ -193,7 +191,7 @@ QList<GroupBitmap> collectGroupBitmaps()
     return result;
 }
 
-void sendGroupDataFrame(const QString& rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, const GroupBitmap& gb)
+void sendGroupDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, const GroupBitmap& gb)
 {
     QByteArray frame;
     uchar crc = 0;
@@ -218,9 +216,9 @@ void sendGroupDataFrame(const QString& rcvAddress, uint8_t commandHigh, uint8_t 
     _udpSocket->sendData(dst, frame);
 }
 
-void sendGroupDataToEth(const QString &rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket)
+void sendGroupDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, Database* _database, UdpSocket *_udpSocket)
 {
-    QList<GroupBitmap> list = collectGroupBitmaps();
+    QList<GroupBitmap> list = collectGroupBitmaps(_database);
 
     for (const GroupBitmap& gb : list)
     {
@@ -229,9 +227,8 @@ void sendGroupDataToEth(const QString &rcvAddress, uint8_t commandHigh, uint8_t 
     }
 }
 
-void saveGroupFromEth(QByteArray data)
+void saveGroupFromEth(QByteArray data, Database* _database)
 {
-    Database *_database;
     uint8_t groupId = static_cast<int>(data[10]);
     uint8_t nameLength = static_cast<int>(data[9]);
     QByteArray nameBytes = data.mid(11, nameLength);
@@ -242,9 +239,8 @@ void saveGroupFromEth(QByteArray data)
     _database->editGroup(groupAddress, newName);
 }
 
-void updateGroupsDataFromEth(QByteArray data, UartPort* _uartPort)
+void updateGroupsDataFromEth(QByteArray data,  Database* _database, UartPort* _uartPort)
 {
-    Database *_database;
     uint8_t groupId = data[10];
     uint8_t subnet = data[11];
     QByteArray bitmap = data.mid(12, 8);
@@ -277,4 +273,110 @@ void updateGroupsDataFromEth(QByteArray data, UartPort* _uartPort)
             delay(SLEEP_DALI_TIME_MS);
         }
     }
+}
+
+void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, QByteArray testData)
+{
+    QByteArray frame;
+    uchar crc = 0;
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_83);
+    frame.append(commandHigh);
+    frame.append(commandLow);
+    frame.append(0x07);
+
+    frame.append(testData);
+
+    for (int i = 3; i < frame.size(); ++i) crc += frame[i];
+    frame.append(crc);
+
+    QHostAddress dst;
+    dst.setAddress(rcvAddress);
+
+    _udpSocket->sendData(dst, frame);
+}
+
+void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database, QByteArray data)
+{
+    uint8_t groupId = static_cast<int>(data[10]);
+    uint16_t groupValue = getMaskedGroupId(groupId);
+    QString groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
+
+    if(_database->groupExistsInTestTable(groupAddress)){
+        QString testStr = _database->getTests(groupAddress);
+        QStringList parts = testStr.split("#");
+
+        int functionalEnable = parts[0].toInt();
+        int durationEnable   = parts[1].toInt();
+        QStringList daysList = parts[2].split(" ");
+        QString functionalTime = parts[3];
+        QString durationDate = parts[5];
+        QString durationTime = parts[6];
+
+        uchar enableFlag = (functionalEnable || durationEnable) ? 0x01 : 0x00;
+        uchar weekday = mapDayToNumber(daysList[0]);  // From normalink can choose just one
+        uchar fuHour = functionalTime.left(2).toInt();
+        uchar fuMin  = functionalTime.right(2).toInt();
+        uchar dtDay = durationDate.mid(8,2).toInt();
+        uchar dtMonth = durationDate.mid(5,2).toInt();
+        uchar dtHour = durationTime.left(2).toInt();
+        uchar dtMin  = durationTime.right(2).toInt();
+
+        QByteArray testData;
+        testData.append(enableFlag);
+        testData.append(weekday);
+        testData.append(fuHour);
+        testData.append(fuMin);
+        testData.append(dtDay);
+        testData.append(dtMonth);
+        testData.append(dtHour);
+        testData.append(dtMin);
+
+        sendTestDataFrame(rcvAddress, commandHigh, commandLow, _udpSocket, testData);
+    }
+
+}
+
+void setTestDataFromEth(QByteArray data, Database* _database)
+{
+    uint8_t groupId        = static_cast<int>(data[10]);
+    uchar enabled         =data[11];
+    uchar weekday         =data[12];  
+    uchar fuHour = QString::number(data[13], 16).toUInt();
+    uchar fuMin  = QString::number(data[14], 16).toUInt();
+    uchar dtMonth = QString::number(data[15], 16).toUInt();
+    uchar dtDay   = QString::number(data[16], 16).toUInt();
+    uchar dtHour  = QString::number(data[17], 16).toUInt();
+    uchar dtMin   = QString::number(data[18], 16).toUInt();
+
+    uint16_t groupValue = getMaskedGroupId(groupId);
+    QString groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
+    QString functionalDays = mapWeekdayToName(weekday) + " ";
+    QString functionalTime = QString("%1:%2")
+                                 .arg(fuHour, 2, 10, QChar('0'))
+                                 .arg(fuMin, 2, 10, QChar('0'));
+    QString durationTime = QString("%1:%2")
+                               .arg(dtHour, 2, 10, QChar('0'))
+                               .arg(dtMin, 2, 10, QChar('0'));
+
+    QDate now = QDate::currentDate();  // Get current year
+    QString durationDate = QString("%1-%2-%3")
+                               .arg(now.year())
+                               .arg(dtMonth, 2, 10, QChar('0'))
+                               .arg(dtDay, 2, 10, QChar('0'));
+
+    QStringList wsParts;
+    wsParts << groupAddress
+            << QString::number(enabled)
+            << functionalDays
+            << functionalTime
+            << QString::number(enabled)         // use same for duration enable
+            << "1"                              // default periodicity
+            << durationDate
+            << durationTime;
+
+    setTests(wsParts, _database);
 }

@@ -406,3 +406,32 @@ uint16_t getMaskedGroupId(uint8_t groupId)
     else
         return 0xC010 + (groupId - 4); // Dynamic groups: C010, C011, ...
 }
+
+int mapDayToNumber(const QString &day)
+{
+    QString d = day.trimmed().toLower();
+
+    if (d == "mon") return 1;
+    if (d == "tue") return 2;
+    if (d == "wed") return 3;
+    if (d == "thu") return 4;
+    if (d == "fri") return 5;
+    if (d == "sat") return 6;
+    if (d == "sun") return 7;
+
+    return 0;
+}
+
+QString mapWeekdayToName(uchar day)
+{
+    switch (day) {
+    case 1: return "Mon";
+    case 2: return "Tue";
+    case 3: return "Wed";
+    case 4: return "Thu";
+    case 5: return "Fri";
+    case 6: return "Sat";
+    case 7: return "Sun";
+    default: return "";
+    }
+}
