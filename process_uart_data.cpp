@@ -1234,7 +1234,7 @@ void sendNetKey(UartPort* _uartPort, Database* database)
             netKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
         }
     } else {
-        memcpy(netKeyBytes, netKeys[netKey.toInt()], 16);
+        memcpy(netKeyBytes, netKeys[netKey.toInt() - 1], 16);
     }
 
     QByteArray frame;
