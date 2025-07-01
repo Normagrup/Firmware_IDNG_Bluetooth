@@ -34,7 +34,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_GROUP_FRAME: return 4;
             case CONFIRM_NEW_ITERATION: return 4;
             case CONFIRM_CHANGE_RELAY: return 4;
-            case ADD_DEVICE: return 6;
+            case ADD_DEVICES: return 6;
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
             case SEND_RECOVERY_NODE: return 22;
@@ -42,6 +42,27 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case FEATURES: return 28;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
+            case NODE_DELETED: return 6;
+            case CONFIRM_START_SCAN: return 4;
+            case CONFIRM_ADD_NODE_TO_GROUP: return 9;
+            case CONFIRM_START_REMOVE_ALL_NODES: return 4;
+            case CONFIRM_END_REMOVE_ALL_NODES: return 4;
+            case CONFIRM_START_REMOVE_ONE_NODE: return 4;
+            case CONFIRM_END_REMOVE_ONE_NODE: return 4;
+            case RELAY_STATUS: return 7;
+            case LINE_SCAN_SEND: return 22;
+            case QUERY_RESPONSE: return 7;
+            case CONFIRM_SET_POWER_ON_LEVEL: return 7;
+            case SCAN_NODE_NOT_FOUND: return 6;
+            case CONFIRM_GET_ANTENNA_ADDRESS: return 6;
+            case CONFIRM_END_LINE_SCANNING: return 4;
+            case CONFIRM_START_LINE_SCANNING: return 4;
+            case SEND_FEATURES_STATUS: return 13;
+            case CONFIRM_START_GROUPS_RECOVERY: return 4;
+            case ANSWER_POWER_ON_LEVEL: return 7;
+            case CONFIRM_END_GROUPS_RECOVERY: return 4;
+            case RECOVERY_GROUPS: return 80;
+            case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             default: return -1;
         }
 
@@ -177,7 +198,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         commissionData.isChangeRelayConfirmed = true;
                     break;
 
-                    case ADD_DEVICE:
+                    case ADD_DEVICES:
                         currentNodeAddress = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
                         sendAddedDevices(data, webServer, database);
                     break;
@@ -819,7 +840,7 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(ADD_DEVICE);
+    frame.append(ADD_DEVICES);
     frame.append((uuidScanned.nodeAddressReport >> 8) & 0xFF);
     frame.append(uuidScanned.nodeAddressReport & 0xFF);
 
