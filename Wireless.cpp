@@ -95,7 +95,8 @@ void Wireless::udpReceivedData(QQueue <QPair <QString, QByteArray> >* rcvData)
 
 void Wireless::uartReceivedData(QByteArray data)
 {
-    processUartData(data, _webServer, _uartPort, _database);
+    //processUartData(data, _webServer, _uartPort, _database);
+    extractAndProcessFrames(data, _webServer, _uartPort, _database);
 }
 
 void Wireless::webServerReceivedData(QString data)

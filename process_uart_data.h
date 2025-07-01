@@ -25,7 +25,7 @@
 #define START_COMMISSION                0x03
 #define NEW_ITERATION                   0x05
 #define CHANGE_RELAY                    0x07
-#define ADD_DEVICE                      0x09
+#define ADD_DEVICES                     0x09
 #define DEVICE_ERROR                    0x11
 #define DEL_DEVICES                     0x13
 #define NODE_DELETED                    0x50
@@ -47,6 +47,7 @@
 #define DEBUG                           0x90
 #define LINE_SCANNING                   0x22
 #define LINE_SCAN_SEND                  0x24
+#define QUERY_RESPONSE                  0x47
 #define CONFIRM_START_SCAN              0x49
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
@@ -67,7 +68,9 @@
 #define CONFIRM_START_LINE_SCANNING     0x75
 #define SEND_FEATURES_STATUS            0x77
 #define ASK_POWER_ON_LEVEL              0x80
+#define CONFIRM_START_GROUPS_RECOVERY   0x81
 #define ANSWER_POWER_ON_LEVEL           0x82
+#define CONFIRM_END_GROUPS_RECOVERY     0x83
 #define COMMISSION_FAIL                 0x84
 #define RECOVERY_GROUPS                 0x85
 #define LS_INFO                         0x86
@@ -77,11 +80,13 @@
 #define SET_NET_KEY_CHANGE              0x90
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
+void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);
+int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartScannedDevices(UartPort* _uartPort);
 void sendUartStartCommission(UartPort* _uartPort);
