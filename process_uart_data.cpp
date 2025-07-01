@@ -121,12 +121,6 @@ void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, Ua
             break;  // Aún no llegó todo
         }
 
-        // Verificar FOOTER (0xAD)
-        if ((unsigned char)buffer[totalFrameSize - 1] != UART_END) {
-            buffer.remove(0, headerIdx + 1);  // Saltar y buscar otro header
-            continue;
-        }
-
         // Trama completa detectada
         QByteArray frame = buffer.mid(0, totalFrameSize);
 
