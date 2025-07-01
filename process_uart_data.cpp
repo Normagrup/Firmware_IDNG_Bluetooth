@@ -6,9 +6,6 @@
 #include "global_variables.h"
 #include "log.h"
 
-QByteArray uartBuffer;
-static bool secondBufferRequired = false;
-
 static bool checkCRC(QByteArray data)
 {
     uint8_t checkSum, crc = 0;
@@ -21,139 +18,107 @@ static bool checkCRC(QByteArray data)
     else { return false; }
 }
 
-static QByteArray processUartFrame(QByteArray data)
+int getExpectedFrameSize(const QByteArray& buffer)
 {
-    if (!secondBufferRequired) {
-        uartBuffer.clear();
+    if (buffer.size() < 2) return -1;  // no hay FRAME_TYPE
 
-        for (uint8_t i = 0; i < data.size(); i++) { uartBuffer.append(data[i]); }
+    uint8_t frameType = static_cast<uint8_t>(buffer[1]);
+    uint8_t subType = buffer.size() > 2 ? static_cast<uint8_t>(buffer[2]) : 0;
 
-        if (data.size() > 1) {
-            if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == SCAN_DEVICES) {
-                if (data.size() != 22) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == CONFIRM_START_COMMISSION) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == CONFIRM_ADD_DEVICE) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == CONFIRM_GROUP_FRAME) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == CONFIRM_NEW_ITERATION) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == CONFIRM_CHANGE_RELAY) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == ADD_DEVICE) {
-                if (data.size() != 6) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == DEVICE_ERROR) {
-                if (data.size() != 20) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == COMMISSION_FAIL) {
-                if (data.size() != 7) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == LS_INFO) {
-                if (data.size() != 7) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == FEATURES) {
-                if (data.size() != 28) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == GROUP_ADDED) {
-                if (data.size() != 10) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CONFIG_FRAME_TYPE && (unsigned char)data[2] == DEBUG) {
-                if (data.size() != 5) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_CHANGE_FRAME_TYPE) {
-                if (data.size() != 7) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_RSP_POLLING_FRAME_TYPE) {
-                if (data.size() != 9) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_ID_FRAME_TYPE && (unsigned char)data[2] == FACTORY_ID_WROTE) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_ID_FRAME_TYPE && (unsigned char)data[2] == DALI_TESTED) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
-            else if ((unsigned char)data[0] == UART_HEADER && (unsigned char)data[1] == UART_ID_FRAME_TYPE && (unsigned char)data[2] == RECORDED_DEVICE) {
-                if (data.size() != 4) {
-                    secondBufferRequired = true;
-                    return QByteArray();
-                }
-            }
+    switch (frameType) {
+    case UART_RSP_CONFIG_FRAME_TYPE:
+        switch (subType) {
+            case SCAN_DEVICES: return 22;
+            case CONFIRM_START_COMMISSION: return 4;
+            case CONFIRM_ADD_DEVICE: return 4;
+            case CONFIRM_GROUP_FRAME: return 4;
+            case CONFIRM_NEW_ITERATION: return 4;
+            case CONFIRM_CHANGE_RELAY: return 4;
+            case ADD_DEVICE: return 6;
+            case DEVICE_ERROR: return 20;
+            case COMMISSION_FAIL: return 7;
+            case SEND_RECOVERY_NODE: return 22;
+            case LS_INFO: return 7;
+            case FEATURES: return 28;
+            case GROUP_ADDED: return 10;
+            case DEBUG: return 5;
+            default: return -1;
         }
-        else {
-            secondBufferRequired = true;
-            return QByteArray();
+
+    case UART_RSP_CHANGE_FRAME_TYPE:
+        return 7;
+
+    case UART_RSP_POLLING_FRAME_TYPE:
+        return 9;
+
+    case UART_ID_FRAME_TYPE:
+        switch (subType) {
+            case FACTORY_ID_WROTE:
+            case DALI_TESTED:
+            case RECORDED_DEVICE:
+                return 4;
+            default: return -1;
         }
-    }
-    else {
-        for (uint8_t i = 0; i < data.size(); i++) { uartBuffer.append(data[i]); }
 
-        secondBufferRequired = false;
+    default:
+        return -1;
     }
-
-    return uartBuffer;
 }
 
-static bool addDeviceFrameReceived = false;
-static bool featuresFrameReceived = false;
+void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database)
+{
+    static QByteArray buffer;
+    buffer.append(rawData);
+
+    while (true) {
+        // Buscar HEADER (0xAF)
+        int headerIdx = buffer.indexOf((char)UART_HEADER);
+        if (headerIdx == -1) {
+            buffer.clear();  // No hay header → limpiar basura
+            break;
+        }
+
+        // Eliminar bytes basura antes del header
+        if (headerIdx > 0) {
+            buffer.remove(0, headerIdx);
+            headerIdx = 0;
+        }
+
+        // Asegurar que al menos hay HEADER + LEN
+        if (buffer.size() < 2) {
+            break;  // Esperar más datos
+        }
+
+        // Obtener longitud
+        int totalFrameSize = getExpectedFrameSize(buffer);
+        if (totalFrameSize == -1) {
+            buffer.remove(0, 1);  // ignorar y seguir buscando
+            continue;
+        }
+
+        if (buffer.size() < totalFrameSize) {
+            break;  // Aún no llegó todo
+        }
+
+        // Verificar FOOTER (0xAD)
+        if ((unsigned char)buffer[totalFrameSize - 1] != UART_END) {
+            buffer.remove(0, headerIdx + 1);  // Saltar y buscar otro header
+            continue;
+        }
+
+        // Trama completa detectada
+        QByteArray frame = buffer.mid(0, totalFrameSize);
+
+        if (checkCRC(frame)) {
+            processUartData(frame, webServer, uartPort, database);
+        } else {
+            qWarning() << "Trama descartada por CRC inválido";
+        }
+
+        // Eliminar la trama procesada del buffer
+        buffer.remove(0, totalFrameSize);
+    }
+}
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database)
 {
@@ -163,13 +128,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
     }
     qDebug() << hexString.trimmed();
     //qDebug() << "DATA SIZE" << data.size();
-    QByteArray dataChecked = processUartFrame(data);
-    if (!dataChecked.isEmpty() && (unsigned char)dataChecked[0] == UART_HEADER && checkCRC(data)) {
-        switch ((unsigned char)dataChecked[1]) {
+    if (!data.isEmpty() && (unsigned char)data[0] == UART_HEADER) {
+        switch ((unsigned char)data[1]) {
             case UART_RSP_CONFIG_FRAME_TYPE:
-                switch ((unsigned char)dataChecked[2]) {
+                switch ((unsigned char)data[2]) {
                     case SCAN_DEVICES:
-                        sendScannedDevices(dataChecked, webServer);
+                        sendScannedDevices(data, webServer);
                     break;
 
                     case CONFIRM_START_COMMISSION:
@@ -214,23 +178,23 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
 
                     case ADD_DEVICE:
-                        currentNodeAddress = ((unsigned char)dataChecked[3] << 8) + (unsigned char)dataChecked[4];
-                        sendAddedDevices(dataChecked, webServer, database);
+                        currentNodeAddress = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
+                        sendAddedDevices(data, webServer, database);
                     break;
 
                     case DEVICE_ERROR:
                     {
                         qDebug() << "DEVICE ERROR";
-                        QByteArray uuidBytes = dataChecked.mid(3,16);
+                        QByteArray uuidBytes = data.mid(3,16);
                         insertCommissionErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
-                        sendDeviceError(dataChecked, uartPort, webServer);
+                        sendDeviceError(data, uartPort, webServer);
                     }
                     break;
 
                     case COMMISSION_FAIL:
                     {
-                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
-                        uint8_t failType = (uint8_t)dataChecked[5];
+                        uint16_t nodeAddress = ((unsigned char)data[3] << 8) | (unsigned char)data[4];
+                        uint8_t failType = (uint8_t)data[5];
                         if(failType == GROUP_FAIL) {
                             sendLogCommissionEntry(webServer, "Error assigning node to group...", "ERROR");
                             insertDevToLog(nodeAddress, database, LOG_COMMISSION_GROUP_FAIL, "Commissioning");
@@ -250,26 +214,26 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case LS_INFO:
                     {
-                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
-                        uint8_t phase = (uint8_t)dataChecked[5];
+                        uint16_t nodeAddress = ((unsigned char)data[3] << 8) | (unsigned char)data[4];
+                        uint8_t phase = (uint8_t)data[5];
                         sendLSInfo(webServer, nodeAddress, phase);
                     }
                     break;
 
                     case FEATURES:
-                        processFeaturesFrame(dataChecked, uartPort, database, webServer);
+                        processFeaturesFrame(data, uartPort, database, webServer);
                     break;
                     case GROUP_ADDED:
-                        processGroupAddedFrame(dataChecked, uartPort, database, webServer);
+                        processGroupAddedFrame(data, uartPort, database, webServer);
                     break;
 
                     case DEBUG:
-                        qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)dataChecked[3], 2, 16, QChar('0')).toUpper();
+                        qDebug() << "DEBUG FRAME:" << QString("0x%1").arg((unsigned char)data[3], 2, 16, QChar('0')).toUpper();
                     break;
 
                     case NODE_DELETED:
                     {
-                        uint16_t nodeAddress = ((unsigned char)dataChecked[3] << 8) | (unsigned char)dataChecked[4];
+                        uint16_t nodeAddress = ((unsigned char)data[3] << 8) | (unsigned char)data[4];
 
                         qDebug() << "Nodo eliminado confirmado desde micro: " << nodeAddress;
 
@@ -304,26 +268,26 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_GET_ANTENNA_ADDRESS:
                     {
-                        uint16_t antennaAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
                         reloadAntennaAddress(webServer, database, antennaAddress);
                     }
                     break;
 
                     case RELAY_STATUS:
                     {
-                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        bool enabled = ((uint8_t)dataChecked[5] != 0);
+                        uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
+                        bool enabled = ((uint8_t)data[5] != 0);
                         updateRelayStatus(webServer, database, nodeAddress, enabled);
                     }
                     break;
                     case SEND_RECOVERY_NODE:
                     {
                         isLineScanning = true;
-                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
+                        uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
 
                         uint8_t uuid[16];
                         memcpy(uuid,
-                               reinterpret_cast<const uint8_t*>(dataChecked.constData()) + 5,
+                               reinterpret_cast<const uint8_t*>(data.constData()) + 5,
                                sizeof(uuid));
 
                         while(configuredNodes.contains(lineScanningCounter + 1)) {
@@ -341,7 +305,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
                         isLineScanning = true;
-                        processRecoveryFeaturesFrame(dataChecked, database);
+                        processRecoveryFeaturesFrame(data, database);
                     break;
                     case CONFIRM_START_LINE_SCANNING:
                     {
@@ -367,12 +331,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case RECOVERY_GROUPS:
                     {
-                        uint16_t nodeAddress = ((uint16_t)dataChecked[3] << 8) | (uint16_t)dataChecked[4];
-                        uint8_t validCount = (uint8_t)dataChecked[5];
+                        uint16_t nodeAddress = ((uint16_t)data[3] << 8) | (uint16_t)data[4];
+                        uint8_t validCount = (uint8_t)data[5];
 
                         for (uint8_t i = 0; i < validCount; i++) {
-                            uint16_t groupAddr = (uint16_t)dataChecked[6 + 2*i]
-                                                 | ((uint16_t)dataChecked[7 + 2*i] << 8);
+                            uint16_t groupAddr = (uint16_t)data[6 + 2*i]
+                                                 | ((uint16_t)data[7 + 2*i] << 8);
 
                             database->setGroup(nodeAddress, groupAddr);
 
@@ -385,7 +349,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     case SCAN_NODE_NOT_FOUND:
                     {
-                        uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
+                        uint16_t nodeAddr = (data[3] << 8) | data[4];
                         qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
 
                         // TODO: Implementar mensaje de nodo no encontrado en base de datos del micro (opcional)
@@ -393,24 +357,24 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                     case ANSWER_POWER_ON_LEVEL:
                     {
-                        uint16_t nodeAddr = (dataChecked[3] << 8) | dataChecked[4];
-                        uint8_t powerOnLevel = (uint8_t)dataChecked[5];
+                        uint16_t nodeAddr = (data[3] << 8) | data[4];
+                        uint8_t powerOnLevel = (uint8_t)data[5];
                         updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
                     }
                     break;
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
-                        uint16_t address = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        uint16_t deviceTypeGroupAddress = ((uint16_t)dataChecked[5] << 8) | dataChecked[6];
-                        bool added = ((uint8_t)dataChecked[7] != 0);
+                        uint16_t address = ((uint16_t)data[3] << 8) | data[4];
+                        uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
+                        bool added = ((uint8_t)data[7] != 0);
                         sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
                     }
                     break;
 
                     case CONFIRM_SET_POWER_ON_LEVEL:
                     {
-                        uint16_t groupAddress = ((uint16_t)dataChecked[3] << 8) | dataChecked[4];
-                        uint8_t powerOnLevel = dataChecked[5];
+                        uint16_t groupAddress = ((uint16_t)data[3] << 8) | data[4];
+                        uint8_t powerOnLevel = data[5];
                         sendConfirmPowerOnLevel(webServer, powerOnLevel, groupAddress, database);
                     }
                     break;
@@ -422,15 +386,15 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
-                processChangeFrame(dataChecked, database, webServer);
+                processChangeFrame(data, database, webServer);
             break;
 
             case UART_RSP_POLLING_FRAME_TYPE:
-                processPollingFrame(dataChecked);
+                processPollingFrame(data);
             break;
 
             case UART_ID_FRAME_TYPE:
-                switch ((unsigned char)dataChecked[2]) {
+                switch ((unsigned char)data[2]) {
                     case FACTORY_ID_WROTE:
                         sendFactoryIDWrote(webServer);
                     break;

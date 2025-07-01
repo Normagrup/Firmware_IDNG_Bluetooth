@@ -77,11 +77,13 @@
 #define SET_NET_KEY_CHANGE              0x90
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
+void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
 void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer);
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);
+int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartScannedDevices(UartPort* _uartPort);
 void sendUartStartCommission(UartPort* _uartPort);
