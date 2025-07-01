@@ -317,7 +317,13 @@ void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
         QString durationTime = parts[6];
 
         uchar enableFlag = (functionalEnable || durationEnable) ? 0x01 : 0x00;
-        uchar weekday = mapDayToNumber(daysList[0]);  // From normalink can choose just one
+        uchar weekday = 0;
+        for (const QString& day : daysList) {
+            int d = mapDayToNumber(day.trimmed());
+            if (d >= 1 && d <= 7)
+                weekday |= (1 << (d - 1));
+        }
+
         uchar fuHour = functionalTime.left(2).toInt();
         uchar fuMin  = functionalTime.right(2).toInt();
         uchar dtDay = durationDate.mid(8,2).toInt();
@@ -342,9 +348,9 @@ void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
 
 void setTestDataFromEth(QByteArray data, Database* _database)
 {
-    uint8_t groupId        = static_cast<int>(data[10]);
-    uchar enabled         =data[11];
-    uchar weekday         =data[12];  
+    uint8_t groupId       = static_cast<int>(data[10]);
+    uchar enabled         = data[11];
+    uchar weekdayBitmask  = data[12];
     uchar fuHour = QString::number(data[13], 16).toUInt();
     uchar fuMin  = QString::number(data[14], 16).toUInt();
     uchar dtMonth = QString::number(data[15], 16).toUInt();
@@ -354,7 +360,13 @@ void setTestDataFromEth(QByteArray data, Database* _database)
 
     uint16_t groupValue = getMaskedGroupId(groupId);
     QString groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
-    QString functionalDays = mapWeekdayToName(weekday) + " ";
+    QStringList selectedDays;
+    for (int i = 0; i < 7; ++i) {
+        if ((weekdayBitmask >> i) & 1) {
+            selectedDays << mapWeekdayToName(i + 1);
+        }
+    }
+    QString functionalDays = selectedDays.join(" ") + " ";
     QString functionalTime = QString("%1:%2")
                                  .arg(fuHour, 2, 10, QChar('0'))
                                  .arg(fuMin, 2, 10, QChar('0'));
