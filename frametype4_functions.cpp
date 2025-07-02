@@ -392,3 +392,78 @@ void setTestDataFromEth(QByteArray data, Database* _database)
 
     setTests(wsParts, _database);
 }
+
+void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, Database *_database, QByteArray data)
+{
+    uint16_t pos = (static_cast<uint8_t>(data[10]) << 8) | static_cast<uint8_t>(data[11]); //pos (2 bytes: high, low)
+
+    QList<QStringList> logs = _database->getLastNLogEvents(pos);
+    int totalLogs = logs.size();
+
+    if(pos > totalLogs)
+        pos = totalLogs;
+
+    for (int i = 0; i < pos; i++)
+    {
+        const QStringList &log = logs[i];
+        if (log.size() < 6) continue;
+
+        QByteArray frame;
+        uchar crc = 0;
+
+        frame.append(FRAME_HEADER_0);
+        frame.append(FRAME_HEADER_1);
+        frame.append(FRAME_HEADER_2);
+        frame.append(FRAME_TYPE_83);
+        frame.append(commandHigh);
+        frame.append(commandLow);
+        frame.append(0x0F);
+
+        QByteArray payload(16, 0xFF);
+
+        payload[0] = 0x01;
+        payload[1] = 0xFF;
+        payload[2] = log[2].toUInt();  // BtAddress as shortAddress
+
+        // Timestamp
+        QDateTime dt = QDateTime::fromString(log[4], "yyyy-MM-dd HH:mm:ss");
+        payload[3] = dt.date().day();
+        payload[4] = dt.date().month();
+        payload[5] = dt.date().year() - 2000;
+        payload[6] = dt.time().hour();
+        payload[7] = dt.time().minute();
+
+        payload[8] = log[5].toUInt();  // Event code
+
+        // Serial
+        QStringList serial = log[1].split(".");
+        if (serial.size() == 4) {
+            payload[9]  = serial[0].toUInt(nullptr, 16);
+            payload[10] = serial[1].toUInt(nullptr, 16);
+            payload[11] = serial[2].toUInt(nullptr, 16);
+            payload[12] = serial[3].toUInt(nullptr, 16);
+        }
+
+        // Device name
+        QStringList nameParts = log[0].split(" ");
+        if(nameParts.size() == 2){
+            bool ok;
+            int sub = nameParts[0].split(":")[1].toInt(&ok);
+            if(ok) payload[13] = static_cast<uchar>(sub);
+            int id = nameParts[1].split(":")[1].toInt(&ok);
+            if(ok) payload[14] = static_cast<uchar>(id);
+        }
+
+        frame.append(payload);
+
+        for (int j = 3; j < frame.size(); ++j)
+            crc += frame[j];
+        frame.append(crc);
+
+        QHostAddress dst;
+        dst.setAddress(rcvAddress);
+        _udpSocket->sendData(dst, frame);
+
+        delay(ETH_SEND_TIME_MS);
+    }
+}

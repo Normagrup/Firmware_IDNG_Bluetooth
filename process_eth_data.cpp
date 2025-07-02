@@ -1071,7 +1071,7 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x84: // READ HISTORIC READABLE EVENTS
-            // ???????
+            sendLogDataToEth(rcvAddress, commandHigh, commandLow, _udpSocket, _database, data);
             break;
 
         case 0x46: // GET MODEL VERSION

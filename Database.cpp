@@ -1192,6 +1192,35 @@ QList<QStringList> Database::getAllTestLogs()
     return results;
 }
 
+QList<QStringList> Database::getLastNLogEvents(int count)
+{
+    QList<QStringList> results;
+    QSqlQuery query;
+
+    query.prepare("SELECT Name, Serial, BtAddress, IP, Timestamp, Event "
+                  "FROM Log ORDER BY Timestamp DESC LIMIT :limit");
+    query.bindValue(":limit", count);
+
+    if (!query.exec()) {
+        qDebug() << "Error in getLastNLogEvents:" << query.lastError().text();
+        return results;
+    }
+
+    while (query.next()) {
+        QStringList row;
+        row << query.value(0).toString();
+        row << query.value(1).toString();
+        row << query.value(2).toString();
+        row << query.value(3).toString();
+        QDateTime dt = QDateTime::fromSecsSinceEpoch(query.value(4).toLongLong());
+        row << dt.toString("yyyy-MM-dd HH:mm:ss");
+        row << query.value(5).toString();
+        results.append(row);
+    }
+
+    return results;
+}
+
 void Database::readNodesForTree()
 {
     nodesByRealAddress = {};

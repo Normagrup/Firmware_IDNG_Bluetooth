@@ -74,6 +74,7 @@ public:
     QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
     QList<QStringList> getLogEventPaged(const QString &type, qint64 startDate, qint64 endDate, int page);
     QList<QStringList> getAllTestLogs();
+    QList<QStringList> getLastNLogEvents(int count);
 
     void readNodesForTree();
     void updateRelayMode(uint16_t nodeAddress, bool enabled);
