@@ -3,6 +3,9 @@
 #include "process_uart_data.h"
 #include "dali_headers.h"
 #include "time_functions.h"
+#include "Database.h"
+
+Database* database;
 
 void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subnet, uint8_t daliAddress, uint8_t commandLow, uint8_t commandType)
 {
@@ -27,6 +30,10 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
             delay(SLEEP_DALI_TIME_MS);
         }
         sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
+        if(commandLow == 227 || commandLow == 228 || commandLow == 229){
+            logTestRequest(database, targetAddress, true, logTestTypeHelper(commandLow));
+        }
+
     } else {
         uint8_t nodesubnet = getNodeSubnetFromDaliAddress(daliAddress);
         uint16_t targetAddress = getTargetAddress(subnet, nodesubnet);
@@ -35,5 +42,8 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
             delay(SLEEP_DALI_TIME_MS);
         }
         sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
+        if(commandLow == 227 || commandLow == 228 || commandLow == 229){
+            logTestRequest(database, targetAddress, false, logTestTypeHelper(commandLow));
+        }
     }
 }

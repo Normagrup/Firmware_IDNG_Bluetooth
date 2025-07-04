@@ -36,5 +36,7 @@ uint16_t getGroupAddressFromDaliAddress(uint8_t daliAddress);
 uint16_t getMaskedGroupId(uint8_t groupId);
 int mapDayToNumber(const QString& day);
 QString mapWeekdayToName(uchar day);
+QString logTestTypeHelper(uint8_t testType);
+
 
 #endif // AUX_FUNCTIONS_H

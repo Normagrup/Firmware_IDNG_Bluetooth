@@ -435,3 +435,14 @@ QString mapWeekdayToName(uchar day)
     default: return "";
     }
 }
+
+QString logTestTypeHelper(uint8_t testType)
+{
+    if (testType == 227){
+        return "FUNCTIONAL";
+    } else if (testType == 228){
+        return "DURATION";
+    } else if (testType == 229) {
+        return "STOP";
+    }
+}
