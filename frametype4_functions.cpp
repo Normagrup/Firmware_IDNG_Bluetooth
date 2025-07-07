@@ -399,6 +399,8 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
 
     QList<QStringList> logs = _database->getLastNLogEvents(pos);
     int totalLogs = logs.size();
+    uint16_t Id;
+    bool group = false;
 
     if(pos > totalLogs)
         pos = totalLogs;
@@ -407,6 +409,13 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
     {
         const QStringList &log = logs[i];
         if (log.size() < 6) continue;
+        if(log[2].toUInt() >= 49152){
+            group = true;
+            Id = getGroupIdFromMasked(log[2].toUInt());
+        } else {
+            group = false;
+            Id = log[2].toUInt();
+        }
 
         QByteArray frame;
         uchar crc = 0;
@@ -423,7 +432,7 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
 
         payload[0] = 0x01;
         payload[1] = 0xFF;
-        payload[2] = log[2].toUInt();  // BtAddress as shortAddress
+        payload[2] = Id;  // BtAddress as shortAddress
 
         // Timestamp
         QDateTime dt = QDateTime::fromString(log[4], "yyyy-MM-dd HH:mm:ss");
@@ -446,7 +455,7 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
 
         // Device name
         QStringList nameParts = log[0].split(" ");
-        if(nameParts.size() == 2){
+        if(nameParts.size() == 2 && !group){
             bool ok;
             int sub = nameParts[0].split(":")[1].toInt(&ok);
             if(ok) payload[13] = static_cast<uchar>(sub);

@@ -446,3 +446,13 @@ QString logTestTypeHelper(uint8_t testType)
         return "STOP";
     }
 }
+
+int getGroupIdFromMasked(uint16_t maskedGroupId)
+{
+    if (maskedGroupId >= 0xC000 && maskedGroupId <= 0xC003)
+        return maskedGroupId - 0xC000; // Fixed groups: 0–3
+    else if (maskedGroupId >= 0xC010)
+        return 4 + (maskedGroupId - 0xC010); // Dynamic groups: 4+
+    else
+        return -1;
+}
