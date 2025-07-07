@@ -65,6 +65,10 @@ extern QMultiMap<uint16_t, uint16_t> childrenMap;
 
 extern bool isLineScanning;
 extern uint8_t failComCycles;
+extern uint16_t discovered_nodes[2048];
+extern uint16_t discovered_nodes_count;
+extern bool forceStopLS1;
+extern bool forceStopLS2;
 
 extern QString reportType;
 extern QString startDate;

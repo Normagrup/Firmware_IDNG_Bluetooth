@@ -653,8 +653,40 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_LINE_SCANNING) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
-        sendUartLineScanning(uartPort);
 
+        uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 16);
+        uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 16);
+
+        sendUartStartLineScanning(uartPort);
+        delay(2500);
+
+        // Si se ha recibido el mensaje de confirmación del micro, empieza
+        if(discovered_nodes_count == 0) {
+            for(uint16_t i = startAddr; i <= endAddr; i++) {
+                if(forceStopLS1) { forceStopLS1 = false; break; }
+
+                if (!database->isExistingNode(i)) {
+                    sendLSInfo(webServer, i, 1);
+                    sendUartLineScanning(uartPort, 1, i);
+                    delay(5000);
+                }
+            }
+
+            sendLSInfo(webServer, 0, 0);
+            delay(2500);
+
+            for(uint16_t j = 0; j < discovered_nodes_count; j++) {
+                if(forceStopLS2) { forceStopLS2 = false; break; }
+
+                if (database->isExistingNode(discovered_nodes[j])) {
+                    sendLSInfo(webServer, discovered_nodes[j], 2);
+                    sendUartLineScanning(uartPort, 2, discovered_nodes[j]);
+                    delay(5000);
+                }
+            }
+        }
+
+        sendUartEndLineScanning(uartPort);
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
         sendGroupsWithPOL(webServer, database, value);
@@ -734,6 +766,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         delay(100);
         sendAntennaNetKeyChange(uartPort);
+    }
+    else if (type == WS_STOP_LS) {
+        if(value == "1")
+            forceStopLS1 = true;
+        else if(value == "2")
+            forceStopLS2 = true;
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {

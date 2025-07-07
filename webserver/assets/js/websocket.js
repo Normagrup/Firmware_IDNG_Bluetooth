@@ -1155,11 +1155,17 @@ function processIsLSInProgress(value)
         var informerTotal = iframeDocument.getElementById('informerTotal');
         var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
+        var btnStop1 = iframeDocument.getElementById('stopButton1');
+        var btnStop2 = iframeDocument.getElementById('stopButton2');
+
         popupLS.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
         informerLabel1.textContent = "Phase 1: Completed.";
-        informerTotal.textContent = "FOUNDED NODES: ...";
+        informerTotal.textContent = "FOUNDED NODES: 0";
         informerLabel2.textContent = "Phase 2: Waiting...";
+
+        btnStop1.disabled = true;
+        btnStop2.disabled = true;
 
         sendData("GET_LINE_SCANNED_NODES", "");
     }
@@ -1339,11 +1345,17 @@ function processConfirmStartLineScanning(value)
     var informerTotal = iframeDocument.getElementById('informerTotal');
     var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
+
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     informerLabel1.textContent = "Phase 1: Starting...";
-    informerTotal.textContent = "FOUNDED NODES: ...";
+    informerTotal.textContent = "FOUNDED NODES: 0";
     informerLabel2.textContent = "Phase 2: Waiting...";
+
+    btnStop1.disabled = false;
+    btnStop2.disabled = true;
 }
 
 function processConfirmEndLineScanning(value)
@@ -1367,17 +1379,24 @@ function processLSInfo(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+    var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
+
     if(phase == "1") {
-        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
         informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+        btnStop1.disabled = false;
     }
     else if(phase == "2") {
-        var informerLabel2 = iframeDocument.getElementById('informerLabel2');
         informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+        btnStop2.disabled = false;
     }
     else if(phase == "0") {
-        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
         informerLabel1.textContent = "Phase 1: Completed.";
+        btnStop1.disabled = true;
+        btnStop2.disabled = false;
     }
 }
 
@@ -2000,7 +2019,14 @@ function clearAllData()
 
 function lineScanning()
 {
-    sendData("LINE_SCANNING", "");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var start = parseInt(iframeDocument.getElementById("scanStart").value);
+    var end = parseInt(iframeDocument.getElementById("scanEnd").value);
+
+    if(start >= 1 && start <= 2048 && end >= 1 && end <= 2048 && start <= end)
+        sendData("LINE_SCANNING", start + "_" + end);
 }
 
 function getLogs()
@@ -2486,4 +2512,25 @@ function changeCustomNetKey()
             window.location.href = "http://" + window.location.hostname;
         }, 1500);
     }
+}
+
+function stopLS(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
+
+    if(value == "1") 
+    {
+        btnStop1.disabled = true;
+        btnStop2.disabled = false;
+    } 
+    else if(value == "2") 
+    {
+        btnStop2.disabled = true;
+    }
+
+    sendData("STOP_LS", value);
 }

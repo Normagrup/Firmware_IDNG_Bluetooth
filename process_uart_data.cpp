@@ -38,7 +38,6 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
             case SEND_RECOVERY_NODE: return 22;
-            case LS_INFO: return 7;
             case FEATURES: return 28;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
@@ -227,14 +226,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
 
-                    case LS_INFO:
-                    {
-                        uint16_t nodeAddress = ((unsigned char)data[3] << 8) | (unsigned char)data[4];
-                        uint8_t phase = (uint8_t)data[5];
-                        sendLSInfo(webServer, nodeAddress, phase);
-                    }
-                    break;
-
                     case FEATURES:
                         processFeaturesFrame(data, uartPort, database, webServer);
                     break;
@@ -314,6 +305,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         lineScanningCounter++;
                         scannedNodesCounter++;
 
+                        discovered_nodes[discovered_nodes_count++] = nodeAddress;
+
                         sendFoundNodes(webServer, scannedNodesCounter);
                     }
                     break;
@@ -329,6 +322,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         configuredNodes = database->getConfiguredNodes();
                         lineScanningCounter = 0;
                         scannedNodesCounter = 0;
+                        discovered_nodes_count = 0;
+
+                        forceStopLS1 = false;
+                        forceStopLS2 = false;
+
                         for (int i = 0; i < MAX_SUBNET; i++) {
                             for (int j = 0; j < MAX_NODES_SUBNET; j++) {
                                 meshDevice[i][j].deleteDevice();
@@ -1002,24 +1000,53 @@ void sendUartClearAllData(UartPort* _uartPort)
     qDebug() << "[Embebido] Frame de CLEAR_ALL_DATA enviado correctamente.";
 }
 
-void sendUartLineScanning(UartPort* _uartPort)
+void sendUartStartLineScanning(UartPort* _uartPort)
 {
     QByteArray frame;
 
-    qDebug() << "[Embebido] Enviando comando Line Scanning";
     unsigned char length = 3;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(START_LINE_SCANNING);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress)
+{
+    QByteArray frame;
+
+    unsigned char length = 6;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(LINE_SCANNING);
+    frame.append(phase);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
 
     frame.append(UART_END);
 
-    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
+    _uartPort->sendData(frame);
+}
+
+void sendUartEndLineScanning(UartPort* _uartPort)
+{
+    QByteArray frame;
+
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(END_LINE_SCANNING);
+    frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    qDebug() << "[Embebido] Frame de LINE_SCANNING enviado correctamente.";
 }
 
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)

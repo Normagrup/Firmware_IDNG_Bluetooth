@@ -73,11 +73,12 @@
 #define CONFIRM_END_GROUPS_RECOVERY     0x83
 #define COMMISSION_FAIL                 0x84
 #define RECOVERY_GROUPS                 0x85
-#define LS_INFO                         0x86
 #define CHANGE_FATHER                   0x87
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
 #define SEND_NET_KEY                    0x89
 #define SET_NET_KEY_CHANGE              0x90
+#define START_LINE_SCANNING             0x91
+#define END_LINE_SCANNING               0x92
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -110,7 +111,9 @@ void sendAntennaAddress(UartPort* _uartPort, Database* database);
 void sendAntennaGetAddress(UartPort* _uartPort);
 void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
 void sendAntennaNetKeyChange(UartPort* _uartPort);
-void sendUartLineScanning(UartPort* _uartPort);
+void sendUartStartLineScanning(UartPort* _uartPort);
+void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
+void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 

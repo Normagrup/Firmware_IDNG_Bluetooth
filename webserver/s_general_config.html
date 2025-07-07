@@ -35,9 +35,18 @@
             <div class="popup-subcontainer">
                 <label id="lineScanningLabel" style="margin-top: 10px; color: #4682b4;"> Line Scanning in progress... </label>
                 <div class="loader"></div>
-                <label class="informer" id="informerLabel1" style="color: #000;"> </label>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="informer" id="informerLabel1" style="color: #000;"></label>
+                    <button id="stopButton1" onclick="parent.stopLS(1)">Stop</button>
+                </div>
+
                 <label class="informer" id="informerTotal" style="color: #000;"> </label>
-                <label class="informer" id="informerLabel2" style="color: #000;"> </label>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="informer" id="informerLabel2" style="color: #000;"></label>
+                    <button id="stopButton2" onclick="parent.stopLS(2)">Stop</button>
+                </div>
             </div>
         </div>
     </div>
@@ -107,7 +116,21 @@
                         <img id="changeNetKeyImg" src="images/save.png" alt="Change" style="width: 25px; height: 25px; padding-left: 1px;">
                     </button>
                 </div>
-                <button onclick="parent.lineScanning()"> Line Scanning </button>
+
+                <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
+                    <button onclick="parent.lineScanning()" style="width: 40%; padding-left: 5px; padding-right: 5px; margin-top: 0px;">Line Scanning</button>
+                    
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <span style="color: #4682b4;">FROM</span>
+                        <input type="number" id="scanStart" value="1" class="input-scan" min="1" max="2048">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <span style="color: #4682b4;">TO</span>
+                        <input type="number" id="scanEnd" value="2048" class="input-scan" min="1" max="2048">
+                    </div>
+                </div>
+
                 <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
                     <label for="failComCycles" style="color: #4682b4;">FailCom Cycles:</label>
                     <input type="number" id="failComCycles" style="width: 80px; padding: 5px; padding-left: 10px;" min="1">
