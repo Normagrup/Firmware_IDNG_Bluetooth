@@ -5,6 +5,7 @@
 #include "time_functions.h"
 #include "global_variables.h"
 #include "log.h"
+#include "eth_frames.h"
 
 static bool checkCRC(QByteArray data)
 {
@@ -374,6 +375,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
                         uint8_t powerOnLevel = (uint8_t)data[5];
+                        if(powerOnQueryMap.contains(nodeAddr)){
+                            POLQueryContext ctx = powerOnQueryMap[nodeAddr];
+                            powerOnQueryMap.remove(nodeAddr);
+                            sendPowerOnLeveltoEth(ctx.pid, powerOnLevel, ctx.rcvAddress, ctx.socket);
+                        }
                         updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
                     }
                     break;
@@ -1293,4 +1299,30 @@ void sendAntennaNetKeyChange(UartPort* _uartPort)
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
+}
+
+void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket *_udpSocket)
+{
+    QByteArray frame;
+    unsigned char crc = 0;
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_82);
+    frame.append((pid >> 8) & 0xFF);
+    frame.append(pid & 0xFF);
+    frame.append(0x01);
+    frame.append(powerOnLevel);
+
+    for (uint8_t i = 3; i < frame.size(); i++) {
+        crc += frame[i];
+    }
+
+    frame.append(crc);
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddress);
+
+    _udpSocket->sendData(dstAddress, frame);
 }

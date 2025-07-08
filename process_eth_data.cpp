@@ -321,6 +321,7 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
 
         case 0x2E: // STORE DTR AS POWER ON LVL
             sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, STORE_DTR_POWER_ON_LVL, IS_TWICE);
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x2F: // STORE DTR AS FADE TIME
@@ -663,9 +664,14 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, QUERY_MIN_LVL, IS_QUERY);
             break;
 
-        case 0xA4: // QUERY POWER ON LVL
-            sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, QUERY_POWER_ON_LVL, IS_QUERY);
+        case 0xA4:  // QUERY POWER ON LVL
+        {
+            uint16_t pid = ((uint16_t)data[5] << 8) | data[6];
+            uint16_t targetAddress = getTargetAddress(subnet, daliAddress);
+            powerOnQueryMap[targetAddress] = { pid, rcvAddress, _udpSocket };
+            askPowerOnLevelFromEthToDali(_uartPort, subnet, daliAddress);
             break;
+        }
 
         case 0xA5: // QUERY SYSTEM FAILURE LVL
             sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, QUERY_SYSTEM_FAILURE_LVL, IS_QUERY);
@@ -964,7 +970,8 @@ static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0xE3: // DTR0
-            //sendDaliSpecialCommand(subnet, DTR_0, IS_NORMAL);
+            setDTR0FromEth(_uartPort, subnet, daliAddress, DTR_0, value, IS_NORMAL);
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0xE4: // INITIALISE

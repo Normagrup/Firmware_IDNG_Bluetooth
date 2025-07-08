@@ -71,5 +71,6 @@ extern QString startDate;
 extern QString endDate;
 
 extern uint8_t netKeys[15][16];
+extern QMap<uint16_t, POLQueryContext> powerOnQueryMap;
 
 #endif // GLOBAL_VARIABLES_H

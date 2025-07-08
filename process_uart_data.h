@@ -6,6 +6,9 @@
 #include "WebServer.h"
 #include  "Database.h"
 #include "global_variables.h"
+#include "UdpSocket.h"
+
+
 
 #define UART_HEADER                     0xAF
 #define UART_END                        0xAD
@@ -113,5 +116,6 @@ void sendAntennaNetKeyChange(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
+void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 
 #endif // PROCESS_UART_DATA_H

@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QDateTime>
+#include "UdpSocket.h"
 
 typedef struct {
     QString networkIP;
@@ -71,5 +72,11 @@ typedef struct {
     uint8_t subnetId;
     QByteArray bitmap;
 } GroupBitmap;
+
+typedef struct {
+    uint16_t pid;
+    QString rcvAddress;
+    UdpSocket* socket;
+} POLQueryContext;
 
 #endif // STRUCTURES_H

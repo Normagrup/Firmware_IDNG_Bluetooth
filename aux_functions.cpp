@@ -402,9 +402,9 @@ uint16_t getGroupAddressFromDaliAddress(uint8_t daliAddress)
 uint16_t getMaskedGroupId(uint8_t groupId)
 {
     if (groupId < 4)
-        return 0xC000 + groupId; // Fixed groups: C000–C003
+        return 0xC000 + groupId; //Fixed groups: C000–C003
     else
-        return 0xC010 + (groupId - 4); // Dynamic groups: C010, C011, ...
+        return 0xC010 + (groupId - 4); //Dynamic groups: C010, C011, ...
 }
 
 int mapDayToNumber(const QString &day)
@@ -450,9 +450,9 @@ QString logTestTypeHelper(uint8_t testType)
 int getGroupIdFromMasked(uint16_t maskedGroupId)
 {
     if (maskedGroupId >= 0xC000 && maskedGroupId <= 0xC003)
-        return maskedGroupId - 0xC000; // Fixed groups: 0–3
+        return maskedGroupId - 0xC000; //Fixed groups: 0–3
     else if (maskedGroupId >= 0xC010)
-        return 4 + (maskedGroupId - 0xC010); // Dynamic groups: 4+
+        return 4 + (maskedGroupId - 0xC010); //Dynamic groups: 4+
     else
         return -1;
 }

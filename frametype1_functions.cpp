@@ -10,7 +10,7 @@ Database* database;
 void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subnet, uint8_t daliAddress, uint8_t commandLow, uint8_t commandType)
 {
     //sendUartDaliCommand(_uartPort, daliMessageType, targetAddress, commandLow, commandType);
-    if(daliAddress == 255){
+    if(daliAddress == 255){ //subnet control
         for (int node = 0; node < 64; ++node) {
             Device &device = meshDevice[subnet][node];
             if (device.getIsConfigured()) {
@@ -23,7 +23,7 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
                 delay(SLEEP_DALI_TIME_MS);
             }
         }
-    } else if (subnet == 255 && daliAddress > 32) {
+    } else if (subnet == 255 && daliAddress > 32) { //Group control
         uint16_t targetAddress = getGroupAddressFromDaliAddress(daliAddress);
         if(daliMessageType == 3){
             sendUartDaliCommand(_uartPort, targetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
@@ -34,7 +34,7 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
             logTestRequest(database, targetAddress, true, logTestTypeHelper(commandLow));
         }
 
-    } else {
+    } else { //device control
         uint8_t nodesubnet = getNodeSubnetFromDaliAddress(daliAddress);
         uint16_t targetAddress = getTargetAddress(subnet, nodesubnet);
         if(daliMessageType == 3){
@@ -46,4 +46,24 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
             logTestRequest(database, targetAddress, false, logTestTypeHelper(commandLow));
         }
     }
+}
+
+void askPowerOnLevelFromEthToDali(UartPort* _uartPort, uint8_t subnet, uint8_t daliAddress)
+{
+    uint16_t targetAddress = getTargetAddress(subnet, daliAddress);
+
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(ASK_POWER_ON_LEVEL);
+    frame.append((targetAddress >> 8) & 0xFF);
+    frame.append(targetAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+
+    delay(SLEEP_DALI_TIME_MS * 2);
 }
