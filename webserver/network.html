@@ -183,6 +183,11 @@
             parent.changeAddress();
             parent.createGroupButtons();
 
+            setInterval(() => {
+                parent.updateAllDisplayedButtons();
+                parent.requestDevicesAndFailuresCount();
+            }, 10000);
+
             function handleButtonClick(e) {
                 var button = e.currentTarget;
                 button.classList.add("clicked");
