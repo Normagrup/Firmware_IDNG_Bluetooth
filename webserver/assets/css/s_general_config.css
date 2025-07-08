@@ -209,18 +209,18 @@ button.clicked {
     cursor: pointer;
 }
 
-#saveAntennaID,
+#saveAntennaIDAndNetKey,
 #saveCycles,
-#changeNetKey {
+#editNetKey {
     padding: 0;
     margin: 0;
     width: 32px;
     height: 32px;
 }
 
-#saveAntennaID img,
+#saveAntennaIDAndNetKey img,
 #saveCycles img,
-#changeNetKey img {
+#editNetKey img {
     margin-top: 3px;
 }
 

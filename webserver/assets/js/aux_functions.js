@@ -717,21 +717,47 @@ function closeSwap() {
     popup.style.visibility = "hidden";
 }
 
-function updateNetKeyButtons()
+function updateButtonsForNetKeySelected()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var netKeySelector = iframeDocument.getElementById("netKey");
 
-    var changeNetKeyImg = iframeDocument.getElementById("changeNetKeyImg");
+    // BOTÓN DE EDIT NETKEY
+    var editNetKey = iframeDocument.getElementById("editNetKey");
 
     if(netKeySelector.value == "16") { // si es la Custom NetKey
-        changeNetKeyImg.src = "images/edit.png";
+        editNetKey.disabled = false;
     }
     else { // si es una NetKey por defecto
-        changeNetKeyImg.src = "images/save.png";
+        editNetKey.disabled = true;
     }
+
+    // BOTÓN DE SAVE CHANGES
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+
+    if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
+        saveBtn.disabled = false;
+    }
+    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != "") {
+        saveBtn.disabled = false;
+    }
+    else {
+        saveBtn.disabled = true;
+    }
+}
+
+function editNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupEditNetKey");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 }
 
 function closeCustomNetKey()
@@ -744,11 +770,14 @@ function closeCustomNetKey()
         if (input) input.value = "";
     }
 
-    var popup = iframeDocument.getElementById("popupChangeNetKey");
+    var popup = iframeDocument.getElementById("popupEditNetKey");
     var popupOverlay = iframeDocument.getElementById("popupOverlay");
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
+
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    saveBtn.disabled = true;
 }
 
 function randomizeNetKey()
@@ -761,5 +790,48 @@ function randomizeNetKey()
         const hex = randByte.toString(16).toUpperCase().padStart(2, '0');
         const input = iframeDocument.getElementById(`netKeyByte${i}`);
         if (input) input.value = hex;
+    }
+}
+
+function saveCustomNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    for(var i = 0; i < 16; i++) {
+        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const value = input.value.trim().toUpperCase();
+
+        if (!/^[0-9A-F]{2}$/.test(value)) {
+            alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
+            return null;
+        }
+    }
+
+    var popup = iframeDocument.getElementById("popupEditNetKey");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    saveBtn.disabled = false;
+}
+
+function checkAntennaIDChange()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var inputAntennaID = iframeDocument.getElementById('antennaID');
+
+    // BOTÓN DE SAVE CHANGES
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+
+    if(inputAntennaID.value != antennaID && inputAntennaID.value >= 1 && inputAntennaID.value <= 1000) {
+        saveBtn.disabled = false;
+    }
+    else {
+        saveBtn.disabled = true;
     }
 }

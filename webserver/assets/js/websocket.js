@@ -3,6 +3,8 @@ var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
 var isStoppingCommission = false;
+var netKey;
+var antennaID;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -1315,6 +1317,8 @@ function confirmSetRelay(value)
 
 function processMasterAddressGet(value)
 {
+    antennaID = value; // variable global
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -1424,19 +1428,21 @@ function processConfirmEndClearAll(value)
 
 function processNetKeyGet(value)
 {
+    netKey = value; // variable global
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var netKeySelector = iframeDocument.getElementById("netKey");
     netKeySelector.value = value;
 
-    var changeNetKeyImg = iframeDocument.getElementById("changeNetKeyImg");
+    var editNetKey = iframeDocument.getElementById("editNetKey");
 
     if(value == "16") { // si es la Custom NetKey
-        changeNetKeyImg.src = "images/edit.png";
+        editNetKey.disabled = false;
     }
     else { // si es una NetKey por defecto
-        changeNetKeyImg.src = "images/save.png";
+        editNetKey.disabled = true;
     }
 }
 
@@ -2358,35 +2364,41 @@ function syncPOL() {
     }, 10000);
 }
 
-function setAntennaNumber() {
+function setAntennaNumberAndNetKey() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var inputAntennaNumber = iframeDocument.getElementById('antennaID');
+    var netKeySelector = iframeDocument.getElementById("netKey");
 
-    var saveButton = iframeDocument.getElementById('saveAntennaID');
+    var newAntennaID = "";
+    if(inputAntennaNumber && inputAntennaNumber.value != antennaID) {
+        newAntennaID = inputAntennaNumber.value;
+    }
 
-    if(inputAntennaNumber && inputAntennaNumber.value >= 1 && inputAntennaNumber.value <= 1000) 
-    {
-        var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-        if (isTrue) {
-            sendData("SET_MASTER_REAL_ADDRESS", inputAntennaNumber.value);
-
-            setTimeout(function () {
-                sendData("SET_REBOOT_DEVICE", " ");
-                logoutApp();
-                window.location.href = "http://" + window.location.hostname;
-            }, 1000);
+    var newNetKey = "";
+    if(netKeySelector && ((netKeySelector.value != "16" && netKeySelector.value != netKey) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != ""))) {
+        if(netKeySelector.value != "16") {
+            newNetKey = netKeySelector.value;
+        }
+        else {
+            for(var i = 0; i < 16; i++) {
+                const input = iframeDocument.getElementById(`netKeyByte${i}`);
+                const value = input.value.trim().toUpperCase();
+                newNetKey += value;
+            }
         }
     }
-    else {
-        if (saveButton) {
-            saveButton.style.backgroundColor = "red";
 
-            setTimeout(function () {
-                saveButton.style.backgroundColor = "#4682b4";
-            }, 500);
-        }
+    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+    if (isTrue) {
+        sendData("SET_MASTER_ADDR_AND_NETKEY", newAntennaID + "_" + newNetKey);
+
+        setTimeout(function () {
+            sendData("SET_REBOOT_DEVICE", " ");
+            logoutApp();
+            window.location.href = "http://" + window.location.hostname;
+        }, 2000);
     }
 }
 
@@ -2452,65 +2464,6 @@ function confirmSwap()
         setTimeout(function() {
             updateAllDisplayedButtons();
         }, 1000);
-    }
-}
-
-function changeNetKey()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var netKeySelector = iframeDocument.getElementById("netKey");
-
-    if(netKeySelector.value != "16") {
-        var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-        if (isTrue) {
-            sendData("CHANGE_NET_KEY", netKeySelector.value);
-
-            setTimeout(function () {
-                sendData("SET_REBOOT_DEVICE", " ");
-                logoutApp();
-                window.location.href = "http://" + window.location.hostname;
-            }, 1500);
-        }
-    }
-    else {
-        var popup = iframeDocument.getElementById("popupChangeNetKey");
-        var popupOverlay = iframeDocument.getElementById("popupOverlay");
-
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-    }
-}
-
-function changeCustomNetKey()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var netKeyStr = '';
-
-    for(var i = 0; i < 16; i++) {
-        const input = iframeDocument.getElementById(`netKeyByte${i}`);
-        const value = input.value.trim().toUpperCase();
-
-        if (!/^[0-9A-F]{2}$/.test(value)) {
-            alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
-            return null;
-        }
-
-        netKeyStr += value;
-    }
-
-    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-    if (isTrue) {
-        sendData("CHANGE_NET_KEY", netKeyStr);
-
-        setTimeout(function () {
-            sendData("SET_REBOOT_DEVICE", " ");
-            logoutApp();
-            window.location.href = "http://" + window.location.hostname;
-        }, 1500);
     }
 }
 
