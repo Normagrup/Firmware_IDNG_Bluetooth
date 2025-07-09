@@ -760,7 +760,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         // Si cambia la netKey
         if(netKey != "") {
-            database->setNetKey(value);
+            database->setNetKey(netKey);
             database->clearAllData();
         }
 

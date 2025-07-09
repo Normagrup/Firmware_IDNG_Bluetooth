@@ -739,18 +739,19 @@ function updateButtonsForNetKeySelected()
     var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
     var changed = false;
 
-    if(inputAntennaID.value != antennaID && inputAntennaID.value >= 1 && inputAntennaID.value <= 1000) {
+    if(inputAntennaID.value != antennaID) {
         changed = true;
     }
 
     if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
         changed = true;
     }
-    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != "") {
+    else if(netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**")) {
         changed = true;
     }
-    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "") {
-        changed = false; // forzamos desactivado por falta de netkey
+    
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
+        changed = false; // forzamos desactivado por error de rango de ID o falta de netkey
     }
 
     if(changed) {
@@ -779,7 +780,12 @@ function clearCustomNetKey()
 
     for (var i = 0; i < 16; i++) {
         const input = iframeDocument.getElementById(`netKeyByte${i}`);
-        if (input) input.value = "";
+        if (input) {
+            if(netKey == "16")
+                input.value = "**";
+            else
+                input.value = "";
+        }
     }
 
     var popup = iframeDocument.getElementById("popupEditNetKey");
@@ -789,7 +795,13 @@ function clearCustomNetKey()
     popupOverlay.style.visibility = "hidden";
 
     var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
-    saveBtn.disabled = true;
+    var inputAntennaID = iframeDocument.getElementById('antennaID');
+    if(inputAntennaID.value != antennaID) {   
+        saveBtn.disabled = false;
+    } else {
+        saveBtn.disabled = true;
+    }
+
 }
 
 function randomizeNetKey()
@@ -842,18 +854,19 @@ function checkAntennaIDChange()
     var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
     var changed = false;
 
-    if(inputAntennaID.value != antennaID && inputAntennaID.value >= 1 && inputAntennaID.value <= 1000) {
+    if(inputAntennaID.value != antennaID) {
         changed = true;
     }
 
     if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
         changed = true;
     }
-    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != "") {
+    else if(netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**")) {
         changed = true;
     }
-    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "") {
-        changed = false; // forzamos desactivado por falta de netkey
+    
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
+        changed = false; // forzamos desactivado por error de rango de ID o falta de netkey
     }
 
     if(changed) {

@@ -1440,6 +1440,11 @@ function processNetKeyGet(value)
 
     if(value == "16") { // si es la Custom NetKey
         editNetKey.disabled = false;
+
+        for(var i = 0; i < 16; i++) {
+            const input = iframeDocument.getElementById(`netKeyByte${i}`);
+            input.value = "**";
+        }
     }
     else { // si es una NetKey por defecto
         editNetKey.disabled = true;
@@ -2368,16 +2373,16 @@ function setAntennaNumberAndNetKey() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var inputAntennaNumber = iframeDocument.getElementById('antennaID');
+    var inputAntennaID = iframeDocument.getElementById('antennaID');
     var netKeySelector = iframeDocument.getElementById("netKey");
 
     var newAntennaID = "";
-    if(inputAntennaNumber && inputAntennaNumber.value != antennaID) {
-        newAntennaID = inputAntennaNumber.value;
+    if(inputAntennaID.value != antennaID) {
+        newAntennaID = inputAntennaID.value;
     }
 
     var newNetKey = "";
-    if(netKeySelector && ((netKeySelector.value != "16" && netKeySelector.value != netKey) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != ""))) {
+    if((netKeySelector.value != "16" && netKeySelector.value != netKey) || (netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**"))) {
         if(netKeySelector.value != "16") {
             newNetKey = netKeySelector.value;
         }
@@ -2388,6 +2393,10 @@ function setAntennaNumberAndNetKey() {
                 newNetKey += value;
             }
         }
+    }
+
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
+        return; // forzamos stop por error de rango de ID o falta de netkey
     }
 
     var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
