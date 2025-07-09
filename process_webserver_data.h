@@ -60,6 +60,7 @@
 #define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
 #define WS_CHANGE_NET_KEY                   "CHANGE_NET_KEY"
 #define WS_STOP_LS                          "STOP_LS"
+#define WS_SET_MASTER_ADDR_AND_NETKEY       "SET_MASTER_ADDR_AND_NETKEY"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"

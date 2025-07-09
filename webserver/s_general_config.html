@@ -88,13 +88,16 @@
                 <h2> General Configuration </h2>
                 <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
                     <label for="antennaID" style="color: #4682b4;"><b>Antenna ID</b></label>
-                    <input type="number" id="antennaID" style="width: 80px; padding: 5px; padding-left: 10px;" min="1" max="1000" oninput="parent.checkAntennaIDChange()">
+                    <input type="number" id="antennaID" style="width: 105px; padding: 5px; padding-left: 10px;" min="1" max="1000" oninput="parent.checkAntennaIDChange()">
+                    <!--
                     <button id="saveAntennaIDAndNetKey" onclick="parent.setAntennaNumberAndNetKey()" disabled>
                         <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
                     </button>
+                    -->
                 </div>
                 <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px; width: 100%;">
-                    <select id="netKey" class="selector" onchange="parent.updateButtonsForNetKeySelected()">
+                    <label for="netKey" style="color: #4682b4;"><b>NetKey</b></label>
+                    <select id="netKey" class="selector" style="width: 100px; padding: 5px; padding-left: 10px;" onchange="parent.updateButtonsForNetKeySelected()">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>

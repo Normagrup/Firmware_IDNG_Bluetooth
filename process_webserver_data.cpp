@@ -773,6 +773,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         else if(value == "2")
             forceStopLS2 = true;
     }
+    else if (type == WS_SET_MASTER_ADDR_AND_NETKEY) {
+        qDebug() << "EAEAEA";
+        qDebug() << value;
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
