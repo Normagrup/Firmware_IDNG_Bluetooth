@@ -1317,7 +1317,7 @@ function confirmSetRelay(value)
 
 function processMasterAddressGet(value)
 {
-    antennaID = value; // variable global
+    antennaID = value - 31767; // variable global
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;

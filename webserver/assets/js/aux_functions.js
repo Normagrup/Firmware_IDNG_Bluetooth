@@ -722,6 +722,7 @@ function updateButtonsForNetKeySelected()
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var inputAntennaID = iframeDocument.getElementById('antennaID');
     var netKeySelector = iframeDocument.getElementById("netKey");
 
     // BOTÓN DE EDIT NETKEY
@@ -736,14 +737,25 @@ function updateButtonsForNetKeySelected()
 
     // BOTÓN DE SAVE CHANGES
     var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    var changed = false;
+
+    if(inputAntennaID.value != antennaID && inputAntennaID.value >= 1 && inputAntennaID.value <= 1000) {
+        changed = true;
+    }
 
     if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
-        saveBtn.disabled = false;
+        changed = true;
     }
     else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != "") {
-        saveBtn.disabled = false;
+        changed = true;
     }
-    else {
+    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "") {
+        changed = false; // forzamos desactivado por falta de netkey
+    }
+
+    if(changed) {
+        saveBtn.disabled = false;
+    } else {
         saveBtn.disabled = true;
     }
 }
@@ -760,7 +772,7 @@ function editNetKey()
     popupOverlay.style.visibility = "visible";
 }
 
-function closeCustomNetKey()
+function clearCustomNetKey()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -824,14 +836,29 @@ function checkAntennaIDChange()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var inputAntennaID = iframeDocument.getElementById('antennaID');
+    var netKeySelector = iframeDocument.getElementById("netKey");
 
     // BOTÓN DE SAVE CHANGES
     var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    var changed = false;
 
     if(inputAntennaID.value != antennaID && inputAntennaID.value >= 1 && inputAntennaID.value <= 1000) {
-        saveBtn.disabled = false;
+        changed = true;
     }
-    else {
+
+    if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
+        changed = true;
+    }
+    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value != "") {
+        changed = true;
+    }
+    else if(netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "") {
+        changed = false; // forzamos desactivado por falta de netkey
+    }
+
+    if(changed) {
+        saveBtn.disabled = false;
+    } else {
         saveBtn.disabled = true;
     }
 }

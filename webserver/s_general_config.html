@@ -74,7 +74,7 @@
                 </div>
                 <label id="editNetKeyAdv" style="margin-top: 10px; color: #C30101; font-size: 14px;"> Store the NetKey safely, once rebooted it cannot be recovered </label>
                 <div style="display: flex; gap: 10px; margin-top: 0px; justify-content: center;">
-                    <button onclick="parent.closeCustomNetKey()">Close</button>
+                    <button onclick="parent.clearCustomNetKey()">Clear</button>
                     <button onclick="parent.randomizeNetKey()">Randomize</button>
                     <button onclick="parent.saveCustomNetKey()">Save</button>
                 </div>
@@ -86,37 +86,42 @@
         <div class="general-config-container">
             <div class="top-section">
                 <h2> General Configuration </h2>
-                <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
-                    <label for="antennaID" style="color: #4682b4;"><b>Antenna ID</b></label>
-                    <input type="number" id="antennaID" style="width: 105px; padding: 5px; padding-left: 10px;" min="1" max="1000" oninput="parent.checkAntennaIDChange()">
-                    <!--
+
+                <div class="antenna-netkey-container">
+                    <div class="antenna-netkey-inputs">
+                        <div class="input-group">
+                            <label for="antennaID" style="color: #4682b4;"><b>Antenna ID</b></label>
+                            <input type="number" id="antennaID" min="1" max="1000" oninput="parent.checkAntennaIDChange()">
+                        </div>
+                        <div class="input-group">
+                            <label for="netKey" style="color: #4682b4;"><b>NetKey</b></label>
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <select id="netKey" class="selector" onchange="parent.updateButtonsForNetKeySelected()">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                    <option value="13">13</option>
+                                    <option value="14">14</option>
+                                    <option value="15">15</option>
+                                    <option value="16">Custom</option>
+                                </select>
+                                <button id="editNetKey" onclick="parent.editNetKey()">
+                                    <img id="editNetKeyImg" src="images/edit.png" alt="Edit" style="width: 25px; height: 25px; padding-left: 1px;">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <button id="saveAntennaIDAndNetKey" onclick="parent.setAntennaNumberAndNetKey()" disabled>
                         <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
-                    </button>
-                    -->
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px; width: 100%;">
-                    <label for="netKey" style="color: #4682b4;"><b>NetKey</b></label>
-                    <select id="netKey" class="selector" style="width: 100px; padding: 5px; padding-left: 10px;" onchange="parent.updateButtonsForNetKeySelected()">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                        <option value="13">13</option>
-                        <option value="14">14</option>
-                        <option value="15">15</option>
-                        <option value="16">Custom</option>
-                    </select>
-                    <button id="editNetKey" onclick="parent.editNetKey()">
-                        <img id="editNetKeyImg" src="images/edit.png" alt="Edit" style="width: 25px; height: 25px; padding-left: 1px;">
                     </button>
                 </div>
 
