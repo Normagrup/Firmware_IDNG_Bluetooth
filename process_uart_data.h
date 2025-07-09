@@ -59,7 +59,6 @@
 #define SET_RELAY                       0x65
 #define SCAN_FROM_NODE                  0x67
 #define SCAN_NODE_NOT_FOUND             0x68
-#define SET_ANTENNA_ADDRESS             0x69    // modificar la address del micro
 #define SEND_ANTENNA_ADDRESS            0x70    // mandar al micro la address que tiene el embebido
 #define GET_ANTENNA_ADDRESS             0x71    // solicitar la address del micro (solicitud)
 #define CONFIRM_GET_ANTENNA_ADDRESS     0x72    // solicitar la address del micro (respuesta)
@@ -76,9 +75,9 @@
 #define CHANGE_FATHER                   0x87
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
 #define SEND_NET_KEY                    0x89
-#define SET_NET_KEY_CHANGE              0x90
 #define START_LINE_SCANNING             0x91
 #define END_LINE_SCANNING               0x92
+#define ADDRESS_AND_NET_KEY             0x93
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -109,8 +108,7 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
 void sendNetKey(UartPort* _uartPort, Database* database);
 void sendAntennaAddress(UartPort* _uartPort, Database* database);
 void sendAntennaGetAddress(UartPort* _uartPort);
-void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress);
-void sendAntennaNetKeyChange(UartPort* _uartPort);
+void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, bool netKeyHasChanged);
 void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
 void sendUartEndLineScanning(UartPort* _uartPort);

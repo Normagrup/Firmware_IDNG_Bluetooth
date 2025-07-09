@@ -1290,7 +1290,7 @@ void sendAntennaGetAddress(UartPort* _uartPort)
     _uartPort->sendData(frame);
 }
 
-void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress)
+void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, bool netKeyHasChanged)
 {
     QByteArray frame;
     unsigned char length = 5;
@@ -1298,23 +1298,9 @@ void sendAntennaSetAddress(UartPort* _uartPort, uint16_t newAntennaRealAddress)
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(SET_ANTENNA_ADDRESS);
-    frame.append((newAntennaRealAddress >> 8) & 0xFF);
-    frame.append(newAntennaRealAddress & 0xFF);
-    frame.append(UART_END);
-
-    _uartPort->sendData(frame);
-}
-
-void sendAntennaNetKeyChange(UartPort* _uartPort)
-{
-    QByteArray frame;
-    unsigned char length = 3;
-
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(SET_NET_KEY_CHANGE);
+    frame.append(ADDRESS_AND_NET_KEY);
+    frame.append(antennaIDHasChanged ? 0x01 : 0x00);
+    frame.append(netKeyHasChanged ? 0x01 : 0x00);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
