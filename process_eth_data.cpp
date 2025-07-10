@@ -1111,12 +1111,16 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
         case 0x19: // READ GROUPS
             sendGroupDataToEth(rcvAddress, commandHigh, commandLow, _database, _udpSocket);
             break;
+
         case 0x20: // READ GROUPS NAMES
             sendGroupNamesToEth(rcvAddress, commandHigh, commandLow, _database, _udpSocket);
             break;
+
         case 0x1A: // WRITE GROUPS
             updateGroupsDataFromEth(data,  _database, _uartPort);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            if(pendingGroupUpdatesEth.isEmpty()){
+                 sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            }
             break;
 
         case 0x1B: // SAVE CONFIG IN MEMORY

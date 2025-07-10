@@ -389,6 +389,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
                         bool added = ((uint8_t)data[7] != 0);
                         sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
+                        trackGroupUpdateForEth(data);
                     }
                     break;
 
@@ -954,6 +955,10 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
             if (meshDevice[i][j].getRealAddress() == address[0]) {
                 meshDevice[i][j].delGroupSubAddress(address[1]);
                 database->delGroup(address[0], address[1]);
+                if (!pendingGroupUpdatesEth.isEmpty()) {
+                    QString key = QString("%1:%2").arg(address[0]).arg(address[1]);
+                    pendingGroupUpdatesEth.remove(key);
+                }
                 return;
             }
         }
@@ -1325,4 +1330,14 @@ void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddres
     dstAddress.setAddress(rcvAddress);
 
     _udpSocket->sendData(dstAddress, frame);
+}
+
+void trackGroupUpdateForEth(QByteArray data)
+{
+    uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
+    uint16_t groupAddress = ((uint16_t)data[5] << 8) | data[6];
+    if (!pendingGroupUpdatesEth.isEmpty()) {
+        QString key = QString("%1:%2").arg(nodeAddress).arg(groupAddress);
+        pendingGroupUpdatesEth.remove(key);
+    }
 }

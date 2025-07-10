@@ -72,5 +72,6 @@ extern QString endDate;
 
 extern uint8_t netKeys[15][16];
 extern QMap<uint16_t, POLQueryContext> powerOnQueryMap;
+extern QSet<QString> pendingGroupUpdatesEth;
 
 #endif // GLOBAL_VARIABLES_H

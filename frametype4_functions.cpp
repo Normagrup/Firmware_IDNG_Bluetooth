@@ -264,13 +264,17 @@ void updateGroupsDataFromEth(QByteArray data,  Database* _database, UartPort* _u
         if (shouldBeInGroup && !isInGroup) {
             //_database->setGroup(realAddress, groupAddress);
             uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
+            QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
+            pendingGroupUpdatesEth.insert(key);
             sendUartAddGroupManual(_uartPort, address);
-            delay(SLEEP_DALI_TIME_MS);
+            delay(SLEEP_DALI_TIME_MS*2);
         }
         else if (!shouldBeInGroup && isInGroup) {
             uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
+            QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
+            pendingGroupUpdatesEth.insert(key);
             sendUartDelGroup(_uartPort, address, _database);
-            delay(SLEEP_DALI_TIME_MS);
+            delay(SLEEP_DALI_TIME_MS*3);
         }
     }
 }
