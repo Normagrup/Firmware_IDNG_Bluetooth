@@ -1315,7 +1315,7 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
         }
     }
 
-    QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+    QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + (added ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

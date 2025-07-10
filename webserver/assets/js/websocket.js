@@ -1239,16 +1239,28 @@ function processDelAllDev(value, init)
 
 function processAddNodeToGroup(value)
 {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var added = (value === "true");
 
     loadNodesLists();
 
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
     var popup = iframeDocument.getElementById('popupAddingNode');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var addLabel = iframeDocument.getElementById('addLabel');
+    var addLoader = iframeDocument.getElementById('addLoader');
 
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    addLabel.textContent = added ? "Node correctly added" : "Something went wrong..."
+    addLoader.style.animation = "none";
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+
+        addLabel.textContent = "Adding Node...";
+        addLoader.style.animation = "spin 1.5s linear infinite";
+    }, 1800);
 }
 
 function processPowerOnLevelChange(value)
