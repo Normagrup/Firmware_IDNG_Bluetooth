@@ -55,6 +55,10 @@ QMap<uint16_t, NodeInfo> nodesByRealAddress;
 QMultiMap<uint16_t, uint16_t> childrenMap;
 
 uint8_t failComCycles;
+uint16_t discovered_nodes[2048] = {0};
+uint16_t discovered_nodes_count = -1;
+bool forceStopLS1;
+bool forceStopLS2;
 
 QString reportType;
 QString startDate;

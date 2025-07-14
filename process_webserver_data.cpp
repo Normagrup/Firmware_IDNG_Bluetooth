@@ -653,8 +653,40 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_LINE_SCANNING) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
-        sendUartLineScanning(uartPort);
 
+        uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 16);
+        uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 16);
+
+        sendUartStartLineScanning(uartPort);
+        delay(2500);
+
+        // Si se ha recibido el mensaje de confirmación del micro, empieza
+        if(discovered_nodes_count == 0) {
+            for(uint16_t i = startAddr; i <= endAddr; i++) {
+                if(forceStopLS1) { forceStopLS1 = false; break; }
+
+                if (!database->isExistingNode(i)) {
+                    sendLSInfo(webServer, i, 1);
+                    sendUartLineScanning(uartPort, 1, i);
+                    delay(5000);
+                }
+            }
+
+            sendLSInfo(webServer, 0, 0);
+            delay(2500);
+
+            for(uint16_t j = 0; j < discovered_nodes_count; j++) {
+                if(forceStopLS2) { forceStopLS2 = false; break; }
+
+                if (database->isExistingNode(discovered_nodes[j])) {
+                    sendLSInfo(webServer, discovered_nodes[j], 2);
+                    sendUartLineScanning(uartPort, 2, discovered_nodes[j]);
+                    delay(5000);
+                }
+            }
+        }
+
+        sendUartEndLineScanning(uartPort);
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
         sendGroupsWithPOL(webServer, database, value);
@@ -688,23 +720,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if (webServer != nullptr) { webServer->sendData(message); }
     }
-    else if (type == WS_SET_MASTER_REAL_ADDRESS) {
-        // Para que la antena núm. 1 sea la address 31768 (0x7C18), la núm. 2 sea la address 31769 (0x7C19), etc. Hasta la núm. 1000, que será la 32767 (0x7FFF)
-        int numValue = value.toInt(nullptr, 10) + 31767;
-        uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
-
-        uint16_t actualAntennaRealAddress = database->getMasterRealAddress();
-        if(newAntennaRealAddress == actualAntennaRealAddress) { return; }
-
-        database->setMasterRealAddress(newAntennaRealAddress);
-        antennaRealAddress = newAntennaRealAddress;
-
-        QString netKey = database->getNetKey();
-        saveNetKeyAndMasterAddress(getLocalDate(), getLocalTime(), netKey, antennaRealAddress);
-
-        delay(100);
-        sendAntennaSetAddress(uartPort, newAntennaRealAddress);
-    }
     else if (type == WS_GET_FAILCOM_CYCLES) {
         sendFailComCycles(webServer);
     }
@@ -722,18 +737,40 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_GET_LINE_SCANNED_NODES) {
         sendFoundNodes(webServer, scannedNodesCounter);
     }
-    else if (type == WS_CHANGE_NET_KEY) {
-        QString actualNetKey = database->getNetKey();
-        if(value == actualNetKey) { return; }
+    else if (type == WS_STOP_LS) {
+        if(value == "1")
+            forceStopLS1 = true;
+        else if(value == "2")
+            forceStopLS2 = true;
+    }
+    else if (type == WS_SET_MASTER_ADDR_AND_NETKEY) {
+        QStringList elems = value.split("_");
+        QString antennaID = elems[0];
+        QString netKey = elems[1];
 
-        database->setNetKey(value);
-        database->clearAllData();
+        // Si cambia la antennaID
+        if(antennaID != "") {
+            // Para que la antena núm. 1 sea la address 31768 (0x7C18), la núm. 2 sea la address 31769 (0x7C19), etc. Hasta la núm. 1000, que será la 32767 (0x7FFF)
+            int numValue = antennaID.toInt(nullptr, 10) + 31767;
+            uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
 
-        uint16_t masterRealAddress = database->getMasterRealAddress();
-        saveNetKeyAndMasterAddress(getLocalDate(), getLocalTime(), value, masterRealAddress);
+            database->setMasterRealAddress(newAntennaRealAddress);
+            antennaRealAddress = newAntennaRealAddress;
+        }
+
+        // Si cambia la netKey
+        if(netKey != "") {
+            database->setNetKey(netKey);
+            database->clearAllData();
+        }
+
+        uint16_t mra = database->getMasterRealAddress();
+        QString nk = database->getNetKey();
+        saveNetKeyAndMasterAddress(getLocalDate(), getLocalTime(), nk, mra);
 
         delay(100);
-        sendAntennaNetKeyChange(uartPort);
+
+        sendAntennaAddressAndNetKey(uartPort, antennaID != "", netKey != "");
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -1278,7 +1315,7 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
         }
     }
 
-    QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + " ";
+    QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + (added ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

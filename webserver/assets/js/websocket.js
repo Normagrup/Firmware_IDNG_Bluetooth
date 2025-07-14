@@ -3,6 +3,8 @@ var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
 var isStoppingCommission = false;
+var netKey;
+var antennaID;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -1155,11 +1157,17 @@ function processIsLSInProgress(value)
         var informerTotal = iframeDocument.getElementById('informerTotal');
         var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
+        var btnStop1 = iframeDocument.getElementById('stopButton1');
+        var btnStop2 = iframeDocument.getElementById('stopButton2');
+
         popupLS.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
         informerLabel1.textContent = "Phase 1: Completed.";
-        informerTotal.textContent = "FOUNDED NODES: ...";
+        informerTotal.textContent = "FOUNDED NODES: 0";
         informerLabel2.textContent = "Phase 2: Waiting...";
+
+        btnStop1.disabled = true;
+        btnStop2.disabled = true;
 
         sendData("GET_LINE_SCANNED_NODES", "");
     }
@@ -1231,16 +1239,28 @@ function processDelAllDev(value, init)
 
 function processAddNodeToGroup(value)
 {
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var added = (value === "true");
 
     loadNodesLists();
 
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
     var popup = iframeDocument.getElementById('popupAddingNode');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var addLabel = iframeDocument.getElementById('addLabel');
+    var addLoader = iframeDocument.getElementById('addLoader');
 
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
+    addLabel.textContent = added ? "Node correctly added" : "Something went wrong..."
+    addLoader.style.animation = "none";
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+
+        addLabel.textContent = "Adding Node...";
+        addLoader.style.animation = "spin 1.5s linear infinite";
+    }, 1800);
 }
 
 function processPowerOnLevelChange(value)
@@ -1309,6 +1329,8 @@ function confirmSetRelay(value)
 
 function processMasterAddressGet(value)
 {
+    antennaID = value - 31767; // variable global
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -1339,11 +1361,17 @@ function processConfirmStartLineScanning(value)
     var informerTotal = iframeDocument.getElementById('informerTotal');
     var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
+
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     informerLabel1.textContent = "Phase 1: Starting...";
-    informerTotal.textContent = "FOUNDED NODES: ...";
+    informerTotal.textContent = "FOUNDED NODES: 0";
     informerLabel2.textContent = "Phase 2: Waiting...";
+
+    btnStop1.disabled = false;
+    btnStop2.disabled = true;
 }
 
 function processConfirmEndLineScanning(value)
@@ -1367,17 +1395,24 @@ function processLSInfo(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+    var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
+
     if(phase == "1") {
-        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
         informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+        btnStop1.disabled = false;
     }
     else if(phase == "2") {
-        var informerLabel2 = iframeDocument.getElementById('informerLabel2');
         informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+        btnStop2.disabled = false;
     }
     else if(phase == "0") {
-        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
         informerLabel1.textContent = "Phase 1: Completed.";
+        btnStop1.disabled = true;
+        btnStop2.disabled = false;
     }
 }
 
@@ -1405,19 +1440,26 @@ function processConfirmEndClearAll(value)
 
 function processNetKeyGet(value)
 {
+    netKey = value; // variable global
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var netKeySelector = iframeDocument.getElementById("netKey");
     netKeySelector.value = value;
 
-    var changeNetKeyImg = iframeDocument.getElementById("changeNetKeyImg");
+    var editNetKey = iframeDocument.getElementById("editNetKey");
 
     if(value == "16") { // si es la Custom NetKey
-        changeNetKeyImg.src = "images/edit.png";
+        editNetKey.disabled = false;
+
+        for(var i = 0; i < 16; i++) {
+            const input = iframeDocument.getElementById(`netKeyByte${i}`);
+            input.value = "**";
+        }
     }
     else { // si es una NetKey por defecto
-        changeNetKeyImg.src = "images/save.png";
+        editNetKey.disabled = true;
     }
 }
 
@@ -2000,7 +2042,14 @@ function clearAllData()
 
 function lineScanning()
 {
-    sendData("LINE_SCANNING", "");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var start = parseInt(iframeDocument.getElementById("scanStart").value);
+    var end = parseInt(iframeDocument.getElementById("scanEnd").value);
+
+    if(start >= 1 && start <= 2048 && end >= 1 && end <= 2048 && start <= end)
+        sendData("LINE_SCANNING", start + "_" + end);
 }
 
 function getLogs()
@@ -2332,35 +2381,45 @@ function syncPOL() {
     }, 10000);
 }
 
-function setAntennaNumber() {
+function setAntennaNumberAndNetKey() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var inputAntennaNumber = iframeDocument.getElementById('antennaID');
+    var inputAntennaID = iframeDocument.getElementById('antennaID');
+    var netKeySelector = iframeDocument.getElementById("netKey");
 
-    var saveButton = iframeDocument.getElementById('saveAntennaID');
+    var newAntennaID = "";
+    if(inputAntennaID.value != antennaID) {
+        newAntennaID = inputAntennaID.value;
+    }
 
-    if(inputAntennaNumber && inputAntennaNumber.value >= 1 && inputAntennaNumber.value <= 1000) 
-    {
-        var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-        if (isTrue) {
-            sendData("SET_MASTER_REAL_ADDRESS", inputAntennaNumber.value);
-
-            setTimeout(function () {
-                sendData("SET_REBOOT_DEVICE", " ");
-                logoutApp();
-                window.location.href = "http://" + window.location.hostname;
-            }, 1000);
+    var newNetKey = "";
+    if((netKeySelector.value != "16" && netKeySelector.value != netKey) || (netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**"))) {
+        if(netKeySelector.value != "16") {
+            newNetKey = netKeySelector.value;
+        }
+        else {
+            for(var i = 0; i < 16; i++) {
+                const input = iframeDocument.getElementById(`netKeyByte${i}`);
+                const value = input.value.trim().toUpperCase();
+                newNetKey += value;
+            }
         }
     }
-    else {
-        if (saveButton) {
-            saveButton.style.backgroundColor = "red";
 
-            setTimeout(function () {
-                saveButton.style.backgroundColor = "#4682b4";
-            }, 500);
-        }
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
+        return; // forzamos stop por error de rango de ID o falta de netkey
+    }
+
+    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+    if (isTrue) {
+        sendData("SET_MASTER_ADDR_AND_NETKEY", newAntennaID + "_" + newNetKey);
+
+        setTimeout(function () {
+            sendData("SET_REBOOT_DEVICE", " ");
+            logoutApp();
+            window.location.href = "http://" + window.location.hostname;
+        }, 2000);
     }
 }
 
@@ -2429,61 +2488,23 @@ function confirmSwap()
     }
 }
 
-function changeNetKey()
+function stopLS(value)
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var netKeySelector = iframeDocument.getElementById("netKey");
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
 
-    if(netKeySelector.value != "16") {
-        var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-        if (isTrue) {
-            sendData("CHANGE_NET_KEY", netKeySelector.value);
-
-            setTimeout(function () {
-                sendData("SET_REBOOT_DEVICE", " ");
-                logoutApp();
-                window.location.href = "http://" + window.location.hostname;
-            }, 1500);
-        }
-    }
-    else {
-        var popup = iframeDocument.getElementById("popupChangeNetKey");
-        var popupOverlay = iframeDocument.getElementById("popupOverlay");
-
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-    }
-}
-
-function changeCustomNetKey()
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var netKeyStr = '';
-
-    for(var i = 0; i < 16; i++) {
-        const input = iframeDocument.getElementById(`netKeyByte${i}`);
-        const value = input.value.trim().toUpperCase();
-
-        if (!/^[0-9A-F]{2}$/.test(value)) {
-            alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
-            return null;
-        }
-
-        netKeyStr += value;
+    if(value == "1") 
+    {
+        btnStop1.disabled = true;
+        btnStop2.disabled = false;
+    } 
+    else if(value == "2") 
+    {
+        btnStop2.disabled = true;
     }
 
-    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-    if (isTrue) {
-        sendData("CHANGE_NET_KEY", netKeyStr);
-
-        setTimeout(function () {
-            sendData("SET_REBOOT_DEVICE", " ");
-            logoutApp();
-            window.location.href = "http://" + window.location.hostname;
-        }, 1500);
-    }
+    sendData("STOP_LS", value);
 }

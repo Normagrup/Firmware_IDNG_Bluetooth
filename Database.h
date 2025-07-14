@@ -95,6 +95,8 @@ public:
 
     void changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress);
 
+    bool isExistingNode(uint16_t realAddress);
+
 signals:
 
 private:

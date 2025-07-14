@@ -1571,3 +1571,14 @@ void Database::changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, 
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in changePosition:" << query.lastError().text(); }
 }
+
+bool Database::isExistingNode(uint16_t realAddress)
+{
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes WHERE RealAddress = :addr");
+    query.bindValue(":addr", realAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return false; }
+
+    return query.next(); // true si al menos una fila coincide
+}

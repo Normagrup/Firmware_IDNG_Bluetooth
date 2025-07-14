@@ -209,18 +209,18 @@ button.clicked {
     cursor: pointer;
 }
 
-#saveAntennaID,
+#saveAntennaIDAndNetKey,
 #saveCycles,
-#changeNetKey {
+#editNetKey {
     padding: 0;
     margin: 0;
     width: 32px;
     height: 32px;
 }
 
-#saveAntennaID img,
+#saveAntennaIDAndNetKey img,
 #saveCycles img,
-#changeNetKey img {
+#editNetKey img {
     margin-top: 3px;
 }
 
@@ -286,16 +286,100 @@ button:disabled:hover {
 }
 
 .selector {
-    height: 100%;
-    width: 60%;
+    padding: 5px;
+    padding-left: 10px;
+    height: 35px;
+    width: 100px;
     border: 2px solid #4682b4;
     border-radius: 8px;
-    padding: 0px;
-    font-size: 16px;
+    font-size: 14px;
     color: #4682b4;
     cursor: pointer;
 }
 
 .selector:focus {
     outline: 2px solid #63e8f0;
+}
+
+.input-scan {
+    padding: 5px; 
+    padding-left: 10px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 70px;
+    outline: none;
+    color: #4682b4;
+}
+
+.input-scan:focus {
+    border-color: #63e8f0;
+    box-shadow: 0 0 3px #63e8f0;
+}
+
+#popupLineScanning .popup-subcontainer {
+    width: 95%;
+}
+
+#stopButton1,
+#stopButton2 {
+    padding: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    background-color: #4682b4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 0px;
+    width: 80px;
+    height: 35px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.antenna-netkey-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    padding: 15px;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.antenna-netkey-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    height: 32px;
+}
+
+#antennaID {
+    padding: 5px;
+    padding-left: 10px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    height: 35px;
+    width: 106px;
+    outline: none;
+    color: #4682b4;
+}
+
+#antennaID:focus {
+    border-color: #63e8f0;
+    box-shadow: 0 0 3px #63e8f0;
+}
+
+#saveAntennaIDAndNetKey {
+  margin-left: auto;
+  margin-right: 10px;
 }
