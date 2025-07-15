@@ -1,4 +1,3 @@
-#include <QCoreApplication>
 #include <QTime>
 
 #include "time_functions.h"

@@ -24,6 +24,7 @@ QList<GroupBitmap> collectGroupBitmaps( Database* _database);
 void sendGroupDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, Database* database, UdpSocket* _udpSocket);
 void sendGroupNamesToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, Database* _database, UdpSocket* _udpSocket);
 void saveGroupFromEth(QByteArray data,  Database* _database);
+void processGroupBitmap(const writeGroupBitmap& gb, Database* db, UartPort* uartPort);
 void updateGroupsDataFromEth(QByteArray data, Database* _database, UartPort* _uartPort);
 
 void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, QByteArray data);

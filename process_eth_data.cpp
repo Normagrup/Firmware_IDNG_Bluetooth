@@ -667,9 +667,10 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
         case 0xA4:  // QUERY POWER ON LVL
         {
             uint16_t pid = ((uint16_t)data[5] << 8) | data[6];
-            uint16_t targetAddress = getTargetAddress(subnet, daliAddress);
+            uint8_t nodesubnet = getNodeSubnetFromDaliAddress(daliAddress);
+            uint16_t targetAddress = getTargetAddress(subnet, nodesubnet);
             powerOnQueryMap[targetAddress] = { pid, rcvAddress, _udpSocket };
-            askPowerOnLevelFromEthToDali(_uartPort, subnet, daliAddress);
+            askPowerOnLevelFromEthToDali(_uartPort, subnet, nodesubnet);
             break;
         }
 
@@ -1119,7 +1120,8 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
         case 0x1A: // WRITE GROUPS
             updateGroupsDataFromEth(data,  _database, _uartPort);
             if(pendingGroupUpdatesEth.isEmpty()){
-                 sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+                sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+                numDevicesToUpdate = 0;
             }
             break;
 

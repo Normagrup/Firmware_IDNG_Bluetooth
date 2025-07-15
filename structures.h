@@ -79,4 +79,15 @@ typedef struct {
     UdpSocket* socket;
 } POLQueryContext;
 
+typedef struct {
+    uint16_t groupId;
+    uint8_t subnetId;
+    QByteArray bitmap;
+} writeGroupBitmap;
+
+typedef enum {
+    Add,
+    Remove
+} GroupActionType;
+
 #endif // STRUCTURES_H

@@ -241,42 +241,18 @@ void saveGroupFromEth(QByteArray data, Database* _database)
 
 void updateGroupsDataFromEth(QByteArray data,  Database* _database, UartPort* _uartPort)
 {
-    uint8_t groupId = data[10];
-    uint8_t subnet = data[11];
-    QByteArray bitmap = data.mid(12, 8);
+    writeGroupBitmap gb;
+    gb.groupId = data[10];
+    gb.subnetId = data[11];
+    gb.bitmap = data.mid(12, 8);
 
-    uint16_t groupAddress = getMaskedGroupId(groupId);
-
-    for (int node = 0; node < MAX_NODES_SUBNET; ++node)
-    {
-        Device &dev = meshDevice[subnet][node];
-
-        if (!dev.getIsConfigured())
-            continue;
-
-        int byteIndex = node / 8;
-        int bitIndex  = node % 8;
-
-        bool shouldBeInGroup = (bitmap[byteIndex] >> bitIndex) & 0x01;
-        uint16_t realAddress = dev.getRealAddress();
-        bool isInGroup = _database->deviceIsInGroup(realAddress, groupAddress);
-
-        if (shouldBeInGroup && !isInGroup) {
-            //_database->setGroup(realAddress, groupAddress);
-            uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
-            QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
-            pendingGroupUpdatesEth.insert(key);
-            sendUartAddGroupManual(_uartPort, address);
-            delay(SLEEP_DALI_TIME_MS*2);
-        }
-        else if (!shouldBeInGroup && isInGroup) {
-            uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
-            QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
-            pendingGroupUpdatesEth.insert(key);
-            sendUartDelGroup(_uartPort, address, _database);
-            delay(SLEEP_DALI_TIME_MS*3);
-        }
-    }
+    pendingGroupBitmaps.append(gb);
+    processGroupBitmap(gb, _database, _uartPort);  //First try
+    int durMS = numDevicesToUpdate * 300;
+    QTimer::singleShot(durMS + 200, [=]() {
+        if(!pendingGroupUpdatesEth.isEmpty())
+            processGroupBitmap(gb, _database, _uartPort);  //Retry after delay
+    });
 }
 
 void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, QByteArray testData)
@@ -480,3 +456,45 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         delay(ETH_SEND_TIME_MS);
     }
 }
+
+void processGroupBitmap(const writeGroupBitmap &gb, Database* _database, UartPort* _uartPort)
+{
+    uint16_t groupAddress = getMaskedGroupId(gb.groupId);
+    uint8_t subnet = gb.subnetId;
+    QByteArray bitmap = gb.bitmap;
+
+    for (int node = 0; node < MAX_NODES_SUBNET; node++)
+    {
+        Device &dev = meshDevice[subnet][node];
+
+        if (!dev.getIsConfigured())
+            continue;
+
+        int byteIndex = node / 8;
+        int bitIndex  = node % 8;
+
+        bool toAddToGroup = (bitmap[byteIndex] >> bitIndex) & 0x01;
+        uint16_t realAddress = dev.getRealAddress();
+        bool isInGroup = _database->deviceIsInGroup(realAddress, groupAddress);
+
+        if (toAddToGroup && !isInGroup) {
+            numDevicesToUpdate++;
+            uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
+            QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
+            pendingGroupUpdatesEth.insert(key);
+            groupActionTypeMap[key] = Add;
+            sendUartAddGroupManual(_uartPort, address);
+            delay(300);
+        }
+        else if (!toAddToGroup && isInGroup) {
+            numDevicesToUpdate++;
+            uint16_t address[3] = { realAddress, groupAddress, 0x0000 };
+            QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
+            pendingGroupUpdatesEth.insert(key);
+            groupActionTypeMap[key] = Remove;
+            sendUartDelGroup(_uartPort, address, _database);
+            delay(300);
+        }
+    }
+}
+

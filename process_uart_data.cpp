@@ -45,6 +45,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case NODE_DELETED: return 6;
             case CONFIRM_START_SCAN: return 4;
             case CONFIRM_ADD_NODE_TO_GROUP: return 9;
+            case CONFIRM_DEL_NODE_FROM_GROUP: return 9;
             case CONFIRM_START_REMOVE_ALL_NODES: return 4;
             case CONFIRM_END_REMOVE_ALL_NODES: return 4;
             case CONFIRM_START_REMOVE_ONE_NODE: return 4;
@@ -375,8 +376,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint8_t powerOnLevel = (uint8_t)data[5];
                         if(powerOnQueryMap.contains(nodeAddr)){
                             POLQueryContext ctx = powerOnQueryMap[nodeAddr];
-                            powerOnQueryMap.remove(nodeAddr);
                             sendPowerOnLeveltoEth(ctx.pid, powerOnLevel, ctx.rcvAddress, ctx.socket);
+                            powerOnQueryMap.remove(nodeAddr);
                         }
                         updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
                     }
@@ -388,6 +389,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         bool added = ((uint8_t)data[7] != 0);
                         sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
                         trackGroupUpdateForEth(data);
+                    }
+                    break;
+                    case CONFIRM_DEL_NODE_FROM_GROUP:
+                    {
+                        uint16_t address = ((uint16_t)data[3] << 8) | data[4];
+                        uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
+                        bool removed = ((uint8_t)data[7] != 0);
+                        updateDelNodeToDatabase(address, deviceTypeGroupAddress, removed, database);
                     }
                     break;
 
@@ -947,20 +956,6 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == address[0]) {
-                meshDevice[i][j].delGroupSubAddress(address[1]);
-                database->delGroup(address[0], address[1]);
-                if (!pendingGroupUpdatesEth.isEmpty()) {
-                    QString key = QString("%1:%2").arg(address[0]).arg(address[1]);
-                    pendingGroupUpdatesEth.remove(key);
-                }
-                return;
-            }
-        }
-    }
 }
 
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database)
@@ -1352,5 +1347,24 @@ void trackGroupUpdateForEth(QByteArray data)
     if (!pendingGroupUpdatesEth.isEmpty()) {
         QString key = QString("%1:%2").arg(nodeAddress).arg(groupAddress);
         pendingGroupUpdatesEth.remove(key);
+    }
+}
+       
+void updateDelNodeToDatabase(uint16_t address, uint16_t deviceTypeGroupAddress, bool removed, Database *database)
+{
+    if(removed){
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == address) {
+                    meshDevice[i][j].delGroupSubAddress(deviceTypeGroupAddress);
+                    database->delGroup(address, deviceTypeGroupAddress);
+                    if (!pendingGroupUpdatesEth.isEmpty()) {
+                        QString key = QString("%1:%2").arg(address).arg(deviceTypeGroupAddress);
+                        pendingGroupUpdatesEth.remove(key);
+                    }
+                    return;
+                }
+            }
+        }
     }
 }

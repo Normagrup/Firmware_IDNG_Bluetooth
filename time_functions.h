@@ -1,6 +1,8 @@
 #ifndef TIME_FUNCTIONS_H
 #define TIME_FUNCTIONS_H
 
+#include <QCoreApplication>
+
 #define SLEEP_DALI_TIME_MS              150
 #define SLEEP_CONFIG_TIME_MS            1000
 #define POLLING_TIMER_MS                2000

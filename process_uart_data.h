@@ -55,6 +55,7 @@
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
 #define CONFIRM_ADD_NODE_TO_GROUP       0x55
+#define CONFIRM_DEL_NODE_FROM_GROUP     0x56
 #define CONFIRM_SET_POWER_ON_LEVEL      0x57
 #define CONFIRM_START_REMOVE_ONE_NODE   0x59
 #define CONFIRM_END_REMOVE_ONE_NODE     0x61
@@ -119,5 +120,6 @@ void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void trackGroupUpdateForEth(QByteArray data);
+void updateDelNodeToDatabase(uint16_t address, uint16_t deviceTypeGroupAddress, bool removed, Database* database);
 
 #endif // PROCESS_UART_DATA_H

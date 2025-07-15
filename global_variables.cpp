@@ -83,4 +83,7 @@ uint8_t netKeys[15][16] = {
 };
 QMap<uint16_t, POLQueryContext> powerOnQueryMap;
 QSet<QString> pendingGroupUpdatesEth;
+QList<writeGroupBitmap> pendingGroupBitmaps;
+int numDevicesToUpdate;
+QMap<QString, GroupActionType> groupActionTypeMap;
 
