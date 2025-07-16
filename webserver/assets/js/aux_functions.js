@@ -396,10 +396,11 @@ function switchMode()
     var manualContainerNN = iframeDocument.getElementById("manualContainerNetworkNodes");
 
     var addButtons = iframeDocument.querySelectorAll('.deviceAddButton');
+    var replaceButtons = iframeDocument.querySelectorAll('.deviceReplaceButton');
     var scanButtons = iframeDocument.querySelectorAll('.deviceScanButton');
     var relayButtons = iframeDocument.querySelectorAll('.deviceRelayButton');
 
-    var allButtons = [...addButtons, ...scanButtons, ...relayButtons];
+    var allButtons = [...addButtons, ...replaceButtons, ...scanButtons, ...relayButtons];
 
     if (toggleMode.checked) {
         automaticLabel.style.color = "#999";
@@ -435,17 +436,18 @@ function switchMode()
     }
 }
 
-function updateAddScanRelayButtons() {
+function updateAddReplaceScanRelayButtons() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var toggleMode = iframeDocument.getElementById("toggleMode");
 
     var addButtons = iframeDocument.querySelectorAll('.deviceAddButton');
+    var replaceButtons = iframeDocument.querySelectorAll('.deviceReplaceButton');
     var scanButtons = iframeDocument.querySelectorAll('.deviceScanButton');
     var relayButtons = iframeDocument.querySelectorAll('.deviceRelayButton');
 
-    var allButtons = [...addButtons, ...scanButtons, ...relayButtons];
+    var allButtons = [...addButtons, ...replaceButtons, ...scanButtons, ...relayButtons];
 
     if (toggleMode.checked) {
         allButtons.forEach(function(button) {
@@ -637,17 +639,23 @@ function closeWirelessPopup()
     var popupAdd = iframeDocument.getElementById('popupAddDevice');
     var popupDelete = iframeDocument.getElementById('popupDelDevice');
     var popupDeleteAll = iframeDocument.getElementById('popupDelAllDevices');
+    var popupReplacePrev = iframeDocument.getElementById('popupReplaceDevices');
+    var popupReplace = iframeDocument.getElementById('popupReplace');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
     var loader1 = popup.querySelector('.loader');
     loader1.style.animation = "spin 1.5s linear infinite";
     var loader2 = popupAdd.querySelector('.loader');
     loader2.style.animation = "spin 1.5s linear infinite";
+    var loader3 = popupReplace.querySelector('.loader');
+    loader3.style.animation = "spin 1.5s linear infinite";
     
     if(popup) { popup.style.visibility = "hidden"; }
     if(popupAdd) { popupAdd.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
     if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
+    if(popupReplacePrev) { popupReplace.style.visibility = "hidden"; }
+    if(popupReplace) { popupReplace.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
 }
 
@@ -873,5 +881,39 @@ function checkAntennaIDChange()
         saveBtn.disabled = false;
     } else {
         saveBtn.disabled = true;
+    }
+}
+
+function showReplacePopup()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupReplaceDevices");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var scannedSelect = iframeDocument.getElementById("deviceToReplaceSelect");
+    scannedSelect.innerHTML = "";
+
+    var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
+    if(scannedDevicesList) {
+        var scannedDevices = scannedDevicesList.getElementsByTagName('li');
+
+        for (var i = 0; i < scannedDevices.length; i++) { 
+            var li = scannedDevices[i];
+            var span = li.getElementsByTagName('span')[0];
+            if (span) {
+                var text = span.textContent.trim();
+                
+                var option = iframeDocument.createElement('option');
+                option.value = text;
+                option.text = text;
+
+                scannedSelect.appendChild(option);
+            }
+        }
     }
 }

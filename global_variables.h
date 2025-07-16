@@ -57,6 +57,7 @@ extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
 extern bool isScanning;
+extern bool isReplacingDevices;
 extern uint16_t lineScanningCounter; // para calcular la posición del siguiente nodo escaneado
 extern uint16_t scannedNodesCounter; // para mostrar en el WS la cantidad de nodos encontrados
 extern QList<uint16_t> configuredNodes;
@@ -75,5 +76,8 @@ extern QString startDate;
 extern QString endDate;
 
 extern uint8_t netKeys[15][16];
+
+extern ReplaceData replaceData;
+extern ReplaceNode replaceNode;
 
 #endif // GLOBAL_VARIABLES_H

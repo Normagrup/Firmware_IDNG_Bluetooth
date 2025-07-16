@@ -182,10 +182,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             }
             */
 
-            // Sacamos el número de hijos del padre del nodo que estamos borrando, para saber si tras borrar, debemos desactivar el relay del padre o no
-            //uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
-            //int numberOfChildren = database->getCountOfDirectChildren(fatherNodeAddress);
-
             // Borrado del dispositivo elegido
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
@@ -205,10 +201,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             // Eliminar el nodo de la estructura interna
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
             database->deleteNode(nodeAddress);
-
-            // Si tenía solo un hijo, al haberlo eliminado, ahora tiene 0 y por tanto, se le desactiva el relay
-            //if(fatherNodeAddress != 0xC00F && numberOfChildren <= 1)
-            //    sendUartSetRelay(uartPort, fatherNodeAddress, false);
         }
     }
     else if (type == WS_SET_ADD_DEVICE) {
@@ -528,6 +520,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_IS_LS_IN_PROGRESS) {
         sendIsLSInProgress(webServer);
     }
+    else if (type == WS_SET_IS_REPLACING_IN_PROGRESS) {
+        sendIsReplacingInProgress(webServer);
+    }
+    else if (type == WS_SET_IS_ADDING_MAN_OR_REPLACING) {
+        sendIsAddingManOrReplacing(webServer);
+    }
     else if (type == WS_SET_TEST) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
 
@@ -772,10 +770,145 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendAntennaAddressAndNetKey(uartPort, antennaID != "", netKey != "");
     }
+    else if (type == WS_REPLACE_NODES) {
+        if (isCommissionOrLSInProgress(webServer)) { return; }
+
+        isReplacingDevices = true;
+        sendConfirmStartReplace(webServer);
+
+        QStringList elems = value.split("_");
+        replaceData.newNodeUUID = elems[0];
+        replaceData.newNodeRealAddress = 0x0000;
+        replaceData.oldNodeID = elems[1];
+        replaceData.oldNodeRealAddress = 0x0000;
+
+        addNodeForReplace(webServer, uartPort);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
     }
+}
+
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort) {
+    // PARTE 1 de 3: AÑADIR NODO NUEVO
+
+    // Extraer el índice del UUID correspondiente al nodo que queremos añadir
+    int uuidIndex = getUUIDIndexOfScanned(replaceData.newNodeUUID);
+
+    isManualAddingDevice = true;
+
+    // Guardar backup de la lista original
+    memcpy(scannedUUIDBackup, scannedUUID, sizeof(scannedUUID));
+
+    // Limpiar la lista original
+    memset(scannedUUID, 0, sizeof(scannedUUID));
+
+    // Copiar el UUID y el nodeAddressReport en la lista nueva
+    memcpy(scannedUUID[0].UUID, scannedUUIDBackup[uuidIndex].UUID, sizeof(scannedUUIDBackup[0].UUID));
+    scannedUUID[0].nodeAddressReport = scannedUUIDBackup[uuidIndex].nodeAddressReport;
+
+    // Limpiar de la lista original el elemento correspondiente al nodo que queremos añadir
+    for(int i = uuidIndex; i < 20; i++) {
+        if(i != 19) {
+            memcpy(scannedUUIDBackup[i].UUID, scannedUUIDBackup[i+1].UUID, sizeof(scannedUUIDBackup[i].UUID));
+            scannedUUIDBackup[i].nodeAddressReport = scannedUUIDBackup[i+1].nodeAddressReport;
+        }
+        else {
+            memset(scannedUUIDBackup[i].UUID, 0, sizeof(scannedUUIDBackup[i].UUID));
+            scannedUUIDBackup[i].nodeAddressReport = 0;
+        }
+    }
+
+    sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+    delay(SLEEP_DALI_TIME_MS);
+    sendUartAddDevice(uartPort, scannedUUID[0]);
+    sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
+}
+
+void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
+    // PARTE 2 de 3: BORRAR NODO ANTIGUO (guardando datos)
+    uint16_t nodeNetAddress = getNodeNetAddress(replaceData.oldNodeID);
+    sendLogCommissionEntry(webServer, "Looking for Node " + QString::number(nodeNetAddress) + " to delete...", "INFO");
+
+    uint16_t nodeAddress = meshDevice[replaceNode.subnetAddress][replaceNode.nodeSubnetAddress].getRealAddress();
+    replaceData.oldNodeRealAddress = nodeAddress;
+
+    replaceNode = database->getNodeDataForReplace(nodeAddress);
+
+    // Borrado del dispositivo elegido
+    printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
+
+    sendUartDelDevice(uartPort, nodeAddress);
+
+    // Device to delete added to log
+    insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
+
+    // Eliminar el nodo de la estructura interna
+    meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
+    database->deleteNode(nodeAddress);
+}
+
+void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
+    // PARTE 3 de 3: CARGAR DATOS AL NODO NUEVO
+
+    // Cargar los datos en el nodo (parte modelo)
+    uint16_t nodeNetAddress = database->getNodeNetAddressForReplace(replaceData.newNodeRealAddress);
+
+    Device &dev1 = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64];
+    Device &dev2 = meshDevice[replaceNode.subnetAddress][replaceNode.nodeSubnetAddress];
+
+    Device temp;
+    temp.copyFrom(dev1); // dev1 -> temp
+    dev1.copyFrom(dev2); // dev1 <- dev2
+    dev2.copyFrom(temp); // dev2 <- temp
+
+    uint16_t* removedGroups = dev2.delAllGroups();
+    QStringList groups = replaceNode.groupSubAddress.split(", ");
+    for(uint8_t i = 0; i < groups.size(); i++) {
+        dev2.setGroupSubAddress(groups[i].toUShort(nullptr, 16));
+    }
+
+    // Cargar los datos en el nodo (parte BBDD)
+    database->setNodeDataForReplace(replaceNode, replaceData.newNodeRealAddress);
+
+    // Cargar los datos en los nodos (parte nodos, tanto el propio nodo como los hijos)
+    QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(replaceData.oldNodeRealAddress);
+    for(uint16_t childRealAddress : childrenRealAddresses) {
+        sendUartChangeFather(uartPort, childRealAddress, replaceData.newNodeRealAddress);
+        database->setFatherRealAddress(childRealAddress, replaceData.newNodeRealAddress);
+        delay(150);
+    }
+
+    sendUartChangeFather(uartPort, replaceData.newNodeRealAddress, replaceNode.fatherRealAddress);
+    delay(150);
+    sendUartSetRelay(uartPort, replaceData.newNodeRealAddress, replaceNode.relayMode);
+    delay(150);
+
+    uint16_t* address = new uint16_t[2];
+    address[0] = replaceData.newNodeRealAddress;
+    for(uint8_t j = 0; j < MESH_GROUP_COUNT; j++) {
+        if(removedGroups[j] != 0) {
+            address[1] = removedGroups[j];
+            sendUartDelGroupSimple(uartPort, address);
+            delay(150);
+        }
+    }
+
+    for(uint8_t k = 0; k < groups.size(); k++) {
+        address[1] = groups[k].toUShort(nullptr, 16);
+
+        timerGroupAddress[0] = address[0];
+        timerGroupAddress[1] = address[1];
+        timerGroupAddress[2] = 0x0000;
+
+        groupDataConfiguration.configSecondGroup = false;
+        sendUartAddGroupManual(uartPort, address);
+        delay(150);
+    }
+
+    delay(5000);
+    sendUartConfirmReplacing(uartPort, replaceData.newNodeRealAddress);
 }
 
 bool isCommissionOrLSInProgress(WebServer* webServer)
@@ -1045,6 +1178,20 @@ void sendIsAddManualInProgress(WebServer* webServer)
 void sendIsLSInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_LS_IN_PROGRESS) + "@" + (isLineScanning ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsReplacingInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_REPLACING_IN_PROGRESS) + "@" + (isReplacingDevices ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsAddingManOrReplacing(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_ADDING_MAN_OR_REPLACING) + "@" + (isManualAddingDevice ? "true" : "false") + "_" + (isReplacingDevices ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1453,6 +1600,20 @@ void changePositions(Database* database, uint16_t pos1, uint16_t pos2)
 void sendConfirmEndClearAllData(WebServer* webServer)
 {
     QString message = QString(WS_SEND_CONFIRM_END_CLEAR_ALL) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmStartReplace(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_START_REPLACE) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndReplace(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_REPLACE) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

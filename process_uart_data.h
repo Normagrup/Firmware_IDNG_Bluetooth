@@ -78,6 +78,8 @@
 #define START_LINE_SCANNING             0x91
 #define END_LINE_SCANNING               0x92
 #define ADDRESS_AND_NET_KEY             0x93
+#define CONFIRM_REPLACE                 0x94
+#define CONFIRM_REPLACE_DONE            0x95
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -97,6 +99,7 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
 void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
+void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address); // no actualiza el modelo y la bbdd directamente
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
@@ -114,5 +117,6 @@ void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddre
 void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
+void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 
 #endif // PROCESS_UART_DATA_H
