@@ -1565,8 +1565,8 @@ void Database::setNodeDataForReplace(ReplaceNode replaceNode, uint16_t realAddre
     query.prepare("UPDATE Nodes SET SubnetAddress = :sa, NodeSubnetAddress = :nsa, GroupSub = :gs, RelayMode = :rm, FatherRealAddress = :fra WHERE RealAddress = :realAddress");
     query.bindValue(":sa", replaceNode.subnetAddress);
     query.bindValue(":nsa", replaceNode.nodeSubnetAddress);
-    query.bindValue(":gs", replaceNode.groupSubAddress);
-    query.bindValue(":rm", replaceNode.relayMode);
+    query.bindValue(":gs", ""); // groupSub se carga con la respuesta del micro
+    query.bindValue(":rm", 0); // relayMode se carga con la respuesta del micro
     query.bindValue(":fra", replaceNode.fatherRealAddress);
     query.bindValue(":realAddress", realAddress);
 

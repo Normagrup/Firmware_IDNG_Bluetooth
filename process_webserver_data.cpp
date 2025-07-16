@@ -831,7 +831,7 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     uint16_t nodeNetAddress = getNodeNetAddress(replaceData.oldNodeID);
     sendLogCommissionEntry(webServer, "Looking for Node " + QString::number(nodeNetAddress) + " to delete...", "INFO");
 
-    uint16_t nodeAddress = meshDevice[replaceNode.subnetAddress][replaceNode.nodeSubnetAddress].getRealAddress();
+    uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
     replaceData.oldNodeRealAddress = nodeAddress;
 
     replaceNode = database->getNodeDataForReplace(nodeAddress);
@@ -891,7 +891,7 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
         if(removedGroups[j] != 0) {
             address[1] = removedGroups[j];
             sendUartDelGroupSimple(uartPort, address);
-            delay(150);
+            delay(200);
         }
     }
 
@@ -904,7 +904,7 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
 
         groupDataConfiguration.configSecondGroup = false;
         sendUartAddGroupManual(uartPort, address);
-        delay(150);
+        delay(2000);
     }
 
     delay(5000);

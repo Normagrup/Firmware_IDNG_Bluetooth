@@ -306,9 +306,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
                         bool enabled = ((uint8_t)data[5] != 0);
-                        if(!isReplacingDevices) {
-                            updateRelayStatus(webServer, database, nodeAddress, enabled);
-                        }
+                        updateRelayStatus(webServer, database, nodeAddress, enabled);
                     }
                     break;
                     case SEND_RECOVERY_NODE:

@@ -654,7 +654,7 @@ function closeWirelessPopup()
     if(popupAdd) { popupAdd.style.visibility = "hidden"; }
     if(popupDelete) { popupDelete.style.visibility = "hidden"; }
     if(popupDeleteAll) { popupDeleteAll.style.visibility = "hidden"; }
-    if(popupReplacePrev) { popupReplace.style.visibility = "hidden"; }
+    if(popupReplacePrev) { popupReplacePrev.style.visibility = "hidden"; }
     if(popupReplace) { popupReplace.style.visibility = "hidden"; }
     popupOverlay.style.visibility = "hidden";
 }
