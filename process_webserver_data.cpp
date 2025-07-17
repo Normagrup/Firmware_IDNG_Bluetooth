@@ -652,8 +652,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_LINE_SCANNING) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
 
-        uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 16);
-        uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 16);
+        uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 10);
+        uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 10);
 
         sendUartStartLineScanning(uartPort);
         delay(2500);
