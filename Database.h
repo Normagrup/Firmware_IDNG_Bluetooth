@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include "structures.h"
+#include "log.h"
 
 class Database : public QObject
 {

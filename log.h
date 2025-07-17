@@ -42,5 +42,18 @@
 #define LOG_TEST_DT_OK                        0xC1
 #define LOG_TEST_DT_FAIL                      0xC2
 
+// Add/Delete to/from group result
+#define LOG_ADDED_TO_GROUP_OK                 0x50
+#define LOG_ADDED_TO_GROUP_FAIL               0x51
+#define LOG_DEL_FROM_GROUP                    0x57
+
+// Creating and deleting groups
+#define LOG_GROUP_CREATED                     0x52
+#define LOG_GROUP_DELETED                     0x53
+
+// PowerOnLevel
+#define POL_MAX                               0x54
+#define POL_LAST_VALUE                        0x55
+#define POL_OFF                               0x56
 
 #endif // LOG_H

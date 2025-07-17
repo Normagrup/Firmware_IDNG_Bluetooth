@@ -1447,17 +1447,17 @@ void sendConfirmEndRemoveOneNode(WebServer* webServer)
 
 void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, bool added, Database* database)
 {
-    if(added) {
-        // Añadir grupo en la BBDD
-        database->setGroup(address, deviceTypeGroupAddress);
+    uint8_t subnetAddress, nodeSubnetAddress;
 
-        // Añadir al modelo
-        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-                if (meshDevice[i][j].getRealAddress() == address) {
-                    meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress);
-                    break;
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address) {
+                subnetAddress = i; nodeSubnetAddress = j;
+                if(added) {
+                    meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress); // Añadir al modelo
+                    database->setGroup(address, deviceTypeGroupAddress); // Añadir grupo en la BBDD
                 }
+                break;
             }
         }
     }
@@ -1465,6 +1465,15 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
     QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + (added ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
+
+    // Log entry
+    QString groupAddressString = QString("%1").arg(deviceTypeGroupAddress, 4, 16, QLatin1Char('0')).toUpper();
+    QString name = "SUB:" + QString::number(subnetAddress) + " " + "ID:" + QString::number(nodeSubnetAddress) + " - " + database->getGroupName(groupAddressString);
+    QString serialNum = meshDevice[subnetAddress][nodeSubnetAddress].serialNumberString();
+    int btAddress = meshDevice[subnetAddress][nodeSubnetAddress].getRealAddress();
+    AntennaInfo info = getAntennaInfo(database);
+    QString eventType = "Groups";
+    insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, added ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
 }
 
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database)
@@ -1476,6 +1485,15 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
     QString message = QString(WS_SEND_CONFIRM_POWER_ON_LEVEL) + "@" + groupAddressString + "_" + QString::number(powerOnLevel);
 
     if (webServer != nullptr) { webServer->sendData(message); }
+
+    // Log entry
+    QString name = database->getGroupName(groupAddressString) + " [G]";
+    QString serialNum = "FF.FF.FF.FF";
+    int btAddress = groupAddress;
+    AntennaInfo info = getAntennaInfo(database);
+    int eventCode = powerOnLevel == 0 ? POL_OFF : (powerOnLevel == 254 ? POL_MAX : POL_LAST_VALUE);
+    QString eventType = "PowerOnLevel";
+    insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, eventCode, eventType);
 }
 
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
