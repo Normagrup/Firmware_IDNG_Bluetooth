@@ -994,6 +994,18 @@ void Database::createGroup()
     if (!query.exec()) { qDebug() << "Error inserting new group:" << query.lastError().text(); return; }
 
     createTestEntry(newGroupAddress);
+
+    // Log entry
+    LogInfo log;
+    log.name = newGroupName + " [G]";
+    log.serialNum = "FF.FF.FF.FF";
+    log.btAddress = newGroupAddress.toUShort(nullptr, 16);
+    log.devIP = getAntennaInfo(this).ip;
+    log.timestamp = getAntennaInfo(this).timestamp.toSecsSinceEpoch();;
+    log.event = LOG_GROUP_CREATED;
+    log.eventType = "Groups";
+
+    insertLogEvent(log);
 }
 
 void Database::createTestEntry(QString address)
@@ -1017,6 +1029,8 @@ void Database::createTestEntry(QString address)
 
 void Database::removeGroup(QString address)
 {
+    QString groupName = getGroupName(address);
+
     QSqlQuery query;
     query.prepare("DELETE FROM Groups WHERE GroupAddress = ?");
     query.addBindValue(address);
@@ -1024,6 +1038,18 @@ void Database::removeGroup(QString address)
     if (!query.exec()) { qDebug() << "Error deleting group with address" << address << ":" << query.lastError().text(); return; }
 
     removeTestEntry(address);
+
+    // Log entry
+    LogInfo log;
+    log.name = groupName + " [G]";
+    log.serialNum = "FF.FF.FF.FF";
+    log.btAddress = address.toUShort(nullptr, 16);
+    log.devIP = getAntennaInfo(this).ip;
+    log.timestamp = getAntennaInfo(this).timestamp.toSecsSinceEpoch();;
+    log.event = LOG_GROUP_DELETED;
+    log.eventType = "Groups";
+
+    insertLogEvent(log);
 }
 
 void Database::removeTestEntry(QString address)
