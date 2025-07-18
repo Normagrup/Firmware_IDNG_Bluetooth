@@ -63,6 +63,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
+            case DEVKEY_STATUS: return 7;
             default: return -1;
         }
 
@@ -416,6 +417,35 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case CONFIRM_END_CLEAR_ALL_DATA:
                     {
                         sendConfirmEndClearAllData(webServer);
+                    }
+                    break;
+
+                    case DEVKEY_STATUS:
+                    {
+                        qDebug() << "DEVKEY_STATUS";
+
+                        uint16_t address = (data[3] << 8) | data[4];
+                        uint8_t status = data[5];
+
+                        QString statusStr = QString("0x%1 -> %2")
+                                                .arg(address, 4, 16, QChar('0'))
+                                                .arg(status);
+
+                        qDebug() << QString("STATUS recibido para nodo %1: %2")
+                                        .arg(QString("0x%1").arg(address, 4, 16, QChar('0')))
+                                        .arg(status);
+
+                        QString path = QCoreApplication::applicationDirPath() + "/devkey_status.txt";
+                        QFile file(path);
+
+                        if (file.open(QIODevice::Append | QIODevice::Text)) {
+                            QTextStream out(&file);
+                            out << statusStr << "\n";
+                            file.close();
+                            qDebug() << "Guardado en:" << path << "→" << statusStr;
+                        } else {
+                            qWarning() << "No se pudo abrir para escribir:" << path;
+                        }
                     }
                     break;
                 }

@@ -6,6 +6,8 @@
 #include "WebServer.h"
 #include  "Database.h"
 #include "global_variables.h"
+#include <QFile>
+#include <QCoreApplication>
 
 #define UART_HEADER                     0xAF
 #define UART_END                        0xAD
@@ -80,6 +82,7 @@
 #define ADDRESS_AND_NET_KEY             0x93
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
+#define DEVKEY_STATUS                   0x97
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
