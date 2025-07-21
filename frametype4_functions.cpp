@@ -266,7 +266,7 @@ void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
     frame.append(FRAME_TYPE_83);
     frame.append(commandHigh);
     frame.append(commandLow);
-    frame.append(0x07);
+    frame.append(0x10);
 
     frame.append(testData);
 
@@ -282,8 +282,13 @@ void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
 void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database, QByteArray data)
 {
     uint8_t groupId = static_cast<int>(data[10]);
-    uint16_t groupValue = getMaskedGroupId(groupId);
-    QString groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
+    QString groupAddress;
+    if(groupId == 255){
+        groupAddress = "FFFF";
+    } else {
+        uint16_t groupValue = getMaskedGroupId(groupId);
+        groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
+    }
 
     if(_database->groupExistsInTestTable(groupAddress)){
         QString testStr = _database->getTests(groupAddress);
@@ -293,10 +298,12 @@ void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
         int durationEnable   = parts[1].toInt();
         QStringList daysList = parts[2].split(" ");
         QString functionalTime = parts[3];
+        QString durPeriodicity = parts[4];
         QString durationDate = parts[5];
         QString durationTime = parts[6];
 
-        uchar enableFlag = (functionalEnable || durationEnable) ? 0x01 : 0x00;
+        uchar fuEnable = functionalEnable;
+        uchar durEnable = durationEnable;
         uchar weekday = 0;
         for (const QString& day : daysList) {
             int d = mapDayToNumber(day.trimmed());
@@ -306,20 +313,25 @@ void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
 
         uchar fuHour = functionalTime.left(2).toInt();
         uchar fuMin  = functionalTime.right(2).toInt();
+        uchar dtYear = durationDate.mid(2, 2).toUInt();
         uchar dtDay = durationDate.mid(8,2).toInt();
         uchar dtMonth = durationDate.mid(5,2).toInt();
         uchar dtHour = durationTime.left(2).toInt();
         uchar dtMin  = durationTime.right(2).toInt();
+        uchar periodicity = durPeriodicity.toInt();
 
         QByteArray testData;
-        testData.append(enableFlag);
+        testData.append(fuEnable);
+        testData.append(durEnable);
         testData.append(weekday);
         testData.append(fuHour);
         testData.append(fuMin);
+        testData.append(dtYear);
         testData.append(dtDay);
         testData.append(dtMonth);
         testData.append(dtHour);
         testData.append(dtMin);
+        testData.append(periodicity);
 
         sendTestDataFrame(rcvAddress, commandHigh, commandLow, _udpSocket, testData);
     }
@@ -329,17 +341,26 @@ void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
 void setTestDataFromEth(QByteArray data, Database* _database)
 {
     uint8_t groupId       = static_cast<int>(data[10]);
-    uchar enabled         = data[11];
-    uchar weekdayBitmask  = data[12];
-    uchar fuHour = QString::number(data[13], 16).toUInt();
-    uchar fuMin  = QString::number(data[14], 16).toUInt();
-    uchar dtMonth = QString::number(data[15], 16).toUInt();
-    uchar dtDay   = QString::number(data[16], 16).toUInt();
-    uchar dtHour  = QString::number(data[17], 16).toUInt();
-    uchar dtMin   = QString::number(data[18], 16).toUInt();
+    uchar fuEnable        = data[11];
+    uchar durEnable       = data[12];
+    uchar weekdayBitmask  = data[13];
+    uchar fuHour = QString::number(data[14], 16).toUInt();
+    uchar fuMin  = QString::number(data[15], 16).toUInt();
+    uchar year   = QString::number(data[16], 16).toUInt();
+    uchar dtMonth = QString::number(data[17], 16).toUInt();
+    uchar dtDay   = QString::number(data[18], 16).toUInt();
+    uchar dtHour  = QString::number(data[19], 16).toUInt();
+    uchar dtMin   = QString::number(data[20], 16).toUInt();
+    uchar periodicity = QString::number(data[21], 16).toUInt();
+    QString groupAddress;
 
-    uint16_t groupValue = getMaskedGroupId(groupId);
-    QString groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
+    if(groupId == 255){
+        groupAddress = "FFFF";
+    } else {
+        uint16_t groupValue = getMaskedGroupId(groupId);
+        groupAddress =  QString("C%1").arg(groupValue & 0x0FFF, 3, 16, QLatin1Char('0')).toUpper();
+    }
+
     QStringList selectedDays;
     for (int i = 0; i < 7; ++i) {
         if ((weekdayBitmask >> i) & 1) {
@@ -354,19 +375,19 @@ void setTestDataFromEth(QByteArray data, Database* _database)
                                .arg(dtHour, 2, 10, QChar('0'))
                                .arg(dtMin, 2, 10, QChar('0'));
 
-    QDate now = QDate::currentDate();  // Get current year
+    int nowYear = 2000 + year;
     QString durationDate = QString("%1-%2-%3")
-                               .arg(now.year())
+                               .arg(nowYear)
                                .arg(dtMonth, 2, 10, QChar('0'))
                                .arg(dtDay, 2, 10, QChar('0'));
 
     QStringList wsParts;
     wsParts << groupAddress
-            << QString::number(enabled)
+            << QString::number(fuEnable)
             << functionalDays
             << functionalTime
-            << QString::number(enabled)         // use same for duration enable
-            << "1"                              // default periodicity
+            << QString::number(durEnable)
+            << QString::number(periodicity)
             << durationDate
             << durationTime;
 
