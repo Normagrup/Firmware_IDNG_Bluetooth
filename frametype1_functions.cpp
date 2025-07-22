@@ -10,20 +10,29 @@ Database* database;
 void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subnet, uint8_t daliAddress, uint8_t commandLow, uint8_t commandType)
 {
     //sendUartDaliCommand(_uartPort, daliMessageType, targetAddress, commandLow, commandType);
-    if(daliAddress == 255){ //subnet control
-        for (int node = 0; node < 64; ++node) {
-            Device &device = meshDevice[subnet][node];
-            if (device.getIsConfigured()) {
-                uint16_t targetAddress = getTargetAddress(subnet, node);
-                if(daliMessageType == 3){
-                    sendUartDaliCommand(_uartPort, targetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
+    if(daliAddress == 255){
+        if(subnet == 255){//All device
+            for(int i = 0; i < MAX_SUBNET; i++){
+                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    Device& device = meshDevice[i][j];
+                    if (device.getIsConfigured()) {
+                        uint16_t targetAddress = getTargetAddress(i, j);
+                        sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
+                        delay(SLEEP_DALI_TIME_MS);
+                    }
+                }
+            }
+        } else { //subnet control
+            for (int node = 0; node < 64; ++node) {
+                Device &device = meshDevice[subnet][node];
+                if (device.getIsConfigured()) {
+                    uint16_t targetAddress = getTargetAddress(subnet, node);
+                    sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
                     delay(SLEEP_DALI_TIME_MS);
                 }
-                sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
-                delay(SLEEP_DALI_TIME_MS);
             }
         }
-    } else if (subnet == 255 && daliAddress > 32) { //Group control
+    } else if (subnet == 255 && daliAddress > 32 && daliAddress < 255) { //Group control
         uint16_t targetAddress = getGroupAddressFromDaliAddress(daliAddress);
         if(daliMessageType == 3){
             sendUartDaliCommand(_uartPort, targetAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);

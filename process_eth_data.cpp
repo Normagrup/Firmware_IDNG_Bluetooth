@@ -847,11 +847,11 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x0C: // STORE FUNCTION TEST INTERVAL
-            sendDaliCommand(_uartPort, DALI_EXTENDED_TYPE, subnet, daliAddress, STORE_FUNCTION_TEST_INTERVAL, IS_TWICE);
+            //sendDaliCommand(_uartPort, DALI_EXTENDED_TYPE, subnet, daliAddress, STORE_FUNCTION_TEST_INTERVAL, IS_TWICE);
             break;
 
         case 0x0D: // STORE DURATION TEST INTERVAL
-            sendDaliCommand(_uartPort, DALI_EXTENDED_TYPE, subnet, daliAddress, STORE_DURATION_TEST_INTERVAL, IS_TWICE);
+            //sendDaliCommand(_uartPort, DALI_EXTENDED_TYPE, subnet, daliAddress, STORE_DURATION_TEST_INTERVAL, IS_TWICE);
             break;
 
         case 0x0E: // STORE TEST EXECUTION TIMEOUT
@@ -1143,11 +1143,11 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
             // ???????
             break;
 
-        case 0x84: // READ TEST 0-16
+        case 0x84: // READ TEST ALL AVAILABLE GROUP
             sendTestDataToEth(rcvAddress, commandHigh, commandLow, _udpSocket, _database, data);
             break;
 
-        case 0x85: // WRITE TEST 0-16
+        case 0x85: // WRITE TEST ALL AVAILABLE GROUP
             setTestDataFromEth(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
