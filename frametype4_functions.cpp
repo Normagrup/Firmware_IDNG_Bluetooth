@@ -4,46 +4,54 @@
 #include "aux_functions.h"
 #include "time_functions.h"
 
-void setIPAddress(QByteArray data)
+void setIPAddress(QByteArray data, Database* _database)
 {
     if ((unsigned char)data[9] == 0x03) {
         QString ipAddress = QString::number((unsigned char)data[10]) + "." + QString::number((unsigned char)data[11]) + "." +
                             QString::number((unsigned char)data[12]) + "." + QString::number((unsigned char)data[13]);
         setIPAddressFile(ipAddress);
+        _database->setGeneralData("IP", ipAddress);
+        //_database->setIPAddress(ipAddress);
     }
 }
 
-void setSubmaskAddress(QByteArray data)
+void setSubmaskAddress(QByteArray data, Database* _database)
 {
     if ((unsigned char)data[9] == 0x03) {
         QString submaskAddress = QString::number((unsigned char)data[10]) + "." + QString::number((unsigned char)data[11]) + "." +
                                  QString::number((unsigned char)data[12]) + "." + QString::number((unsigned char)data[13]);
         setSubmaskAddressFile(submaskAddress);
+          _database->setGeneralData("Submask", submaskAddress);
+         //_database->setSubmask(submaskAddress);
     }
 }
 
-void setGatewayAddress(QByteArray data)
+void setGatewayAddress(QByteArray data, Database* _database)
 {
     if ((unsigned char)data[9] == 0x03) {
         QString gatewayAddress = QString::number((unsigned char)data[10]) + "." + QString::number((unsigned char)data[11]) + "." +
                                  QString::number((unsigned char)data[12]) + "." + QString::number((unsigned char)data[13]);
         setGatewayAddressFile(gatewayAddress);
+         _database->setGeneralData("Gateway", gatewayAddress);
+        //_database->setGateway(gatewayAddress);
     }
 }
 
-void setBuildingName(QByteArray data)
+void setBuildingName(QByteArray data, Database* _database)
 {
-    if ((unsigned char)data[9] == 0x0F) {
+    if ((unsigned char)data[9] == 0x0F && data.size() >= 26) {
         QString buildingName;
         for (uint8_t i = 0; i < 16; i++) {
+            if ((i + 10) >= data.size()) break; //safety check
             char asciiChar = static_cast<char>(data[i + 10]);
             if (asciiChar != '\0') { buildingName.append(asciiChar); }
         }
-        setBuildingNameFile(buildingName);
+        _database->setGeneralData("BuildingName", buildingName);
+        //_database->setBuildingName(buildingName);
     }
 }
 
-void setLineName(QByteArray data)
+void setLineName(QByteArray data, Database* _database)
 {
     if ((unsigned char)data[9] == 0x0F) {
         QString lineName;
@@ -51,7 +59,8 @@ void setLineName(QByteArray data)
             char asciiChar = static_cast<char>(data[i + 10]);
             if (asciiChar != '\0') { lineName.append(asciiChar); }
         }
-        setLineNameFile(lineName);
+        _database->setGeneralData("LineName", lineName);
+        //_database->setLineName(lineName);
     }
 }
 

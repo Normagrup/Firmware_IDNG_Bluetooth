@@ -381,6 +381,25 @@ void Database::setInterfaceParameters(QStringList interfaceParameters)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setInterfaceParameters" << query.lastError().text(); }
 }
 
+void Database::setGeneralData(const QString &key, const QString &value)
+{
+    QSqlQuery query;
+    QString sql = QString("UPDATE General SET %1 = :value").arg(key);
+    query.prepare(sql);
+    query.bindValue(":value", value.trimmed().left(16));
+
+    if (!query.exec()) {
+        qDebug() << "Error updating" << key << "in DB:" << query.lastError().text();
+    }
+}
+
+QString Database::getGeneralData(const QString &key)
+{
+    QSqlQuery query(QString("SELECT %1 FROM General").arg(key));
+    if (query.next()) return query.value(0).toString();
+    return "";
+}
+
 void Database::loadNodesFromDatabase()
 {
     QSqlQuery query;

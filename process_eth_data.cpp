@@ -44,7 +44,7 @@ bool checkRcvAddress(QString rcvAddress)
     else { return false; }
 }
 
-static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket)
+static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, Database* _database)
 {
     uint8_t commandHigh = (unsigned char)data[7];
     uint8_t commandLow = (unsigned char)data[8];
@@ -69,11 +69,11 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x10: // GET BUILDING NAME
-            sendBuildingNameFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendBuildingNameFrame(rcvAddress, commandHigh, commandLow, _udpSocket, _database);
             break;
 
         case 0x20: // GET LINE NAME
-            sendLineNameFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendLineNameFrame(rcvAddress, commandHigh, commandLow, _udpSocket, _database);
             break;
 
         case 0x30: // GET RTC DATE DAY
@@ -121,7 +121,8 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x01: // RESET ETHERNET CONFIG
-            // ???????
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            rebootDevice();
             break;
 
         case 0xFF: // PING
@@ -1034,27 +1035,27 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
     case 0x00:
         switch (commandLow) {
         case 0x01: // SET IP ADDRESS
-            setIPAddress(data);
+            setIPAddress(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x03: // SET SUBMASK ADDRESS
-            setSubmaskAddress(data);
+            setSubmaskAddress(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x05: // SET GATEWAY ADDRESS
-            setGatewayAddress(data);
+            setGatewayAddress(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x11: // SET BUILDING NAME
-            setBuildingName(data);
+            setBuildingName(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x21: // SET LINE NAME
-            setLineName(data);
+            setLineName(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
@@ -1276,7 +1277,7 @@ void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket,
 
     switch(frameType) {
     case 0x00:
-        processEthFrameType0(rcvAddress, data, _udpSocket);
+        processEthFrameType0(rcvAddress, data, _udpSocket, _database);
         break;
 
     case 0x01:

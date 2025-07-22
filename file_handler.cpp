@@ -119,9 +119,9 @@ void getRtcDate(uint8_t* data)
         if (match.hasMatch()) {
             QString rtcDate = match.captured(1);
             QStringList rtcDateParts = rtcDate.split("-");
-
-            for (uint8_t i = 0; i < 3; i++) { data[i] = rtcDateParts[i].trimmed().toUInt(); }
-
+            data[0] = rtcDateParts[0].right(2).toUInt();
+            data[1] = rtcDateParts[1].toUInt();
+            data[2] = rtcDateParts[2].toUInt();
             data[3] = data[2] / 7 + (data[2] % 7 > 0 ? 1 : 0);
         }
     }
@@ -478,4 +478,26 @@ QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
     }
 
     return obj;
+}
+
+void getBuildingNameDB(Database *database, uint8_t *data)
+{
+    QString buildingName = database->getGeneralData("BuildingName").trimmed().left(16);
+    QByteArray byteArray = buildingName.toLatin1();
+
+    for (int i = 0; i < byteArray.size(); i++)
+        data[i] = byteArray[i];
+    for (int i = byteArray.size(); i < 16; i++)
+        data[i] = 0;
+}
+
+void getLineNameDB(Database *database, uint8_t *data)
+{
+    QString lineName = database->getGeneralData("LineName").trimmed().left(16);
+    QByteArray byteArray = lineName.toLatin1();
+
+    for (int i = 0; i < byteArray.size(); i++)
+        data[i] = byteArray[i];
+    for (int i = byteArray.size(); i < 16; i++)
+        data[i] = 0;
 }

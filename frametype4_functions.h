@@ -9,11 +9,11 @@
 #include "process_uart_data.h"
 
 
-void setIPAddress(QByteArray data);
-void setSubmaskAddress(QByteArray data);
-void setGatewayAddress(QByteArray data);
-void setBuildingName(QByteArray data);
-void setLineName(QByteArray data);
+void setIPAddress(QByteArray data, Database* _database);
+void setSubmaskAddress(QByteArray data, Database* _database);
+void setGatewayAddress(QByteArray data, Database* _database);
+void setBuildingName(QByteArray data, Database* _database);
+void setLineName(QByteArray data, Database* _database);
 void setRtcDateDay(QByteArray data);
 void setRtcDateTime(QByteArray data);
 void setAdminPassword(QByteArray data);

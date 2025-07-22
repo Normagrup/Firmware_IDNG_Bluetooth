@@ -20,6 +20,8 @@ public:
     QStringList getLoginParameters(void);
     QStringList getInterfaceParameters(void);
     void setInterfaceParameters(QStringList interfaceParameters);
+    void setGeneralData(const QString& key, const QString& value);
+    QString getGeneralData(const QString& key);
     void loadNodesFromDatabase(void);
     void loadTestsFromDatabase(void);
 
