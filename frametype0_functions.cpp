@@ -610,3 +610,46 @@ void sendDaliLineQueryFailureStatus(QString rcvAddress, uint8_t commandHigh, uin
         }
     }
 }
+
+void sendDaliLineReadDevicesSerials(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket)
+{
+    for (uint8_t subnet = SUBNET_OFFSET; subnet  <  MAX_SUBNET; subnet++) {
+        if (polling.isSubnetConfigured(subnet - SUBNET_OFFSET)) {
+            QByteArray frame;
+            unsigned char crc = 0;
+
+            int configuredDevCount = 0;
+            QByteArray serials;
+            for (int i = MAX_NODES_SUBNET - 1; i >= 0; i--) {
+                if (meshDevice[subnet][i].getIsConfigured()) {
+                    configuredDevCount++;
+                    uint8_t* sn = meshDevice[subnet][i].serialNumber();
+                    if (sn) {
+                        serials.append(static_cast<char>(i));
+                        serials.append(reinterpret_cast<const char*>(sn), 4);
+                        delete[] sn;
+                    }
+                }
+            }
+
+            frame.append(FRAME_HEADER_0);
+            frame.append(FRAME_HEADER_1);
+            frame.append(FRAME_HEADER_2);
+            frame.append(FRAME_TYPE_95);
+            frame.append(subnet - SUBNET_OFFSET);
+            frame.append(commandHigh);
+            frame.append(commandLow);
+            frame.append(configuredDevCount);
+            frame.append(serials);
+
+            for (uint8_t i = 3; i < frame.size(); i++) { crc += frame[i]; }
+
+            frame.append(crc);
+
+            QHostAddress dstAddress;
+            dstAddress.setAddress(rcvAddress);
+
+            _udpSocket->sendData(dstAddress, frame);
+        }
+    }
+}

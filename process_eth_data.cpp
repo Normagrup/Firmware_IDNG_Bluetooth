@@ -155,6 +155,11 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
             else {}
             break;
 
+        case 0x45: // DALI LINE READ DEVICES SERIALS
+            if ((unsigned char)data[4] == 0xFF) { sendDaliLineReadDevicesSerials(rcvAddress, commandHigh, commandLow, _udpSocket); }
+            else {}
+            break;
+
         case 0x60: // DALI LINE QUUERY ACTUAL LVL
             if ((unsigned char)data[4] == 0xFF) { sendDaliLineQueryActualLvl(rcvAddress, commandHigh, commandLow, _udpSocket); }
             else {}

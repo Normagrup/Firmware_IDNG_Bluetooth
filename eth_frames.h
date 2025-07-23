@@ -13,5 +13,6 @@
 #define FRAME_TYPE_82                       0x82
 #define FRAME_TYPE_83                       0x83
 #define FRAME_TYPE_90                       0x90
+#define FRAME_TYPE_95                       0x95
 
 #endif // ETH_FRAMES_H

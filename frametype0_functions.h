@@ -24,6 +24,7 @@ void sendPingFrame(QString rcvAddress, uint8_t packetID, UdpSocket* _udpSocket);
 
 void sendDaliLineInstalledDevices(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendDaliLineReadDevicesType(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
+void sendDaliLineReadDevicesSerials(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineReadComunicationState(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryActualLvl(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryStatus(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
