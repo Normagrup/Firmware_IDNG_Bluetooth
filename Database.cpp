@@ -518,12 +518,18 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
 
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid)");
+    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl, RelayMode, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :dt, :rd, :ef, :pml, :rm, :fra)");
 
     query.bindValue(":subnetAddress", subnetAddress);
     query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
     query.bindValue(":realAddress", realAddress);
     query.bindValue(":uuid", nodeUUIDText);
+    query.bindValue(":dt", 1);
+    query.bindValue(":rd", 60);
+    query.bindValue(":ef", 143);
+    query.bindValue(":pml", 254);
+    query.bindValue(":rm", 0);
+    query.bindValue(":fra", getMasterRealAddress());
 
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }

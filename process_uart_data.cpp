@@ -309,6 +309,27 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         updateRelayStatus(webServer, database, nodeAddress, enabled);
                     }
                     break;
+
+                    case CONFIRM_START_LINE_SCANNING:
+                    {
+                        sendConfirmStartLineScanning(webServer);
+                        isLineScanning = true;
+                        configuredNodes = database->getConfiguredNodes();
+                        lineScanningCounter = 0;
+                        scannedNodesCounter = 0;
+                        discovered_nodes_count = 0;
+
+                        forceStopLS1 = false;
+                        forceStopLS2 = false;
+
+                        for (int i = 0; i < MAX_SUBNET; i++) {
+                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                                meshDevice[i][j].deleteDevice();
+                            }
+                        }
+                    }
+                    break;
+
                     case SEND_RECOVERY_NODE:
                     {
                         isLineScanning = true;
@@ -333,38 +354,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendFoundNodes(webServer, scannedNodesCounter);
                     }
                     break;
+
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
                         isLineScanning = true;
                         processRecoveryFeaturesFrame(data, database);
                     break;
-                    case CONFIRM_START_LINE_SCANNING:
-                    {
-                        sendConfirmStartLineScanning(webServer);
-                        isLineScanning = true;
-                        configuredNodes = database->getConfiguredNodes();
-                        lineScanningCounter = 0;
-                        scannedNodesCounter = 0;
-                        discovered_nodes_count = 0;
 
-                        forceStopLS1 = false;
-                        forceStopLS2 = false;
-
-                        for (int i = 0; i < MAX_SUBNET; i++) {
-                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-                                meshDevice[i][j].deleteDevice();
-                            }
-                        }
-                    }
-                    break;
-                    case CONFIRM_END_LINE_SCANNING:
-                    {
-                        database->loadNodesFromDatabase();
-
-                        isLineScanning = false;
-                        sendConfirmEndLineScanning(webServer);
-                    }
-                    break;
                     case RECOVERY_GROUPS:
                     {
                         uint16_t nodeAddress = ((uint16_t)data[3] << 8) | (uint16_t)data[4];
@@ -381,8 +377,18 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                      << "→ añadiendo grupo 0x"
                                      << QString::asprintf("%04X", groupAddr);
                         }
-                    break;
+                        break;
                     }
+
+                    case CONFIRM_END_LINE_SCANNING:
+                    {
+                        database->loadNodesFromDatabase();
+
+                        isLineScanning = false;
+                        sendConfirmEndLineScanning(webServer);
+                    }
+                    break;
+
                     case SCAN_NODE_NOT_FOUND:
                     {
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
@@ -614,27 +620,14 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database)
 
     qDebug() << "EXT FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
 
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (!meshDevice[i][j].getIsConfigured()) {
-                meshDevice[i][j].setRealAddress(address);
-                meshDevice[i][j].setDeviceType(deviceType);
-                meshDevice[i][j].setRatedDuration(ratedDuration);
-                meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
-                meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
-                meshDevice[i][j].setIsConfigured(true);
+    database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
+    database->setFatherRealAddress(address, fatherAddress);
 
-                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
-                database->setFatherRealAddress(address, fatherAddress);
+    qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
 
-                qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
+    delay(2000);
 
-                delay(2000);
-
-                return;
-            }
-        }
-    }
+    return;
 }
 
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
