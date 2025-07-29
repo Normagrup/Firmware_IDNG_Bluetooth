@@ -31,5 +31,6 @@ void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandL
 void sendTestDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database, QByteArray data);
 void setTestDataFromEth(QByteArray data, Database* _database);
 void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database, QByteArray data);
+void swapDeviceFromEth(QByteArray data,  Database* _database);
 
 #endif // FRAMETYPE4_FUNCTIONS_H

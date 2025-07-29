@@ -275,12 +275,13 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
         QString hexAddr = QString("%1").arg(targetAddr, 4, 16, QChar('0')).toUpper();
         name = db->getGroupName(hexAddr) + " [G]";
     } else {
-        name = "SUB:" + QString::number((targetAddr - 1) / 64) + " ID:" + QString::number((targetAddr - 1) % 64);
+        int globalPos = targetAddr;
+        name = "A" + QString::number(globalPos).rightJustified(4, '0');
     }
 
     int btAddress = isGroup
-                    ? targetAddr
-                    : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].getRealAddress();
+                    ? getGroupIdFromMasked(targetAddr)
+                    : targetAddr;
 
     AntennaInfo info = getAntennaInfo(db);
     QString eventType = "Test";
@@ -321,9 +322,10 @@ void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString e
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
-                name = "SUB:" + QString::number(i) + " ID:" + QString::number(j);
+                int globalPos = i * 64 + j + 1;
+                name = "A" + QString::number(globalPos).rightJustified(4, '0');
                 serial = meshDevice[i][j].serialNumberString();
-                btAddress = nodeAddress;
+                btAddress = globalPos;
             }
         }
     }
@@ -376,7 +378,7 @@ void insertCommissionErrorToLog(const QByteArray& uuidArray, Database *db, int e
 
 int getNodeSubnetFromDaliAddress(uint8_t daliAddr)
 {
-    if (daliAddr < 0 || daliAddr >= 127 || daliAddr % 2 == 0)
+    if (daliAddr < 0 || daliAddr > 127 || daliAddr % 2 == 0)
         return 0; // Invalid DALI address
 
     int id = daliAddr >> 1;

@@ -3,6 +3,7 @@
 #include <QDebug>
 #include "aux_functions.h"
 #include "time_functions.h"
+#include "process_webserver_data.h"
 
 void setIPAddress(QByteArray data, Database* _database)
 {
@@ -422,6 +423,9 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         if(log[2].toUInt() >= 49152){
             group = true;
             Id = getGroupIdFromMasked(log[2].toUInt());
+        } else if (log[2] == "-1"){
+            group = true;
+            Id = -1;
         } else {
             group = false;
             Id = log[2].toUInt();
@@ -464,13 +468,16 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         }
 
         // Device name
-        QStringList nameParts = log[0].split(" ");
-        if(nameParts.size() == 2 && !group){
+        if (!group && log[0].startsWith("A")) {
             bool ok;
-            int sub = nameParts[0].split(":")[1].toInt(&ok);
-            if(ok) payload[13] = static_cast<uchar>(sub);
-            int id = nameParts[1].split(":")[1].toInt(&ok);
-            if(ok) payload[14] = static_cast<uchar>(id);
+            int globalPos = log[0].mid(1).toInt(&ok);
+            if (ok) {
+                int subnet = (globalPos - 1) / 64;
+                int id = (globalPos - 1) % 64;
+
+                payload[13] = static_cast<uchar>(subnet);
+                payload[14] = static_cast<uchar>(id);
+            }
         }
 
         frame.append(payload);
@@ -528,3 +535,11 @@ void processGroupBitmap(const writeGroupBitmap &gb, Database* _database, UartPor
     }
 }
 
+
+void swapDeviceFromEth(QByteArray data, Database *_database)
+{
+    uint16_t pos1 = static_cast<uint8_t>(data[10]) | (static_cast<uint8_t>(data[11]) << 8);
+    uint16_t pos2 = static_cast<uint8_t>(data[12]) | (static_cast<uint8_t>(data[13]) << 8);
+
+    changePositions(_database, pos1, pos2);
+}

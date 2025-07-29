@@ -313,6 +313,10 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, STORE_ACTUAL_LVL_DTR, IS_TWICE);
             break;
 
+        case 0x25: // IDENTIFY DEVICE
+            sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, IDENTIFY_DEVICE, IS_TWICE);
+            break;
+
         case 0x2B: // STORE DTR AS MAX LVL
             sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, STORE_DTR_MAX_LVL, IS_TWICE);
             break;
@@ -943,11 +947,11 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x20: // BLINK
-            sendDaliCommand(_uartPort, DALI_NORMAGROUP_TYPE, subnet, daliAddress, BLINK, IS_NORMAL);
+            //sendDaliCommand(_uartPort, DALI_NORMAGROUP_TYPE, subnet, daliAddress, BLINK, IS_NORMAL);
             break;
 
         case 0x21: // BLINK TERMINATE
-            sendDaliCommand(_uartPort, DALI_NORMAGROUP_TYPE, subnet, daliAddress, BLINK_TERMINATE, IS_NORMAL);
+            //sendDaliCommand(_uartPort, DALI_NORMAGROUP_TYPE, subnet, daliAddress, BLINK_TERMINATE, IS_NORMAL);
             break;
 
         default:
@@ -1137,6 +1141,11 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
 
         case 0x1C: // WRITE GROUP NAMES
             saveGroupFromEth(data, _database);
+            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            break;
+
+        case 0x46: // SWAP DEVICE FROM ETH
+            swapDeviceFromEth(data, _database);
             sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
             break;
 
