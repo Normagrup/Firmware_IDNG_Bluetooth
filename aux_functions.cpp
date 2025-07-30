@@ -361,7 +361,7 @@ void insertCommissionErrorToLog(const QByteArray& uuidArray, Database *db, int e
     if (uuidArray.size() < 16) return;
 
     QString name = QString("DEV ERR: %1").arg(currentNodeAddress);
-    int btAddress = currentNodeAddress;
+    int btAddress = -1;
     QString serial = QString("%1.%2.%3.%4")
                          .arg(static_cast<uint8_t>(uuidArray[15]), 2, 16, QChar('0'))
                          .arg(static_cast<uint8_t>(uuidArray[14]), 2, 16, QChar('0'))

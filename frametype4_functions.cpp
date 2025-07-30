@@ -420,10 +420,13 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
     {
         const QStringList &log = logs[i];
         if (log.size() < 6) continue;
+
+        QString name = log[0];
+
         if(log[2].toUInt() >= 49152){
             group = true;
             Id = getGroupIdFromMasked(log[2].toUInt());
-        } else if (log[2] == "-1"){
+        } else if (log[2] == "-1" && name.startsWith("G")){
             group = true;
             Id = -1;
         } else {
@@ -467,10 +470,19 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
             payload[12] = serial[3].toUInt(nullptr, 16);
         }
 
+        bool isDevErr = name.startsWith("DEV ERR:");
+
         // Device name
-        if (!group && log[0].startsWith("A")) {
-            bool ok;
-            int globalPos = log[0].mid(1).toInt(&ok);
+        if (isDevErr) {
+            bool ok = false;
+            int realAddr = name.mid(QString("DEV ERR: ").length()).toInt(&ok);
+            if (ok) {
+                payload[13] = 0xFF; // subnet = -1
+                payload[14] = static_cast<uchar>(realAddr);
+            }
+        } else if (!group && name.startsWith("A")) {
+            bool ok = false;
+            int globalPos = name.mid(1).toInt(&ok);
             if (ok) {
                 int subnet = (globalPos - 1) / 64;
                 int id = (globalPos - 1) % 64;
