@@ -684,6 +684,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             }
         }
 
+        delay(10000);
+
         sendUartEndLineScanning(uartPort);
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
