@@ -46,6 +46,7 @@ uint8_t subnetCount = 0, nodeSubnetCount = 0;
 bool forceStopCommissioning;
 bool isManualAddingDevice;
 bool isScanning;
+bool isReplacingDevices;
 uint16_t lineScanningCounter = 0;
 uint16_t scannedNodesCounter = 0;
 QList<uint16_t> configuredNodes;
@@ -81,9 +82,12 @@ uint8_t netKeys[15][16] = {
     {0x69, 0xEC, 0x21, 0x9B, 0x08, 0xB5, 0x4D, 0x73, 0xDF, 0xC2, 0x36, 0x10, 0x8D, 0xF0, 0x54, 0x3E},
     {0x87, 0xFA, 0x2B, 0x68, 0x9C, 0x03, 0xD7, 0x51, 0xE4, 0x19, 0xA8, 0xBC, 0x0F, 0xC9, 0x74, 0x26}
 };
+
 QMap<uint16_t, POLQueryContext> powerOnQueryMap;
 QSet<QString> pendingGroupUpdatesEth;
 QList<writeGroupBitmap> pendingGroupBitmaps;
 int numDevicesToUpdate;
 QMap<QString, GroupActionType> groupActionTypeMap;
 
+ReplaceData replaceData = {"", 0x0000, "", 0x0000};
+ReplaceNode replaceNode = {0x00, 0x00, "", 0x00, 0x0000};

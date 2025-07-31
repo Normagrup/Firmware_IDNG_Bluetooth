@@ -185,7 +185,7 @@ function addDeviceToScannedList(value)
     var labelCommissionNodes = popup.querySelector('label');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 
-    updateAddScanRelayButtons();
+    updateAddReplaceScanRelayButtons();
 }
 
 function confirmStartScan(value) 
@@ -323,6 +323,17 @@ function addDeviceToNetworkList(value)
         textNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
         textNode.style.pointerEvents = 'none';
 
+        var replaceButton = iframeDocument.createElement('button');
+        replaceButton.textContent = "R";
+        replaceButton.setAttribute('class', 'deviceReplaceButton');
+        replaceButton.style.backgroundColor = "#4682b4";
+        replaceButton.onclick = function(e) {
+            e.stopPropagation();
+
+            selectDevice(newNode);
+            showReplacePopup();
+        };
+
         var scanButton = iframeDocument.createElement('button');
         scanButton.textContent = "SCAN";
         scanButton.setAttribute('class', 'deviceScanButton');
@@ -357,6 +368,7 @@ function addDeviceToNetworkList(value)
         buttonContainer.style.gap = '5px';
         buttonContainer.style.marginLeft = 'auto';
 
+        buttonContainer.appendChild(replaceButton);
         buttonContainer.appendChild(scanButton);
         buttonContainer.appendChild(relayButton);
 
@@ -372,7 +384,7 @@ function addDeviceToNetworkList(value)
     var labelCommissionNodes = popup.querySelector('label');
     labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
 
-    updateAddScanRelayButtons();
+    updateAddReplaceScanRelayButtons();
 }
 
 function processDeviceError(value) 
@@ -382,6 +394,7 @@ function processDeviceError(value)
 
     var popup = iframeDocument.getElementById('popup');
     var popupAdd = iframeDocument.getElementById('popupAddDevice');
+    var popupReplace = iframeDocument.getElementById('popupReplace');
 
     // Si sale DEVICE ERROR durante commissioning
     if(popup.style.visibility == "visible") {
@@ -407,16 +420,39 @@ function processDeviceError(value)
         var logAddManualList = iframeDocument.getElementById('logAddManual');
 
         if(logAddManualList) {
-            var newEntry = iframeDocument.createElement('li');
+            var newEntry1 = iframeDocument.createElement('li');
 
             var closeButton = iframeDocument.createElement('button');
             closeButton.textContent = "Close popup";
             closeButton.onclick = function () {
                 closeWirelessPopup();
             };
-            newEntry.appendChild(closeButton);
+            newEntry1.appendChild(closeButton);
             
-            logAddManualList.insertBefore(newEntry, logAddManualList.firstChild);
+            logAddManualList.insertBefore(newEntry1, logAddManualList.firstChild);
+        }
+    }
+    // Si sale DEVICE ERROR durante replacing
+    else if(popupReplace.style.visibility == "visible") {
+        var selectedNode = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
+        selectedNode.remove();
+
+        var loader = popupReplace.querySelector('.loader');
+        loader.style.animation = "none";
+
+        var logReplaceList = iframeDocument.getElementById('logReplace');
+
+        if(logReplaceList) {
+            var newEntry2 = iframeDocument.createElement('li');
+
+            var closeButton = iframeDocument.createElement('button');
+            closeButton.textContent = "Close popup";
+            closeButton.onclick = function () {
+                closeWirelessPopup();
+            };
+            newEntry2.appendChild(closeButton);
+            
+            logReplaceList.insertBefore(newEntry2, logReplaceList.firstChild);
         }
     }
 }
@@ -456,6 +492,21 @@ function processLogCommissionEntry(value)
             logAddManualList.insertBefore(newEntry2, firstEntry2);
         }
         else if(firstEntry2 && firstEntry2.textContent == content) {
+            console.log("ENTRADA DUPLICADA: " + content);
+        }
+    }
+
+    var logReplaceList = iframeDocument.getElementById('logReplace');
+
+    if(logReplaceList) {
+        var firstEntry3 = logReplaceList.firstChild;
+        if(!firstEntry3 || firstEntry3.textContent != content) {
+            var newEntry3 = iframeDocument.createElement('li');
+            newEntry3.textContent = content;
+            if(type == "ERROR") { newEntry3.style.color = "#C30101"; }
+            logReplaceList.insertBefore(newEntry3, firstEntry3);
+        }
+        else if(firstEntry3 && firstEntry3.textContent == content) {
             console.log("ENTRADA DUPLICADA: " + content);
         }
     }
@@ -1173,6 +1224,56 @@ function processIsLSInProgress(value)
     }
 }
 
+function processIsReplacingInProgress(value)
+{
+    var isReplacing = (value === "true");
+
+    if(isReplacing) {
+        var iframe = document.getElementById('mainframe');
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var popupReplace = iframeDocument.getElementById('popupReplace');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+        popupReplace.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
+        var logReplace = iframeDocument.getElementById('logReplace');
+        logReplace.innerHTML = "";
+    }
+}
+
+function processIsAddingManOrReplacing(value)
+{
+    var parts = value.split("_");
+    var isAddingMan = (parts[0] === "true");
+    var isReplacing = (parts[1] === "true");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    if(isReplacing) {
+        var popupReplace = iframeDocument.getElementById('popupReplace');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+        popupReplace.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
+        var logReplace = iframeDocument.getElementById('logReplace');
+        logReplace.innerHTML = "";
+    }
+    else if(isAddingMan) {
+        var popupAdd = iframeDocument.getElementById('popupAddDevice');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+        popupAdd.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
+        var logAddManual = iframeDocument.getElementById('logAddManual');
+        logAddManual.innerHTML = "";
+    }
+}
+
 function processDelOneDev(value, init)
 {
     var iframe = document.getElementById('mainframe');
@@ -1463,6 +1564,57 @@ function processNetKeyGet(value)
     }
 }
 
+function processReplacing(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupReplace = iframeDocument.getElementById("popupReplace");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+    var logReplace = iframeDocument.getElementById("logReplace");
+
+    if(init) // Cuando empieza el replace
+    {
+        var popupReplacePrev = iframeDocument.getElementById("popupReplaceDevices");
+        popupReplacePrev.style.visibility = "hidden";
+
+        popupReplace.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+        logReplace.innerHTML = "";
+    }
+    else // Cuando termina el replace
+    {
+        var loader = popupReplace.querySelector('.loader');
+        loader.style.animation = "none";
+
+        if(logReplace) {
+            var newEntry = iframeDocument.createElement('li');
+
+            var closeButton = iframeDocument.createElement('button');
+            closeButton.textContent = "Close popup";
+            closeButton.onclick = function () {
+                closeWirelessPopup();
+            };
+            newEntry.appendChild(closeButton);
+            
+            logReplace.insertBefore(newEntry, logReplace.firstChild);
+        }
+
+        setTimeout(function() {
+            var networkNodesList = iframeDocument.getElementById("networkNodesList");
+            networkNodesList.innerHTML = "";
+
+            setTimeout(function() {
+                sendData("SET_LOAD_NODES", "");
+
+                setTimeout(function() {
+                    sendData("SET_STORED_SCANNED_DEVICES", "");
+                }, 200);
+            }, 200);
+        }, 200);
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1503,6 +1655,8 @@ function processReceivedData(data)
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
     else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
+    else if (type == "IS_REPLACING_IN_PROGRESS") { processIsReplacingInProgress(value); }
+    else if (type == "IS_ADDING_MAN_OR_REPLACING") { processIsAddingManOrReplacing(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
@@ -1519,6 +1673,8 @@ function processReceivedData(data)
     else if (type == "LS_FOUNDED") { processLSFounded(value); }
     else if (type == "CONFIRM_END_CLEAR_ALL") { processConfirmEndClearAll(value); }
     else if (type == "NET_KEY_GET") { processNetKeyGet(value); }
+    else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
+    else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
 }
 
 function sendData(type, value) 
@@ -2507,4 +2663,22 @@ function stopLS(value)
     }
 
     sendData("STOP_LS", value);
+}
+
+function replaceDevice()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var selectedIndex = iframeDocument.getElementById('deviceToReplaceSelect').selectedIndex;
+    var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
+
+    if(selectedIndex != -1 && selectedNode) {
+        var newNodeUUID = iframeDocument.getElementById('deviceToReplaceSelect')[selectedIndex].value;
+
+        var oldNodeText = selectedNode.querySelector('span').textContent;
+        var oldNodeId = oldNodeText.trim().split("-")[0]; // Obtener ID del nodo
+
+        sendData("REPLACE_NODES", newNodeUUID + "_" + oldNodeId);
+    }
 }

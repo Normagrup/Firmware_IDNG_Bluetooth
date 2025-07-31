@@ -72,6 +72,25 @@ bool Device::delGroupSubAddress(uint16_t groupAddress)
     return false; // el device no pertenecía al grupo
 }
 
+uint16_t* Device::delAllGroups()
+{
+    static uint16_t removedGroups[MESH_GROUP_COUNT];
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) {
+        if (_groupSubAddress[i] != 0) {
+            removedGroups[count++] = _groupSubAddress[i];
+            _groupSubAddress[i] = 0;
+        }
+    }
+
+    for (uint8_t j = count; j < MESH_GROUP_COUNT; j++) {
+        removedGroups[j] = 0;  // rellenar el resto con ceros
+    }
+
+    return removedGroups;
+}
+
 void Device::setCommunicationFailure(bool comunicationFailure)
 {
     _comunicationFailure = comunicationFailure;

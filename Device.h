@@ -18,6 +18,7 @@ public:
     void setGroupSubAddress(uint16_t groupAddress);
     bool isOnGroupSubAddress(uint16_t groupAddress);
     bool delGroupSubAddress(uint16_t groupAddress);
+    uint16_t* delAllGroups();
     void setCommunicationFailure(bool comunicationFailure);
     void setDeviceType(uint8_t deviceType);
     void setRatedDuration(uint8_t ratedDuration);

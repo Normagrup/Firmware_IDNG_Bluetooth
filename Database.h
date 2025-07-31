@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include "structures.h"
+#include "log.h"
 
 class Database : public QObject
 {
@@ -98,6 +99,10 @@ public:
     void changePosition(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress);
 
     bool isExistingNode(uint16_t realAddress);
+
+    ReplaceNode getNodeDataForReplace(uint16_t realAddress);
+    void setNodeDataForReplace(ReplaceNode replaceNode, uint16_t realAddress);
+    uint16_t getNodeNetAddressForReplace(uint16_t realAddress);
 
 signals:
 

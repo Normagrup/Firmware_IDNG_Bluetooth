@@ -90,4 +90,19 @@ typedef enum {
     Remove
 } GroupActionType;
 
+typedef struct {
+    QString newNodeUUID;
+    uint16_t newNodeRealAddress; // lazy
+    QString oldNodeID;
+    uint16_t oldNodeRealAddress; // lazy
+} ReplaceData;
+
+typedef struct {
+    uint8_t subnetAddress;
+    uint8_t nodeSubnetAddress;
+    QString groupSubAddress;
+    uint8_t relayMode;
+    uint16_t fatherRealAddress;
+} ReplaceNode;
+
 #endif // STRUCTURES_H

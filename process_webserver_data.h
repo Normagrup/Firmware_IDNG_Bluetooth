@@ -30,6 +30,8 @@
 #define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
 #define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SET_IS_LS_IN_PROGRESS            "SET_IS_LS_IN_PROGRESS"
+#define WS_SET_IS_REPLACING_IN_PROGRESS     "SET_IS_REPLACING_IN_PROGRESS"
+#define WS_SET_IS_ADDING_MAN_OR_REPLACING   "SET_IS_ADDING_MAN_OR_REPLACING"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -59,6 +61,7 @@
 #define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
 #define WS_STOP_LS                          "STOP_LS"
 #define WS_SET_MASTER_ADDR_AND_NETKEY       "SET_MASTER_ADDR_AND_NETKEY"
+#define WS_REPLACE_NODES                    "REPLACE_NODES"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -90,6 +93,8 @@
 #define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
 #define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SEND_IS_LS_IN_PROGRESS           "IS_LS_IN_PROGRESS"
+#define WS_SEND_IS_REPLACING_IN_PROGRESS    "IS_REPLACING_IN_PROGRESS"
+#define WS_SEND_IS_ADDING_MAN_OR_REPLACING  "IS_ADDING_MAN_OR_REPLACING"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
@@ -122,6 +127,8 @@
 #define WS_SEND_LS_INFO                     "LS_INFO"
 #define WS_SEND_LS_FOUNDED                  "LS_FOUNDED"
 #define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
+#define WS_SEND_CONFIRM_START_REPLACE       "CONFIRM_START_REPLACE"
+#define WS_SEND_CONFIRM_END_REPLACE         "CONFIRM_END_REPLACE"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_NET_KEY_GET                 "NET_KEY_GET"
@@ -132,6 +139,10 @@
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionOrLSInProgress(WebServer* webServer);
 
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort);
+void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
+void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort);
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
@@ -150,6 +161,8 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendIsCommissionInProgress(WebServer* webServer);
 void sendIsAddManualInProgress(WebServer* webServer);
 void sendIsLSInProgress(WebServer* webServer);
+void sendIsReplacingInProgress(WebServer* webServer);
+void sendIsAddingManOrReplacing(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);
@@ -184,5 +197,7 @@ void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
 void sendFoundNodes(WebServer* webServer, uint16_t nodesCount);
 void changePositions(Database* database, uint16_t pos1, uint16_t pos2);
 void sendConfirmEndClearAllData(WebServer* webServer);
+void sendConfirmStartReplace(WebServer* webServer);
+void sendConfirmEndReplace(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

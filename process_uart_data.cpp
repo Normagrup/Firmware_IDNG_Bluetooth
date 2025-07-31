@@ -64,6 +64,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_END_GROUPS_RECOVERY: return 4;
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
+            case CONFIRM_REPLACE_DONE: return 4;
             default: return -1;
         }
 
@@ -267,17 +268,39 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
 
                     case CONFIRM_START_REMOVE_ONE_NODE:
-                        sendConfirmStartRemoveOneNode(webServer);
+                    {
+                        if(!isReplacingDevices)
+                            sendConfirmStartRemoveOneNode(webServer);
+                        else
+                            sendLogCommissionEntry(webServer, "Deleting node from the network...", "INFO");
+                    }
                     break;
 
                     case CONFIRM_END_REMOVE_ONE_NODE:
-                        sendConfirmEndRemoveOneNode(webServer);
+                    {
+                        if(!isReplacingDevices)
+                            sendConfirmEndRemoveOneNode(webServer);
+                        else {
+                            sendLogCommissionEntry(webServer, "The node has been deleted.", "INFO");
+                            restoreDataForReplace(webServer, uartPort, database);
+                        }
+                    }
                     break;
 
                     case CONFIRM_GET_ANTENNA_ADDRESS:
                     {
                         uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
                         reloadAntennaAddress(webServer, database, antennaAddress);
+                    }
+                    break;
+
+                    case CONFIRM_REPLACE_DONE:
+                    {
+                        replaceData = {"", 0x0000, "", 0x0000};
+                        replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
+
+                        isReplacingDevices = false;
+                        sendConfirmEndReplace(webServer);
                     }
                     break;
 
@@ -288,6 +311,27 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         updateRelayStatus(webServer, database, nodeAddress, enabled);
                     }
                     break;
+
+                    case CONFIRM_START_LINE_SCANNING:
+                    {
+                        sendConfirmStartLineScanning(webServer);
+                        isLineScanning = true;
+                        configuredNodes = database->getConfiguredNodes();
+                        lineScanningCounter = 0;
+                        scannedNodesCounter = 0;
+                        discovered_nodes_count = 0;
+
+                        forceStopLS1 = false;
+                        forceStopLS2 = false;
+
+                        for (int i = 0; i < MAX_SUBNET; i++) {
+                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                                meshDevice[i][j].deleteDevice();
+                            }
+                        }
+                    }
+                    break;
+
                     case SEND_RECOVERY_NODE:
                     {
                         isLineScanning = true;
@@ -312,38 +356,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendFoundNodes(webServer, scannedNodesCounter);
                     }
                     break;
+
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
                         isLineScanning = true;
                         processRecoveryFeaturesFrame(data, database);
                     break;
-                    case CONFIRM_START_LINE_SCANNING:
-                    {
-                        sendConfirmStartLineScanning(webServer);
-                        isLineScanning = true;
-                        configuredNodes = database->getConfiguredNodes();
-                        lineScanningCounter = 0;
-                        scannedNodesCounter = 0;
-                        discovered_nodes_count = 0;
 
-                        forceStopLS1 = false;
-                        forceStopLS2 = false;
-
-                        for (int i = 0; i < MAX_SUBNET; i++) {
-                            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-                                meshDevice[i][j].deleteDevice();
-                            }
-                        }
-                    }
-                    break;
-                    case CONFIRM_END_LINE_SCANNING:
-                    {
-                        database->loadNodesFromDatabase();
-
-                        isLineScanning = false;
-                        sendConfirmEndLineScanning(webServer);
-                    }
-                    break;
                     case RECOVERY_GROUPS:
                     {
                         uint16_t nodeAddress = ((uint16_t)data[3] << 8) | (uint16_t)data[4];
@@ -360,14 +379,22 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                      << "→ añadiendo grupo 0x"
                                      << QString::asprintf("%04X", groupAddr);
                         }
-                    break;
+                        break;
                     }
+
+                    case CONFIRM_END_LINE_SCANNING:
+                    {
+                        database->loadNodesFromDatabase();
+
+                        isLineScanning = false;
+                        sendConfirmEndLineScanning(webServer);
+                    }
+                    break;
+
                     case SCAN_NODE_NOT_FOUND:
                     {
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
                         qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
-
-                        // TODO: Implementar mensaje de nodo no encontrado en base de datos del micro (opcional)
                     }
                     break;
                     case ANSWER_POWER_ON_LEVEL:
@@ -497,6 +524,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
                 insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");
+                if(isReplacingDevices) { replaceData.newNodeRealAddress = address; }
                 delay(500);
                 
                 /*
@@ -524,6 +552,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 //*/
 
                 qDebug()  << "NODO AÑADIDO";
+                sendLogCommissionEntry(webServer, "The features have been loaded.", "INFO");
 
                 delay(4000);
                 /*
@@ -591,8 +620,6 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
             }
         }
     }
-
-    sendLogCommissionEntry(webServer, "The features have been loaded.", "INFO");
 }
 
 void processRecoveryFeaturesFrame(QByteArray data, Database* database)
@@ -611,27 +638,14 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database)
 
     qDebug() << "EXT FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
 
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (!meshDevice[i][j].getIsConfigured()) {
-                meshDevice[i][j].setRealAddress(address);
-                meshDevice[i][j].setDeviceType(deviceType);
-                meshDevice[i][j].setRatedDuration(ratedDuration);
-                meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
-                meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
-                meshDevice[i][j].setIsConfigured(true);
+    database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
+    database->setFatherRealAddress(address, fatherAddress);
 
-                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
-                database->setFatherRealAddress(address, fatherAddress);
+    qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
 
-                qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
+    delay(2000);
 
-                delay(2000);
-
-                return;
-            }
-        }
-    }
+    return;
 }
 
 void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* database, WebServer* webServer)
@@ -683,7 +697,11 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         doneIterations = 0;
         isManualAddingDevice = false;
 
-        sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
+        if(!isReplacingDevices)
+            sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
+        else
+            deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
+
         return;
     }
 
@@ -956,6 +974,43 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getRealAddress() == address[0]) {
+                // Log entry
+                QString groupAddressString = QString("%1").arg(address[1], 4, 16, QLatin1Char('0')).toUpper();
+                QString name = "SUB:" + QString::number(i) + " " + "ID:" + QString::number(j) + " - " + database->getGroupName(groupAddressString);
+                QString serialNum = meshDevice[i][j].serialNumberString();
+                int btAddress = meshDevice[i][j].getRealAddress();
+                AntennaInfo info = getAntennaInfo(database);
+                QString eventType = "Groups";
+                insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DEL_FROM_GROUP, eventType);
+
+                meshDevice[i][j].delGroupSubAddress(address[1]);
+                database->delGroup(address[0], address[1]);
+                return;
+            }
+        }
+    }
+}
+
+void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address)
+{
+    QByteArray frame;
+    unsigned char length = 7;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(DEL_GROUP);
+    frame.append((address[0] >> 8) & 0xFF);
+    frame.append(address[0] & 0xFF);
+    frame.append((address[1] >> 8) & 0xFF);
+    frame.append(address[1] & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }
 
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database)
@@ -1096,7 +1151,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning) { return; }
+    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices) { return; }
 
     QByteArray frame;
     unsigned char length = 4;
@@ -1367,4 +1422,20 @@ void updateDelNodeToDatabase(uint16_t address, uint16_t deviceTypeGroupAddress, 
             }
         }
     }
+}
+
+void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)
+{
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(CONFIRM_REPLACE);
+    frame.append((realAddress >> 8) & 0xFF);
+    frame.append(realAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
 }

@@ -69,6 +69,32 @@
             </div>
         </div>
     </div>
+    <div class="popupManageDevices2" id="popupReplaceDevices">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label style="margin-top: 10px; color: #4682b4;">Select a scanned device to replace</label>
+                <select id="deviceToReplaceSelect" class="selector" style="width: 100%; margin-top: 10px;">
+                    
+                </select>
+                <div class="popup-button-subcontainer" style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">
+                    <button style="width: 100px;" onclick="parent.replaceDevice()">Replace</button>
+                </div>
+            </div>
+
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popupManageDevices1" id="popupReplace">
+        <h2> Replacing nodes... </h2>
+        <br>
+        <div class="loader"></div>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logReplace"></ul>
+        </div>
+    </div>
 
     <div class="wrap-container">
         <div class="wrap-list-container">
@@ -136,7 +162,7 @@
 
         function isAddingManualInProgress() {
             setTimeout(function() {
-				parent.sendData("SET_IS_ADD_MANUAL_IN_PROGRESS", "");
+				parent.sendData("SET_IS_ADDING_MAN_OR_REPLACING", "");
 			}, 10);
         }
 		

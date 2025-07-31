@@ -248,6 +248,17 @@ void transformEventCodes(QList<QStringList>* logs)
 
         else if (event == "193") { event = "DUR TEST OK"; }
         else if (event == "194") { event = "DUR TEST FAIL"; }
+
+        else if (event == "80") { event = "ADD TO GROUP OK"; }
+        else if (event == "81") { event = "ADD TO GROUP FAIL"; }
+        else if (event == "87") { event = "DEL FROM GROUP"; }
+
+        else if (event == "82") { event = "GROUP CREATED"; }
+        else if (event == "83") { event = "GROUP DELETED"; }
+
+        else if (event == "84") { event = "POL TO MAX"; }
+        else if (event == "85") { event = "POL TO LV"; }
+        else if (event == "86") { event = "POL TO OFF"; }
     }
 }
 
