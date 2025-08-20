@@ -400,8 +400,8 @@ void sendPingFrame(QString rcvAddress, uint8_t packetID, UdpSocket* _udpSocket)
     frame.append(FRAME_HEADER_1);
     frame.append(FRAME_HEADER_2);
     frame.append(FRAME_TYPE_82);
-    frame.append(packetID);
-    frame.append(RANDOM_BYTE);
+    frame.append((uint8_t)(C_PING >> 8));     // com high
+    frame.append((uint8_t)(C_PING & 0xFF));   // com low
     frame.append(0x01);
     frame.append(DEVICE_ID);
 
