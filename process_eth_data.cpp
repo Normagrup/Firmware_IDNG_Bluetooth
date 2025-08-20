@@ -977,7 +977,11 @@ static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket*
     case 0x63:
         switch (commandLow) {
         case 0x00: // ARC POWER
-            sendDaliSpecialCommand(_uartPort, subnet, daliAddress, ARC_POWER_DAPC, value, IS_NORMAL);
+            if(value == 0){
+                sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, OFF, IS_NORMAL);
+            } else {
+                sendDaliSpecialCommand(_uartPort, subnet, daliAddress, ARC_POWER_DAPC, value, IS_NORMAL);
+            }
             break;
 
         case 0xE3: // DTR0
