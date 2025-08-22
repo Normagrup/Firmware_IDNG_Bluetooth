@@ -46,6 +46,9 @@ bool checkRcvAddress(QString rcvAddress)
 
 static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, Database* _database)
 {
+    uint16_t pidHigh = (unsigned char)data[5];
+    uint16_t pidLow  = (unsigned char)data[6];
+
     uint8_t commandHigh = (unsigned char)data[7];
     uint8_t commandLow = (unsigned char)data[8];
 
@@ -116,12 +119,12 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
     case 0x01:
         switch (commandLow) {
         case 0x00: // REBOOT
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             rebootDevice();
             break;
 
         case 0x01: // RESET ETHERNET CONFIG
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow, commandHigh, commandLow, _udpSocket);
             rebootDevice();
             break;
 
@@ -192,6 +195,9 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
 
 static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, UartPort* _uartPort)
 {
+    uint16_t pidHigh = (unsigned char)data[5];
+    uint16_t pidLow  = (unsigned char)data[6];
+
     uint8_t commandHigh = (unsigned char)data[8];
     uint8_t commandLow = (unsigned char)data[9];
 
@@ -331,7 +337,7 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
 
         case 0x2E: // STORE DTR AS POWER ON LVL
             sendDaliCommand(_uartPort, DALI_NORMAL_TYPE, subnet, daliAddress, STORE_DTR_POWER_ON_LVL, IS_TWICE);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x2F: // STORE DTR AS FADE TIME
@@ -924,7 +930,7 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x1D: // QUERY EMERGENCY STATUS
-            sendDaliCommand(_uartPort, DALI_EXTENDED_TYPE, subnet, daliAddress, QUERY_EMERGENCY_STATUS, IS_QUERY);
+            //sendDaliCommand(_uartPort, DALI_EXTENDED_TYPE, subnet, daliAddress, QUERY_EMERGENCY_STATUS, IS_QUERY);
             break;
 
         case 0x1E: // PERFORM DTR SELECTED FUNCTION
@@ -966,6 +972,9 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
 
 static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, UartPort* _uartPort)
 {
+    uint16_t pidHigh = (unsigned char)data[5];
+    uint16_t pidLow  = (unsigned char)data[6];
+
     uint8_t commandHigh = (unsigned char)data[8];
     uint8_t commandLow = (unsigned char)data[9];
 
@@ -986,7 +995,7 @@ static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket*
 
         case 0xE3: // DTR0
             setDTR0FromEth(_uartPort, subnet, daliAddress, DTR_0, value, IS_NORMAL);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0xE4: // INITIALISE
@@ -1041,6 +1050,9 @@ static void processEthFrameType3(QString rcvAddress, QByteArray data, UdpSocket*
 
 static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, Database* _database, UartPort* _uartPort)
 {
+    uint16_t pidHigh = (unsigned char)data[5];
+    uint16_t pidLow  = (unsigned char)data[6];
+
     uint8_t commandHigh = (unsigned char)data[7];
     uint8_t commandLow = (unsigned char)data[8];
 
@@ -1049,47 +1061,47 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
         switch (commandLow) {
         case 0x01: // SET IP ADDRESS
             setIPAddress(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x03: // SET SUBMASK ADDRESS
             setSubmaskAddress(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x05: // SET GATEWAY ADDRESS
             setGatewayAddress(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x11: // SET BUILDING NAME
             setBuildingName(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x21: // SET LINE NAME
             setLineName(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x31: // SET RTC DATE DAY
             setRtcDateDay(data);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x33:  // SET RTC DATE SECONDS
             setRtcDateTime(data);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x51: // SET ADMIN PASSWORD
             setAdminPassword(data);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x55: // SET MANTENEDOR PASSWORD
             setMantenedorPassword(data);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow,commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x84: // READ HISTORIC READABLE EVENTS
@@ -1134,7 +1146,7 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
         case 0x1A: // WRITE GROUPS
             updateGroupsDataFromEth(data,  _database, _uartPort);
             if(pendingGroupUpdatesEth.isEmpty()){
-                sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+                sendAckFrame(rcvAddress, pidHigh, pidLow, commandHigh, commandLow, _udpSocket);
                 numDevicesToUpdate = 0;
             }
             break;
@@ -1145,12 +1157,12 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
 
         case 0x1C: // WRITE GROUP NAMES
             saveGroupFromEth(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x46: // SWAP DEVICE FROM ETH
             swapDeviceFromEth(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow, commandHigh, commandLow, _udpSocket);
             break;
 
         case 0x64: // READ TIMERS 0-16
@@ -1167,7 +1179,7 @@ static void processEthFrameType4(QString rcvAddress, QByteArray data, UdpSocket*
 
         case 0x85: // WRITE TEST ALL AVAILABLE GROUP
             setTestDataFromEth(data, _database);
-            sendAckFrame(rcvAddress, commandHigh, commandLow, _udpSocket);
+            sendAckFrame(rcvAddress, pidHigh, pidLow, commandHigh, commandLow, _udpSocket);
             break;
 
         default:
@@ -1315,7 +1327,7 @@ void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket,
     }
 }
 
-void sendAckFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
+void sendAckFrame(QString rcvAddress, uint8_t pidHigh, uint8_t pidLow, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
 {
     QByteArray frame;
     unsigned char crc = 0;
@@ -1324,6 +1336,8 @@ void sendAckFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, U
     frame.append(FRAME_HEADER_1);
     frame.append(FRAME_HEADER_2);
     frame.append(FRAME_TYPE_82);
+    frame.append(pidHigh);
+    frame.append(pidLow);
     frame.append(commandHigh);
     frame.append(commandLow);
     frame.append(0x01);

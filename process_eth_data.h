@@ -11,6 +11,6 @@ bool checkRcvAddress(QString rcvAddress);
 
 void processEthFrame(QString rcvAddress, QByteArray data, UdpSocket* _udpSocket, Database* _database, UartPort* _uartPort);
 
-void sendAckFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
+void sendAckFrame(QString rcvAddress, uint8_t pidHigh, uint8_t pidLow, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 
 #endif // PROCESS_ETH_DATA_H
