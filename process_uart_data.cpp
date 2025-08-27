@@ -332,7 +332,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case SEND_RECOVERY_NODE:
                     {
-                        isLineScanning = true;
+                        //isLineScanning = true;
                         uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
 
                         uint8_t uuid[16];
@@ -357,7 +357,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
-                        isLineScanning = true;
+                        //isLineScanning = true;
                         processRecoveryFeaturesFrame(data, database);
                     break;
 

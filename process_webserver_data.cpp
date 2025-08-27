@@ -682,9 +682,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                     delay(5000);
                 }
             }
+
+            delay(5000);
         }
 
-        delay(10000);
+        delay(2500);
 
         sendUartEndLineScanning(uartPort);
     }
