@@ -466,6 +466,9 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     uint8_t nodeUUID[16];
     uint16_t address;
     uint16_t fatherAddress;
+    uint16_t net_idx;
+    uint8_t num_elem;
+    uint8_t dev_key[16];
 
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
     QString value = "";
@@ -481,8 +484,16 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     physicalMinLvl = (unsigned char)data[24];
     fatherAddress = ((unsigned char)data[25] << 8) + (unsigned char)data[26];
 
+    net_idx = ((unsigned char)data[27] << 8) + (unsigned char)data[28];
+    num_elem = (unsigned char)data[29];
+    QString valueDK = "";
+    for (uint8_t i = 0; i < 16; i++) {
+        dev_key[i] = (unsigned char)data[30 + i];
+        valueDK += QString::asprintf("%02X", dev_key[i]);
+    }
 
     qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+    //qDebug() << "Extra:" << dev_key << net_idx << num_elem;
 
     commissionData.numberOfNodesAdded++;
     numberOfIterations++;
@@ -527,6 +538,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 }
 
                 database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
+                database->setExtraFeatures(address, net_idx, num_elem, dev_key);
 
                 /*
                 QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(i * 64 + j + 1);

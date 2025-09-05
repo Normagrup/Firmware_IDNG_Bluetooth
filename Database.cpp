@@ -40,7 +40,10 @@ void Database::initDatabase()
                "EmergencyFeatures INTEGER, "
                "PhysicalMinLvl INTEGER, "
                "RelayMode INTEGER, "
-               "FatherRealAddress INTEGER);");
+               "FatherRealAddress INTEGER, "
+               "NetIdx INTEGER, "
+               "NumElem INTEGER, "
+               "DevKey TEXT);");
 
 
 
@@ -541,7 +544,7 @@ void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAdd
     query.bindValue(":fra", fatherRealAddress);
     query.bindValue(":nodeAddress", nodeAddress);
 
-    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setFatherRealAddress:" << query.lastError().text(); }
 }
 
 void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
@@ -579,6 +582,27 @@ void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t
     query.bindValue(":relayMode", relayMode);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
+}
+
+void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t num_elem, uint8_t* dev_key)
+{
+    QString nodeDevKeyText;
+    if (dev_key) {
+        for (int i = 0; i < 15; i++) {
+            nodeDevKeyText += QString::asprintf("%02X", dev_key[i]);
+        }
+    } else {
+        nodeDevKeyText = "";
+    }
+
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET NetIdx = :ni, NumElem = :ne, DevKey = :dk WHERE RealAddress = :nodeAddress");
+    query.bindValue(":ni", net_idx);
+    query.bindValue(":ne", num_elem);
+    query.bindValue(":dk", nodeDevKeyText);
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setExtraFeatures:" << query.lastError().text(); }
 }
 
 void Database::addNode(uint16_t nodeAddress)
