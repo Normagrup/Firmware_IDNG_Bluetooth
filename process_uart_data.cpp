@@ -1133,6 +1133,8 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    //return;
+
     if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices) { return; }
 
     QByteArray frame;
@@ -1366,3 +1368,18 @@ void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)
 
     _uartPort->sendData(frame);
 }
+
+void sendUartClearCdb(UartPort* _uartPort)
+{
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(CLEAR_CDB);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
