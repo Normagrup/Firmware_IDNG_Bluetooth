@@ -16,6 +16,7 @@ uint16_t getOneGroupAddress(QString receivedData);
 uint16_t* getActualLvl(QString receivedData);
 void setFirstAddressAvailable(uint16_t nodeAddress, uint8_t* nodeUUID, Database* database, uint8_t* netAddress);
 void convertUuidStringToByteArray(QString uuidString, uint8_t* UUID);
+void convertDevKeyStringToByteArray(QString devKeyString, uint8_t* devKey);
 uint8_t convertGroupSubStringToArray(QString groupSubString, uint16_t* groupSubArray);
 void setIPConfigInfo(QStringList webServerParts, Database* database);
 void insertLogEvent(Database* database, QString name, QString serialNum, int btAddress, QString devIP, QDateTime dateTime, int eventCode, QString eventType);

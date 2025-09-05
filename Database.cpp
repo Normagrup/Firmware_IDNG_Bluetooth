@@ -534,7 +534,7 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     query.bindValue(":rm", 0);
     query.bindValue(":fra", getMasterRealAddress());
 
-    if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
+    if (!query.exec()) { qDebug() << "Error executing INSERT query in setRecoveryNode:" << query.lastError().text(); }
 }
 
 void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
@@ -603,6 +603,31 @@ void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t 
     query.bindValue(":nodeAddress", nodeAddress);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setExtraFeatures:" << query.lastError().text(); }
+}
+
+QString Database::getDevKey(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT DevKey FROM Nodes WHERE RealAddress = :nodeAddress");
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getDevKey:" << query.lastError().text();
+        return QString();
+    }
+
+    if (query.next()) {
+        QString devKeyText = query.value(0).toString().trimmed();
+        if (devKeyText.length() != 32) {
+            qDebug() << "DevKey inválida (longitud incorrecta):" << devKeyText;
+            return QString();
+        }
+        return devKeyText;
+    } else {
+        qDebug() << "No se encontró DevKey para la dirección" << nodeAddress;
+        return QString();
+    }
 }
 
 void Database::addNode(uint16_t nodeAddress)
