@@ -38,7 +38,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
             case SEND_RECOVERY_NODE: return 22;
-            case FEATURES: return 28;
+            case FEATURES: return 47;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
             case NODE_DELETED: return 6;
