@@ -80,6 +80,7 @@
 #define ADDRESS_AND_NET_KEY             0x93
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
+#define CLEAR_CDB                       0x97
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -118,5 +119,6 @@ void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
+void sendUartClearCdb(UartPort* _uartPort);
 
 #endif // PROCESS_UART_DATA_H
