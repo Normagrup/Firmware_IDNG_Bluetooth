@@ -588,7 +588,7 @@ void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t 
 {
     QString nodeDevKeyText;
     if (dev_key) {
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 16; i++) {
             nodeDevKeyText += QString::asprintf("%02X", dev_key[i]);
         }
     } else {
