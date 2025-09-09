@@ -89,7 +89,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         //qDebug() << "ADDING NEW NODE";
         if (value != "0") {
-            sendUartDelDevice(uartPort, 0x0000);
+            sendUartDelDevice(uartPort, 0x0000,database);
             //uuidScanned = compareDeviceUUID(value);
             //delay(500);
             //confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
@@ -136,7 +136,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if(nodeNetAddress == 0xFFFF)
         {
-            sendUartDelDevice(uartPort, nodeNetAddress);
+            sendUartDelDevice(uartPort, nodeNetAddress, database);
 
             // Eliminar nodos de la estructura interna
             for(int i = 0; i < MAX_SUBNET; i++){
@@ -193,7 +193,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 delay(150);
             }
 
-            sendUartDelDevice(uartPort, nodeAddress);
+            sendUartDelDevice(uartPort, nodeAddress, database);
 
             // Device to delete added to log
             insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
@@ -843,7 +843,7 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     // Borrado del dispositivo elegido
     printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
-    sendUartDelDevice(uartPort, nodeAddress);
+    sendUartDelDevice(uartPort, nodeAddress,database);
 
     // Device to delete added to log
     insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");

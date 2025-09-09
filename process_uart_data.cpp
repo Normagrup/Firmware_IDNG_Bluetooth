@@ -879,15 +879,14 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, Database* db)
 {
-    if (_uartPort == nullptr) {
-        printf("Error: _uartPort no está inicializado.\n");
-        return;
-    }
-    
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = db->getDevKey(nodeAddress);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 5;
+    const unsigned char length = 21;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -895,10 +894,14 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(DEL_DEVICES);
     frame.append((nodeAddress >> 8) & 0xFF);
     frame.append(nodeAddress & 0xFF);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    printf("Comando de eliminación enviado: %04X\n", nodeAddress);
 }
 
 

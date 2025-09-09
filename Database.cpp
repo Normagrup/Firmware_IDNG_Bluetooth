@@ -588,7 +588,7 @@ void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t 
 {
     QString nodeDevKeyText;
     if (dev_key) {
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 16; i++) {
             nodeDevKeyText += QString::asprintf("%02X", dev_key[i]);
         }
     } else {
@@ -1645,4 +1645,29 @@ uint16_t Database::getNodeNetAddressForReplace(uint16_t realAddress)
     }
     else
         return 0;
+}
+
+QString Database::getDevKey(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT DevKey FROM Nodes WHERE RealAddress = :nodeAddress");
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getDevKey:" << query.lastError().text();
+        return QString();
+    }
+
+    if (query.next()) {
+        QString devKeyText = query.value(0).toString().trimmed();
+        if (devKeyText.length() != 32) {
+            qDebug() << "DevKey inválida (longitud incorrecta):" << devKeyText;
+            return QString();
+        }
+        return devKeyText;
+    } else {
+        qDebug() << "No se encontró DevKey para la dirección" << nodeAddress;
+        return QString();
+    }
 }

@@ -100,6 +100,7 @@ public:
     ReplaceNode getNodeDataForReplace(uint16_t realAddress);
     void setNodeDataForReplace(ReplaceNode replaceNode, uint16_t realAddress);
     uint16_t getNodeNetAddressForReplace(uint16_t realAddress);
+    QString getDevKey(uint16_t nodeAddress);
 
 signals:
 
