@@ -410,10 +410,7 @@ void Wireless::addDeviceTimerHandler()
                 scannedUUID[i].nodeAddressReport = 0;
             }
 
-            //  Se pide al micro que borre la base de datos
-            sendLogCommissionEntry(_webServer, "Borrando base de datos del micro...", "INFO");
             sendUartClearCdb(_uartPort);
-
             delay(5000);
 
             sendEndAutoCommission(_webServer);

@@ -29,6 +29,7 @@ public:
     void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode);
     void setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t num_elem, uint8_t* dev_key);
     QString getDevKey(uint16_t nodeAddress);
+    QString getUUID(uint16_t nodeAddress);
     void setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value);
 
     bool isNodeInDatabase(uint16_t nodeAddress);

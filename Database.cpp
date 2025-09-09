@@ -630,6 +630,31 @@ QString Database::getDevKey(uint16_t nodeAddress)
     }
 }
 
+QString Database::getUUID(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT UUID FROM Nodes WHERE RealAddress = :nodeAddress");
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getUUID:" << query.lastError().text();
+        return QString();
+    }
+
+    if (query.next()) {
+        QString UUIDText = query.value(0).toString().trimmed();
+        if (UUIDText.length() != 32) {
+            qDebug() << "UUID inválido (longitud incorrecta):" << UUIDText;
+            return QString();
+        }
+        return UUIDText;
+    } else {
+        qDebug() << "No se encontró UUID para la dirección" << nodeAddress;
+        return QString();
+    }
+}
+
 void Database::addNode(uint16_t nodeAddress)
 {
     QSqlQuery query;
