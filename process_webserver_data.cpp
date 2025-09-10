@@ -89,7 +89,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         //qDebug() << "ADDING NEW NODE";
         if (value != "0") {
-            sendUartDelDevice(uartPort, 0x0000, database);
+            sendUartDelDevice(uartPort, 0x0000);
             //uuidScanned = compareDeviceUUID(value);
             //delay(500);
             //confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
@@ -136,7 +136,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if(nodeNetAddress == 0xFFFF)
         {
-            sendUartDelDevice(uartPort, nodeNetAddress, database);
+            sendUartDelDevice(uartPort, nodeNetAddress);
 
             // Eliminar nodos de la estructura interna
             for(int i = 0; i < MAX_SUBNET; i++){
@@ -170,7 +170,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
                 printf(" Net Address: %04X - RealAddress: %04X\n", dependentNodeNetAddress, dependentNodeAddress);
 
-                sendUartDelDevice(uartPort, dependentNodeAddress, database);
+                sendUartDelDevice(uartPort, dependentNodeAddress);
                 delay(800);
 
                 // Device to delete added to log
@@ -193,7 +193,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 delay(150);
             }
 
-            sendUartDelDevice(uartPort, nodeAddress, database);
+            sendUartDelDevice(uartPort, nodeAddress);
 
             // Device to delete added to log
             insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
@@ -843,7 +843,7 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     // Borrado del dispositivo elegido
     printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
-    sendUartDelDevice(uartPort, nodeAddress, database);
+    sendUartDelDevice(uartPort, nodeAddress);
 
     // Device to delete added to log
     insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");

@@ -879,18 +879,15 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    uint8_t devKey[16] = {0};
-    QString devKeyStr = database->getDevKey(nodeAddress);
-    convertDevKeyStringToByteArray(devKeyStr, devKey);
-
-    uint8_t uuid[16] = {0};
-    QString uuidStr = database->getUUID(nodeAddress);
-    convertUuidStringToByteArray(uuidStr, uuid);
-
+    if (_uartPort == nullptr) {
+        printf("Error: _uartPort no está inicializado.\n");
+        return;
+    }
+    
     QByteArray frame;
-    unsigned char length = 37;
+    unsigned char length = 5;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -898,16 +895,6 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, Database* data
     frame.append(DEL_DEVICES);
     frame.append((nodeAddress >> 8) & 0xFF);
     frame.append(nodeAddress & 0xFF);
-
-    for (uint8_t i = 0; i < 16; i++) {
-        frame.append(devKey[i]);
-    }
-
-    for (uint8_t j = 0; j < 16; j++) {
-        frame.append(uuid[j]);
-        //frame.append(uuid[15-j]);
-    }
-
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
@@ -1158,6 +1145,8 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    //return;
+
     if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices) { return; }
 
     QByteArray frame;
