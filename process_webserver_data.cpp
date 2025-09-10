@@ -42,7 +42,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         qDebug() << "Iniciando escaneo desde nodo realAddress:" << nodeRealAddress;
 
-        sendUartScanFromNode(uartPort, nodeRealAddress);
+        sendUartScanFromNode(uartPort, nodeRealAddress, database);
     }
 
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {

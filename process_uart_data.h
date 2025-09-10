@@ -112,7 +112,7 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
-void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
+void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress, Database* database);
 void sendNetKey(UartPort* _uartPort, Database* database);
 void sendAntennaAddress(UartPort* _uartPort, Database* database);
 void sendAntennaGetAddress(UartPort* _uartPort);
