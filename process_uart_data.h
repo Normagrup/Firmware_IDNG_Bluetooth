@@ -81,6 +81,10 @@
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
 #define CLEAR_CDB                       0x97
+#define CONFIRM_CLEAR_ALL_CDB           0x99
+#define SEND_INFO_ANTENNA               0x98
+#define REC_ANTENNA_ADDRESS             0x90
+#define  REC_NET_KEY                    0x86
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -120,5 +124,7 @@ void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartClearCdb(UartPort* _uartPort);
-
+void sendParamsToMicro(UartPort* uartPort,uint16_t antennaAddr,uint16_t netKey);
+void recAntennaAddress(UartPort* _uartPort, Database* database);
+void recNetKey(UartPort* _uartPort, Database* database);
 #endif // PROCESS_UART_DATA_H

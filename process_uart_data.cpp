@@ -48,6 +48,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_END_REMOVE_ALL_NODES: return 4;
             case CONFIRM_START_REMOVE_ONE_NODE: return 4;
             case CONFIRM_END_REMOVE_ONE_NODE: return 4;
+            case CONFIRM_CLEAR_ALL_CDB: return 4;
             case RELAY_STATUS: return 7;
             case LINE_SCAN_SEND: return 22;
             case QUERY_RESPONSE: return 7;
@@ -284,7 +285,16 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
+                    case CONFIRM_CLEAR_ALL_CDB:
+                    {
+                        //qDebug() << "ENVIANDOOO recAntennaAddress";
+                        recAntennaAddress(uartPort, database);
+                        delay(SLEEP_DALI_TIME_MS);
+                        //qDebug() << "ENVIANDOOO recNetKey";
+                        recNetKey(uartPort, database);
 
+                    }
+                    break;
                     case CONFIRM_GET_ANTENNA_ADDRESS:
                     {
                         uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
@@ -299,6 +309,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         isReplacingDevices = false;
                         sendConfirmEndReplace(webServer);
+
                     }
                     break;
 
@@ -1338,6 +1349,52 @@ void sendAntennaAddress(UartPort* _uartPort, Database* database)
     _uartPort->sendData(frame);
 }
 
+void recAntennaAddress(UartPort* _uartPort, Database* database)
+{
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
+
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(REC_ANTENNA_ADDRESS);
+    frame.append((masterStoredAddress >> 8) & 0xFF);
+    frame.append(masterStoredAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void recNetKey(UartPort* _uartPort, Database* database)
+{
+    QString netKey = database->getNetKey();
+    uint8_t netKeyBytes[16];
+
+    if(netKey.size() == 32) {
+        for(uint8_t i = 0; i < 16; i++) {
+            QString byteString = netKey.mid(i * 2, 2);
+            netKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
+        }
+    } else {
+        memcpy(netKeyBytes, netKeys[netKey.toInt() - 1], 16);
+    }
+
+    QByteArray frame;
+    unsigned char length = 19;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(REC_NET_KEY);
+    for(uint8_t j = 0; j < 16; j++) {
+        frame.append(netKeyBytes[j]);
+    }
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
 void sendAntennaGetAddress(UartPort* _uartPort)
 {
     QByteArray frame;
@@ -1398,3 +1455,31 @@ void sendUartClearCdb(UartPort* _uartPort)
     _uartPort->sendData(frame);
 }
 
+void sendParamsToMicro(UartPort* _uartPort,uint16_t antennaAddr,uint16_t netKey)
+{
+
+    QByteArray frame;
+    unsigned char length = 7;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SEND_INFO_ANTENNA);
+
+    frame.append((antennaAddr >> 8) & 0xFF);
+    frame.append(antennaAddr & 0xFF);
+
+    frame.append((netKey >> 8) & 0xFF);
+    frame.append(netKey & 0xFF);
+
+    frame.append(UART_END);
+
+    qDebug() << QString("Enviando INFO de antena: 0x%1 netKey: 0x%2")
+                    .arg(antennaAddr, 4, 16, QLatin1Char('0'))
+                    .arg(netKey, 4, 16, QLatin1Char('0'))
+                    .toUpper();
+
+    _uartPort->sendData(frame);
+
+    _uartPort->sendData(frame);
+}
