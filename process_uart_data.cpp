@@ -976,8 +976,12 @@ void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(address[0]);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 7;
+    unsigned char length = 23;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -987,6 +991,10 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
     frame.append(address[0] & 0xFF);
     frame.append((address[1] >> 8) & 0xFF);
     frame.append(address[1] & 0xFF);
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
