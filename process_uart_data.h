@@ -102,7 +102,7 @@ void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress,  Database* db);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
-void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address); // no actualiza el modelo y la bbdd directamente
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);

@@ -259,7 +259,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         timerGroupAddress[2] = 0x0000;
         groupDataConfiguration.configSecondGroup = false;
         qDebug() << "GROUP ADD";
-        sendUartAddGroupManual(uartPort, address);
+        sendUartAddGroupManual(uartPort, address,database);
 
     }
     else if (type == WS_SET_DEL_GROUP) {
@@ -907,7 +907,7 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
         timerGroupAddress[2] = 0x0000;
 
         groupDataConfiguration.configSecondGroup = false;
-        sendUartAddGroupManual(uartPort, address);
+        sendUartAddGroupManual(uartPort, address,database);
         delay(2000);
     }
 

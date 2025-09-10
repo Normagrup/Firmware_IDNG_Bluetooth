@@ -288,8 +288,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case CONFIRM_CLEAR_ALL_CDB:
                     {
                         //qDebug() << "ENVIANDOOO recAntennaAddress";
-                        recAntennaAddress(uartPort, database);
-                        delay(SLEEP_DALI_TIME_MS);
+                        //recAntennaAddress(uartPort, database);
+                        //delay(SLEEP_DALI_TIME_MS);
                         //qDebug() << "ENVIANDOOO recNetKey";
                         recNetKey(uartPort, database);
 
@@ -916,12 +916,16 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, Database* db)
 }
 
 
-void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(address[0]);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
 
     qDebug() << "UART GROUP SEND";
-    unsigned char length = 9;
+    unsigned char length = 25;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -935,6 +939,10 @@ void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
     frame.append(address[2] & 0xFF);
 
     qDebug() << address[0] << address[1] << address[2];
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
 
     frame.append(UART_END);
 
@@ -1369,6 +1377,7 @@ void recAntennaAddress(UartPort* _uartPort, Database* database)
 
 void recNetKey(UartPort* _uartPort, Database* database)
 {
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
     QString netKey = database->getNetKey();
     uint8_t netKeyBytes[16];
 
@@ -1382,12 +1391,14 @@ void recNetKey(UartPort* _uartPort, Database* database)
     }
 
     QByteArray frame;
-    unsigned char length = 19;
+    unsigned char length = 21;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(REC_NET_KEY);
+    frame.append((masterStoredAddress >> 8) & 0xFF);
+    frame.append(masterStoredAddress & 0xFF);
     for(uint8_t j = 0; j < 16; j++) {
         frame.append(netKeyBytes[j]);
     }
