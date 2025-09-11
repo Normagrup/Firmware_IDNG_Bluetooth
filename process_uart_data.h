@@ -105,7 +105,7 @@ void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartScannedDevices(UartPort* _uartPort);
 void sendUartStartCommission(UartPort* _uartPort);
 void sendUartNewIteration(UartPort* _uartPort);
-void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress);
+void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);

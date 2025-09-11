@@ -366,7 +366,7 @@ void Wireless::addDeviceTimerHandler()
 
         do {
             qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
-            sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport);
+            sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport,_database);
             delay(5000);
         } while (!commissionData.isChangeRelayConfirmed);
     }

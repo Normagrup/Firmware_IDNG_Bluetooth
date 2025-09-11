@@ -702,6 +702,8 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         else
             deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
 
+        sendUartClearInyectedNodes(uartPort);
+
         return;
     }
 
@@ -895,8 +897,11 @@ void sendUartNewIteration(UartPort* _uartPort)
     _uartPort->sendData(frame);
 }
 
-void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress)
+void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
 {
+    sendUartInyectNode(_uartPort, nodeAddress, database);
+    delay(300);
+
     QByteArray frame;
     unsigned char length = 5;
 
@@ -1063,10 +1068,14 @@ void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database)
 {
+    bool hasEnteredInSubnet;
 
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        hasEnteredInSubnet = false;
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getIsConfigured() && meshDevice[i][j].delGroupSubAddress(groupAddress)) {
+                hasEnteredInSubnet = true;
+
                 uint16_t nodeRealAddress = meshDevice[i][j].getRealAddress();
                 database->delGroup(nodeRealAddress, groupAddress);
 
@@ -1087,10 +1096,13 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
                 frame.append(UART_END);
 
                 _uartPort->sendData(frame);
-
-                delay(300);
-                sendUartClearInyectedNodes(_uartPort);
             }
+        }
+
+        if(hasEnteredInSubnet) {
+            delay(750);
+            sendUartClearInyectedNodes(_uartPort);
+            delay(750);
         }
     }
 }
@@ -1313,11 +1325,11 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
 
         _uartPort->sendData(frame);
 
-        delay(300);
-        sendUartClearInyectedNodes(_uartPort);
-
         delay(SLEEP_DALI_TIME_MS * 2);
     }
+
+    delay(1000);
+    sendUartClearInyectedNodes(_uartPort);
 }
 
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)

@@ -44,7 +44,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartInyectNode(uartPort, nodeRealAddress, database);
         delay(300);
         sendUartScanFromNode(uartPort, nodeRealAddress);
-        delay(10300);
+        delay(10000);
         sendUartClearInyectedNodes(uartPort);
 
     }
@@ -233,7 +233,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             }
         }
 
-        sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+        if (scannedUUID[0].nodeAddressReport != antennaRealAddress){
+            sendUartInyectNode(uartPort, scannedUUID[0].nodeAddressReport, database);
+            delay(300);
+            sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+        }
+
         delay(SLEEP_DALI_TIME_MS);
         sendUartAddDevice(uartPort, scannedUUID[0]);
         sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
@@ -399,7 +404,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         uint16_t realAddress = meshDevice[(netAddress - 1) / 64][(netAddress - 1) % 64].getRealAddress();
 
+        sendUartInyectNode(uartPort, realAddress, database);
+        delay(300);
         sendUartSetRelay(uartPort, realAddress, enable);
+        delay(300);
+        sendUartClearInyectedNodes(uartPort);
     }
     else if (type == WS_SET_IDENTIFY) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
@@ -794,7 +803,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         replaceData.oldNodeID = elems[1];
         replaceData.oldNodeRealAddress = 0x0000;
 
-        addNodeForReplace(webServer, uartPort, database);
+        addNodeForReplace(webServer, uartPort);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -802,7 +811,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 }
 
-void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort) {
     // PARTE 1 de 3: AÑADIR NODO NUEVO
 
     // Extraer el índice del UUID correspondiente al nodo que queremos añadir
@@ -1135,6 +1144,8 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         numberOfIterations = 0;
         doneIterations = 0;
         isManualAddingDevice = false;
+
+        sendUartClearInyectedNodes(uartPort);
 
         return;
     }
