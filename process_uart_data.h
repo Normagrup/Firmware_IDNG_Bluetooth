@@ -23,6 +23,7 @@
 
 #define INYECT_NODE                     0xF1
 #define CLEAR_INYECTED_NODES            0xF2
+#define CLEAR_ONE_INYECTED_NODE         0xF3
 
 #define SCAN_DEVICES                    0x01
 #define START_COMMISSION                0x03
@@ -99,6 +100,7 @@ int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
 void sendUartClearInyectedNodes(UartPort* _uartPort);
+void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
 
 void sendUartScannedDevices(UartPort* _uartPort);
 void sendUartStartCommission(UartPort* _uartPort);
