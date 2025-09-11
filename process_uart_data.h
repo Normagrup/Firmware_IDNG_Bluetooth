@@ -21,6 +21,9 @@
 #define DEV_TYPE_FAIL                   0x02
 #define NET_ADDR_FAIL                   0x03
 
+#define INYECT_NODE                     0xF1
+#define CLEAR_INYECTED_NODES            0xF2
+
 #define SCAN_DEVICES                    0x01
 #define START_COMMISSION                0x03
 #define NEW_ITERATION                   0x05
@@ -91,7 +94,11 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);
+void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 int getExpectedFrameSize(const QByteArray& buffer);
+
+void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
+void sendUartClearInyectedNodes(UartPort* _uartPort);
 
 void sendUartScannedDevices(UartPort* _uartPort);
 void sendUartStartCommission(UartPort* _uartPort);
@@ -119,8 +126,8 @@ void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
 void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
-void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartClearCdb(UartPort* _uartPort);
 void recNetKey(UartPort* _uartPort, Database* database);
+
 #endif // PROCESS_UART_DATA_H

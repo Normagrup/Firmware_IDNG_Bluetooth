@@ -800,6 +800,43 @@ void processConfirmGroupFrame(void)
     groupFrameTimer.stop();
 }
 
+void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
+{
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(nodeAddress);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
+    QByteArray frame;
+    unsigned char length = 21;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(INYECT_NODE);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendUartClearInyectedNodes(UartPort* _uartPort)
+{
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(CLEAR_INYECTED_NODES);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
 void sendUartScannedDevices(UartPort* _uartPort)
 {
     QByteArray frame;
