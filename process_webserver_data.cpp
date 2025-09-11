@@ -41,8 +41,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
         qDebug() << "Iniciando escaneo desde nodo realAddress:" << nodeRealAddress;
+        sendUartInyectNode(uartPort, nodeRealAddress, database);
+        delay(300);
+        sendUartScanFromNode(uartPort, nodeRealAddress);
+        delay(10300);
+        sendUartClearInyectedNodes(uartPort);
 
-        sendUartScanFromNode(uartPort, nodeRealAddress, database);
     }
 
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {
@@ -87,33 +91,24 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_START_ACTION) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
 
-        //qDebug() << "ADDING NEW NODE";
-        if (value != "0") {
-            sendUartDelDevice(uartPort, 0x0000,database);
-            //uuidScanned = compareDeviceUUID(value);
-            //delay(500);
-            //confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
-            //if (uuidScanned.UUID != nullptr) { sendUartAddDevice(uartPort, uuidScanned); sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(uuidScanned), "INFO"); }
-        }
-        else {
-            qDebug() << "START COMMISSION";
+        qDebug() << "START COMMISSION";
 
-            numberOfIterations = 0;
-            doneIterations = 0;
-            for(int i = 0; i < MAX_SUBNET; i++){
-                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
-                    if(meshDevice[i][j].getIsConfigured())
-                        numberOfIterations++;
-                }
+        numberOfIterations = 0;
+        doneIterations = 0;
+        for(int i = 0; i < MAX_SUBNET; i++){
+            for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                if(meshDevice[i][j].getIsConfigured())
+                    numberOfIterations++;
             }
-            memset(scannedUUID, 0, sizeof(scannedUUID));
-
-            commissionData.numberOfNodesScanned = 0;
-            commissionData.numberOfNodesAdded = 0;
-            sendUartStartCommission(uartPort);
-            delay(300);
-            sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
         }
+        memset(scannedUUID, 0, sizeof(scannedUUID));
+
+        commissionData.numberOfNodesScanned = 0;
+        commissionData.numberOfNodesAdded = 0;
+        sendUartStartCommission(uartPort);
+        delay(300);
+        sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
+
     }
     else if (type == WS_SET_NEW_COMMISSION_ITERATION) {
         /*
@@ -136,7 +131,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if(nodeNetAddress == 0xFFFF)
         {
-            sendUartDelDevice(uartPort, nodeNetAddress, database);
+            sendUartDelDevice(uartPort, nodeNetAddress);
 
             // Eliminar nodos de la estructura interna
             for(int i = 0; i < MAX_SUBNET; i++){
@@ -192,8 +187,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
                 delay(150);
             }
-
-            sendUartDelDevice(uartPort, nodeAddress, database);
+            sendUartInyectNode(uartPort, nodeAddress, database);
+            delay(300);
+            sendUartDelDevice(uartPort, nodeAddress);
+            delay(300);
+            sendUartClearInyectedNodes(uartPort);
 
             // Device to delete added to log
             insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
@@ -259,7 +257,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         timerGroupAddress[2] = 0x0000;
         groupDataConfiguration.configSecondGroup = false;
         qDebug() << "GROUP ADD";
-        sendUartAddGroupManual(uartPort, address,database);
+
+        sendUartInyectNode(uartPort, address[0], database);
+        delay(300);
+        sendUartAddGroupManual(uartPort, address);
+        delay(300);
+        sendUartClearInyectedNodes(uartPort);
 
     }
     else if (type == WS_SET_DEL_GROUP) {
@@ -271,7 +274,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         uint16_t* address = getGroupAddress(parsedValue);
         qDebug() << "GROUP DEL";
+
+        sendUartInyectNode(uartPort, address[0], database);
+        delay(300);
         sendUartDelGroup(uartPort, address, database);
+        delay(300);
+        sendUartClearInyectedNodes(uartPort);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
         database->createGroup();
@@ -786,7 +794,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         replaceData.oldNodeID = elems[1];
         replaceData.oldNodeRealAddress = 0x0000;
 
-        addNodeForReplace(webServer, uartPort);
+        addNodeForReplace(webServer, uartPort, database);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -794,7 +802,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 }
 
-void addNodeForReplace(WebServer* webServer, UartPort* uartPort) {
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
     // PARTE 1 de 3: AÑADIR NODO NUEVO
 
     // Extraer el índice del UUID correspondiente al nodo que queremos añadir
@@ -826,6 +834,7 @@ void addNodeForReplace(WebServer* webServer, UartPort* uartPort) {
 
     sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
     delay(SLEEP_DALI_TIME_MS);
+
     sendUartAddDevice(uartPort, scannedUUID[0]);
     sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
 }
@@ -843,7 +852,7 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     // Borrado del dispositivo elegido
     printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
-    sendUartDelDevice(uartPort, nodeAddress,database);
+    sendUartDelDevice(uartPort, nodeAddress);
 
     // Device to delete added to log
     insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
@@ -907,7 +916,7 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
         timerGroupAddress[2] = 0x0000;
 
         groupDataConfiguration.configSecondGroup = false;
-        sendUartAddGroupManual(uartPort, address,database);
+        sendUartAddGroupManual(uartPort, address);
         delay(2000);
     }
 
