@@ -1279,8 +1279,12 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
         uint16_t realAddress = crossedGroupAndNodes[i].first;
 
+        uint8_t devKey[16] = {0};
+        QString devKeyStr = database->getDevKey(realAddress);
+        convertDevKeyStringToByteArray(devKeyStr, devKey);
+
         QByteArray frame;
-        unsigned char length = 5;
+        unsigned char length = 21;
 
         frame.append(UART_HEADER);
         frame.append(length);
@@ -1288,6 +1292,11 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
         frame.append(ASK_POWER_ON_LEVEL);
         frame.append((realAddress >> 8) & 0xFF);
         frame.append(realAddress & 0xFF);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            frame.append(devKey[i]);
+        }
+
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
@@ -1296,10 +1305,14 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     }
 }
 
-void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
+void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(nodeAddress);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 6;
+    unsigned char length = 22;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -1308,6 +1321,11 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
     frame.append((nodeAddress >> 8) & 0xFF);
     frame.append(nodeAddress & 0xFF);
     frame.append(enable ? 0x01 : 0x00);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
