@@ -81,6 +81,8 @@
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
 #define CLEAR_CDB                       0x97
+#define CONFIRM_CLEAR_ALL_CDB           0x99
+#define  REC_NET_KEY                    0x86
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -96,9 +98,9 @@ void sendUartStartCommission(UartPort* _uartPort);
 void sendUartNewIteration(UartPort* _uartPort);
 void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress,  Database* db);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
-void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address); // no actualiza el modelo y la bbdd directamente
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
@@ -108,7 +110,7 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
-void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
+void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress, Database* database);
 void sendNetKey(UartPort* _uartPort, Database* database);
 void sendAntennaAddress(UartPort* _uartPort, Database* database);
 void sendAntennaGetAddress(UartPort* _uartPort);
@@ -120,5 +122,5 @@ void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartClearCdb(UartPort* _uartPort);
-
+void recNetKey(UartPort* _uartPort, Database* database);
 #endif // PROCESS_UART_DATA_H
