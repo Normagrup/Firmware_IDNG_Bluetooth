@@ -48,6 +48,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_END_REMOVE_ALL_NODES: return 4;
             case CONFIRM_START_REMOVE_ONE_NODE: return 4;
             case CONFIRM_END_REMOVE_ONE_NODE: return 4;
+            case CONFIRM_CLEAR_ALL_CDB: return 4;
             case RELAY_STATUS: return 7;
             case LINE_SCAN_SEND: return 22;
             case QUERY_RESPONSE: return 7;
@@ -284,7 +285,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
-
+                    case CONFIRM_CLEAR_ALL_CDB:
+                    {
+                        recNetKey(uartPort, database);
+                    }
+                    break;
                     case CONFIRM_GET_ANTENNA_ADDRESS:
                     {
                         uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
@@ -299,6 +304,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         isReplacingDevices = false;
                         sendConfirmEndReplace(webServer);
+
                     }
                     break;
 
@@ -879,15 +885,14 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, Database* db)
 {
-    if (_uartPort == nullptr) {
-        printf("Error: _uartPort no está inicializado.\n");
-        return;
-    }
-    
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = db->getDevKey(nodeAddress);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 5;
+    const unsigned char length = 21;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -895,19 +900,27 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(DEL_DEVICES);
     frame.append((nodeAddress >> 8) & 0xFF);
     frame.append(nodeAddress & 0xFF);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
-    printf("Comando de eliminación enviado: %04X\n", nodeAddress);
 }
 
 
-void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
+void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(address[0]);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
 
     qDebug() << "UART GROUP SEND";
-    unsigned char length = 9;
+    unsigned char length = 25;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -921,6 +934,10 @@ void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
     frame.append(address[2] & 0xFF);
 
     qDebug() << address[0] << address[1] << address[2];
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
 
     frame.append(UART_END);
 
@@ -954,8 +971,12 @@ void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(address[0]);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 7;
+    unsigned char length = 23;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -965,6 +986,10 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
     frame.append(address[0] & 0xFF);
     frame.append((address[1] >> 8) & 0xFF);
     frame.append(address[1] & 0xFF);
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
@@ -989,10 +1014,14 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
     }
 }
 
-void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address)
+void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(address[0]);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 7;
+    unsigned char length = 23;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -1002,6 +1031,11 @@ void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address)
     frame.append(address[0] & 0xFF);
     frame.append((address[1] >> 8) & 0xFF);
     frame.append(address[1] & 0xFF);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
@@ -1009,15 +1043,18 @@ void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database)
 {
+
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getIsConfigured() && meshDevice[i][j].delGroupSubAddress(groupAddress)) {
                 uint16_t nodeRealAddress = meshDevice[i][j].getRealAddress();
-
+                uint8_t devKey[16] = {0};
+                QString devKeyStr = database->getDevKey(nodeRealAddress);
+                convertDevKeyStringToByteArray(devKeyStr, devKey);
                 database->delGroup(nodeRealAddress, groupAddress);
 
                 QByteArray frame;
-                unsigned char length = 7;
+                unsigned char length = 23;
 
                 frame.append(UART_HEADER);
                 frame.append(length);
@@ -1027,6 +1064,11 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
                 frame.append(nodeRealAddress & 0xFF);
                 frame.append((groupAddress >> 8) & 0xFF);
                 frame.append(groupAddress & 0xFF);
+
+                for (uint8_t i = 0; i < 16; i++) {
+                    frame.append(devKey[i]);
+                }
+
                 frame.append(UART_END);
 
                 _uartPort->sendData(frame);
@@ -1271,10 +1313,14 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
     _uartPort->sendData(frame);
 }
 
-void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
+void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress, Database* database)
 {
+    uint8_t devKey[16] = {0};
+    QString devKeyStr = database->getDevKey(nodeRealAddress);
+    convertDevKeyStringToByteArray(devKeyStr, devKey);
+
     QByteArray frame;
-    unsigned char length = 5;
+    unsigned char length = 21;
 
     frame.append(UART_HEADER);                
     frame.append(length);                     
@@ -1282,6 +1328,11 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
     frame.append(SCAN_FROM_NODE);           
     frame.append((nodeRealAddress >> 8) & 0xFF);
     frame.append(nodeRealAddress & 0xFF);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        frame.append(devKey[i]);
+    }
+
     frame.append(UART_END);                   
 
     qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
@@ -1335,6 +1386,37 @@ void sendAntennaAddress(UartPort* _uartPort, Database* database)
     _uartPort->sendData(frame);
 }
 
+void recNetKey(UartPort* _uartPort, Database* database)
+{
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
+    QString netKey = database->getNetKey();
+    uint8_t netKeyBytes[16];
+
+    if(netKey.size() == 32) {
+        for(uint8_t i = 0; i < 16; i++) {
+            QString byteString = netKey.mid(i * 2, 2);
+            netKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
+        }
+    } else {
+        memcpy(netKeyBytes, netKeys[netKey.toInt() - 1], 16);
+    }
+
+    QByteArray frame;
+    unsigned char length = 21;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(REC_NET_KEY);
+    frame.append((masterStoredAddress >> 8) & 0xFF);
+    frame.append(masterStoredAddress & 0xFF);
+    for(uint8_t j = 0; j < 16; j++) {
+        frame.append(netKeyBytes[j]);
+    }
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
 void sendAntennaGetAddress(UartPort* _uartPort)
 {
     QByteArray frame;
@@ -1394,4 +1476,3 @@ void sendUartClearCdb(UartPort* _uartPort)
 
     _uartPort->sendData(frame);
 }
-

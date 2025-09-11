@@ -32,5 +32,6 @@ QString getUUIDAsString(uint8_t UUID[16]);
 
 void setTests(QStringList webServerParts, Database* database);
 void transformEventCodes(QList<QStringList>* logs);
+void convertDevKeyStringToByteArray(QString devKeyString, uint8_t* devKey);
 
 #endif // AUX_FUNCTIONS_H
