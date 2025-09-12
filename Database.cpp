@@ -537,6 +537,37 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }
 
+void Database::setRecoveryDevKey(uint16_t addr, const uint8_t devKey[16])
+{
+
+    QString devKeyText;
+    if (devKey) {
+        for (int i = 0; i <= 15; i++) {
+            devKeyText += QString::asprintf("%02X", devKey[i]);
+        }
+    } else {
+        devKeyText = "";
+    }
+
+    /*qInfo() << "[DB] setRecoveryDevKey: addr="
+            << QString("0x%1").arg(addr, 4, 16, QLatin1Char('0')).toUpper()
+            << " devkey=" << devKeyText;*/
+
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET DevKey = :devKey "
+                  "WHERE RealAddress = :addr");
+
+    query.bindValue(":devKey", devKeyText);
+    query.bindValue(":addr", addr);
+
+
+    if (!query.exec()) {
+        qDebug() <<"Error executing UPDATE query in setRecoveryDevKey:"
+                 << query.lastError().text();
+    }
+
+}
+
 void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
 {
     QSqlQuery query;
