@@ -367,28 +367,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         database->setRecoveryDevKey(nodeAddress, dev_key);
                     }
                     break;
-                    /*case RECOVERY_DEVKEY:
-                    {
-                        uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
-                        uint8_t dev_key[16];
-                        memcpy(dev_key,
-                               reinterpret_cast<const uint8_t*>(data.constData()) + 5,
-                               sizeof(dev_key));
-
-                        // Construir HEX para imprimir
-                        QString devKeyHex;
-                        for (int i = 0; i < 16; ++i) {
-                            devKeyHex += QString::asprintf("%02X", dev_key[i]);
-                            if (i < 15) devKeyHex += ' ';
-                        }
-
-                        qInfo() << "[UART] RECOVERY_DEVKEY addr="
-                                << QString("0x%1").arg(nodeAddress, 4, 16, QLatin1Char('0')).toUpper()
-                                << " devkey=" << devKeyHex;
-
-                        database->setRecoveryDevKey(nodeAddress, dev_key);
-                    }
-                    break;*/
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
                         //isLineScanning = true;
