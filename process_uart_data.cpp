@@ -37,7 +37,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case ADD_DEVICES: return 6;
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
-            case SEND_RECOVERY_NODE: return 22;
+            case SEND_RECOVERY_NODE: return 38;
             case FEATURES: return 47;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
@@ -335,7 +335,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
-
                     case SEND_RECOVERY_NODE:
                     {
                         //isLineScanning = true;
@@ -345,6 +344,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         memcpy(uuid,
                                reinterpret_cast<const uint8_t*>(data.constData()) + 5,
                                sizeof(uuid));
+
+                        uint8_t dev_key[16];
+                        memcpy(dev_key,
+                               reinterpret_cast<const uint8_t*>(data.constData()) + 21,
+                               sizeof(dev_key));
+
 
                         while(configuredNodes.contains(lineScanningCounter + 1)) {
                             lineScanningCounter++;
@@ -358,9 +363,32 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         discovered_nodes[discovered_nodes_count++] = nodeAddress;
 
                         sendFoundNodes(webServer, scannedNodesCounter);
+
+                        database->setRecoveryDevKey(nodeAddress, dev_key);
                     }
                     break;
+                    /*case RECOVERY_DEVKEY:
+                    {
+                        uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
+                        uint8_t dev_key[16];
+                        memcpy(dev_key,
+                               reinterpret_cast<const uint8_t*>(data.constData()) + 5,
+                               sizeof(dev_key));
 
+                        // Construir HEX para imprimir
+                        QString devKeyHex;
+                        for (int i = 0; i < 16; ++i) {
+                            devKeyHex += QString::asprintf("%02X", dev_key[i]);
+                            if (i < 15) devKeyHex += ' ';
+                        }
+
+                        qInfo() << "[UART] RECOVERY_DEVKEY addr="
+                                << QString("0x%1").arg(nodeAddress, 4, 16, QLatin1Char('0')).toUpper()
+                                << " devkey=" << devKeyHex;
+
+                        database->setRecoveryDevKey(nodeAddress, dev_key);
+                    }
+                    break;*/
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
                         //isLineScanning = true;

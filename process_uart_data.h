@@ -86,7 +86,8 @@
 #define CONFIRM_REPLACE_DONE            0x95
 #define CLEAR_CDB                       0x97
 #define CONFIRM_CLEAR_ALL_CDB           0x99
-#define  REC_NET_KEY                    0x86
+#define  REC_NET_KEY                    0xF4
+#define RECOVERY_DEVKEY                 0xF5
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
