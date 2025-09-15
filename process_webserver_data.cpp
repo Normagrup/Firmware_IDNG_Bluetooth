@@ -131,16 +131,28 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if(nodeNetAddress == 0xFFFF)
         {
-            sendUartDelDevice(uartPort, nodeNetAddress);
-
+            bool hasEnteredInSubnet;
             // Eliminar nodos de la estructura interna
             for(int i = 0; i < MAX_SUBNET; i++){
+                hasEnteredInSubnet = false;
                 for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                     if(meshDevice[i][j].getIsConfigured()) {
+                        hasEnteredInSubnet = true;
+                        uint16_t nodeAddress = meshDevice[i][j].getRealAddress();
+                        sendUartInyectNode(uartPort, nodeAddress, database);
+                        delay(500);
+                        sendUartDelDevice(uartPort, nodeAddress);
+                        delay(500);
                         insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_REMOVED, "Device");
                         meshDevice[i][j].deleteDevice();
                     }
                 }
+                if (hasEnteredInSubnet){
+                    delay(500);
+                    sendUartClearInyectedNodes(uartPort);
+                    delay(500);
+                }
+
             }
             database->deleteAllNodes();
         }
