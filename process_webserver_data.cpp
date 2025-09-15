@@ -806,7 +806,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         replaceData.oldNodeID = elems[1];
         replaceData.oldNodeRealAddress = 0x0000;
 
-        addNodeForReplace(webServer, uartPort);
+        addNodeForReplace(webServer, uartPort, database);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -814,7 +814,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 }
 
-void addNodeForReplace(WebServer* webServer, UartPort* uartPort) {
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
     // PARTE 1 de 3: AÑADIR NODO NUEVO
 
     // Extraer el índice del UUID correspondiente al nodo que queremos añadir
@@ -844,9 +844,13 @@ void addNodeForReplace(WebServer* webServer, UartPort* uartPort) {
         }
     }
 
-    sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
-    delay(SLEEP_DALI_TIME_MS);
+    if (scannedUUID[0].nodeAddressReport != antennaRealAddress) {
+        sendUartInyectNode(uartPort, scannedUUID[0].nodeAddressReport, database);
+        delay(300);
+        sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+    }
 
+    delay(SLEEP_DALI_TIME_MS);
     sendUartAddDevice(uartPort, scannedUUID[0]);
     sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
 }
@@ -864,6 +868,8 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     // Borrado del dispositivo elegido
     printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
+    sendUartInyectNode(uartPort, nodeAddress, database);
+    delay(300);
     sendUartDelDevice(uartPort, nodeAddress);
 
     // Device to delete added to log
@@ -900,6 +906,8 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
     // Cargar los datos en los nodos (parte nodos, tanto el propio nodo como los hijos)
     QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(replaceData.oldNodeRealAddress);
     for(uint16_t childRealAddress : childrenRealAddresses) {
+        sendUartInyectNode(uartPort, childRealAddress, database);
+        delay(300);
         sendUartChangeFather(uartPort, childRealAddress, replaceData.newNodeRealAddress);
         database->setFatherRealAddress(childRealAddress, replaceData.newNodeRealAddress);
         delay(150);
@@ -1148,7 +1156,12 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
         doneIterations = 0;
         isManualAddingDevice = false;
 
-        sendUartClearInyectedNodes(uartPort);
+        if(!isReplacingDevices) {
+            sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
+            sendUartClearInyectedNodes(uartPort);
+        } else {
+            deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
+        }
 
         return;
     }

@@ -139,10 +139,9 @@
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 bool isCommissionOrLSInProgress(WebServer* webServer);
 
-void addNodeForReplace(WebServer* webServer, UartPort* uartPort);
+void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
-void addNodeForReplace(WebServer* webServer, UartPort* uartPort);
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);

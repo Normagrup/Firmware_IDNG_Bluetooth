@@ -304,7 +304,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         isReplacingDevices = false;
                         sendConfirmEndReplace(webServer);
-
+                        sendUartClearInyectedNodes(uartPort);
                     }
                     break;
 
@@ -703,12 +703,12 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         doneIterations = 0;
         isManualAddingDevice = false;
 
-        if(!isReplacingDevices)
+        if(!isReplacingDevices) {
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
-        else
+            sendUartClearInyectedNodes(uartPort);
+        } else {
             deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
-
-        sendUartClearInyectedNodes(uartPort);
+        }
 
         return;
     }
