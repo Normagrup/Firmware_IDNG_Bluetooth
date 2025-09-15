@@ -131,6 +131,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if(nodeNetAddress == 0xFFFF)
         {
+            sendConfirmStartRemoveAllNodes(webServer);
+
             bool hasEnteredInSubnet;
             // Eliminar nodos de la estructura interna
             for(int i = 0; i < MAX_SUBNET; i++){
@@ -141,7 +143,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                         uint16_t nodeAddress = meshDevice[i][j].getRealAddress();
                         sendUartInyectNode(uartPort, nodeAddress, database);
                         delay(500);
-                        sendUartDelDevice(uartPort, nodeAddress);
+                        sendUartDelDevice(uartPort, nodeAddress, true);
                         delay(500);
                         insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_REMOVED, "Device");
                         meshDevice[i][j].deleteDevice();
@@ -155,6 +157,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             }
             database->deleteAllNodes();
+
+            sendConfirmEndRemoveAllNodes(webServer);
         }
         else
         {
@@ -195,13 +199,16 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
             QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(nodeAddress);
             for(uint16_t childRealAddress : childrenRealAddresses) {
+                sendUartInyectNode(uartPort, childRealAddress, database);
+                delay(300);
                 sendUartChangeFather(uartPort, childRealAddress, fatherNodeAddress);
                 database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
                 delay(150);
             }
+
             sendUartInyectNode(uartPort, nodeAddress, database);
             delay(300);
-            sendUartDelDevice(uartPort, nodeAddress);
+            sendUartDelDevice(uartPort, nodeAddress, false);
             delay(300);
             sendUartClearInyectedNodes(uartPort);
 
@@ -882,7 +889,7 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
 
     sendUartInyectNode(uartPort, nodeAddress, database);
     delay(300);
-    sendUartDelDevice(uartPort, nodeAddress);
+    sendUartDelDevice(uartPort, nodeAddress, false);
 
     // Device to delete added to log
     insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");

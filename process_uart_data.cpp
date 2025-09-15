@@ -954,7 +954,7 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast)
 {
     QByteArray frame;
     const unsigned char length = 5;
@@ -965,6 +965,7 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(DEL_DEVICES);
     frame.append((nodeAddress >> 8) & 0xFF);
     frame.append(nodeAddress & 0xFF);
+    frame.append(isBroadcast ? 0x01 : 0x00);
 
     frame.append(UART_END);
 

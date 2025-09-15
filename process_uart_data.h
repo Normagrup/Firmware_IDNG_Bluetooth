@@ -106,7 +106,7 @@ void sendUartStartCommission(UartPort* _uartPort);
 void sendUartNewIteration(UartPort* _uartPort, uint16_t addressToNextIt);
 void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
 void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
