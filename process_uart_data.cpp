@@ -48,7 +48,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_END_REMOVE_ALL_NODES: return 4;
             case CONFIRM_START_REMOVE_ONE_NODE: return 4;
             case CONFIRM_END_REMOVE_ONE_NODE: return 4;
-            case CONFIRM_CLEAR_ALL_CDB: return 4;
+            case CONFIRM_RESET_CDB: return 4;
             case RELAY_STATUS: return 7;
             case LINE_SCAN_SEND: return 22;
             case QUERY_RESPONSE: return 7;
@@ -203,7 +203,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEVICE ERROR";
                         QByteArray uuidBytes = data.mid(3,16);
                         insertCommissionErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
-                        sendDeviceError(data, uartPort, webServer);
+                        sendDeviceError(data, uartPort, webServer, database);
                     }
                     break;
 
@@ -285,9 +285,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
-                    case CONFIRM_CLEAR_ALL_CDB:
+                    case CONFIRM_RESET_CDB:
                     {
-                        recNetKey(uartPort, database);
+                        reloadCdb(uartPort, database);
                     }
                     break;
                     case CONFIRM_GET_ANTENNA_ADDRESS:
@@ -718,7 +718,10 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            sendUartNewIteration(uartPort);
+            uint16_t addressToNextIt = database->getNextNodeAddress(doneIterations);
+            sendUartInyectNode(uartPort, addressToNextIt, database);
+            delay(300);
+            sendUartNewIteration(uartPort, addressToNextIt);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
             break;
         }
@@ -889,15 +892,17 @@ void sendUartStartCommission(UartPort* _uartPort)
     _uartPort->sendData(frame);
 }
 
-void sendUartNewIteration(UartPort* _uartPort)
+void sendUartNewIteration(UartPort* _uartPort, uint16_t addressToNextIt)
 {
     QByteArray frame;
-    unsigned char length = 3;
+    unsigned char length = 5;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(NEW_ITERATION);
+    frame.append((addressToNextIt >> 8) & 0xFF);
+    frame.append(addressToNextIt & 0xFF);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
@@ -1419,7 +1424,7 @@ void sendAntennaAddress(UartPort* _uartPort, Database* database)
     _uartPort->sendData(frame);
 }
 
-void recNetKey(UartPort* _uartPort, Database* database)
+void reloadCdb(UartPort* _uartPort, Database* database)
 {
     uint16_t masterStoredAddress = database->getMasterRealAddress();
     QString netKey = database->getNetKey();
@@ -1440,7 +1445,7 @@ void recNetKey(UartPort* _uartPort, Database* database)
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(REC_NET_KEY);
+    frame.append(RELOAD_CDB);
     frame.append((masterStoredAddress >> 8) & 0xFF);
     frame.append(masterStoredAddress & 0xFF);
     for(uint8_t j = 0; j < 16; j++) {
@@ -1491,20 +1496,6 @@ void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)
     frame.append(CONFIRM_REPLACE);
     frame.append((realAddress >> 8) & 0xFF);
     frame.append(realAddress & 0xFF);
-    frame.append(UART_END);
-
-    _uartPort->sendData(frame);
-}
-
-void sendUartClearCdb(UartPort* _uartPort)
-{
-    QByteArray frame;
-    unsigned char length = 3;
-
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(CLEAR_CDB);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);

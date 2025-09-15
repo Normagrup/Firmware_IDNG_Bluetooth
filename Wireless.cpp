@@ -394,7 +394,10 @@ void Wireless::addDeviceTimerHandler()
             numberOfIterations--;
             sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
             doneIterations++;
-            sendUartNewIteration(_uartPort);
+            uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
+            sendUartInyectNode(_uartPort, addressToNextIt, _database);
+            delay(300);
+            sendUartNewIteration(_uartPort, addressToNextIt);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
         else {
@@ -410,7 +413,7 @@ void Wireless::addDeviceTimerHandler()
                 scannedUUID[i].nodeAddressReport = 0;
             }
 
-            sendUartClearCdb(_uartPort);
+            sendUartClearInyectedNodes(_uartPort);
 
             delay(5000);
 
@@ -437,7 +440,10 @@ void Wireless::confirmAddDeviceTimerHandler()
 void Wireless::newIterationTimerHandler()
 {
     qDebug() << "NEW ITERATION TIMER";
-    sendUartNewIteration(_uartPort);
+    uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
+    sendUartInyectNode(_uartPort, addressToNextIt, _database);
+    delay(300);
+    sendUartNewIteration(_uartPort, addressToNextIt);
 }
 
 

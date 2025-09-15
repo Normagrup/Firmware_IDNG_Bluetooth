@@ -1106,7 +1106,7 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
     //if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
+void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, Database* database)
 {
     uint8_t nodeUUID[16];
 
@@ -1158,7 +1158,10 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer)
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            sendUartNewIteration(uartPort);
+            uint16_t addressToNextIt = database->getNextNodeAddress(doneIterations);
+            sendUartInyectNode(uartPort, addressToNextIt, database);
+            delay(300);
+            sendUartNewIteration(uartPort, addressToNextIt);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
             break;
         }

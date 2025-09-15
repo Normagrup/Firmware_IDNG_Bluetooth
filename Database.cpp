@@ -1358,6 +1358,23 @@ QString Database::getNextNodeName(uint16_t doneIts)
         return "Node -";
 }
 
+uint16_t Database::getNextNodeAddress(uint16_t doneIts)
+{
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes ORDER BY RealAddress ASC LIMIT 1 OFFSET :offset");
+    query.bindValue(":offset", doneIts);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0x0000; }
+
+    if (query.next()) {
+        uint8_t realAddress = query.value("RealAddress").toUInt();
+
+        return realAddress;
+    }
+    else
+        return 0x0000;
+}
+
 uint16_t Database::getMasterRealAddress()
 {
     QSqlQuery query;

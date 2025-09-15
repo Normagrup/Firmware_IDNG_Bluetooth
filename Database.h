@@ -82,6 +82,7 @@ public:
     int getCountOfDirectChildren(uint16_t nodeAddress);
     QList<uint16_t> getChildrenRealAddresses(uint16_t nodeAddress);
     QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
+    uint16_t getNextNodeAddress(uint16_t doneIts);
 
     uint16_t getMasterRealAddress(void);
     void setMasterRealAddress(uint16_t newAntennaAddress);

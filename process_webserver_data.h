@@ -156,7 +156,7 @@ void sendStartAddingDevices(WebServer* webServer);
 void sendScannedDevices(QByteArray data, WebServer* webServer);
 void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
-void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer);
+void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, Database* database);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendIsCommissionInProgress(WebServer* webServer);
 void sendIsAddManualInProgress(WebServer* webServer);
