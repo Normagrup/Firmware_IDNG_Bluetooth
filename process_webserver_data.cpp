@@ -728,7 +728,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(2500);
 
         sendUartClearInyectedNodes(uartPort);
-        delay(500);
+        delay(2500);
 
         sendUartEndLineScanning(uartPort);
     }
@@ -1500,6 +1500,8 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
     for(int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
 
+    sendUartClearInyectedNodes(uartPort);
+    delay(500);
     sendConfirmEndClearAllData(webServer);
 }
 
