@@ -105,7 +105,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         commissionData.numberOfNodesScanned = 0;
         commissionData.numberOfNodesAdded = 0;
-        sendUartStartCommission(uartPort, database->getNextUnicastAddress());
+        sendUartStartCommission(uartPort, getNextUnicastAddress());
         delay(300);
         sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
 
@@ -205,7 +205,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
                 delay(150);
             }
-
             sendUartInyectNode(uartPort, nodeAddress, database);
             delay(300);
             sendUartDelDevice(uartPort, nodeAddress, false);

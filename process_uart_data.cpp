@@ -959,7 +959,7 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast)
 {
     QByteArray frame;
-    const unsigned char length = 5;
+    const unsigned char length = 6;
 
     frame.append(UART_HEADER);
     frame.append(length);
