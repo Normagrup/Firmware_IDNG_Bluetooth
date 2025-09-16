@@ -93,7 +93,8 @@ void Database::initDatabase()
                "LineName TEXT, "
                "MasterAddress TEXT, "
                "NetKey TEXT, "
-               "FailComCycles INTEGER);");
+               "FailComCycles INTEGER, "
+               "NextUnicastAddress INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -106,7 +107,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles, NextUnicastAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc, :nua)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
@@ -115,6 +116,7 @@ void Database::initDatabase()
             query.bindValue(":masterAddress", "7C18");
             query.bindValue(":nk", "1");
             query.bindValue(":fcc", 5);
+            query.bindValue(":nua", 0);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
         }
@@ -534,7 +536,7 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     query.bindValue(":rm", 0);
     query.bindValue(":fra", getMasterRealAddress());
 
-    if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
+    if (!query.exec()) { qDebug() << "Error executing INSERT query in setRecoveryNode:" << query.lastError().text(); }
 }
 
 void Database::setRecoveryDevKey(uint16_t addr, const uint8_t devKey[16])
@@ -1717,5 +1719,37 @@ QString Database::getDevKey(uint16_t nodeAddress)
     } else {
         qDebug() << "No se encontró DevKey para la dirección" << nodeAddress;
         return QString();
+    }
+}
+
+uint16_t Database::getNextUnicastAddress()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT NextUnicastAddress FROM General");
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getNextUnicastAddress:" << query.lastError().text();
+        return 0;
+    }
+
+    if (query.next()) {
+        return static_cast<uint16_t>(query.value(0).toInt());
+    } else {
+        qDebug() << "No se encontró NextUnicastAddress";
+        return 0;
+    }
+}
+
+void Database::updateNextUnicastAddress(uint16_t nextUnicastAddress)
+{
+    uint16_t actualNextUnicastAddress = getNextUnicastAddress();
+
+    if(actualNextUnicastAddress < nextUnicastAddress) {
+        QSqlQuery query;
+        query.prepare("UPDATE General SET NextUnicastAddress = :nua");
+        query.bindValue(":nua", nextUnicastAddress);
+
+        if (!query.exec()) { qDebug() << "Error executing UPDATE query in General:" << query.lastError().text(); }
     }
 }

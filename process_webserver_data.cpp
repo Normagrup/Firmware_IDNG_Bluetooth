@@ -105,7 +105,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         commissionData.numberOfNodesScanned = 0;
         commissionData.numberOfNodesAdded = 0;
-        sendUartStartCommission(uartPort, getNextUnicastAddress());
+        sendUartStartCommission(uartPort, database->getNextUnicastAddress());
         delay(300);
         sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
 
@@ -251,7 +251,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             }
         }
 
-        sendUartUpdateNextUnicast(uartPort, getNextUnicastAddress());
+        sendUartUpdateNextUnicast(uartPort, database->getNextUnicastAddress());
         delay(300);
 
         if (scannedUUID[0].nodeAddressReport != antennaRealAddress){
@@ -866,7 +866,7 @@ void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* datab
         }
     }
 
-    sendUartUpdateNextUnicast(uartPort, getNextUnicastAddress());
+    sendUartUpdateNextUnicast(uartPort, database->getNextUnicastAddress());
     delay(300);
 
     if (scannedUUID[0].nodeAddressReport != antennaRealAddress) {

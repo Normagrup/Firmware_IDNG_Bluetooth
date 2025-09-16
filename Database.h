@@ -104,6 +104,9 @@ public:
     QString getDevKey(uint16_t nodeAddress);
     void setRecoveryDevKey(uint16_t addr, const uint8_t devKey[16]);
 
+    uint16_t getNextUnicastAddress(void);
+    void updateNextUnicastAddress(uint16_t nextUnicastAddress);
+
 signals:
 
 private:

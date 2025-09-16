@@ -33,6 +33,4 @@ void setTests(QStringList webServerParts, Database* database);
 void transformEventCodes(QList<QStringList>* logs);
 void convertDevKeyStringToByteArray(QString devKeyString, uint8_t* devKey);
 
-uint16_t getNextUnicastAddress();
-
 #endif // AUX_FUNCTIONS_H

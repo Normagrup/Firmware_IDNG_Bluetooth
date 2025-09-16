@@ -356,6 +356,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
 
                         database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
+                        database->updateNextUnicastAddress(nodeAddress);
 
                         lineScanningCounter++;
                         scannedNodesCounter++;
@@ -528,6 +529,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
+                database->updateNextUnicastAddress(address);
                 insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");
                 if(isReplacingDevices) { replaceData.newNodeRealAddress = address; }
                 delay(500);
