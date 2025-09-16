@@ -394,3 +394,18 @@ void insertCommissionErrorToLog(const QByteArray& uuidArray, Database *db, int e
     insertLogEvent(db, name, serial, btAddress, info.ip, info.timestamp, eventCode, eventType);
     currentNodeAddress = 0;
 }
+
+uint16_t getNextUnicastAddress()
+{
+    uint16_t nextUnicastAddress = 0;
+
+    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+            if (meshDevice[i][j].getIsConfigured()) {
+                if(nextUnicastAddress < meshDevice[i][j].getRealAddress()) { nextUnicastAddress = meshDevice[i][j].getRealAddress(); }
+            }
+        }
+    }
+
+    return nextUnicastAddress;
+}

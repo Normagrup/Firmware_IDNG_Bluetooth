@@ -102,7 +102,7 @@ void sendUartClearInyectedNodes(UartPort* _uartPort);
 void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
 
 void sendUartScannedDevices(UartPort* _uartPort);
-void sendUartStartCommission(UartPort* _uartPort);
+void sendUartStartCommission(UartPort* _uartPort, uint16_t nextUnicastAddress);
 void sendUartNewIteration(UartPort* _uartPort, uint16_t addressToNextIt);
 void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
@@ -115,7 +115,7 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
-void sendUartClearAllData(UartPort* _uartPort);
+void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);

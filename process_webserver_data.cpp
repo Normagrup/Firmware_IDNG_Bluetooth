@@ -44,7 +44,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartInyectNode(uartPort, nodeRealAddress, database);
         delay(300);
         sendUartScanFromNode(uartPort, nodeRealAddress);
-        delay(10000);
+        delay(10300);
         sendUartClearInyectedNodes(uartPort);
 
     }
@@ -105,7 +105,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         commissionData.numberOfNodesScanned = 0;
         commissionData.numberOfNodesAdded = 0;
-        sendUartStartCommission(uartPort);
+        sendUartStartCommission(uartPort, database->getNextUnicastAddress());
         delay(300);
         sendLogCommissionEntry(webServer, "Scanning devices...", "INFO");
 
@@ -683,7 +683,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
-        clearSystemData(database, uartPort);
+        clearSystemData(webServer, database, uartPort);
     }
     else if (type == WS_LINE_SCANNING) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
@@ -796,7 +796,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             uint16_t newAntennaRealAddress = static_cast<uint16_t>(numValue);
 
             database->setMasterRealAddress(newAntennaRealAddress);
-            antennaRealAddress = newAntennaRealAddress;
+            // antennaRealAddress = newAntennaRealAddress;
         }
 
         // Si cambia la netKey
@@ -1458,25 +1458,42 @@ void sendLogFile(WebServer *webServer, QString fileDir)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void clearSystemData(Database* database,  UartPort* uartPort)
+void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
+    bool hasEnteredInSubnet;
+    for(int i = 0; i < MAX_SUBNET; i++) {
+        hasEnteredInSubnet = false;
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            if(meshDevice[i][j].getIsConfigured()) {
+                hasEnteredInSubnet = true;
+                uint16_t nodeAddress = meshDevice[i][j].getRealAddress();
+                sendUartInyectNode(uartPort, nodeAddress, database);
+                delay(500);
+                sendUartClearAllData(uartPort, nodeAddress);
+                delay(500);
+                // el borrado del modelo se hace después
+            }
+        }
+
+        if(hasEnteredInSubnet) {
+            delay(500);
+            sendUartClearInyectedNodes(uartPort);
+            delay(500);
+        }
+    }
+
     // Borrado de la BBDD del embebido
-    qDebug() << "[Embebido] Borrando datos de la BBDD...";
     database->clearAllData();
 
     // Borrado del modelo del embebido
-    qDebug() << "[Embebido] Borrando datos de meshDevice...";
     for(int i = 0; i < MAX_SUBNET; i++)
         for(int j = 0; j < MAX_NODES_SUBNET; j++)
             meshDevice[i][j].deleteDevice();
 
-    qDebug() << "[Embebido] Borrando datos de tests...";
     for(int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
 
-    qDebug() << "[Embebido] Enviando CLEAR_ALL_DATA al micro por UART...";
-    sendUartClearAllData(uartPort); 
-
+    sendConfirmEndClearAllData(webServer);
 }
 
 void sendConfirmStartRemoveAllNodes(WebServer* webServer)

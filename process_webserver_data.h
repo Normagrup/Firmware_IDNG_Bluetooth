@@ -177,7 +177,7 @@ void sendDaliTested(WebServer* webServer);
 void sendRecordedDevice(WebServer* webServer);
 void sendLogData(WebServer* webServer, QList<QStringList> logs);
 void sendLogFile(WebServer* webServer, QString fileDir);
-void clearSystemData(Database* database,UartPort* uartPort);
+void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort);
 void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);

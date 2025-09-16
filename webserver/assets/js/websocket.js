@@ -2534,7 +2534,7 @@ function syncPOL() {
 
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
-    }, 10000);
+    }, 12000);
 }
 
 function setAntennaNumberAndNetKey() {

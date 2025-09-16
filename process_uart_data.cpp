@@ -878,15 +878,17 @@ void sendUartScannedDevices(UartPort* _uartPort)
     _uartPort->sendData(frame);
 }
 
-void sendUartStartCommission(UartPort* _uartPort)
+void sendUartStartCommission(UartPort* _uartPort, uint16_t nextUnicastAddress)
 {
     QByteArray frame;
-    unsigned char length = 3;
+    unsigned char length = 5;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(START_COMMISSION);
+    frame.append((nextUnicastAddress >> 8) & 0xFF);
+    frame.append(nextUnicastAddress & 0xFF);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
@@ -1119,26 +1121,21 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
     }
 }
 
-void sendUartClearAllData(UartPort* _uartPort)
+void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress)
 {
     QByteArray frame;
-
-    qDebug() << "UART CLEAR ALL DATA SEND";
-    qDebug() << "[Embebido] Preparando frame de CLEAR_ALL_DATA para el micro...";
-    unsigned char length = 3;
-
+    unsigned char length = 5;
 
     frame.append(UART_HEADER);               
     frame.append(length);                   
     frame.append(UART_CONFIG_FRAME_TYPE);   
-    frame.append(CLEAR_ALL_DATA);    
+    frame.append(CLEAR_ALL_DATA);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
 
     frame.append(UART_END);
 
-    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
-
     _uartPort->sendData(frame);
-    qDebug() << "[Embebido] Frame de CLEAR_ALL_DATA enviado correctamente.";
 }
 
 void sendUartStartLineScanning(UartPort* _uartPort)
