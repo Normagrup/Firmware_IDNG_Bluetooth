@@ -1113,10 +1113,9 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
                 hasEnteredInSubnet = true;
 
                 uint16_t nodeRealAddress = meshDevice[i][j].getRealAddress();
-                database->delGroup(nodeRealAddress, groupAddress);
 
                 sendUartInyectNode(_uartPort, nodeRealAddress, database);
-                delay(300);
+                delay(600);
 
                 QByteArray frame;
                 unsigned char length = 7;
@@ -1132,6 +1131,9 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
                 frame.append(UART_END);
 
                 _uartPort->sendData(frame);
+
+                database->delGroup(nodeRealAddress, groupAddress);
+
             }
         }
 
