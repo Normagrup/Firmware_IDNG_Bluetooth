@@ -358,17 +358,12 @@ void Wireless::addDeviceTimerHandler()
 
     if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != antennaRealAddress) {
         if (numberOfIterations != 0 && !forceStopCommissioning) {
-            qDebug() << "NUEVO ESCANEO" << numberOfIterations;
-            numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
-            doneIterations++;
+            do {
+                qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
+                sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport,_database);
+                delay(5000);
+            } while (!commissionData.isChangeRelayConfirmed);
         }
-
-        do {
-            qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
-            sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport,_database);
-            delay(5000);
-        } while (!commissionData.isChangeRelayConfirmed);
     }
 
     qDebug() << "IS CHANGE FALSE";
@@ -392,11 +387,12 @@ void Wireless::addDeviceTimerHandler()
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
-            doneIterations++;
+            sendLogCommissionEntry(_webServer, "- New iteration in process from " + _database->getNextNodeName(doneIterations), "INFO");
             uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
-            sendUartInyectNode(_uartPort, addressToNextIt, _database);
+            qDebug() << "[1] DONE ITERATIONS: "<< doneIterations;
             delay(300);
+            sendUartInyectNode(_uartPort, addressToNextIt, _database);
+            delay(500);
             sendUartNewIteration(_uartPort, addressToNextIt);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
@@ -441,8 +437,10 @@ void Wireless::newIterationTimerHandler()
 {
     qDebug() << "NEW ITERATION TIMER";
     uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
-    sendUartInyectNode(_uartPort, addressToNextIt, _database);
+    qDebug() << "[4] DONE ITERATIONS: "<< doneIterations;
     delay(300);
+    sendUartInyectNode(_uartPort, addressToNextIt, _database);
+    delay(500);
     sendUartNewIteration(_uartPort, addressToNextIt);
 }
 

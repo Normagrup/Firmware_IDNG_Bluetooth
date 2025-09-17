@@ -7,7 +7,7 @@
 #define TEST_TIMER_MS                   60000
 #define ADD_DEVICE_TIMER_MS             14000
 #define CONFIRM_ADD_DEVICE_TIMER_MS     2000
-#define NEW_ITERATION_TIMER_MS          2000
+#define NEW_ITERATION_TIMER_MS          4000
 #define GROUP_FRAME_TIMER_MS            2000
 #define COM_TIMER_MS                    2000
 #define WEBSERVER_SEND_TIME_MS          50

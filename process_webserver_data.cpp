@@ -1197,11 +1197,14 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            uint16_t addressToNextIt = database->getNextNodeAddress(doneIterations);
-            sendUartInyectNode(uartPort, addressToNextIt, database);
-            delay(300);
-            sendUartNewIteration(uartPort, addressToNextIt);
-            newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            //uint16_t addressToNextIt = database->getNextNodeAddress(doneIterations);
+            //qDebug() << "[2] DONE ITERATIONS: "<< doneIterations;
+            //delay(300);
+            //sendUartInyectNode(uartPort, addressToNextIt, database);
+            //delay(500);
+            //sendUartNewIteration(uartPort, addressToNextIt);
+            //newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            addDeviceTimer.start(100);
             break;
         }
         if (memcmp(scannedUUID[l].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
