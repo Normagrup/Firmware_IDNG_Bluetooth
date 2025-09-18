@@ -1252,7 +1252,7 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
     //return;
 
-    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices) { return; }
+    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices || isClearingAllData) { return; }
 
     QByteArray frame;
     unsigned char length = 4;

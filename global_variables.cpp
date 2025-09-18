@@ -85,3 +85,5 @@ uint8_t netKeys[15][16] = {
 
 ReplaceData replaceData = {"", 0x0000, "", 0x0000};
 ReplaceNode replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
+
+bool isClearingAllData = false;

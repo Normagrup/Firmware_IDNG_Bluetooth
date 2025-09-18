@@ -676,10 +676,17 @@ function clearAllDataPrev()
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
+    var input = iframeDocument.getElementById('deleteConfirmInput');
+    var button = iframeDocument.getElementById('deletingDataButton');
+    var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     confirmDeleteData.textContent = "Do you want to delete ALL the data?";
+    input.value = "";
+    button.disabled = true;
+    closeClearAllPopup.style.pointerEvents = "auto";
+    closeClearAllPopup.style.opacity = "1";
 }
 
 function closeManageDataPopup()

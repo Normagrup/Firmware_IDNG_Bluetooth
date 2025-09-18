@@ -1224,6 +1224,31 @@ function processIsLSInProgress(value)
     }
 }
 
+function processIsClearAllInProgress(value)
+{
+    var isClearingAllData = (value === "true");
+
+    if(isClearingAllData) {
+        var iframe = document.getElementById('mainframe');
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        var popup = iframeDocument.getElementById('popup');
+        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+        var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
+        var input = iframeDocument.getElementById('deleteConfirmInput');
+        var button = iframeDocument.getElementById('deletingDataButton');
+        var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
+
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+        confirmDeleteData.textContent = "Deleting ALL data...";
+        input.value = "";
+        button.disabled = true;
+        closeClearAllPopup.style.pointerEvents = "none";
+        closeClearAllPopup.style.opacity = "0.5";
+    }
+}
+
 function processIsReplacingInProgress(value)
 {
     var isReplacing = (value === "true");
@@ -1655,6 +1680,7 @@ function processReceivedData(data)
     else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
     else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
+    else if (type == "IS_CLEAR_ALL_IN_PROGRESS") { processIsClearAllInProgress(value); }
     else if (type == "IS_REPLACING_IN_PROGRESS") { processIsReplacingInProgress(value); }
     else if (type == "IS_ADDING_MAN_OR_REPLACING") { processIsAddingManOrReplacing(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
@@ -2186,14 +2212,18 @@ function clearAllData()
 
     sendData("SET_CLEAR_ALL_DATA", "");
 
+    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
+    confirmDeleteData.textContent = "Deleting ALL data...";
+
     var input = iframeDocument.getElementById('deleteConfirmInput');
     input.value = "";
 
     var button = iframeDocument.getElementById('deletingDataButton');
     button.disabled = true;
 
-    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
-    confirmDeleteData.textContent = "Deleting ALL data. Don't leave this screen";
+    var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
+    closeClearAllPopup.style.pointerEvents = "none";
+    closeClearAllPopup.style.opacity = "0.5";
 }
 
 function lineScanning()

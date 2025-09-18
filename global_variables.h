@@ -80,4 +80,6 @@ extern uint8_t netKeys[15][16];
 extern ReplaceData replaceData;
 extern ReplaceNode replaceNode;
 
+extern bool isClearingAllData;
+
 #endif // GLOBAL_VARIABLES_H

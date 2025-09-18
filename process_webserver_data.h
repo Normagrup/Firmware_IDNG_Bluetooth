@@ -30,6 +30,7 @@
 #define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
 #define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SET_IS_LS_IN_PROGRESS            "SET_IS_LS_IN_PROGRESS"
+#define WS_SET_IS_CLEAR_ALL_IN_PROGRESS     "SET_IS_CLEAR_ALL_IN_PROGRESS"
 #define WS_SET_IS_REPLACING_IN_PROGRESS     "SET_IS_REPLACING_IN_PROGRESS"
 #define WS_SET_IS_ADDING_MAN_OR_REPLACING   "SET_IS_ADDING_MAN_OR_REPLACING"
 #define WS_SET_TEST                         "SET_TEST"
@@ -93,6 +94,7 @@
 #define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
 #define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SEND_IS_LS_IN_PROGRESS           "IS_LS_IN_PROGRESS"
+#define WS_SEND_IS_CLEAR_ALL_IN_PROGRESS    "IS_CLEAR_ALL_IN_PROGRESS"
 #define WS_SEND_IS_REPLACING_IN_PROGRESS    "IS_REPLACING_IN_PROGRESS"
 #define WS_SEND_IS_ADDING_MAN_OR_REPLACING  "IS_ADDING_MAN_OR_REPLACING"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
@@ -160,6 +162,7 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendIsCommissionInProgress(WebServer* webServer);
 void sendIsAddManualInProgress(WebServer* webServer);
 void sendIsLSInProgress(WebServer* webServer);
+void sendIsClearAllInProgress(WebServer* webServer);
 void sendIsReplacingInProgress(WebServer* webServer);
 void sendIsAddingManOrReplacing(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);

@@ -26,7 +26,7 @@
             </div>
             
             <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeManageDataPopup()"> &times; </span>
+                <span id="closeClearAllPopup" class="closeWindow" onclick="parent.closeManageDataPopup()"> &times; </span>
             </div>
         </div>
     </div>
@@ -158,16 +158,26 @@
 			}, 10);
         }
 
+        function isClearAllInProgress() {
+            setTimeout(function() {
+				parent.sendData("SET_IS_CLEAR_ALL_IN_PROGRESS", "");
+			}, 10);
+        }
+
         window.onload = function () {
             isLineScanningInProgress();
+            isClearAllInProgress();
 
             const input = document.getElementById('deleteConfirmInput');
             const button = document.getElementById('deletingDataButton');
 
+            const popupHeader = document.getElementById('confirmDeleteData');
+
             if (input && button) {
                 input.addEventListener('input', function () {
                     const text = input.value.trim().toUpperCase();
-                    button.disabled = (text !== "DELETE");
+                    const header = popupHeader.textContent;
+                    button.disabled = (text !== "DELETE") || (header !== "Do you want to delete ALL the data?");
                 });
 
                 // Reiniciar botón por si ya estaba abierto antes

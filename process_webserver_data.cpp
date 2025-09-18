@@ -559,6 +559,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_IS_LS_IN_PROGRESS) {
         sendIsLSInProgress(webServer);
     }
+    else if (type == WS_SET_IS_CLEAR_ALL_IN_PROGRESS) {
+        sendIsClearAllInProgress(webServer);
+    }
     else if (type == WS_SET_IS_REPLACING_IN_PROGRESS) {
         sendIsReplacingInProgress(webServer);
     }
@@ -686,6 +689,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+
+        isClearingAllData = true;
+
         clearSystemData(webServer, database, uartPort);
     }
     else if (type == WS_LINE_SCANNING) {
@@ -1254,6 +1260,13 @@ void sendIsLSInProgress(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendIsClearAllInProgress(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_IS_CLEAR_ALL_IN_PROGRESS) + "@" + (isClearingAllData ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendIsReplacingInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_REPLACING_IN_PROGRESS) + "@" + (isReplacingDevices ? "true" : "false");
@@ -1505,6 +1518,7 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
 
     sendUartClearInyectedNodes(uartPort);
     delay(500);
+    isClearingAllData = false;
     sendConfirmEndClearAllData(webServer);
 }
 
