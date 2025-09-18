@@ -9,16 +9,8 @@ void sendDaliSpecialCommand(UartPort* _uartPort, uint8_t subnet, uint8_t daliAdd
     // ENVIAR UART(COMMAND, COMMAND TYPE, TARGET ADDRESS);
     if(daliAddress == 255){
         if(subnet == 255){ //All device
-            for(int i = 0; i < MAX_SUBNET; i++){
-                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
-                    Device& device = meshDevice[i][j];
-                    if (device.getIsConfigured()) {
-                        uint16_t targetAddress = getTargetAddress(i, j);
-                        sendUartDaliCommand(_uartPort, targetAddress, daliSpecialCmd, value, commandType);
-                        delay(SLEEP_DALI_TIME_MS);
-                    }
-                }
-            }
+            sendUartDaliCommand(_uartPort, 0xFFFF, daliSpecialCmd, value, commandType);
+            delay(SLEEP_DALI_TIME_MS);
         } else { //subnet control
             for (int node = 0; node < 64; ++node) {
                 Device &device = meshDevice[subnet][node];
