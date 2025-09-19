@@ -253,15 +253,22 @@ void setGatewayAddressFile(QString gatewayAddress)
         QTextStream interfacesInput(&interfacesFile);
         QStringList interfacesLines;
         while (!interfacesInput.atEnd()) {
-            QString line = interfacesInput.readLine();
-            interfacesLines.append(line);
+            interfacesLines.append(interfacesInput.readLine());
         }
+        while (interfacesLines.size() < 5)
+            interfacesLines.append(QString());
 
         interfacesLines[4] = "gateway " + gatewayAddress;
+        interfacesLines = interfacesLines.mid(0, 5);
+
+        interfacesFile.resize(0);
         interfacesFile.seek(0);
 
         QTextStream interfacesOutput(&interfacesFile);
-        for (const QString& line : interfacesLines) { interfacesOutput << line << endl; }
+        for (const QString& line : interfacesLines) { interfacesOutput << line << '\n'; }
+
+        interfacesOutput.flush();
+        interfacesFile.flush();
         interfacesFile.close();
     }
 }
