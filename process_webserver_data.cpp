@@ -1171,6 +1171,8 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
     sendLogCommissionEntry(webServer, "An error has occurred with the device...", "ERROR");
     sendDevError(webServer); // mensaje de error de añadir device para add manual y commission
 
+    database->updateNextUnicastAddress(database->getNextUnicastAddress() + 1);
+
     delay(5000);
 
     // PARA STOP_COMMISSION

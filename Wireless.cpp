@@ -411,6 +411,8 @@ void Wireless::addDeviceTimerHandler()
 
             sendUartClearInyectedNodes(_uartPort, true);
 
+            _database->updateNextUnicastAddress(_database->getNextUnicastAddress() + 1);
+
             delay(5000);
 
             sendEndAutoCommission(_webServer);
