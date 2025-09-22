@@ -45,7 +45,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(300);
         sendUartScanFromNode(uartPort, nodeRealAddress);
         delay(10300);
-        sendUartClearInyectedNodes(uartPort);
+        sendUartClearInyectedNodes(uartPort, false);
 
     }
 
@@ -151,7 +151,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 }
                 if (hasEnteredInSubnet){
                     delay(500);
-                    sendUartClearInyectedNodes(uartPort);
+                    sendUartClearInyectedNodes(uartPort, false);
                     delay(500);
                 }
 
@@ -209,7 +209,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             delay(300);
             sendUartDelDevice(uartPort, nodeAddress, false);
             delay(300);
-            sendUartClearInyectedNodes(uartPort);
+            sendUartClearInyectedNodes(uartPort, false);
 
             // Device to delete added to log
             insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
@@ -289,7 +289,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(300);
         sendUartAddGroupManual(uartPort, address);
         delay(300);
-        sendUartClearInyectedNodes(uartPort);
+        sendUartClearInyectedNodes(uartPort, false);
 
     }
     else if (type == WS_SET_DEL_GROUP) {
@@ -306,7 +306,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(300);
         sendUartDelGroup(uartPort, address, database);
         delay(300);
-        sendUartClearInyectedNodes(uartPort);
+        sendUartClearInyectedNodes(uartPort, false);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
         database->createGroup();
@@ -430,7 +430,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(300);
         sendUartSetRelay(uartPort, realAddress, enable);
         delay(300);
-        sendUartClearInyectedNodes(uartPort);
+        sendUartClearInyectedNodes(uartPort, false);
     }
     else if (type == WS_SET_IDENTIFY) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
@@ -733,7 +733,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         delay(2500);
 
-        sendUartClearInyectedNodes(uartPort);
+        sendUartClearInyectedNodes(uartPort, false);
         delay(2500);
 
         sendUartEndLineScanning(uartPort);
@@ -1190,7 +1190,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
 
         if(!isReplacingDevices) {
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
-            sendUartClearInyectedNodes(uartPort);
+            sendUartClearInyectedNodes(uartPort, false);
         } else {
             deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
         }
@@ -1500,7 +1500,7 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
 
         if(hasEnteredInSubnet) {
             delay(500);
-            sendUartClearInyectedNodes(uartPort);
+            sendUartClearInyectedNodes(uartPort, false);
             delay(500);
         }
     }
@@ -1516,7 +1516,7 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
     for(int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
 
-    sendUartClearInyectedNodes(uartPort);
+    sendUartClearInyectedNodes(uartPort, false);
     delay(500);
     isClearingAllData = false;
     sendConfirmEndClearAllData(webServer);

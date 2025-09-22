@@ -409,7 +409,7 @@ void Wireless::addDeviceTimerHandler()
                 scannedUUID[i].nodeAddressReport = 0;
             }
 
-            sendUartClearInyectedNodes(_uartPort);
+            sendUartClearInyectedNodes(_uartPort, true);
 
             delay(5000);
 

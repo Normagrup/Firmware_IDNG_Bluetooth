@@ -100,7 +100,7 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
-void sendUartClearInyectedNodes(UartPort* _uartPort);
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning);
 void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
 
 void sendUartUpdateNextUnicast(UartPort* _uartPort, uint16_t nextUnicastAddress);

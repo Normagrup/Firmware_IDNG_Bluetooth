@@ -305,7 +305,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         isReplacingDevices = false;
                         sendConfirmEndReplace(webServer);
-                        sendUartClearInyectedNodes(uartPort);
+                        sendUartClearInyectedNodes(uartPort, false);
                     }
                     break;
 
@@ -708,7 +708,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
 
         if(!isReplacingDevices) {
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
-            sendUartClearInyectedNodes(uartPort);
+            sendUartClearInyectedNodes(uartPort, false);
         } else {
             deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
         }
@@ -840,15 +840,16 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
     _uartPort->sendData(frame);
 }
 
-void sendUartClearInyectedNodes(UartPort* _uartPort)
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning)
 {
     QByteArray frame;
-    unsigned char length = 3;
+    unsigned char length = 4;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(CLEAR_INYECTED_NODES);
+    frame.append(isCommissioning ? 0x01 : 0x00);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
@@ -1139,7 +1140,7 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
 
         if(hasEnteredInSubnet) {
             delay(750);
-            sendUartClearInyectedNodes(_uartPort);
+            sendUartClearInyectedNodes(_uartPort, false);
             delay(750);
         }
     }
@@ -1362,7 +1363,7 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     }
 
     delay(1000);
-    sendUartClearInyectedNodes(_uartPort);
+    sendUartClearInyectedNodes(_uartPort, false);
 }
 
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
