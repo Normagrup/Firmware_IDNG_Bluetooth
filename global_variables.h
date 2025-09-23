@@ -82,4 +82,13 @@ extern ReplaceNode replaceNode;
 
 extern bool isClearingAllData;
 
+enum MessageState {
+    EMPTY,
+    PENDING,
+    RECEIVED,
+    MISSED
+};
+
+extern MessageState messageState;
+
 #endif // GLOBAL_VARIABLES_H

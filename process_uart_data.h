@@ -86,6 +86,8 @@
 #define ADDRESS_AND_NET_KEY             0x93
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
+#define CONFIRM_INYECT                  0x97
+#define CONFIRM_ACTION                  0x98
 #define CONFIRM_RESET_CDB               0x99
 #define RELOAD_CDB                      0xF4
 
