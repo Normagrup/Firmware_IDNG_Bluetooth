@@ -834,7 +834,7 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
 {
     uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[3] = {500, 2000, 3500};
+    int ms[3] = {500, 2000, 4000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
@@ -872,7 +872,7 @@ void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning)
 {
     uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[3] = {500, 2000, 3500};
+    int ms[3] = {1000, 2000, 4000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
