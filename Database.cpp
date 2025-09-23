@@ -1042,7 +1042,7 @@ void Database::createGroup()
     LogInfo log;
     log.name = newGroupName + " [G]";
     log.serialNum = "FF.FF.FF.FF";
-    log.btAddress = newGroupAddress.toUShort(nullptr, 16);
+    log.btAddress = getGroupIdFromMasked(newGroupAddress.toUShort(nullptr, 16));
     log.devIP = getAntennaInfo(this).ip;
     log.timestamp = getAntennaInfo(this).timestamp.toSecsSinceEpoch();;
     log.event = LOG_GROUP_CREATED;
@@ -1086,7 +1086,7 @@ void Database::removeGroup(QString address)
     LogInfo log;
     log.name = groupName + " [G]";
     log.serialNum = "FF.FF.FF.FF";
-    log.btAddress = address.toUShort(nullptr, 16);
+    log.btAddress = getGroupIdFromMasked(address.toUShort(nullptr, 16));
     log.devIP = getAntennaInfo(this).ip;
     log.timestamp = getAntennaInfo(this).timestamp.toSecsSinceEpoch();;
     log.event = LOG_GROUP_DELETED;
@@ -1477,6 +1477,23 @@ QString Database::getGroupName(QString groupAddress)
 
     if(query.next()) { return query.value("GroupName").toString(); }
     else { return "Group -"; }
+}
+
+QString Database::getGroupAdress(QString groupName)
+{
+    QSqlQuery query;
+
+    if(groupName == "Lighting" || groupName == "Emergency" || groupName == "Even" || groupName == "Odd")
+        query.prepare("SELECT GroupAddress FROM FixedGroups WHERE GroupName = :groupName");
+    else
+        query.prepare("SELECT GroupAddress FROM Groups WHERE GroupName = :groupName");
+
+    query.bindValue(":groupName", groupName);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return "-1"; }
+
+    if(query.next()) { return query.value("GroupAddress").toString(); }
+    else { return "-1"; }
 }
 
 void Database::setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel)

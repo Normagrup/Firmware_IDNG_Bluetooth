@@ -54,6 +54,7 @@ public:
     void removeTestEntry(QString address);
     void editGroup(QString address, QString name);
     QString getGroupName(QString groupAddress);
+    QString getGroupAdress(QString groupName);
     void setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel);
     QStringList getPowerOnLevel(int page);
 

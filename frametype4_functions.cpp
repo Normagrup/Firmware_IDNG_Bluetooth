@@ -460,6 +460,7 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         payload[7] = dt.time().minute();
 
         payload[8] = log[5].toUInt();  // Event code
+        const quint8 ev = static_cast<quint8>(payload.at(8));
 
         // Serial
         QStringList serial = log[1].split(".");
@@ -468,6 +469,21 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
             payload[10] = serial[1].toUInt(nullptr, 16);
             payload[11] = serial[2].toUInt(nullptr, 16);
             payload[12] = serial[3].toUInt(nullptr, 16);
+        }
+
+        // Device add to/rem from group
+        if(ev == LOG_ADDED_TO_GROUP_OK || ev ==  LOG_ADDED_TO_GROUP_FAIL || ev == LOG_DEL_FROM_GROUP ){
+            int sep = name.indexOf(" - ");
+            QString groupName = (sep >= 0) ? name.mid(sep + 3).trimmed() : name.trimmed();
+            QString groupAddress = _database->getGroupAdress(groupName).trimmed().toUpper();
+
+            bool okHex = false;
+            quint16 masked = groupAddress.toUShort(&okHex, 16);
+            int groupId = -1;
+            if(okHex)
+                groupId = getGroupIdFromMasked(masked);
+            payload[13] = (groupId >= 0) ? static_cast<uchar>(groupId) : 0xFF;
+            payload[14] = 0xFF; // id = -1
         }
 
         bool isDevErr = name.startsWith("DEV ERR:");
