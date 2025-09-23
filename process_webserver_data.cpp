@@ -426,19 +426,16 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         uint16_t realAddress = meshDevice[(netAddress - 1) / 64][(netAddress - 1) % 64].getRealAddress();
 
-        messageState = EMPTY;
         sendUartInyectNode(uartPort, realAddress, database);
-        while(messageState == EMPTY || messageState == PENDING) {}
+        while(messageState == PENDING) {}
 
         if(messageState == RECEIVED) {
-            messageState = EMPTY;
             sendUartSetRelay(uartPort, realAddress, enable);
-            while(messageState == EMPTY || messageState == PENDING) {}
+            while(messageState == PENDING) {}
         }
 
-        messageState = EMPTY;
         sendUartClearInyectedNodes(uartPort, false);
-        while(messageState == EMPTY || messageState == PENDING) {}
+        while(messageState == PENDING) {}
     }
     else if (type == WS_SET_IDENTIFY) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
