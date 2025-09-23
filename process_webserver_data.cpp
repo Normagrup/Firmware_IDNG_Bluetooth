@@ -41,12 +41,18 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeRealAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
         qDebug() << "Iniciando escaneo desde nodo realAddress:" << nodeRealAddress;
-        sendUartInyectNode(uartPort, nodeRealAddress, database);
-        delay(300);
-        sendUartScanFromNode(uartPort, nodeRealAddress);
-        delay(10300);
-        sendUartClearInyectedNodes(uartPort, false);
 
+        sendUartInyectNode(uartPort, nodeRealAddress, database);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            sendUartScanFromNode(uartPort, nodeRealAddress);
+            while(messageState == PENDING) {}
+            delay(10300);
+        }
+
+        sendUartClearInyectedNodes(uartPort, false);
+        while(messageState == PENDING) {}
     }
 
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {

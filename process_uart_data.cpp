@@ -1135,7 +1135,7 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
 
     if(messageState == PENDING) {
         messageState = MISSED;
-        qDebug() << "No se recibió confirmación del ADD_GROUP_MANUAL";
+        qDebug() << "No se recibió confirmación del DEL_GROUP";
     }
     else {
         for (uint8_t i = 0; i < MAX_SUBNET; i++) {
@@ -1474,19 +1474,34 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
 
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
 {
-    QByteArray frame;
-    unsigned char length = 5;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {500, 2000, 2500};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);                
-    frame.append(length);                     
-    frame.append(UART_CONFIG_FRAME_TYPE);    
-    frame.append(SCAN_FROM_NODE);           
-    frame.append((nodeRealAddress >> 8) & 0xFF);
-    frame.append(nodeRealAddress & 0xFF);
-    frame.append(UART_END);                   
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 5;
 
-    qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(SCAN_FROM_NODE);
+        frame.append((nodeRealAddress >> 8) & 0xFF);
+        frame.append(nodeRealAddress & 0xFF);
+        frame.append(UART_END);
+
+        qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del SCAN_FROM_NODE";
+    }
 }
 
 void sendNetKey(UartPort* _uartPort, Database* database)
