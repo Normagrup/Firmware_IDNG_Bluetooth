@@ -292,10 +292,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         messageState = RECEIVED;
                     }
+                    break;
                     case CONFIRM_ACTION:
                     {
                         messageState = RECEIVED;
                     }
+                    break;
                     case CONFIRM_RESET_CDB:
                     {
                         messageState = RECEIVED;
@@ -856,8 +858,8 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
 
         _uartPort->sendData(frame);
 
-        actAtt++;
         delay(ms[actAtt]);
+        actAtt++;
     }
 
     if(messageState == PENDING) {
@@ -886,8 +888,8 @@ void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning)
 
         _uartPort->sendData(frame);
 
-        actAtt++;
         delay(ms[actAtt]);
+        actAtt++;
     }
 
     if(messageState == PENDING) {
@@ -1429,8 +1431,8 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
 
         _uartPort->sendData(frame);
 
-        actAtt++;
         delay(ms[actAtt]);
+        actAtt++;
     }
 
     if(messageState == PENDING) {
