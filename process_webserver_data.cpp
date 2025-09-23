@@ -286,11 +286,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "GROUP ADD";
 
         sendUartInyectNode(uartPort, address[0], database);
-        delay(300);
-        sendUartAddGroupManual(uartPort, address);
-        delay(300);
-        sendUartClearInyectedNodes(uartPort, false);
+        while(messageState == PENDING) {}
 
+        if(messageState == RECEIVED) {
+            sendUartAddGroupManual(uartPort, address);
+            while(messageState == PENDING) {}
+        }
+
+        sendUartClearInyectedNodes(uartPort, false);
+        while(messageState == PENDING) {}
     }
     else if (type == WS_SET_DEL_GROUP) {
         if(isCommissionOrLSInProgress(webServer)) { return; }

@@ -1043,27 +1043,42 @@ void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadca
 
 void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 2500, 3500};
+    messageState = PENDING;
 
-    qDebug() << "UART GROUP SEND";
-    unsigned char length = 9;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(ADD_GROUP_MANUAL);
-    frame.append((address[0] >> 8) & 0xFF);
-    frame.append(address[0] & 0xFF);
-    frame.append((address[1] >> 8) & 0xFF);
-    frame.append(address[1] & 0xFF);
-    frame.append((address[2] >> 8) & 0xFF);
-    frame.append(address[2] & 0xFF);
+        qDebug() << "UART GROUP SEND";
+        unsigned char length = 9;
 
-    qDebug() << address[0] << address[1] << address[2];
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(ADD_GROUP_MANUAL);
+        frame.append((address[0] >> 8) & 0xFF);
+        frame.append(address[0] & 0xFF);
+        frame.append((address[1] >> 8) & 0xFF);
+        frame.append(address[1] & 0xFF);
+        frame.append((address[2] >> 8) & 0xFF);
+        frame.append(address[2] & 0xFF);
 
-    frame.append(UART_END);
+        qDebug() << address[0] << address[1] << address[2];
 
-    _uartPort->sendData(frame);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del ADD_GROUP_MANUAL";
+    }
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
