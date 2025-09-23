@@ -1108,36 +1108,52 @@ void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database)
 {
-    QByteArray frame;
-    unsigned char length = 7;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 2500, 3500};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(DEL_GROUP);
-    frame.append((address[0] >> 8) & 0xFF);
-    frame.append(address[0] & 0xFF);
-    frame.append((address[1] >> 8) & 0xFF);
-    frame.append(address[1] & 0xFF);
-    frame.append(UART_END);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DEL_GROUP);
+        frame.append((address[0] >> 8) & 0xFF);
+        frame.append(address[0] & 0xFF);
+        frame.append((address[1] >> 8) & 0xFF);
+        frame.append(address[1] & 0xFF);
+        frame.append(UART_END);
 
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == address[0]) {
-                // Log entry
-                QString groupAddressString = QString("%1").arg(address[1], 4, 16, QLatin1Char('0')).toUpper();
-                QString name = "SUB:" + QString::number(i) + " " + "ID:" + QString::number(j) + " - " + database->getGroupName(groupAddressString);
-                QString serialNum = meshDevice[i][j].serialNumberString();
-                int btAddress = meshDevice[i][j].getRealAddress();
-                AntennaInfo info = getAntennaInfo(database);
-                QString eventType = "Groups";
-                insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DEL_FROM_GROUP, eventType);
+        _uartPort->sendData(frame);
 
-                meshDevice[i][j].delGroupSubAddress(address[1]);
-                database->delGroup(address[0], address[1]);
-                return;
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del ADD_GROUP_MANUAL";
+    }
+    else {
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == address[0]) {
+                    // Log entry
+                    QString groupAddressString = QString("%1").arg(address[1], 4, 16, QLatin1Char('0')).toUpper();
+                    QString name = "SUB:" + QString::number(i) + " " + "ID:" + QString::number(j) + " - " + database->getGroupName(groupAddressString);
+                    QString serialNum = meshDevice[i][j].serialNumberString();
+                    int btAddress = meshDevice[i][j].getRealAddress();
+                    AntennaInfo info = getAntennaInfo(database);
+                    QString eventType = "Groups";
+                    insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DEL_FROM_GROUP, eventType);
+
+                    meshDevice[i][j].delGroupSubAddress(address[1]);
+                    database->delGroup(address[0], address[1]);
+                    return;
+                }
             }
         }
     }

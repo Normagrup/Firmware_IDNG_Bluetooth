@@ -307,10 +307,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "GROUP DEL";
 
         sendUartInyectNode(uartPort, address[0], database);
-        delay(300);
-        sendUartDelGroup(uartPort, address, database);
-        delay(300);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            sendUartDelGroup(uartPort, address, database);
+            while(messageState == PENDING) {}
+        }
+
         sendUartClearInyectedNodes(uartPort, false);
+        while(messageState == PENDING) {}
     }
     else if (type == WS_SET_ADD_A_GROUP) {
         database->createGroup();
