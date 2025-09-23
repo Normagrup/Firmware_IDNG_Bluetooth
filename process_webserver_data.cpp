@@ -720,11 +720,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 10);
         uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 10);
 
+        sendConfirmStartLineScanning(webServer);
         sendUartStartLineScanning(uartPort);
-        delay(2500);
+        while(messageState == PENDING) {}
 
         // Si se ha recibido el mensaje de confirmación del micro, empieza
-        if(discovered_nodes_count == 0) {
+        if(messageState == RECEIVED) {
             for(uint16_t i = startAddr; i <= endAddr; i++) {
                 if(forceStopLS1) { forceStopLS1 = false; break; }
 
@@ -751,12 +752,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             delay(5000);
         }
 
-        delay(2500);
-
         sendUartClearInyectedNodes(uartPort, false);
-        delay(2500);
+        while(messageState == PENDING) {}
 
         sendUartEndLineScanning(uartPort);
+        while(messageState == PENDING) {}
+
+        sendConfirmEndLineScanning(webServer);
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
         sendGroupsWithPOL(webServer, database, value);

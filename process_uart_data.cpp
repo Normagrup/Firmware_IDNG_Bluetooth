@@ -332,7 +332,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_START_LINE_SCANNING:
                     {
-                        sendConfirmStartLineScanning(webServer);
                         isLineScanning = true;
                         configuredNodes = database->getConfiguredNodes();
                         lineScanningCounter = 0;
@@ -347,6 +346,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                 meshDevice[i][j].deleteDevice();
                             }
                         }
+
+                        messageState = RECEIVED;
                     }
                     break;
                     case SEND_RECOVERY_NODE:
@@ -412,7 +413,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         database->loadNodesFromDatabase();
 
                         isLineScanning = false;
-                        sendConfirmEndLineScanning(webServer);
+                        messageState = RECEIVED;
                     }
                     break;
 
@@ -1239,17 +1240,32 @@ void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendUartStartLineScanning(UartPort* _uartPort)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 3000};
+    messageState = PENDING;
 
-    unsigned char length = 3;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(START_LINE_SCANNING);
-    frame.append(UART_END);
+        unsigned char length = 3;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(START_LINE_SCANNING);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del START_LINE_SCANNING";
+    }
 }
 
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress)
@@ -1273,17 +1289,32 @@ void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddre
 
 void sendUartEndLineScanning(UartPort* _uartPort)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 4000};
+    messageState = PENDING;
 
-    unsigned char length = 3;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(END_LINE_SCANNING);
-    frame.append(UART_END);
+        unsigned char length = 3;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(END_LINE_SCANNING);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del END_LINE_SCANNING";
+    }
 }
 
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)
