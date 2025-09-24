@@ -139,7 +139,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         {
             sendConfirmStartRemoveAllNodes(webServer);
 
-            QList<uint16_t> addresses = database->getNextNodeAddressDesc();
+            QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
             /*qDebug() << "[DELETE_DEVICE] Lista de RealAddress en descendente:";
             for (const uint16_t nodeAddress : addresses) {
                 qDebug() << " -> 0x" + QString::number(nodeAddress, 16).toUpper();
@@ -1546,48 +1546,35 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
-    QList<uint16_t> addresses = database->getNextNodeAddressDesc();
-
-    qDebug() << "[CLEAR] Lista de RealAddress en descendente:";
-    for (const uint16_t addr : addresses) {
-        qDebug() << " -> 0x" + QString::number(addr, 16).toUpper();
-    }
-
-    if (addresses.empty()) {
-        database->clearAllData();
-        for (int i = 0; i < MAX_TEST; i++)
-            tests[i].deleteTest();
-        isClearingAllData = false;
-        sendConfirmEndClearAllData(webServer);
-        return;
-    }
+    QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
+    uint8_t counter = 0;
+    uint8_t max = 64;
 
     for (const uint16_t nodeAddress : addresses) {
-        if (nodeAddress == 0x0000) continue;
         sendUartInyectNode(uartPort, nodeAddress, database);
         while(messageState == PENDING) {}
 
         if(messageState == RECEIVED) {
+            counter++;
             sendUartClearAllData(uartPort, nodeAddress);
             while(messageState == PENDING) {}
+        }
 
-            for (int i = 0; i < MAX_SUBNET; i++) {
-                for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-                    if (meshDevice[i][j].getIsConfigured() &&
-                        meshDevice[i][j].getRealAddress() == nodeAddress)
-                    {
-                        meshDevice[i][j].deleteDevice();
-                    }
-                }
-            }
+        if(counter >= max) {
+            counter = 0;
+            sendUartClearInyectedNodes(uartPort, false);
+            while(messageState == PENDING) {}
         }
     }
-    if(messageState == RECEIVED) {
-        database->clearAllData();
 
-        for (int i = 0; i < MAX_TEST; i++)
-            tests[i].deleteTest();
-    }
+    database->clearAllData();
+
+    for (int i = 0; i < MAX_SUBNET; i++)
+        for (int j = 0; j < MAX_NODES_SUBNET; j++)
+            meshDevice[i][j].deleteDevice();
+
+    for (int i = 0; i < MAX_TEST; i++)
+        tests[i].deleteTest();
 
     sendUartClearInyectedNodes(uartPort, false);
     while(messageState == PENDING) {}

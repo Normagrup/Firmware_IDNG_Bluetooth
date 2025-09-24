@@ -455,7 +455,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_END_CLEAR_ALL_DATA:
                     {
-                        sendConfirmEndClearAllData(webServer);
+                        sendConfirmEndClearAllData(webServer); // no se usa ya que no devuelve confirmación al terminar
                     }
                     break;
                 }
@@ -1270,7 +1270,7 @@ void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress)
 {
     uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[3] = {500, 2000, 2500};
+    int ms[3] = {1000, 2000, 2500};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {

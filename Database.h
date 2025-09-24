@@ -106,7 +106,7 @@ public:
 
     uint16_t getNextUnicastAddress(void);
     void updateNextUnicastAddress(uint16_t nextUnicastAddress);
-    QList<uint16_t>getNextNodeAddressDesc();
+    QList<uint16_t> getAddressesDescForGlobalRemove();
 
 signals:
 

@@ -1754,15 +1754,14 @@ void Database::updateNextUnicastAddress(uint16_t nextUnicastAddress)
     }
 }
 
-QList<uint16_t> Database::getNextNodeAddressDesc() {
+QList<uint16_t> Database::getAddressesDescForGlobalRemove() {
     QList<uint16_t> addresses;
 
     QSqlQuery query;
     query.prepare("SELECT RealAddress FROM Nodes ORDER BY RealAddress DESC");
 
     if (!query.exec()) {
-        qDebug() << "Error executing SELECT query (RealAddress DESC):"
-                 << query.lastError().text();
+        qDebug() << "Error executing SELECT query (RealAddress DESC):" << query.lastError().text();
         return addresses;
     }
 
