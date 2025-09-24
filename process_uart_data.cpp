@@ -166,6 +166,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "CONFIRM START SCAN";
                         isScanning = true;
                         sendConfirmStartScan(webServer);
+                        messageState = RECEIVED;
                         QTimer::singleShot(12000, []() {isScanning = false;});
                     break;
 
@@ -421,6 +422,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
                         qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
+                        messageState = RECEIVED;
                     }
                     break;
                     case ANSWER_POWER_ON_LEVEL:
@@ -436,6 +438,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint16_t address = ((uint16_t)data[3] << 8) | data[4];
                         uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
                         bool added = ((uint8_t)data[7] != 0);
+                        messageState = RECEIVED;
                         sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
                     }
                     break;
