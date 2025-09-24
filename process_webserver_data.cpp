@@ -131,7 +131,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "Mensaje de detención de COMMISSIONING recibido.";
     }
     else if (type == WS_SET_DELETE_DEVICE) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
+       if(isCommissionOrLSInProgress(webServer)) { return; }
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
 
@@ -139,30 +139,32 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         {
             sendConfirmStartRemoveAllNodes(webServer);
 
-            bool hasEnteredInSubnet;
-            // Eliminar nodos de la estructura interna
-            for(int i = 0; i < MAX_SUBNET; i++){
-                hasEnteredInSubnet = false;
-                for(int j = 0; j < MAX_NODES_SUBNET; j++) {
-                    if(meshDevice[i][j].getIsConfigured()) {
-                        hasEnteredInSubnet = true;
-                        uint16_t nodeAddress = meshDevice[i][j].getRealAddress();
-                        sendUartInyectNode(uartPort, nodeAddress, database);
-                        delay(500);
-                        sendUartDelDevice(uartPort, nodeAddress, true);
-                        delay(500);
-                        insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_REMOVED, "Device");
-                        meshDevice[i][j].deleteDevice();
+            QList<uint16_t> addresses = database->getNextNodeAddressDesc();
+
+            for (const uint16_t nodeAddress : addresses) {
+                if (nodeAddress == 0x0000) continue;
+                sendUartInyectNode(uartPort, nodeAddress, database);
+                delay(2000);
+                sendUartDelDevice(uartPort, nodeAddress, true);
+                delay(2000);
+
+                insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
+
+                for (int i = 0; i < MAX_SUBNET; i++) {
+                    for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                        if (meshDevice[i][j].getIsConfigured() &&
+                            meshDevice[i][j].getRealAddress() == nodeAddress) {
+                            meshDevice[i][j].deleteDevice();
+                        }
                     }
                 }
-                if (hasEnteredInSubnet){
-                    delay(500);
-                    sendUartClearInyectedNodes(uartPort, false);
-                    delay(500);
-                }
-
             }
+
             database->deleteAllNodes();
+
+            sendUartClearInyectedNodes(uartPort, false);
+
+            delay(500);
 
             sendConfirmEndRemoveAllNodes(webServer);
         }
@@ -1507,37 +1509,43 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
-    bool hasEnteredInSubnet;
-    for(int i = 0; i < MAX_SUBNET; i++) {
-        hasEnteredInSubnet = false;
-        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
-            if(meshDevice[i][j].getIsConfigured()) {
-                hasEnteredInSubnet = true;
-                uint16_t nodeAddress = meshDevice[i][j].getRealAddress();
-                sendUartInyectNode(uartPort, nodeAddress, database);
-                delay(500);
-                sendUartClearAllData(uartPort, nodeAddress);
-                delay(500);
-                // el borrado del modelo se hace después
-            }
-        }
+    QList<uint16_t> addresses = database->getNextNodeAddressDesc();
 
-        if(hasEnteredInSubnet) {
-            delay(500);
-            sendUartClearInyectedNodes(uartPort, false);
-            delay(500);
+    qDebug() << "[CLEAR] Lista de RealAddress en descendente:";
+    for (const uint16_t addr : addresses) {
+        qDebug() << " -> 0x" + QString::number(addr, 16).toUpper();
+    }
+
+    if (addresses.empty()) {
+        database->clearAllData();
+        for (int i = 0; i < MAX_TEST; i++)
+            tests[i].deleteTest();
+        isClearingAllData = false;
+        sendConfirmEndClearAllData(webServer);
+        return;
+    }
+
+    for (const uint16_t nodeAddress : addresses) {
+        if (nodeAddress == 0x0000) continue;
+        sendUartInyectNode(uartPort, nodeAddress, database);
+        delay(500);
+        sendUartClearAllData(uartPort, nodeAddress);
+        delay(500);
+
+        for (int i = 0; i < MAX_SUBNET; i++) {
+            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getIsConfigured() &&
+                    meshDevice[i][j].getRealAddress() == nodeAddress)
+                {
+                    meshDevice[i][j].deleteDevice();
+                }
+            }
         }
     }
 
-    // Borrado de la BBDD del embebido
     database->clearAllData();
 
-    // Borrado del modelo del embebido
-    for(int i = 0; i < MAX_SUBNET; i++)
-        for(int j = 0; j < MAX_NODES_SUBNET; j++)
-            meshDevice[i][j].deleteDevice();
-
-    for(int i = 0; i < MAX_TEST; i++)
+    for (int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
 
     sendUartClearInyectedNodes(uartPort, false);
