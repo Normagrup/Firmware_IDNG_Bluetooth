@@ -1540,27 +1540,34 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
     for (const uint16_t nodeAddress : addresses) {
         if (nodeAddress == 0x0000) continue;
         sendUartInyectNode(uartPort, nodeAddress, database);
-        delay(500);
-        sendUartClearAllData(uartPort, nodeAddress);
-        delay(500);
+        while(messageState == PENDING) {}
 
-        for (int i = 0; i < MAX_SUBNET; i++) {
-            for (int j = 0; j < MAX_NODES_SUBNET; j++) {
-                if (meshDevice[i][j].getIsConfigured() &&
-                    meshDevice[i][j].getRealAddress() == nodeAddress)
-                {
-                    meshDevice[i][j].deleteDevice();
+        if(messageState == RECEIVED) {
+            sendUartClearAllData(uartPort, nodeAddress);
+            while(messageState == PENDING) {}
+            delay(1000);
+
+
+            for (int i = 0; i < MAX_SUBNET; i++) {
+                for (int j = 0; j < MAX_NODES_SUBNET; j++) {
+                    if (meshDevice[i][j].getIsConfigured() &&
+                        meshDevice[i][j].getRealAddress() == nodeAddress)
+                    {
+                        meshDevice[i][j].deleteDevice();
+                    }
                 }
             }
         }
     }
+    if(messageState == RECEIVED) {
+        database->clearAllData();
 
-    database->clearAllData();
-
-    for (int i = 0; i < MAX_TEST; i++)
-        tests[i].deleteTest();
+        for (int i = 0; i < MAX_TEST; i++)
+            tests[i].deleteTest();
+    }
 
     sendUartClearInyectedNodes(uartPort, false);
+    while(messageState == PENDING) {}
     delay(500);
     isClearingAllData = false;
     sendConfirmEndClearAllData(webServer);
