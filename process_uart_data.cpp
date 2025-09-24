@@ -281,8 +281,8 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_END_REMOVE_ONE_NODE:
                     {
+                        messageState = RECEIVED;
                         if(!isReplacingDevices) {
-                            messageState = RECEIVED;
                             sendConfirmEndRemoveOneNode(webServer);
                         } else {
                             sendLogCommissionEntry(webServer, "The node has been deleted.", "INFO");
@@ -319,8 +319,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
 
                         isReplacingDevices = false;
-                        sendConfirmEndReplace(webServer);
                         sendUartClearInyectedNodes(uartPort, false);
+                        while(messageState == PENDING) {}
+                        sendConfirmEndReplace(webServer);
                     }
                     break;
 

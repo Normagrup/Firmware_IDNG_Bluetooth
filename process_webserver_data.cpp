@@ -916,11 +916,14 @@ void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* datab
 
     if (scannedUUID[0].nodeAddressReport != antennaRealAddress) {
         sendUartInyectNode(uartPort, scannedUUID[0].nodeAddressReport, database);
-        delay(300);
-        sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+            while(messageState == PENDING) {}
+        }
     }
 
-    delay(SLEEP_DALI_TIME_MS);
     sendUartAddDevice(uartPort, scannedUUID[0]);
     sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
     confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
@@ -940,8 +943,12 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
 
     sendUartInyectNode(uartPort, nodeAddress, database);
-    delay(300);
-    sendUartDelDevice(uartPort, nodeAddress, false);
+    while(messageState == PENDING) {}
+
+    if(messageState == RECEIVED) {
+        sendUartDelDevice(uartPort, nodeAddress, false);
+        while(messageState == PENDING) {}
+    }
 
     // Device to delete added to log
     insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
@@ -977,17 +984,23 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
     // Cargar los datos en los nodos (parte nodos, tanto el propio nodo como los hijos)
     QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(replaceData.oldNodeRealAddress);
     for(uint16_t childRealAddress : childrenRealAddresses) {
-        //sendUartInyectNode(uartPort, childRealAddress, database);
-        //delay(300);
-        sendUartChangeFather(uartPort, childRealAddress, replaceData.newNodeRealAddress);
-        database->setFatherRealAddress(childRealAddress, replaceData.newNodeRealAddress);
-        delay(150);
+        sendUartInyectNode(uartPort, childRealAddress, database); // es necesario?
+        while(messageState == PENDING) {} // es necesario?
+
+        if(messageState == RECEIVED) {
+            sendUartChangeFather(uartPort, childRealAddress, replaceData.newNodeRealAddress);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) {
+                database->setFatherRealAddress(childRealAddress, replaceData.newNodeRealAddress);
+            }
+        }
     }
 
     sendUartChangeFather(uartPort, replaceData.newNodeRealAddress, replaceNode.fatherRealAddress);
-    delay(150);
+    delay(250);
     sendUartSetRelay(uartPort, replaceData.newNodeRealAddress, replaceNode.relayMode);
-    delay(150);
+    delay(250);
 
     uint16_t* address = new uint16_t[2];
     address[0] = replaceData.newNodeRealAddress;
