@@ -118,6 +118,7 @@ void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address); // no actualiza el modelo y la bbdd directamente
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
+void sendUartDelGroupForAllNodesUnitary(UartPort* _uartPort, uint16_t nodeRealAddress, uint16_t groupAddress);
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);

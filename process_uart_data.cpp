@@ -1195,33 +1195,56 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
                 uint16_t nodeRealAddress = meshDevice[i][j].getRealAddress();
 
                 sendUartInyectNode(_uartPort, nodeRealAddress, database);
-                delay(600);
+                while(messageState == PENDING) {}
 
-                QByteArray frame;
-                unsigned char length = 7;
+                if(messageState == RECEIVED) {
+                    sendUartDelGroupForAllNodesUnitary(_uartPort, nodeRealAddress, groupAddress);
+                    while(messageState == PENDING) {}
 
-                frame.append(UART_HEADER);
-                frame.append(length);
-                frame.append(UART_CONFIG_FRAME_TYPE);
-                frame.append(DEL_GROUP);
-                frame.append((nodeRealAddress >> 8) & 0xFF);
-                frame.append(nodeRealAddress & 0xFF);
-                frame.append((groupAddress >> 8) & 0xFF);
-                frame.append(groupAddress & 0xFF);
-                frame.append(UART_END);
-
-                _uartPort->sendData(frame);
-
-                database->delGroup(nodeRealAddress, groupAddress);
-
+                    if(messageState == RECEIVED) {
+                        database->delGroup(nodeRealAddress, groupAddress);
+                    }
+                }
             }
         }
 
         if(hasEnteredInSubnet) {
-            delay(750);
             sendUartClearInyectedNodes(_uartPort, false);
-            delay(750);
+            while(messageState == PENDING) {}
         }
+    }
+}
+
+void sendUartDelGroupForAllNodesUnitary(UartPort* _uartPort, uint16_t nodeRealAddress, uint16_t groupAddress)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 2500, 3500};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DEL_GROUP);
+        frame.append((nodeRealAddress >> 8) & 0xFF);
+        frame.append(nodeRealAddress & 0xFF);
+        frame.append((groupAddress >> 8) & 0xFF);
+        frame.append(groupAddress & 0xFF);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DEL_GROUP_FOR_ALL_NODES_UNITARY";
     }
 }
 
