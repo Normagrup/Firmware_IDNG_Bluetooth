@@ -428,6 +428,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
                         uint8_t powerOnLevel = (uint8_t)data[5];
                         updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
+                        messageState = RECEIVED;
                     }
                     break;
                     case CONFIRM_ADD_NODE_TO_GROUP:
@@ -1449,8 +1450,29 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
         uint16_t realAddress = crossedGroupAndNodes[i].first;
 
         sendUartInyectNode(_uartPort, realAddress, database);
-        delay(300);
+        while(messageState == PENDING) {}
 
+        if(messageState == RECEIVED) {
+            sendUartPOLForUpdateUnitary(_uartPort, realAddress);
+
+            //delay(SLEEP_DALI_TIME_MS * 2);
+            while(messageState == PENDING) {}
+        }
+    }
+
+    delay(1000);
+    sendUartClearInyectedNodes(_uartPort, false);
+    while(messageState == PENDING) {}
+}
+
+void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {750, 1500, 2500};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
         unsigned char length = 5;
 
@@ -1464,11 +1486,14 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
 
         _uartPort->sendData(frame);
 
-        delay(SLEEP_DALI_TIME_MS * 2);
+        delay(ms[actAtt]);
+        actAtt++;
     }
 
-    delay(1000);
-    sendUartClearInyectedNodes(_uartPort, false);
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del POL_FOR_UPDATE_UNITARY";
+    }
 }
 
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
