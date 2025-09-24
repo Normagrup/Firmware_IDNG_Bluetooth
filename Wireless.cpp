@@ -389,10 +389,10 @@ void Wireless::addDeviceTimerHandler()
             numberOfIterations--;
             sendLogCommissionEntry(_webServer, "- New iteration in process from " + _database->getNextNodeName(doneIterations), "INFO");
             uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
-            qDebug() << "[1] DONE ITERATIONS: "<< doneIterations;
+            //qDebug() << "[1] DONE ITERATIONS: "<< doneIterations;
             delay(300);
             sendUartInyectNode(_uartPort, addressToNextIt, _database);
-            delay(500);
+            while(messageState == PENDING) {}
             sendUartNewIteration(_uartPort, addressToNextIt);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
@@ -410,10 +410,9 @@ void Wireless::addDeviceTimerHandler()
             }
 
             sendUartClearInyectedNodes(_uartPort, true);
+            while(messageState == PENDING) {}
 
             _database->updateNextUnicastAddress(_database->getNextUnicastAddress() + 1);
-
-            delay(5000);
 
             sendEndAutoCommission(_webServer);
             pollingTimer.start(POLLING_TIMER_MS);
@@ -439,10 +438,10 @@ void Wireless::newIterationTimerHandler()
 {
     qDebug() << "NEW ITERATION TIMER";
     uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
-    qDebug() << "[4] DONE ITERATIONS: "<< doneIterations;
+    //qDebug() << "[4] DONE ITERATIONS: "<< doneIterations;
     delay(300);
     sendUartInyectNode(_uartPort, addressToNextIt, _database);
-    delay(500);
+    while(messageState == PENDING) {}
     sendUartNewIteration(_uartPort, addressToNextIt);
 }
 
