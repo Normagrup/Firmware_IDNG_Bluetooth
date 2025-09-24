@@ -1753,3 +1753,22 @@ void Database::updateNextUnicastAddress(uint16_t nextUnicastAddress)
         if (!query.exec()) { qDebug() << "Error executing UPDATE query in General:" << query.lastError().text(); }
     }
 }
+
+QList<uint16_t> Database::getNextNodeAddressDesc() {
+    QList<uint16_t> addresses;
+
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes ORDER BY RealAddress DESC");
+
+    if (!query.exec()) {
+        qDebug() << "Error executing SELECT query (RealAddress DESC):"
+                 << query.lastError().text();
+        return addresses;
+    }
+
+    while (query.next()) {
+        addresses.append(static_cast<uint16_t>(query.value(0).toUInt()));
+    }
+
+    return addresses;
+}
