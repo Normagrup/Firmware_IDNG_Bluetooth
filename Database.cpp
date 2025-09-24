@@ -1369,7 +1369,7 @@ uint16_t Database::getNextNodeAddress(uint16_t doneIts)
     if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0x0000; }
 
     if (query.next()) {
-        uint8_t realAddress = query.value("RealAddress").toUInt();
+        uint16_t realAddress = query.value("RealAddress").toUInt();
 
         return realAddress;
     }
