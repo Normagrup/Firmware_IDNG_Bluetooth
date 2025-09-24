@@ -281,9 +281,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_END_REMOVE_ONE_NODE:
                     {
-                        if(!isReplacingDevices)
+                        if(!isReplacingDevices) {
+                            messageState = RECEIVED;
                             sendConfirmEndRemoveOneNode(webServer);
-                        else {
+                        } else {
                             sendLogCommissionEntry(webServer, "The node has been deleted.", "INFO");
                             restoreDataForReplace(webServer, uartPort, database);
                         }
@@ -1029,20 +1030,35 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
 
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast)
 {
-    QByteArray frame;
-    const unsigned char length = 6;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 3000, 3000};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(DEL_DEVICES);
-    frame.append((nodeAddress >> 8) & 0xFF);
-    frame.append(nodeAddress & 0xFF);
-    frame.append(isBroadcast ? 0x01 : 0x00);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        const unsigned char length = 6;
 
-    frame.append(UART_END);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DEL_DEVICES);
+        frame.append((nodeAddress >> 8) & 0xFF);
+        frame.append(nodeAddress & 0xFF);
+        frame.append(isBroadcast ? 0x01 : 0x00);
 
-    _uartPort->sendData(frame);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DEL_DEVICE";
+    }
 }
 
 
@@ -1346,20 +1362,35 @@ void sendUartEndLineScanning(UartPort* _uartPort)
 
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)
 {
-    QByteArray frame;
-    unsigned char length = 7;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {500, 1500, 2500};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(CHANGE_FATHER);
-    frame.append((childRealAddress >> 8) & 0xFF);
-    frame.append(childRealAddress & 0xFF);
-    frame.append((fatherRealAddress >> 8) & 0xFF);
-    frame.append(fatherRealAddress & 0xFF);
-    frame.append(UART_END);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(CHANGE_FATHER);
+        frame.append((childRealAddress >> 8) & 0xFF);
+        frame.append(childRealAddress & 0xFF);
+        frame.append((fatherRealAddress >> 8) & 0xFF);
+        frame.append(fatherRealAddress & 0xFF);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del CHANGE_FATHER";
+    }
 }
 
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)

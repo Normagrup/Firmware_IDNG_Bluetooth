@@ -208,16 +208,28 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(nodeAddress);
             for(uint16_t childRealAddress : childrenRealAddresses) {
                 sendUartInyectNode(uartPort, childRealAddress, database);
-                delay(300);
-                sendUartChangeFather(uartPort, childRealAddress, fatherNodeAddress);
-                database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
-                delay(150);
+                while(messageState == PENDING) {}
+
+                if(messageState == RECEIVED) {
+                    sendUartChangeFather(uartPort, childRealAddress, fatherNodeAddress);
+                    while(messageState == PENDING) {}
+
+                    if(messageState == RECEIVED) {
+                        database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
+                    }
+                }
             }
+
             sendUartInyectNode(uartPort, nodeAddress, database);
-            delay(300);
-            sendUartDelDevice(uartPort, nodeAddress, false);
-            delay(300);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) {
+                sendUartDelDevice(uartPort, nodeAddress, false);
+                while(messageState == PENDING) {}
+            }
+
             sendUartClearInyectedNodes(uartPort, false);
+            while(messageState == PENDING) {}
 
             // Device to delete added to log
             insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device");
