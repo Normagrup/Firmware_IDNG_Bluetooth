@@ -276,11 +276,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if (scannedUUID[0].nodeAddressReport != antennaRealAddress){
             sendUartInyectNode(uartPort, scannedUUID[0].nodeAddressReport, database);
-            delay(300);
-            sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) {
+                sendUartSetRelay(uartPort, scannedUUID[0].nodeAddressReport, true);
+                while(messageState == PENDING) {}
+            }
         }
 
-        delay(SLEEP_DALI_TIME_MS);
         sendUartAddDevice(uartPort, scannedUUID[0]);
         sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
         confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
@@ -1229,6 +1232,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
         if(!isReplacingDevices) {
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
             sendUartClearInyectedNodes(uartPort, false);
+            while(messageState == PENDING) {}
         } else {
             deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
         }

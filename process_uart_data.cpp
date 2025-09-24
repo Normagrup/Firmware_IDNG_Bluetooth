@@ -728,6 +728,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if(!isReplacingDevices) {
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
             sendUartClearInyectedNodes(uartPort, false);
+            while(messageState == PENDING) {}
         } else {
             deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
         }
