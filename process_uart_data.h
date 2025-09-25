@@ -89,7 +89,6 @@
 #define CONFIRM_INYECT                  0x97
 #define CONFIRM_ACTION                  0x98
 #define CONFIRM_RESET_CDB               0x99
-#define RELOAD_CDB                      0xF4
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
