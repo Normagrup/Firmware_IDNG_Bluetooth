@@ -416,8 +416,6 @@ void Wireless::addDeviceTimerHandler()
             sendUartClearInyectedNodes(_uartPort, true);
             while(messageState == PENDING) {}
 
-            _database->updateNextUnicastAddress(_database->getNextUnicastAddress() + 1);
-
             sendEndAutoCommission(_webServer);
             pollingTimer.start(POLLING_TIMER_MS);
         }
