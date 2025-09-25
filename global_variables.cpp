@@ -27,6 +27,9 @@ QTimer newIterationTimer;
 
 QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 
+QTimer replaceP2Timer;
+QTimer replaceP3Timer;
+
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
 ScannedUUID scannedUUIDBackup[20];

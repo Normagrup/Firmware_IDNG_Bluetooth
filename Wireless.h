@@ -29,6 +29,8 @@ private slots:
     void addDeviceTimerHandler(void);
     void confirmAddDeviceTimerHandler(void);
     void newIterationTimerHandler(void);
+    void replaceP2TimerHandler(void);
+    void replaceP3TimerHandler(void);
 
     void updateLogsByPollings(Device &device);
     void updateLogsByTests(uint8_t i, uint8_t code);

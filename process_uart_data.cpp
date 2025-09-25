@@ -285,8 +285,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         if(!isReplacingDevices) {
                             sendConfirmEndRemoveOneNode(webServer);
                         } else {
-                            sendLogCommissionEntry(webServer, "The node has been deleted.", "INFO");
-                            restoreDataForReplace(webServer, uartPort, database);
+                            replaceP3Timer.start(3000); // siguiente paso del replacing
                         }
                     }
                     break;
@@ -731,7 +730,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
             sendUartClearInyectedNodes(uartPort, false);
             while(messageState == PENDING) {}
         } else {
-            deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
+            replaceP2Timer.start(300); // siguiente paso del replacing
         }
 
         return;

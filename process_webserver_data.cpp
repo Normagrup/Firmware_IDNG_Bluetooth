@@ -953,7 +953,7 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     sendUartInyectNode(uartPort, nodeAddress, database);
     while(messageState == PENDING) {}
 
-    if(messageState == RECEIVED || messageState == MISSED) { // se añade MISSED porque no recibe respuesta aunque llegue la orden al micro
+    if(messageState == RECEIVED) {
         sendUartDelDevice(uartPort, nodeAddress, false);
         while(messageState == PENDING) {}
     }
@@ -964,11 +964,6 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     // Eliminar el nodo de la estructura interna
     meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
     database->deleteNode(nodeAddress);
-
-    if(messageState == MISSED) { // se añade MISSED porque no recibe respuesta aunque llegue la orden al micro
-        sendLogCommissionEntry(webServer, "The node has been deleted.", "INFO");
-        restoreDataForReplace(webServer, uartPort, database);
-    }
 }
 
 void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
@@ -1260,7 +1255,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
             sendUartClearInyectedNodes(uartPort, false);
             while(messageState == PENDING) {}
         } else {
-            deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
+            replaceP2Timer.start(300); // siguiente paso del replacing
         }
 
         return;

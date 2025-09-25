@@ -33,6 +33,10 @@ Wireless::Wireless(QObject *parent)
     connect(&addDeviceTimer, &QTimer::timeout, this, &Wireless::addDeviceTimerHandler);
     connect(&confirmAddDeviceTimer, &QTimer::timeout, this, &Wireless::confirmAddDeviceTimerHandler);
     connect(&newIterationTimer, &QTimer::timeout, this, &Wireless::newIterationTimerHandler);
+    connect(&replaceP2Timer, &QTimer::timeout, this, &Wireless::replaceP2TimerHandler);
+    replaceP2Timer.setSingleShot(true);
+    connect(&replaceP3Timer, &QTimer::timeout, this, &Wireless::replaceP3TimerHandler);
+    replaceP3Timer.setSingleShot(true);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
@@ -445,4 +449,13 @@ void Wireless::newIterationTimerHandler()
     sendUartNewIteration(_uartPort, addressToNextIt);
 }
 
+void Wireless::replaceP2TimerHandler()
+{
+    deleteNodeForReplace(_webServer, _uartPort, _database);
+}
 
+void Wireless::replaceP3TimerHandler()
+{
+    sendLogCommissionEntry(_webServer, "The node has been deleted.", "INFO");
+    restoreDataForReplace(_webServer, _uartPort, _database);
+}
