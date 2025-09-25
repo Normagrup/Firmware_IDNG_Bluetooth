@@ -51,7 +51,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             delay(10300);
         }
 
-        sendUartClearInyectedNodes(uartPort, false);
+        sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
     }
 
@@ -157,7 +157,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
                 if(counter >= max) {
                     counter = 0;
-                    sendUartClearInyectedNodes(uartPort, false);
+                    sendUartClearInyectedNodes(uartPort, false, database);
                     while(messageState == PENDING) {}
                 }
             }
@@ -168,7 +168,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 for (int j = 0; j < MAX_NODES_SUBNET; j++)
                     meshDevice[i][j].deleteDevice();
 
-            sendUartClearInyectedNodes(uartPort, false);
+            sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
             sendConfirmEndRemoveAllNodes(webServer);
         }
@@ -232,7 +232,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 while(messageState == PENDING) {}
             }
 
-            sendUartClearInyectedNodes(uartPort, false);
+            sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
 
             // Device to delete added to log
@@ -320,7 +320,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             while(messageState == PENDING) {}
         }
 
-        sendUartClearInyectedNodes(uartPort, false);
+        sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
     }
     else if (type == WS_SET_DEL_GROUP) {
@@ -341,7 +341,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             while(messageState == PENDING) {}
         }
 
-        sendUartClearInyectedNodes(uartPort, false);
+        sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
     }
     else if (type == WS_SET_ADD_A_GROUP) {
@@ -470,7 +470,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             while(messageState == PENDING) {}
         }
 
-        sendUartClearInyectedNodes(uartPort, false);
+        sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
     }
     else if (type == WS_SET_IDENTIFY) {
@@ -773,7 +773,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             delay(5000);
         }
 
-        sendUartClearInyectedNodes(uartPort, false);
+        sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
 
         sendUartEndLineScanning(uartPort);
@@ -1248,7 +1248,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
 
         if(!isReplacingDevices) {
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
-            sendUartClearInyectedNodes(uartPort, false);
+            sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
         } else {
             replaceP2Timer.start(300); // siguiente paso del replacing
@@ -1558,7 +1558,7 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
 
         if(counter >= max) {
             counter = 0;
-            sendUartClearInyectedNodes(uartPort, false);
+            sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
         }
     }
@@ -1572,7 +1572,7 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
     for (int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
 
-    sendUartClearInyectedNodes(uartPort, false);
+    sendUartClearInyectedNodes(uartPort, false, database);
     while(messageState == PENDING) {}
     isClearingAllData = false;
     sendConfirmEndClearAllData(webServer);

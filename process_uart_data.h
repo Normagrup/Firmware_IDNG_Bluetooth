@@ -102,7 +102,7 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
-void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning);
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Database* database);
 void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
 
 void sendUartUpdateNextUnicast(UartPort* _uartPort, uint16_t nextUnicastAddress);
@@ -136,6 +136,5 @@ void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddre
 void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
-void reloadCdb(UartPort* _uartPort, Database* database);
 
 #endif // PROCESS_UART_DATA_H
