@@ -55,6 +55,7 @@ extern QTimer newIterationTimer;
 extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 extern QTimer replaceP2Timer; // para ejecutar la parte2 del replace
 extern QTimer replaceP3Timer; // para ejecutar la parte3 del replace
+extern QTimer cleanCdbTimer;
 
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
@@ -92,5 +93,6 @@ enum MessageState {
 };
 
 extern MessageState messageState;
+extern int TIME_TO_CLEAN_CDB;
 
 #endif // GLOBAL_VARIABLES_H

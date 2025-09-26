@@ -37,6 +37,7 @@ Wireless::Wireless(QObject *parent)
     replaceP2Timer.setSingleShot(true);
     connect(&replaceP3Timer, &QTimer::timeout, this, &Wireless::replaceP3TimerHandler);
     replaceP3Timer.setSingleShot(true);
+    connect(&cleanCdbTimer, &QTimer::timeout, this, &Wireless::cleanCdbTimerHandler);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
@@ -61,9 +62,9 @@ void Wireless::runNetwork()
     _database->loadFailComCycles();
 
     sendNetKey(_uartPort, _database);
-    delay(1000);
+    delay(300); // posible unificar estos dos mensajes
     sendAntennaAddress(_uartPort, _database);
-    delay(2000);
+    delay(1200);
     sendAntennaGetAddress(_uartPort);
 
     pollingTimer.start(POLLING_TIMER_MS);
@@ -418,6 +419,7 @@ void Wireless::addDeviceTimerHandler()
 
             sendEndAutoCommission(_webServer);
             pollingTimer.start(POLLING_TIMER_MS);
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         }
     }
 }
@@ -456,4 +458,9 @@ void Wireless::replaceP3TimerHandler()
 {
     sendLogCommissionEntry(_webServer, "The node has been deleted.", "INFO");
     restoreDataForReplace(_webServer, _uartPort, _database);
+}
+
+void Wireless::cleanCdbTimerHandler()
+{
+    sendUartClearInyectedNodes(_uartPort, true, _database);
 }

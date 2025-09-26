@@ -27,6 +27,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_SCANNED_DEVICES) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         memset(scannedUUID, 0, sizeof(scannedUUID));
 
@@ -34,6 +35,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_SCAN_FROM_NODE) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         memset(scannedUUID, 0, sizeof(scannedUUID));
 
@@ -53,6 +55,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
 
     else if (type == WS_SET_STORED_SCANNED_DEVICES) {
@@ -96,6 +99,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_START_ACTION) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         qDebug() << "START COMMISSION";
 
@@ -131,7 +135,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         qDebug() << "Mensaje de detención de COMMISSIONING recibido.";
     }
     else if (type == WS_SET_DELETE_DEVICE) {
-       if(isCommissionOrLSInProgress(webServer)) { return; }
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         uint16_t nodeNetAddress = getNodeNetAddress(value);
 
@@ -171,6 +176,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
             sendConfirmEndRemoveAllNodes(webServer);
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         }
         else
         {
@@ -241,10 +247,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             // Eliminar el nodo de la estructura interna
             meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
             database->deleteNode(nodeAddress);
+
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         }
     }
     else if (type == WS_SET_ADD_DEVICE) {
         if (isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         // Extraer el índice del UUID correspondiente al nodo que queremos añadir
         int uuidIndex = getUUIDIndexOfScanned(value);
@@ -294,6 +303,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }  
     else if (type == WS_SET_ADD_GROUP) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -322,9 +332,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
+
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_SET_DEL_GROUP) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -343,16 +356,23 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
+
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_SET_ADD_A_GROUP) {
         database->createGroup();
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_DEL_A_GROUP) {
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
+
         database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         sendGroups(webServer, database);
+
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_SET_EDIT_A_GROUP) {
         QStringList parts = value.split("#");
@@ -367,6 +387,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_MAX) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -387,6 +408,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_OFF) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -407,6 +429,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_MIN) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -427,6 +450,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_RESET) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -439,6 +463,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_ACTUAL_LVL) {
         uint16_t* values = getActualLvl(value);
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         if(values[0] < 0xC000) {
             meshDevice[(values[0] - 1) / 64][(values[0] - 1) % 64].setActualLvl(values[1]);
@@ -456,6 +481,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
     else if (type == WS_SET_RELAY_MODE) {
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
+
         QStringList parts = value.split("_");
         uint16_t netAddress = parts[0].toUInt();
         bool enable = parts[1].toInt();
@@ -472,9 +500,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
+
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_SET_IDENTIFY) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -487,6 +518,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_FACTORY_SETTINGS) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -511,6 +543,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_REBOOT) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -535,6 +568,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_FUNCTION_TEST) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -553,6 +587,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_DURATION_TEST) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -572,6 +607,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     else if (type == WS_SET_STOP) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
@@ -730,13 +766,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         isClearingAllData = true;
 
         clearSystemData(webServer, database, uartPort);
+
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_LINE_SCANNING) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 10);
         uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 10);
@@ -780,12 +820,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         while(messageState == PENDING) {}
 
         sendConfirmEndLineScanning(webServer);
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_GET_POWER_ON_LEVEL) {
         sendGroupsWithPOL(webServer, database, value);
     }
     else if (type == WS_SET_POWER_ON_LEVEL) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         QStringList parts = value.split("_");
         uint16_t groupAddress = parts[0].toUShort(nullptr, 16);
@@ -796,7 +838,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
     }
     else if (type == WS_SET_SYNC_POL) {
+        if(isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
+
         sendUartPOLForUpdate(uartPort, database);
+
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     }
     else if (type == WS_SET_RELOAD_TREE) {
         buildTreeAndSendConfirm(webServer, database);
@@ -867,6 +914,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_REPLACE_NODES) {
         if (isCommissionOrLSInProgress(webServer)) { return; }
+        cleanCdbTimer.stop();
 
         isReplacingDevices = true;
         sendConfirmStartReplace(webServer);
@@ -880,7 +928,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         addNodeForReplace(webServer, uartPort, database);
     }
 
-    if (type != WS_SET_START_ACTION && type != WS_SET_DELETE_DEVICE && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
+    if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
     }
 }
@@ -960,6 +1008,10 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
     // Eliminar el nodo de la estructura interna
     meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].deleteDevice();
     database->deleteNode(nodeAddress);
+
+    if(messageState == MISSED) {
+        restoreDataForReplace(webServer, uartPort, database);
+    }
 }
 
 void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
@@ -1030,6 +1082,7 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
 
     delay(5000);
     sendUartConfirmReplacing(uartPort, replaceData.newNodeRealAddress);
+    cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 }
 
 bool isCommissionOrLSInProgress(WebServer* webServer)
@@ -1250,6 +1303,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
             sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         } else {
             replaceP2Timer.start(300); // siguiente paso del replacing
         }

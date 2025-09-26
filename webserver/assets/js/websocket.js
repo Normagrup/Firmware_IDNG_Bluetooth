@@ -1893,7 +1893,7 @@ function delFromGroup()
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
         loadNodesLists();
-    }, 1000);
+    }, 3000);
 }
 
 function addGroup() 

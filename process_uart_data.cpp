@@ -308,6 +308,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
                         reloadAntennaAddress(webServer, database, antennaAddress);
+                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
                     }
                     break;
 
@@ -728,6 +729,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
             sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         } else {
             replaceP2Timer.start(300); // siguiente paso del replacing
         }
@@ -1450,9 +1452,8 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    //return;
-
     if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices || isClearingAllData) { return; }
+    if(nodeAddress == 0x0000) { return; }
 
     QByteArray frame;
     unsigned char length = 4;

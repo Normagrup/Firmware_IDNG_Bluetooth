@@ -29,6 +29,7 @@ QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 
 QTimer replaceP2Timer;
 QTimer replaceP3Timer;
+QTimer cleanCdbTimer;
 
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
@@ -92,3 +93,4 @@ ReplaceNode replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
 bool isClearingAllData = false;
 
 MessageState messageState = EMPTY;
+int TIME_TO_CLEAN_CDB = 30000;
