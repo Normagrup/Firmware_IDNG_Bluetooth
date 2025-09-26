@@ -95,4 +95,24 @@ enum MessageState {
 extern MessageState messageState;
 extern int TIME_TO_CLEAN_CDB;
 
+enum EmbeddedState {
+    FREE,
+    SCAN,
+    COMMISSION,
+    ADD_MANUAL,
+    REPLACE,
+    DEL_DEV_BC,
+    DEL_DEV,
+    SETTER_RELAY,
+    ADD_NODE_TO_GROUP,
+    DEL_NODE_FROM_GROUP,
+    DEL_COMPLETE_GROUP,
+    CLEAR_ALL,
+    SYNC_POL,
+    SCAN_BY_NODE,
+    LINE_SCAN
+};
+
+extern EmbeddedState embeddedState;
+
 #endif // GLOBAL_VARIABLES_H

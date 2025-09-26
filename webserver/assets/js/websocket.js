@@ -24,6 +24,20 @@ function processAlertLineScanning(value)
     alert(value);
 }
 
+function askStateToEmbedded(value)
+{
+    sendData("ASK_STATE_TO_EMBEDDED", value);
+}
+
+function processAskStateToEmbedded(value)
+{
+    var parts = value.split('#');
+    var page = parts[0];
+    var answer = parts[1];
+
+    loadPageAfterAsk(page, answer);
+}
+
 function processLoginInfo(value) 
 {
     var signErrorLabel = document.getElementById('signError');
@@ -188,7 +202,7 @@ function addDeviceToScannedList(value)
     updateAddReplaceScanRelayButtons();
 }
 
-function confirmStartScan(value) 
+function confirmScan(value, init) 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -196,16 +210,17 @@ function confirmStartScan(value)
     var popup = iframeDocument.getElementById('popupScanning');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    var popupHeader = popup.querySelector('h2');
-    popupHeader.textContent = "Scan in progress...";
-    
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
-
-    setTimeout(function() {
+    if(init) {
+        var popupHeader = popup.querySelector('h2');
+        popupHeader.textContent = "Scan in progress...";
+        
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+    else {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
-    }, 12000); // 12 segundos (el escaneo dura 10)
+    }
 }
 
 function confirmStartCommission(value) 
@@ -1146,33 +1161,29 @@ function processLogFile(value) {
 
 function processIsCommissionInProgress(value)
 {
-    var isCommissioning = (value === "true");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = isStoppingCommission ? "Stopping commissioning..." : "Automatic commission in progress...";
+
+    var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
+    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+    var stopButton = iframeDocument.getElementById('stopCommissionButton');
+    if(isStoppingCommission)
+        stopButton.classList.add('button-disabled');
+    else
+        stopButton.classList.remove('button-disabled');
+
+    var logCommission = iframeDocument.getElementById('logCommission');
+    logCommission.innerHTML = "";
     
-    if(isCommissioning) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popup = iframeDocument.getElementById('popup');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        var popupHeader = popup.querySelector('h2');
-        popupHeader.textContent = isStoppingCommission ? "Stopping commissioning..." : "Automatic commission in progress...";
-
-        var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
-        labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
-
-        var stopButton = iframeDocument.getElementById('stopCommissionButton');
-        if(isStoppingCommission)
-            stopButton.classList.add('button-disabled');
-        else
-            stopButton.classList.remove('button-disabled');
-
-        var logCommission = iframeDocument.getElementById('logCommission');
-        logCommission.innerHTML = "";
-        
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-    }
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 }
 
 function processIsAddManualInProgress(value)
@@ -1249,54 +1260,34 @@ function processIsClearAllInProgress(value)
     }
 }
 
-function processIsReplacingInProgress(value)
+function processIsAddingManualInProgress(value)
 {
-    var isReplacing = (value === "true");
-
-    if(isReplacing) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popupReplace = iframeDocument.getElementById('popupReplace');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        popupReplace.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-
-        var logReplace = iframeDocument.getElementById('logReplace');
-        logReplace.innerHTML = "";
-    }
-}
-
-function processIsAddingManOrReplacing(value)
-{
-    var parts = value.split("_");
-    var isAddingMan = (parts[0] === "true");
-    var isReplacing = (parts[1] === "true");
-
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    if(isReplacing) {
-        var popupReplace = iframeDocument.getElementById('popupReplace');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popupAdd = iframeDocument.getElementById('popupAddDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-        popupReplace.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
+    popupAdd.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 
-        var logReplace = iframeDocument.getElementById('logReplace');
-        logReplace.innerHTML = "";
-    }
-    else if(isAddingMan) {
-        var popupAdd = iframeDocument.getElementById('popupAddDevice');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var logAddManual = iframeDocument.getElementById('logAddManual');
+    logAddManual.innerHTML = "";
+}
 
-        popupAdd.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
+function processIsReplacingInProgress(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-        var logAddManual = iframeDocument.getElementById('logAddManual');
-        logAddManual.innerHTML = "";
-    }
+    var popupReplace = iframeDocument.getElementById('popupReplace');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popupReplace.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var logReplace = iframeDocument.getElementById('logReplace');
+    logReplace.innerHTML = "";
 }
 
 function processDelOneDev(value, init)
@@ -1309,21 +1300,21 @@ function processDelOneDev(value, init)
 
     if(init) // Cuando empieza el borrado
     {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
         var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
         var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
 
         deletingDeviceLabel.textContent = "Deleting the node from the network...";
         deletingDeviceButton.classList.add('button-disabled');
+
+        var closeDelDevPopup = iframeDocument.getElementById('closeDelDevPopup');
+        closeDelDevPopup.style.pointerEvents = "none";
+        closeDelDevPopup.style.opacity = "0.5";
     }
     else // Cuando termina el borrado
     {
-        var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-        selectedNode.remove();
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-
-        /**
         var networkNodesList = iframeDocument.getElementById('networkNodesList');
         networkNodesList.innerHTML = "";
 
@@ -1332,8 +1323,7 @@ function processDelOneDev(value, init)
         setTimeout(function() {
             popup.style.visibility = "hidden";
             popupOverlay.style.visibility = "hidden";
-        }, 3000);
-         */
+        }, 1000);
     }
 }
 
@@ -1347,11 +1337,18 @@ function processDelAllDev(value, init)
 
     if(init) // Cuando empieza el borrado
     {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
         var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
         var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
 
         deletingAllDevicesLabel.textContent = "Deleting all the nodes from the network...";
         deletingAllDevicesButton.classList.add('button-disabled');
+
+        var closeDelAllPopup = iframeDocument.getElementById('closeDelAllPopup');
+        closeDelAllPopup.style.pointerEvents = "none";
+        closeDelAllPopup.style.opacity = "0.5";
     }
     else // Cuando termina el borrado
     {
@@ -1648,13 +1645,16 @@ function processReceivedData(data)
     
     if(type == 'ALERT_COMMISSION') { processAlertCommission(value); }
     else if (type == 'ALERT_LINE_SCANNING') { processAlertLineScanning(value); }
+    else if (type == 'ASK_STATE_TO_EMBEDDED') { processAskStateToEmbedded(value); }
     else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
-    else if (type == 'CONFIRM_START_SCAN') { confirmStartScan(value); }
+    else if (type == 'CONFIRM_START_SCAN') { confirmScan(value, true); }
+    else if (type == 'CONFIRM_END_SCAN') { confirmScan(value, false); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
+    else if (type == 'END_AUTO_COMMISSION') { processEndAutoCommission(value); }
     else if (type == 'START_ADDING_DEVICES') { startAddingDevices(value); }
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }
     else if (type == 'ADDED_DEVICE') { addDeviceToNetworkList(value); }
@@ -1670,19 +1670,15 @@ function processReceivedData(data)
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
-    else if (type == 'END_AUTO_COMMISSION') { processEndAutoCommission(value); }
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
-    else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
     else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
     else if (type == "IS_CLEAR_ALL_IN_PROGRESS") { processIsClearAllInProgress(value); }
-    else if (type == "IS_REPLACING_IN_PROGRESS") { processIsReplacingInProgress(value); }
-    else if (type == "IS_ADDING_MAN_OR_REPLACING") { processIsAddingManOrReplacing(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }

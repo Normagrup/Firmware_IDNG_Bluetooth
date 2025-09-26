@@ -272,10 +272,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_START_REMOVE_ONE_NODE:
                     {
-                        if(!isReplacingDevices)
-                            sendConfirmStartRemoveOneNode(webServer);
-                        else
+                        if(!isReplacingDevices) {
+                            //sendConfirmStartRemoveOneNode(webServer);
+                        } else {
                             sendLogCommissionEntry(webServer, "Deleting node from the network...", "INFO");
+                        }
                     }
                     break;
 
@@ -283,7 +284,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         messageState = RECEIVED;
                         if(!isReplacingDevices) {
-                            sendConfirmEndRemoveOneNode(webServer);
+                            //sendConfirmEndRemoveOneNode(webServer);
                         } else {
                             replaceP3Timer.start(3000); // siguiente paso del replacing
                         }
@@ -320,7 +321,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         isReplacingDevices = false;
                         sendUartClearInyectedNodes(uartPort, false, database);
                         while(messageState == PENDING) {}
+
                         sendConfirmEndReplace(webServer);
+                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                        embeddedState = FREE;
                     }
                     break;
 
@@ -726,10 +730,12 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         isManualAddingDevice = false;
 
         if(!isReplacingDevices) {
-            sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
             sendUartClearInyectedNodes(uartPort, false, database);
             while(messageState == PENDING) {}
+
+            sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device (SOLO para el adding manual)
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            embeddedState = FREE;
         } else {
             replaceP2Timer.start(300); // siguiente paso del replacing
         }

@@ -599,11 +599,14 @@ function delDevicePrev()
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
         var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
         var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
+        var closeDelDevPopup = iframeDocument.getElementById('closeDelDevPopup');
 
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
         deletingDeviceLabel.textContent = "Do you want to delete the node from the network?";
         deletingDeviceButton.classList.remove('button-disabled');
+        closeDelDevPopup.style.pointerEvents = "auto";
+        closeDelDevPopup.style.opacity = "1";
 
     } else {
         networkErrorLabel.style.visibility = "visible";
@@ -623,11 +626,14 @@ function delAllDevicesPrev()
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
     var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
+    var closeDelAllPopup = iframeDocument.getElementById('closeDelAllPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     deletingAllDevicesLabel.textContent = "Do you want to delete ALL the nodes from the network?";
     deletingAllDevicesButton.classList.remove('button-disabled');
+    closeDelAllPopup.style.pointerEvents = "auto";
+    closeDelAllPopup.style.opacity = "1";
 }
 
 function closeWirelessPopup()

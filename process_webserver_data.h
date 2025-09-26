@@ -12,6 +12,7 @@
 #define WS_SET_IP_CONFIG                    "SET_IP_CONFIG"
 #define WS_GET_DATE_TIME                    "GET_DATE_TIME"
 #define WS_SET_DATE_TIME                    "SET_DATE_TIME"
+#define WS_ASK_STATE_TO_EMBEDDED            "ASK_STATE_TO_EMBEDDED"
 
 #define WS_SET_SCANNED_DEVICES              "SET_SCANNED_DEVICES"
 #define WS_SET_STORED_SCANNED_DEVICES       "SET_STORED_SCANNED_DEVICES"
@@ -27,12 +28,9 @@
 #define WS_SET_EDIT_A_GROUP                 "SET_EDIT_A_GROUP"  // cambiar nombre de grupo
 #define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
-#define WS_SET_IS_COMMISSION_IN_PROGRESS    "SET_IS_COMMISSION_IN_PROGRESS"
 #define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SET_IS_LS_IN_PROGRESS            "SET_IS_LS_IN_PROGRESS"
 #define WS_SET_IS_CLEAR_ALL_IN_PROGRESS     "SET_IS_CLEAR_ALL_IN_PROGRESS"
-#define WS_SET_IS_REPLACING_IN_PROGRESS     "SET_IS_REPLACING_IN_PROGRESS"
-#define WS_SET_IS_ADDING_MAN_OR_REPLACING   "SET_IS_ADDING_MAN_OR_REPLACING"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -85,17 +83,16 @@
 #define WS_SEND_IPCONFIG_INFO               "IPCONFIG_INFO"
 #define WS_SEND_LOG_COMMISSION_ENTRY        "LOG_COMMISSION_ENTRY"
 #define WS_SEND_CONFIRM_START_SCAN          "CONFIRM_START_SCAN"
+#define WS_SEND_CONFIRM_END_SCAN            "CONFIRM_END_SCAN"
 #define WS_SEND_CONFIRM_START_COMMISSION    "CONFIRM_START_COMMISSION"
 #define WS_SEND_CONFIRM_ADDING_DEVICE       "CONFIRM_ADDING_DEVICE"
 #define WS_SEND_START_ADDING_DEVICES        "START_ADDING_DEVICES"
 #define WS_SEND_SCANNED_DEVICES             "SCANNED_DEVICE"
 #define WS_SEND_ADDED_DEVICES               "ADDED_DEVICE"
 #define WS_SEND_CONFIRM_ADD_DEVICE          "CONFIRM_ADD_DEVICE"
-#define WS_SEND_IS_COMMISSION_IN_PROGRESS   "IS_COMMISSION_IN_PROGRESS"
 #define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SEND_IS_LS_IN_PROGRESS           "IS_LS_IN_PROGRESS"
 #define WS_SEND_IS_CLEAR_ALL_IN_PROGRESS    "IS_CLEAR_ALL_IN_PROGRESS"
-#define WS_SEND_IS_REPLACING_IN_PROGRESS    "IS_REPLACING_IN_PROGRESS"
 #define WS_SEND_IS_ADDING_MAN_OR_REPLACING  "IS_ADDING_MAN_OR_REPLACING"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
@@ -150,6 +147,7 @@ void sendDateTimeInfo(WebServer* webServer, QString info);
 void sendIPConfigInfo(WebServer* webServer, bool ipConfigInfo);
 void sendLogCommissionEntry(WebServer* webServer, QString content, QString type);
 void sendConfirmStartScan(WebServer* webServer);
+void sendConfirmEndScan(WebServer* webServer);
 void sendConfirmStartCommission(WebServer* webServer);
 void sendConfirmAddingDevice(WebServer* webServer);
 void sendDevError(WebServer* webServer);
@@ -159,12 +157,9 @@ void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, Database* database);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
-void sendIsCommissionInProgress(WebServer* webServer);
 void sendIsAddManualInProgress(WebServer* webServer);
 void sendIsLSInProgress(WebServer* webServer);
 void sendIsClearAllInProgress(WebServer* webServer);
-void sendIsReplacingInProgress(WebServer* webServer);
-void sendIsAddingManOrReplacing(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);

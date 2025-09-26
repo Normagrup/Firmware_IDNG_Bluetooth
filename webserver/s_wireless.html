@@ -51,7 +51,7 @@
             </div>
             
             <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+                <span id="closeDelDevPopup" class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
             </div>
         </div>
     </div>
@@ -65,7 +65,7 @@
             </div>
             
             <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+                <span id="closeDelAllPopup" class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
             </div>
         </div>
     </div>
@@ -153,24 +153,10 @@
 				parent.sendData("SET_STORED_SCANNED_DEVICES", "");
 			}, 10);
 		}
-
-        function isCommissionInProgress() {
-            setTimeout(function() {
-				parent.sendData("SET_IS_COMMISSION_IN_PROGRESS", "");
-			}, 10);
-        }
-
-        function isAddingManualInProgress() {
-            setTimeout(function() {
-				parent.sendData("SET_IS_ADDING_MAN_OR_REPLACING", "");
-			}, 10);
-        }
 		
 		window.onload = function() {
             getNodesFromDatabase();
             getScannedNodes();
-            isCommissionInProgress();
-            isAddingManualInProgress();
 
             var automaticLabel = document.getElementById("automaticLabel");
             automaticLabel.style.color = "#4682b4";

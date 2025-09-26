@@ -417,9 +417,11 @@ void Wireless::addDeviceTimerHandler()
             sendUartClearInyectedNodes(_uartPort, true, _database);
             while(messageState == PENDING) {}
 
-            sendEndAutoCommission(_webServer);
             pollingTimer.start(POLLING_TIMER_MS);
+
+            sendEndAutoCommission(_webServer);   
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            embeddedState = FREE;
         }
     }
 }
