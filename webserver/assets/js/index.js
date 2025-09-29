@@ -66,6 +66,9 @@ function loadPageAfterAsk(page, answer)
 	}
 	else if(answer === "SETTER_RELAY") {
 		frame.src = "s_wireless.html";
+		setTimeout(function() {
+			processSetRelayInProgress("");
+		}, 300);
 	}
 	else if(answer === "ADD_NODE_TO_GROUP") {
 		frame.src = "s_groups.html";

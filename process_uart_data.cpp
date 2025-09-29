@@ -1599,7 +1599,7 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
 {
     uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[3] = {2000, 2000, 2000};
+    int ms[3] = {3000, 4000, 5000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {

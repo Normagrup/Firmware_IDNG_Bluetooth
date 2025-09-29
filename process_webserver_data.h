@@ -96,6 +96,7 @@
 #define WS_SEND_CONFIRM_ADD_NODE_TO_GROUP   "CONFIRM_ADD_NODE_TO_GROUP"
 #define WS_SEND_CONFIRM_DEL_NODE_FROM_GROUP "CONFIRM_DEL_NODE_FROM_GROUP"
 #define WS_SEND_CONFIRM_DEL_GROUP           "CONFIRM_DEL_GROUP"
+#define WS_SEND_CONFIRM_MANUAL_RELAY        "CONFIRM_MANUAL_RELAY"
 #define WS_SEND_CONFIRM_POWER_ON_LEVEL      "CONFIRM_POWER_ON_LEVEL"
 #define WS_SEND_TEST                        "TEST_DATA"
 #define WS_SEND_DEVICES_COUNTER             "DEVICES_COUNTER"
@@ -174,6 +175,7 @@ void sendConfirmEndRemoveOneNode(WebServer* webServer);
 void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t deviceTypeGroupAddress, bool added, Database* database);
 void sendConfirmDelNodeFromGroup(WebServer* webServer);
 void sendConfirmDelGroup(WebServer* webServer);
+void sendConfirmSetRelay(WebServer* webServer);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);

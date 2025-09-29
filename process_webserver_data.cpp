@@ -533,8 +533,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
     else if (type == WS_SET_RELAY_MODE) {
-        cleanCdbTimer.stop();
         embeddedState = SETTER_RELAY;
+        cleanCdbTimer.stop();
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
         QStringList parts = value.split("_");
         uint16_t netAddress = parts[0].toUInt();
@@ -553,6 +554,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
 
+        sendConfirmSetRelay(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
@@ -1685,6 +1687,13 @@ void sendConfirmDelNodeFromGroup(WebServer* webServer)
 void sendConfirmDelGroup(WebServer* webServer)
 {
     QString message = QString(WS_SEND_CONFIRM_DEL_GROUP) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmSetRelay(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_MANUAL_RELAY) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

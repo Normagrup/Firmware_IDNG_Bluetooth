@@ -362,6 +362,12 @@ function addDeviceToNetworkList(value)
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "1");
             else
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "0");
+
+            var popup = iframeDocument.getElementById("popupRelay");
+            var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+            popup.style.visibility = "visible";
+            popupOverlay.style.visibility = "visible";
         };
 
         newNode.style.display = 'flex';
@@ -1429,6 +1435,30 @@ function confirmSetRelay(value)
     }
 }
 
+function processSetRelayInProgress(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupRelay");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
+function confirmManualRelay(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupRelay");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}
+
 function processMasterAddressGet(value)
 {
     antennaID = value - 31767; // variable global
@@ -1692,7 +1722,8 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_DEL_GROUP') { processDelGroup(value); }
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
-    else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
+    else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); } // confirma que ha sido capaz de cambiarlo
+    else if (type == "CONFIRM_MANUAL_RELAY") { confirmManualRelay(value); } // confirma que ha llegado la orden de cambio
     else if (type == 'CONFIRM_M_ADDRESS_GET') { processMasterAddressGet(value); }
     else if (type == "FAIL_COM_CYCLES") { processFailComCycles(value); }
     else if (type == "CONFIRM_START_LS") { processConfirmStartLineScanning(value); }
