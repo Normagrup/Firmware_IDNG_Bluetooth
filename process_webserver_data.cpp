@@ -421,8 +421,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        delay(5000); // quitar
-
         database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
@@ -690,9 +688,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
         sendIsAddManualInProgress(webServer);
     }
-    else if (type == WS_SET_IS_LS_IN_PROGRESS) {
-        sendIsLSInProgress(webServer);
-    }
     else if (type == WS_SET_IS_CLEAR_ALL_IN_PROGRESS) {
         sendIsClearAllInProgress(webServer);
     }
@@ -828,14 +823,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = FREE;
     }
     else if (type == WS_LINE_SCANNING) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
-        cleanCdbTimer.stop();
         embeddedState = LINE_SCAN;
+        cleanCdbTimer.stop();
+        sendConfirmStartLineScanning(webServer);
 
         uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 10);
         uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 10);
 
-        sendConfirmStartLineScanning(webServer);
         sendUartStartLineScanning(uartPort);
         while(messageState == PENDING) {}
 
@@ -1420,13 +1414,6 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
 void sendIsAddManualInProgress(WebServer* webServer)
 {
     QString message = QString(WS_SEND_IS_ADD_MANUAL_IN_PROGRESS) + "@" + (isManualAddingDevice ? "true" : "false");
-
-    if (webServer != nullptr) { webServer->sendData(message); }
-}
-
-void sendIsLSInProgress(WebServer* webServer)
-{
-    QString message = QString(WS_SEND_IS_LS_IN_PROGRESS) + "@" + (isLineScanning ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

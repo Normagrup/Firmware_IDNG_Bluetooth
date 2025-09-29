@@ -1459,7 +1459,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices || isClearingAllData) { return; }
+    if(embeddedState != FREE) { return; }
     if(nodeAddress == 0x0000) { return; }
 
     QByteArray frame;

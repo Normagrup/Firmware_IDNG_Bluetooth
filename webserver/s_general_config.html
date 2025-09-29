@@ -152,12 +152,6 @@
     </div>
 
     <script>
-        function isLineScanningInProgress() {
-            setTimeout(function() {
-				parent.sendData("SET_IS_LS_IN_PROGRESS", "");
-			}, 10);
-        }
-
         function isClearAllInProgress() {
             setTimeout(function() {
 				parent.sendData("SET_IS_CLEAR_ALL_IN_PROGRESS", "");
@@ -165,7 +159,6 @@
         }
 
         window.onload = function () {
-            isLineScanningInProgress();
             isClearAllInProgress();
 
             const input = document.getElementById('deleteConfirmInput');

@@ -99,6 +99,9 @@ function loadPageAfterAsk(page, answer)
 	}
 	else if(answer === "LINE_SCAN") {
 		frame.src = "s_general_config.html";
+		setTimeout(function() {
+			processIsLSInProgress("");
+		}, 300);
 	}
 
 	requestDateTime();

@@ -1207,32 +1207,28 @@ function processIsAddManualInProgress(value)
 
 function processIsLSInProgress(value)
 {
-    var isLS = (value === "true");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    if(isLS) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var popupLS = iframeDocument.getElementById('popupLineScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+    var informerTotal = iframeDocument.getElementById('informerTotal');
+    var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
-        var popupLS = iframeDocument.getElementById('popupLineScanning');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
-        var informerTotal = iframeDocument.getElementById('informerTotal');
-        var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
 
-        var btnStop1 = iframeDocument.getElementById('stopButton1');
-        var btnStop2 = iframeDocument.getElementById('stopButton2');
+    popupLS.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    informerLabel1.textContent = "Phase 1: Loading...";
+    informerTotal.textContent = "FOUNDED NODES: ...";
+    informerLabel2.textContent = "Phase 2: Loading...";
 
-        popupLS.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-        informerLabel1.textContent = "Phase 1: Completed.";
-        informerTotal.textContent = "FOUNDED NODES: 0";
-        informerLabel2.textContent = "Phase 2: Waiting...";
+    btnStop1.disabled = true;
+    btnStop2.disabled = true;
 
-        btnStop1.disabled = true;
-        btnStop2.disabled = true;
-
-        sendData("GET_LINE_SCANNED_NODES", "");
-    }
+    sendData("GET_LINE_SCANNED_NODES", "");
 }
 
 function processIsClearAllInProgress(value)
@@ -1563,16 +1559,21 @@ function processLSInfo(value)
 
     if(phase == "1") {
         informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+        informerLabel2.textContent = "Phase 2: Waiting...";
         btnStop1.disabled = false;
+        btnStop2.disabled = true;
     }
     else if(phase == "2") {
+        informerLabel1.textContent = "Phase 1: Completed.";
         informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+        btnStop1.disabled = true;
         btnStop2.disabled = false;
     }
     else if(phase == "0") {
         informerLabel1.textContent = "Phase 1: Completed.";
+        informerLabel2.textContent = "Phase 2: Starting...";
         btnStop1.disabled = true;
-        btnStop2.disabled = false;
+        btnStop2.disabled = true;
     }
 }
 
@@ -1714,7 +1715,6 @@ function processReceivedData(data)
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
-    else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
     else if (type == "IS_CLEAR_ALL_IN_PROGRESS") { processIsClearAllInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
@@ -2303,7 +2303,7 @@ function lineScanning()
     var start = parseInt(iframeDocument.getElementById("scanStart").value);
     var end = parseInt(iframeDocument.getElementById("scanEnd").value);
 
-    if(start >= 1 && start <= 2048 && end >= 1 && end <= 2048 && start <= end)
+    if(start >= 1 && end >= 1 && start <= end)
         sendData("LINE_SCANNING", start + "_" + end);
 }
 
@@ -2754,7 +2754,6 @@ function stopLS(value)
     if(value == "1") 
     {
         btnStop1.disabled = true;
-        btnStop2.disabled = false;
     } 
     else if(value == "2") 
     {
