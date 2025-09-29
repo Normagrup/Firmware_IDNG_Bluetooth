@@ -28,19 +28,19 @@ function loadPageAfterAsk(page, answer)
 	var frame = window.top.document.getElementById("mainframe");
 
 	if(answer === "FREE") { frame.src = page; }
-	else if(answer === "SCAN") { 
+	else if(answer === "SCAN") {
 		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			confirmScan("", true);
 		}, 300);
 	}
-	else if(answer === "COMMISSION") { 
+	else if(answer === "COMMISSION") {
 		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			processIsCommissionInProgress("");
 		}, 300);
 	}
-	else if(answer === "ADD_MANUAL") { 
+	else if(answer === "ADD_MANUAL") {
 		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			processIsAddingManualInProgress("");
@@ -52,7 +52,7 @@ function loadPageAfterAsk(page, answer)
 			processIsReplacingInProgress("");
 		}, 300);
 	}
-	else if(answer === "DEL_DEV_BC") { 
+	else if(answer === "DEL_DEV_BC") {
 		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			processDelAllDev("", true);
@@ -64,32 +64,41 @@ function loadPageAfterAsk(page, answer)
 			processDelOneDev("", true);
 		}, 300);
 	}
-	else if(answer === "SETTER_RELAY") { 
-		frame.src = "s_wireless.html"; 
+	else if(answer === "SETTER_RELAY") {
+		frame.src = "s_wireless.html";
 	}
-	else if(answer === "ADD_NODE_TO_GROUP") { 
-		frame.src = "s_groups.html"; 
+	else if(answer === "ADD_NODE_TO_GROUP") {
+		frame.src = "s_groups.html";
+		setTimeout(function() {
+			addToGroupVisual();
+		}, 300);
 	}
-	else if(answer === "DEL_NODE_FROM_GROUP") { 
-		frame.src = "s_groups.html"; 
+	else if(answer === "DEL_NODE_FROM_GROUP") {
+		frame.src = "s_groups.html";
+		setTimeout(function() {
+			delFromGroupVisual();
+		}, 300);
 	}
-	else if(answer === "DEL_COMPLETE_GROUP") { 
-		frame.src = "s_groups.html"; 
+	else if(answer === "DEL_COMPLETE_GROUP") {
+		frame.src = "s_groups.html";
+		setTimeout(function() {
+			delGroupVisual();
+		}, 300);
 	}
-	else if(answer === "CLEAR_ALL") { 
-		frame.src = "s_general_config.html"; 
+	else if(answer === "CLEAR_ALL") {
+		frame.src = "s_general_config.html";
 	}
-	else if(answer === "SYNC_POL") { 
-		frame.src = "s_power_on_level.html"; 
+	else if(answer === "SYNC_POL") {
+		frame.src = "s_power_on_level.html";
 	}
-	else if(answer === "SCAN_BY_NODE") { 
-		frame.src = "s_wireless.html"; 
+	else if(answer === "SCAN_BY_NODE") {
+		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			confirmScan("", true);
 		}, 300);
 	}
-	else if(answer === "LINE_SCAN") { 
-		frame.src = "s_general_config.html"; 
+	else if(answer === "LINE_SCAN") {
+		frame.src = "s_general_config.html";
 	}
 
 	requestDateTime();

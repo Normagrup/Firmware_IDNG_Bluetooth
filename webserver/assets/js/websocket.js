@@ -1386,6 +1386,43 @@ function processAddNodeToGroup(value)
     }, 1800);
 }
 
+function processDelNodeFromGroup(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupDeletingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    loadNodesLists();
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 500);
+}
+
+function processDelGroup(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupDeletingGroup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var groupList = iframeDocument.getElementById('groupList');
+    groupList.innerHTML = getDefaultGroupsForSelector();
+
+    setTimeout(function() {
+        loadGroups();
+
+        setTimeout(function() {
+            popup.style.visibility = "hidden";
+            popupOverlay.style.visibility = "hidden";
+        }, 200);
+    }, 100);
+}
+
 function processPowerOnLevelChange(value)
 {
     var parts = value.split("_");
@@ -1684,6 +1721,8 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
     else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
+    else if (type == 'CONFIRM_DEL_NODE_FROM_GROUP') { processDelNodeFromGroup(value); }
+    else if (type == 'CONFIRM_DEL_GROUP') { processDelGroup(value); }
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
     else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
@@ -1842,6 +1881,18 @@ function delAllDevices() {
     sendData("SET_DELETE_DEVICE", "65535");
 }
 
+function addToGroupVisual()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupAddingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
 function addToGroup() 
 {
     var iframe = document.getElementById('mainframe');
@@ -1853,26 +1904,36 @@ function addToGroup()
 
     if (!selectedNode || groupSelected == '-') { return; }
 
-    var popup = iframeDocument.getElementById('popupAddingNode');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
+    addToGroupVisual();
 
     var textNodeSelected = selectedNode.textContent.trim();
     var message = textNodeSelected + ' ' + groupSelected;
     sendData("SET_ADD_GROUP", message);
 }
 
-function delFromGroup() 
+function delFromGroupVisual()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    
+
     var popup = iframeDocument.getElementById('popupDeletingNode');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
     var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
+    var closeDelNodeFromGroupPopup = iframeDocument.getElementById('closeDelNodeFromGroupPopup');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    deletingNodeLabel.textContent = "Deleting the node from the group...";
+    deletingNodeButton.classList.add('button-disabled');
+    closeDelNodeFromGroupPopup.style.pointerEvents = "none";
+    closeDelNodeFromGroupPopup.style.opacity = "0.5";
+}
+
+function delFromGroup() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
@@ -1882,14 +1943,7 @@ function delFromGroup()
     var message = textNodeSelected + ' ' + groupSelected;
     sendData("SET_DEL_GROUP", message);
 
-    deletingNodeLabel.textContent = "Deleting the node from the group...";
-    deletingNodeButton.classList.add('button-disabled');
-
-    setTimeout(function() {
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-        loadNodesLists();
-    }, 3000);
+    delFromGroupVisual();
 }
 
 function addGroup() 
@@ -1913,24 +1967,43 @@ function addGroup()
     }, 1300);
 }
 
+function delGroupVisual()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupDeletingGroup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingGroupLabel = iframeDocument.getElementById('deletingGroupLabel');
+    var deletingGroupButton = iframeDocument.getElementById('deletingGroupButton');
+    var closeDelGroupPopup = iframeDocument.getElementById('closeDelGroupPopup');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "Visible";
+    deletingGroupLabel.textContent = "Deleting the group...";
+    deletingGroupButton.classList.add('button-disabled');
+    closeDelGroupPopup.style.pointerEvents = "none";
+    closeDelGroupPopup.style.opacity = "0.5";
+}
+
 function delGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    closeGroupPopup();
-
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
-    if (groupSelected != '-') {
-        groupList.innerHTML = getDefaultGroupsForSelector();
-        sendData("SET_DEL_A_GROUP", groupSelected);
-    }
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
 
-    setTimeout(function(){
-        loadNodesLists();
-    }, 1000);
+    sendData("SET_DEL_A_GROUP", groupSelected);
+
+    groupList.innerHTML = getDefaultGroupsForSelector();
+    notIncludedNodesList.innerHTML = "";
+    includedNodesList.innerHTML = "";
+
+    delGroupVisual();
 }
 
 function editGroup()

@@ -345,9 +345,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
     }  
     else if (type == WS_SET_ADD_GROUP) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
-        cleanCdbTimer.stop();
         embeddedState = ADD_NODE_TO_GROUP;
+        cleanCdbTimer.stop();
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
+
+        bool added = false;
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -372,18 +374,21 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         if(messageState == RECEIVED) {
             sendUartAddGroupManual(uartPort, address);
             while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) { added = true; }
         }
 
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
 
+        sendConfirmAddNodeToGroup(webServer, address[0], address[1], added, database);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
     else if (type == WS_SET_DEL_GROUP) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
-        cleanCdbTimer.stop();
         embeddedState = DEL_NODE_FROM_GROUP;
+        cleanCdbTimer.stop();
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
         QStringList parts0 = value.split(" - "); // "Node 1 - [12.34.56.78] C010" -> "Node 1", "[12.34.56.78] C010"
         QStringList parts1 = parts0[1].split("]"); // "[12.34.56.78] C010" -> "[12.34.56.78", " C010"
@@ -403,6 +408,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartClearInyectedNodes(uartPort, false, database);
         while(messageState == PENDING) {}
 
+        sendConfirmDelNodeFromGroup(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
@@ -411,15 +417,18 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroups(webServer, database);
     }
     else if (type == WS_SET_DEL_A_GROUP) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
-        cleanCdbTimer.stop();
         embeddedState = DEL_COMPLETE_GROUP;
+        cleanCdbTimer.stop();
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
+
+        delay(5000); // quitar
 
         database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
-        sendGroups(webServer, database);
+        //sendGroups(webServer, database);
 
+        sendConfirmDelGroup(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
@@ -1724,6 +1733,20 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
     AntennaInfo info = getAntennaInfo(database);
     QString eventType = "Groups";
     insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, added ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
+}
+
+void sendConfirmDelNodeFromGroup(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_DEL_NODE_FROM_GROUP) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmDelGroup(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_DEL_GROUP) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database)

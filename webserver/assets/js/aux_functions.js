@@ -505,9 +505,16 @@ function delGroupPrev()
 
     var popup = iframeDocument.getElementById('popupDeletingGroup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingGroupLabel = iframeDocument.getElementById('deletingGroupLabel');
+    var deletingGroupButton = iframeDocument.getElementById('deletingGroupButton');
+    var closeDelGroupPopup = iframeDocument.getElementById('closeDelGroupPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+    deletingGroupLabel.textContent = "Do you want to delete the group?";
+    deletingGroupButton.classList.remove('button-disabled');
+    closeDelGroupPopup.style.pointerEvents = "auto";
+    closeDelGroupPopup.style.opacity = "1";
 }
 
 function editGroupPrev()
@@ -559,11 +566,14 @@ function delFromGroupPrev()
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
     var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
+    var closeDelNodeFromGroupPopup = iframeDocument.getElementById('closeDelNodeFromGroupPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     deletingNodeLabel.textContent = "Do you want to delete the node from the group?";
     deletingNodeButton.classList.remove('button-disabled');
+    closeDelNodeFromGroupPopup.style.pointerEvents = "auto";
+    closeDelNodeFromGroupPopup.style.opacity = "1";
 }
 
 function addDevicePrev(value)

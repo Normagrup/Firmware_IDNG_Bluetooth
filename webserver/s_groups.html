@@ -32,14 +32,14 @@
     <div class="popup" id="popupDeletingGroup">
         <div class="popup-container">
             <div class="popup-subcontainer">
-                <label style="margin-top: 10px; color: #4682b4;"> Do you want to delete the group? </label>
+                <label id="deletingGroupLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the group? </label>
                 <div class="popup-button-subcontainer">
-                    <button onclick="parent.delGroup()"> Confirm </button>
+                    <button id="deletingGroupButton" onclick="parent.delGroup()"> Confirm </button>
                 </div>
             </div>
             
             <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+                <span id="closeDelGroupPopup" class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
             </div>
         </div>
     </div>
@@ -61,7 +61,7 @@
             </div>
             
             <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
+                <span id="closeDelNodeFromGroupPopup" class="closeWindow" onclick="parent.closeGroupPopup()"> &times; </span>
             </div>
         </div>
     </div>

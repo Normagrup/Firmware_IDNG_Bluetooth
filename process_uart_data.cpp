@@ -442,9 +442,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t address = ((uint16_t)data[3] << 8) | data[4];
                         uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
-                        bool added = ((uint8_t)data[7] != 0);
-                        messageState = RECEIVED;
-                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
+                        bool added = ((uint8_t)data[7] != 0); // si se añade o falla porque el micro es incapaz
+
+                        if(added) { messageState = RECEIVED; }
+                        else { messageState = MISSED; } // se simula que no ha llegado para que notifique el error en el proceso
                     }
                     break;
 
