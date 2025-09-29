@@ -116,6 +116,7 @@
 #define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
 #define WS_SEND_CONFIRM_START_LS            "CONFIRM_START_LS"
 #define WS_SEND_CONFIRM_END_LS              "CONFIRM_END_LS"
+#define WS_SEND_CONFIRM_END_SYNC_POL        "CONFIRM_END_SYNC_POL"
 #define WS_SEND_LS_INFO                     "LS_INFO"
 #define WS_SEND_LS_FOUNDED                  "LS_FOUNDED"
 #define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
@@ -181,6 +182,7 @@ void sendFailComCycles(WebServer* webServer);
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
 void sendConfirmStartLineScanning(WebServer* webServer);
 void sendConfirmEndLineScanning(WebServer* webServer);
+void sendConfirmEndSyncPOL(WebServer* webServer);
 void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase);
 void sendFoundNodes(WebServer* webServer, uint16_t nodesCount);
 void changePositions(Database* database, uint16_t pos1, uint16_t pos2);

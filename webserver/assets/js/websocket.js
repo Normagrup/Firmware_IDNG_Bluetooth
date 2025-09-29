@@ -1488,6 +1488,31 @@ function processConfirmEndLineScanning(value)
     popupOverlay.style.visibility = "hidden";
 }
 
+function processConfirmEndSyncPOL(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var pageLabel = iframeDocument.getElementById("page");
+
+    if(pageLabel) {
+        var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+        var currentPage = parseInt(currentPageStr, 10);
+
+        pageLabel.textContent = "Page: " + currentPage;
+
+        sendData("GET_POWER_ON_LVL", currentPage);
+    }
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 200);
+}
+
 function processLSInfo(value)
 {
     var parts = value.split("_");
@@ -1672,6 +1697,7 @@ function processReceivedData(data)
     else if (type == "FAIL_COM_CYCLES") { processFailComCycles(value); }
     else if (type == "CONFIRM_START_LS") { processConfirmStartLineScanning(value); }
     else if (type == "CONFIRM_END_LS") { processConfirmEndLineScanning(value); }
+    else if (type == "CONFIRM_END_SYNC_POL") { processConfirmEndSyncPOL(value); }
     else if (type == "LS_INFO") { processLSInfo(value); }
     else if (type == "LS_FOUNDED") { processLSFounded(value); }
     else if (type == "CONFIRM_END_CLEAR_ALL") { processConfirmEndClearAll(value); }
@@ -2559,7 +2585,8 @@ function requestDateTime() {
     sendData("GET_DATE_TIME", "");
 }
 
-function syncPOL() {
+function syncPOLVisual()
+{
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -2568,24 +2595,13 @@ function syncPOL() {
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+}
+
+function syncPOL() 
+{
+    syncPOLVisual();
 
     sendData("SET_SYNC_POL", "");
-
-    setTimeout(function() {
-        var pageLabel = iframeDocument.getElementById("page");
-
-        if(pageLabel) {
-            var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
-            var currentPage = parseInt(currentPageStr, 10);
-
-            pageLabel.textContent = "Page: " + currentPage;
-
-            sendData("GET_POWER_ON_LVL", currentPage);
-        }
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 12000);
 }
 
 function setAntennaNumberAndNetKey() {

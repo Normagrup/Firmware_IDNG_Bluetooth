@@ -1555,13 +1555,11 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
 
         if(messageState == RECEIVED) {
             sendUartPOLForUpdateUnitary(_uartPort, realAddress);
-
-            //delay(SLEEP_DALI_TIME_MS * 2);
             while(messageState == PENDING) {}
         }
     }
 
-    delay(1000);
+    delay(1250);
     sendUartClearInyectedNodes(_uartPort, false, database);
     while(messageState == PENDING) {}
 }

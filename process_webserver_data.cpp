@@ -872,9 +872,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_SYNC_POL) {
         cleanCdbTimer.stop();
         embeddedState = SYNC_POL;
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
         sendUartPOLForUpdate(uartPort, database);
 
+        sendConfirmEndSyncPOL(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
@@ -1782,6 +1784,13 @@ void sendConfirmStartLineScanning(WebServer* webServer)
 void sendConfirmEndLineScanning(WebServer* webServer)
 {
     QString message = QString(WS_SEND_CONFIRM_END_LS) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndSyncPOL(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_CONFIRM_END_SYNC_POL) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

@@ -93,6 +93,9 @@ function loadPageAfterAsk(page, answer)
 	}
 	else if(answer === "SYNC_POL") {
 		frame.src = "s_power_on_level.html";
+		setTimeout(function() {
+			syncPOLVisual();
+		}, 300);
 	}
 	else if(answer === "SCAN_BY_NODE") {
 		frame.src = "s_wireless.html";
