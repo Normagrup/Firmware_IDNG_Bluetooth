@@ -28,7 +28,6 @@
 #define WS_SET_EDIT_A_GROUP                 "SET_EDIT_A_GROUP"  // cambiar nombre de grupo
 #define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
-#define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -73,8 +72,6 @@
 #define WS_SET_STOP                         "SET_STOP"
 #define WS_SET_SCAN_FROM_NODE               "SET_SCAN_FROM_NODE"
 #define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
-#define WS_SEND_ALERT_COMMISSION            "ALERT_COMMISSION"
-#define WS_SEND_ALERT_LINE_SCANNING         "ALERT_LINE_SCANNING"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -88,8 +85,6 @@
 #define WS_SEND_SCANNED_DEVICES             "SCANNED_DEVICE"
 #define WS_SEND_ADDED_DEVICES               "ADDED_DEVICE"
 #define WS_SEND_CONFIRM_ADD_DEVICE          "CONFIRM_ADD_DEVICE"
-#define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
-#define WS_SEND_IS_ADDING_MAN_OR_REPLACING  "IS_ADDING_MAN_OR_REPLACING"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
 #define WS_SEND_NODE_INFO                   "NODE_INFO"
@@ -134,7 +129,6 @@
 
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
-bool isCommissionOrLSInProgress(WebServer* webServer);
 
 void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
@@ -155,7 +149,6 @@ void sendStoredScannedDevices(WebServer* webServer);
 void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database);
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, Database* database);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
-void sendIsAddManualInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);

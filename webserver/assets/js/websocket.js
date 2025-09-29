@@ -14,16 +14,6 @@ socket.onmessage = function(event) {
     processReceivedData(event.data);
 }
 
-function processAlertCommission(value)
-{
-    alert(value);
-}
-
-function processAlertLineScanning(value)
-{
-    alert(value);
-}
-
 function askStateToEmbedded(value)
 {
     sendData("ASK_STATE_TO_EMBEDDED", value);
@@ -1186,25 +1176,6 @@ function processIsCommissionInProgress(value)
     popupOverlay.style.visibility = "visible";
 }
 
-function processIsAddManualInProgress(value)
-{
-    var isAddingManual = (value === "true");
-
-    if(isAddingManual) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popupAdd = iframeDocument.getElementById('popupAddDevice');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        popupAdd.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-
-        var logAddManual = iframeDocument.getElementById('logAddManual');
-        logAddManual.innerHTML = "";
-    }
-}
-
 function processIsLSInProgress(value)
 {
     var iframe = document.getElementById('mainframe');
@@ -1656,9 +1627,7 @@ function processReceivedData(data)
     var type = dataArray[0];
     var value = dataArray[1];
     
-    if(type == 'ALERT_COMMISSION') { processAlertCommission(value); }
-    else if (type == 'ALERT_LINE_SCANNING') { processAlertLineScanning(value); }
-    else if (type == 'ASK_STATE_TO_EMBEDDED') { processAskStateToEmbedded(value); }
+    if (type == 'ASK_STATE_TO_EMBEDDED') { processAskStateToEmbedded(value); }
     else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
@@ -1689,7 +1658,6 @@ function processReceivedData(data)
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
-    else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }

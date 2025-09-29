@@ -442,7 +442,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroupNodes(webServer, value);
     }
     else if (type == WS_SET_MAX) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -463,7 +462,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_OFF) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -484,7 +482,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_MIN) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -505,7 +502,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_RESET) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -537,7 +533,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDaliCommand(uartPort, values[0], ARC_POWER_DAPC, values[1], IS_NORMAL);
     }
     else if (type == WS_SET_RELAY_MODE) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.stop();
         embeddedState = SETTER_RELAY;
 
@@ -562,7 +557,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = FREE;
     }
     else if (type == WS_SET_IDENTIFY) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -575,7 +569,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FACTORY_SETTINGS) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -600,7 +593,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_REBOOT) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -625,7 +617,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_FUNCTION_TEST) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -644,7 +635,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
     }
     else if (type == WS_SET_DURATION_TEST) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -664,7 +654,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
 
     else if (type == WS_SET_STOP) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         uint16_t nodeNetAddress = value.toUInt();
@@ -685,12 +674,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_LOAD_NODES) {
         sendNodesFromDatabase(webServer, database);
     }
-    else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
-        sendIsAddManualInProgress(webServer);
-    }
     else if (type == WS_SET_TEST) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
-
         QStringList webServerParts = value.split(" ");
         setTests(webServerParts, database);
     }
@@ -875,7 +859,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendGroupsWithPOL(webServer, database, value);
     }
     else if (type == WS_SET_POWER_ON_LEVEL) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
 
         QStringList parts = value.split("_");
@@ -887,7 +870,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartDaliCommand(uartPort, groupAddress, BROADCAST_ADDR, STORE_DTR_POWER_ON_LVL , IS_TWICE);
     }
     else if (type == WS_SET_SYNC_POL) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
         cleanCdbTimer.stop();
         embeddedState = SYNC_POL;
 
@@ -1133,21 +1115,6 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
 
     delay(5000);
     sendUartConfirmReplacing(uartPort, replaceData.newNodeRealAddress);
-}
-
-bool isCommissionOrLSInProgress(WebServer* webServer)
-{
-    if (isCommissioning) {
-        QString message = QString(WS_SEND_ALERT_COMMISSION) + "@" + "Command blocked. Commissioning in progress.";
-        if (webServer != nullptr) { webServer->sendData(message); }
-        return true;
-    }
-    else if (isLineScanning) {
-        QString message = QString(WS_SEND_ALERT_LINE_SCANNING) + "@" + "Command blocked. Line Scanning in progress.";
-        if (webServer != nullptr) { webServer->sendData(message); }
-        return true;
-    }
-    return false;
 }
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo)
@@ -1409,13 +1376,6 @@ void sendNodesFromDatabase(WebServer* webServer, Database* database)
         QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + netAddress + "_" + serialNumber + "_" + (relayStatus ? "relayOn" : "relayOff") + "_" + + "false"; // el booleano indica que no se debe incrementar el contador del webserver
         if (webServer != nullptr) { webServer->sendData(message); }
     }
-}
-
-void sendIsAddManualInProgress(WebServer* webServer)
-{
-    QString message = QString(WS_SEND_IS_ADD_MANUAL_IN_PROGRESS) + "@" + (isManualAddingDevice ? "true" : "false");
-
-    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendNodeInfo(WebServer* webServer, QString nodeNetAddress)
