@@ -688,9 +688,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_IS_ADD_MANUAL_IN_PROGRESS) {
         sendIsAddManualInProgress(webServer);
     }
-    else if (type == WS_SET_IS_CLEAR_ALL_IN_PROGRESS) {
-        sendIsClearAllInProgress(webServer);
-    }
     else if (type == WS_SET_TEST) {
         if(isCommissionOrLSInProgress(webServer)) { return; }
 
@@ -811,14 +808,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendTest(webServer, database, value);
     }
     else if (type == WS_SET_CLEAR_ALL_DATA) {
-        if(isCommissionOrLSInProgress(webServer)) { return; }
-        cleanCdbTimer.stop();
         embeddedState = CLEAR_ALL;
+        cleanCdbTimer.stop();
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
         isClearingAllData = true;
 
         clearSystemData(webServer, database, uartPort);
 
+        isClearingAllData = false;
+
+        sendConfirmEndClearAllData(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
@@ -1418,13 +1418,6 @@ void sendIsAddManualInProgress(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsClearAllInProgress(WebServer* webServer)
-{
-    QString message = QString(WS_SEND_IS_CLEAR_ALL_IN_PROGRESS) + "@" + (isClearingAllData ? "true" : "false");
-
-    if (webServer != nullptr) { webServer->sendData(message); }
-}
-
 void sendNodeInfo(WebServer* webServer, QString nodeNetAddress)
 {
     QString controlGearStatus, emergencyMode, emergencyFailureStatus, actualLvl, communicationFailure, deviceType;
@@ -1659,8 +1652,6 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
 
     sendUartClearInyectedNodes(uartPort, false, database);
     while(messageState == PENDING) {}
-    isClearingAllData = false;
-    sendConfirmEndClearAllData(webServer);
 }
 
 void sendConfirmStartRemoveAllNodes(WebServer* webServer)

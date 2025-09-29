@@ -152,15 +152,7 @@
     </div>
 
     <script>
-        function isClearAllInProgress() {
-            setTimeout(function() {
-				parent.sendData("SET_IS_CLEAR_ALL_IN_PROGRESS", "");
-			}, 10);
-        }
-
         window.onload = function () {
-            isClearAllInProgress();
-
             const input = document.getElementById('deleteConfirmInput');
             const button = document.getElementById('deletingDataButton');
 

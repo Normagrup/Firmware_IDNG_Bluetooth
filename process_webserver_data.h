@@ -29,7 +29,6 @@
 #define WS_GET_GROUP_NODES                  "GET_GROUP_NODES"
 #define WS_SET_LOAD_NODES                   "SET_LOAD_NODES"
 #define WS_SET_IS_ADD_MANUAL_IN_PROGRESS    "SET_IS_ADD_MANUAL_IN_PROGRESS"
-#define WS_SET_IS_CLEAR_ALL_IN_PROGRESS     "SET_IS_CLEAR_ALL_IN_PROGRESS"
 #define WS_SET_TEST                         "SET_TEST"
 #define WS_SET_UPDATE_FILE                  "SET_UPDATE_FILE"
 #define WS_GET_LOGS                         "GET_LOGS"
@@ -90,7 +89,6 @@
 #define WS_SEND_ADDED_DEVICES               "ADDED_DEVICE"
 #define WS_SEND_CONFIRM_ADD_DEVICE          "CONFIRM_ADD_DEVICE"
 #define WS_SEND_IS_ADD_MANUAL_IN_PROGRESS   "IS_ADD_MANUAL_IN_PROGRESS"
-#define WS_SEND_IS_CLEAR_ALL_IN_PROGRESS    "IS_CLEAR_ALL_IN_PROGRESS"
 #define WS_SEND_IS_ADDING_MAN_OR_REPLACING  "IS_ADDING_MAN_OR_REPLACING"
 #define WS_SEND_DEVICE_ERROR                "DEVICE_ERROR"
 #define WS_SEND_LOADED_NODES                "LOADED_NODES"
@@ -158,7 +156,6 @@ void sendAddedDevices(QByteArray data, WebServer* webServer, Database* database)
 void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, Database* database);
 void sendNodesFromDatabase(WebServer* webServer, Database* database);
 void sendIsAddManualInProgress(WebServer* webServer);
-void sendIsClearAllInProgress(WebServer* webServer);
 void sendNodeInfo(WebServer* webServer, QString nodeAddress);
 void sendGroups(WebServer* webServer, Database* database);
 void sendGroupInfo(WebServer* webServer, QString groupAddress);

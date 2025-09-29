@@ -1231,31 +1231,6 @@ function processIsLSInProgress(value)
     sendData("GET_LINE_SCANNED_NODES", "");
 }
 
-function processIsClearAllInProgress(value)
-{
-    var isClearingAllData = (value === "true");
-
-    if(isClearingAllData) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popup = iframeDocument.getElementById('popup');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-        var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
-        var input = iframeDocument.getElementById('deleteConfirmInput');
-        var button = iframeDocument.getElementById('deletingDataButton');
-        var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
-
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-        confirmDeleteData.textContent = "Deleting ALL data...";
-        input.value = "";
-        button.disabled = true;
-        closeClearAllPopup.style.pointerEvents = "none";
-        closeClearAllPopup.style.opacity = "0.5";
-    }
-}
-
 function processIsAddingManualInProgress(value)
 {
     var iframe = document.getElementById('mainframe');
@@ -1715,7 +1690,6 @@ function processReceivedData(data)
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
     else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
-    else if (type == "IS_CLEAR_ALL_IN_PROGRESS") { processIsClearAllInProgress(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
@@ -2274,12 +2248,15 @@ function sendFile()
     reader.readAsArrayBuffer(file);
 }
 
-function clearAllData()
+function clearAllDataVisual()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    sendData("SET_CLEAR_ALL_DATA", "");
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 
     var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
     confirmDeleteData.textContent = "Deleting ALL data...";
@@ -2293,6 +2270,13 @@ function clearAllData()
     var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
     closeClearAllPopup.style.pointerEvents = "none";
     closeClearAllPopup.style.opacity = "0.5";
+}
+
+function clearAllData()
+{
+    sendData("SET_CLEAR_ALL_DATA", "");
+
+    clearAllDataVisual();
 }
 
 function lineScanning()

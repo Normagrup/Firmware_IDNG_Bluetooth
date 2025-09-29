@@ -87,6 +87,9 @@ function loadPageAfterAsk(page, answer)
 	}
 	else if(answer === "CLEAR_ALL") {
 		frame.src = "s_general_config.html";
+		setTimeout(function() {
+			clearAllDataVisual();
+		}, 300);
 	}
 	else if(answer === "SYNC_POL") {
 		frame.src = "s_power_on_level.html";
