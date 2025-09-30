@@ -2779,3 +2779,19 @@ function replaceDevice()
         sendData("REPLACE_NODES", newNodeUUID + "_" + oldNodeId);
     }
 }
+
+function loadFactoryNetKey()
+{
+    var factoryNetKey = "0123456789ABCDEFEFCDAB8967452301";
+
+    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+    if (isTrue) {
+        sendData("SET_MASTER_ADDR_AND_NETKEY", "" + "_" + factoryNetKey);
+
+        setTimeout(function () {
+            sendData("SET_REBOOT_DEVICE", " ");
+            logoutApp();
+            window.location.href = "http://" + window.location.hostname;
+        }, 2000);
+    }
+}
