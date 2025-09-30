@@ -140,12 +140,12 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
             // Antes se creaban 16 grupos por defecto -> Ahora ninguno. Se conserva el código por si acaso.
-            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
             // QStringList groupAddresses = {};
 
             query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
-            int groupNumber = 1;
+            int groupNumber = 4;
             foreach (const QString &groupAddress, groupAddresses) {
                 query.bindValue(":groupAddress", groupAddress);
                 query.bindValue(":groupName", "Group " + QString::number(groupNumber));
@@ -176,7 +176,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
             QStringList groupAddresses = {"C000", "C001", "C002", "C003"};
-            QStringList groupNames = {"Lighting", "Emergency", "Even", "Odd"};
+            QStringList groupNames = {"(Gr0) Lighting", "(Gr1) Emergency", "(Gr2) Even", "(Gr3) Odd"};
 
             query.prepare("INSERT INTO FixedGroups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
@@ -213,7 +213,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
             // Antes se creaba el test de broadcast y de los 16 grupos por defecto -> Ahora solo la entrada de broadcast. Se conserva el código por si acaso.
-            QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+            QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
             // QStringList groupAddresses = {"FFFF"};
 
             query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
@@ -1012,7 +1012,7 @@ void Database::createGroup()
     // Si no existe un último GroupAddress, damos el primer valor destinado a las direcciones de grupo
     if(lastGroupAddress.isEmpty()) {
         newGroupAddress = "C010";
-        newGroupName = "Group 1";
+        newGroupName = "Group 4";
     }
     // Si el último GroupAddress no es el máximo, obtenemos el siguiente con un incremento unitario
     else if(lastGroupAddress != "FEFF") {
@@ -1021,7 +1021,7 @@ void Database::createGroup()
         if (!ok) { qDebug() << "Error converting group address:" << lastGroupAddress; return; }
         groupAddr++;
         newGroupAddress = QString("%1").arg(groupAddr, 4, 16, QLatin1Char('0')).toUpper();
-        newGroupName = "Group " + QString::number(groupAddr - 49167); // 49167 es la última dirección no perteneciente a grupos
+        newGroupName = "Group " + QString::number(groupAddr - 49167 + 3); // 49167 es la última dirección no perteneciente a grupos, 3 es un offset
     }
     // Si el último GroupAddress es el máximo, hay que buscar GroupAddress intermedios disponibles
     else {

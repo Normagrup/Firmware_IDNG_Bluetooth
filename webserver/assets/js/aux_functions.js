@@ -350,10 +350,10 @@ function createGroupButtons()
     for (var i = 1; i <= 4; i++) {
         var button = iframeDocument.createElement('button');
 
-        if (i === 1) { button.textContent = "Lighting"; button.setAttribute('group-address', "C000"); } 
-        else if (i === 2) { button.textContent = "Emergency"; button.setAttribute('group-address', "C001"); } 
-        else if (i === 3) { button.textContent = "Even"; button.setAttribute('group-address', "C002"); } 
-        else if (i === 4) { button.textContent = "Odd"; button.setAttribute('group-address', "C003"); }
+        if (i === 1) { button.textContent = "(Gr0) Lighting"; button.setAttribute('group-address', "C000"); } 
+        else if (i === 2) { button.textContent = "(Gr1) Emergency"; button.setAttribute('group-address', "C001"); } 
+        else if (i === 3) { button.textContent = "(Gr2) Even"; button.setAttribute('group-address', "C002"); } 
+        else if (i === 4) { button.textContent = "(Gr3) Odd"; button.setAttribute('group-address', "C003"); }
         button.onclick = function() {
             openGroupControl(this);
         };
@@ -678,10 +678,10 @@ function closeWirelessPopup()
 function getDefaultGroupsForSelector()
 {
     return "<option value='-'> ---- </option>" +
-            "<option value='C000'> Lighting </option>" +
-            "<option value='C001'> Emergency </option>" +
-            "<option value='C002'> Even </option>" +
-            "<option value='C003'> Odd </option>";
+            "<option value='C000'> (Gr0) Lighting </option>" +
+            "<option value='C001'> (Gr1) Emergency </option>" +
+            "<option value='C002'> (Gr2) Even </option>" +
+            "<option value='C003'> (Gr3) Odd </option>";
 }
 
 function clearAllDataPrev()
