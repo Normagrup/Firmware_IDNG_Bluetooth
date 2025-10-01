@@ -462,6 +462,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndClearAllData(webServer); // no se usa ya que no devuelve confirmación al terminar
                     }
                     break;
+
+                    case CONFIRM_RETRY:
+                    {
+                        qDebug() << "RETRYYYYYY";
+                    }
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(data, database, webServer);

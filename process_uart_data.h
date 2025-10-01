@@ -41,6 +41,7 @@
 #define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
 #define WRITE_ID_CODE                   0x33
+#define CONFIRM_RETRY                   0x34
 #define FACTORY_ID_WROTE                0x35
 #define DALI_TESTED                     0x37
 #define RECORDED_DEVICE                 0x39
