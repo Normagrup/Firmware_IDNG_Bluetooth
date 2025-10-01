@@ -1479,25 +1479,40 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
 {
-    bool ok;
-    uint8_t code[4] = {0};
-    QStringList factoryCodeParts = factoryCode.split(".");
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {4000, 4000, 4000};
+    messageState = PENDING;
 
-    for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
-    QByteArray frame;
-    unsigned char length = 7;
+    while(actAtt < att && messageState == PENDING) {
+        bool ok;
+        uint8_t code[4] = {0};
+        QStringList factoryCodeParts = factoryCode.split(".");
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(WRITE_ID_CODE);
-    frame.append(code[0]);
-    frame.append(code[1]);
-    frame.append(code[2]);
-    frame.append(code[3]);
-    frame.append(UART_END);
+        for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
+        QByteArray frame;
+        unsigned char length = 7;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(WRITE_ID_CODE);
+        frame.append(code[0]);
+        frame.append(code[1]);
+        frame.append(code[2]);
+        frame.append(code[3]);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del WRITE_ID_CODE_FRAME";
+    }
 }
 
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
