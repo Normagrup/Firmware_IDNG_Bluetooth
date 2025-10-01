@@ -1676,6 +1676,11 @@ function processReplacing(value, init)
     }
 }
 
+function processWriteIdError(value)
+{
+    alert("Vuelva a escanear el código");
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1735,6 +1740,7 @@ function processReceivedData(data)
     else if (type == "NET_KEY_GET") { processNetKeyGet(value); }
     else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
     else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
+    else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
 }
 
 function sendData(type, value) 

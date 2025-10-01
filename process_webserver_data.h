@@ -123,6 +123,7 @@
 #define WS_SEND_CONFIRM_END_CLEAR_ALL       "CONFIRM_END_CLEAR_ALL"
 #define WS_SEND_CONFIRM_START_REPLACE       "CONFIRM_START_REPLACE"
 #define WS_SEND_CONFIRM_END_REPLACE         "CONFIRM_END_REPLACE"
+#define WS_SEND_WRITE_ID_ERROR              "WRITE_ID_ERROR"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_NET_KEY_GET                 "NET_KEY_GET"
@@ -191,5 +192,6 @@ void changePositions(Database* database, uint16_t pos1, uint16_t pos2);
 void sendConfirmEndClearAllData(WebServer* webServer);
 void sendConfirmStartReplace(WebServer* webServer);
 void sendConfirmEndReplace(WebServer* webServer);
+void sendWriteIDError(WebServer* webServer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

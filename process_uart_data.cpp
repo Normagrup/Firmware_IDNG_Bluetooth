@@ -1479,14 +1479,15 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
 {
-    uint8_t att = 3;
+    uint8_t att = 10;
     uint8_t actAtt = 0;
-    int ms[3] = {4000, 4000, 4000};
+    int ms[10] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
         bool ok;
         uint8_t code[4] = {0};
+        qDebug() << "[WRITE_ID] factoryCode =" << factoryCode;
         QStringList factoryCodeParts = factoryCode.split(".");
 
         for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }

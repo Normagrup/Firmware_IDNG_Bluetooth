@@ -737,9 +737,18 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         isOpenNodeControl = false;
     }
     else if (type == WS_SET_READ_ID_CODE) {
+        if(messageState == PENDING) { return; }
+
+        qDebug() << "[ID_CODE] value =" << value;
         QStringList webServerParts = value.split("ñ");
         QString deviceID = webServerParts[1];
+        qDebug() << "[ID_CODE] deviceID =" << deviceID;
         sendWriteIDCodeFrame(uartPort, deviceID);
+        while(messageState == PENDING) {}
+
+        if(messageState == MISSED) {
+            sendWriteIDError(webServer);
+        }
     }
     else if (type == WS_GET_DEVICES_COUNT) {
         int count = 0;
@@ -1861,6 +1870,13 @@ void sendConfirmStartReplace(WebServer* webServer)
 void sendConfirmEndReplace(WebServer* webServer)
 {
     QString message = QString(WS_SEND_CONFIRM_END_REPLACE) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendWriteIDError(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_WRITE_ID_ERROR) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
