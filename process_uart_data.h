@@ -40,6 +40,7 @@
 #define DEL_GROUP                       0x17
 #define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
+#define CONFIRM_ERROR_RETRY             0x32
 #define WRITE_ID_CODE                   0x33
 #define CONFIRM_RETRY                   0x34
 #define FACTORY_ID_WROTE                0x35

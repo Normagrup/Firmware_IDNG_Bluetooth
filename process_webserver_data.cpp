@@ -1880,3 +1880,4 @@ void sendWriteIDError(WebServer* webServer)
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+

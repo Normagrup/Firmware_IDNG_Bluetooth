@@ -467,6 +467,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         qDebug() << "RETRYYYYYY";
                     }
+                    break;
+
+                    case CONFIRM_ERROR_RETRY:
+                    {
+                        sendWriteIDError(webServer);
+                    }
+                    break;
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(data, database, webServer);
