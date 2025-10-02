@@ -1272,6 +1272,21 @@ QList<QStringList> Database::getLastNLogEvents(int count)
     return results;
 }
 
+int Database::getLogSize()
+{
+    QSqlQuery query;
+    if (!query.exec("SELECT COUNT(*) FROM Log")) {
+        qDebug() << "Error in getLogSize:" << query.lastError().text();
+        return 0;
+    }
+
+    if (query.next()) {
+        return query.value(0).toInt();
+    }
+
+    return 0;
+}
+
 void Database::readNodesForTree()
 {
     nodesByRealAddress = {};

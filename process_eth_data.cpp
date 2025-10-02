@@ -104,7 +104,7 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x80: // GET HISTORIC READABLE EVENTS
-            // ???????
+            sendLogDataSize(rcvAddress, pidHigh, pidLow, commandHigh, commandLow, _udpSocket, _database);
             break;
 
         case 0x88: // HISTORIC RESET

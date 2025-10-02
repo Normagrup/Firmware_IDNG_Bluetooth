@@ -410,8 +410,6 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
 
     QList<QStringList> logs = _database->getLastNLogEvents(pos);
     int totalLogs = logs.size();
-    uint16_t Id;
-    bool group = false;
 
     if(pos > totalLogs)
         pos = totalLogs;
@@ -423,15 +421,16 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
 
         QString name = log[0];
 
-        if(log[2].toUInt() >= 49152){
-            group = true;
-            Id = getGroupIdFromMasked(log[2].toUInt());
-        } else if (log[2] == "-1" && name.startsWith("G")){
-            group = true;
-            Id = -1;
+        int subnet, id;
+        uint16_t group_id;
+
+        if(name.contains("[G]")){
+            subnet = 255;
+            id = 255;
+            group_id = log[2].toUInt();
         } else {
-            group = false;
-            Id = log[2].toUInt();
+            subnet = (log[2].toUInt() - 1) / 64;
+            id = (log[2].toUInt() - 1) % 64;
         }
 
         QByteArray frame;
@@ -448,8 +447,8 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         QByteArray payload(16, 0xFF);
 
         payload[0] = 0x01;
-        payload[1] = 0xFF;
-        payload[2] = Id;  // BtAddress as shortAddress
+        payload[1] = static_cast<uchar>(subnet);
+        payload[2] = static_cast<uchar>(id);
 
         // Timestamp
         QDateTime dt = QDateTime::fromString(log[4], "yyyy-MM-dd HH:mm:ss");
@@ -482,31 +481,26 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
             int groupId = -1;
             if(okHex)
                 groupId = getGroupIdFromMasked(masked);
-            payload[13] = (groupId >= 0) ? static_cast<uchar>(groupId) : 0xFF;
-            payload[14] = 0xFF; // id = -1
-        }
-
-        bool isDevErr = name.startsWith("DEV ERR:");
-
-        // Device name
-        if (isDevErr) {
+            subnet = (log[2].toUInt() - 1) / 64;
+            id = (log[2].toUInt() - 1) % 64;
+            payload[1] = subnet;
+            payload[2] = id;
+            payload[13] = groupId;
+        } else if(ev == LOG_COMMISSION_DEVICE_ERROR){
             bool ok = false;
-            int realAddr = name.mid(QString("DEV ERR: ").length()).toInt(&ok);
+            quint16 realAddr = name.mid(QStringLiteral("DEV ERR: ").length()).toUShort(&ok);
             if (ok) {
-                payload[13] = 0xFF; // subnet = -1
-                payload[14] = static_cast<uchar>(realAddr);
-            }
-        } else if (!group && name.startsWith("A")) {
-            bool ok = false;
-            int globalPos = name.mid(1).toInt(&ok);
-            if (ok) {
-                int subnet = (globalPos - 1) / 64;
-                int id = (globalPos - 1) % 64;
-
-                payload[13] = static_cast<uchar>(subnet);
-                payload[14] = static_cast<uchar>(id);
+                payload[1] = static_cast<uchar>(realAddr & 0xFFu);        // low byte
+                payload[2] = static_cast<uchar>((realAddr >> 8) & 0xFFu); // high byte
+                payload[13] = static_cast<uchar>(255);
             }
         }
+
+        if (name.contains("[G]")){
+            payload[13] = static_cast<uchar>(group_id);
+        }
+
+        payload[14] = dt.time().second(); //To sort logs at same time
 
         frame.append(payload);
 

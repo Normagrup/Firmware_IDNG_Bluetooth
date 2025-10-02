@@ -653,3 +653,32 @@ void sendDaliLineReadDevicesSerials(QString rcvAddress, uint8_t commandHigh, uin
         }
     }
 }
+
+void sendLogDataSize(QString rcvAddress, uint8_t pidHigh, uint8_t pidLow, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, Database *_database)
+{
+    QByteArray frame;
+    unsigned char crc = 0;
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_83);
+    frame.append(commandHigh);
+    frame.append(commandLow);
+
+    uint16_t totalLogs = _database->getLogSize();
+
+    frame.append(0x02);
+    frame.append((totalLogs >> 8) & 0xFF);
+    frame.append(totalLogs & 0xFF);
+
+
+    for (uint8_t i = 3; i < frame.size(); i++) { crc += frame[i]; }
+
+    frame.append(crc);
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddress);
+
+    _udpSocket->sendData(dstAddress, frame);
+}
