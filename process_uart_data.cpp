@@ -495,9 +495,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case RECORDED_DEVICE:
                     {
-                        delay(3000);
+                        /*delay(1000);
                         sendUartClearInyectedNodes(uartPort, true, database);
-                        while(messageState == PENDING) {}
+                        while(messageState == PENDING) {}*/
                         sendRecordedDevice(webServer);
                     }
                     break;
