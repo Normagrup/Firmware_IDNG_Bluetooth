@@ -1,0 +1,17 @@
+
+// Poner este archivo en ruta "etc/systemd/system"
+
+[Unit]
+Description=Servicio IDNG_Blue embebido
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/projects/IDNG_Blue/build-output
+ExecStartPre=/bin/sleep 1
+ExecStart=/projects/IDNG_Blue/build-output/IDNG_Blue
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
