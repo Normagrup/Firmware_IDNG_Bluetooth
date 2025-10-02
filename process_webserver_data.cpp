@@ -1770,9 +1770,11 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
+void reloadAntennaAddressAndNetKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString netKeyStr)
 {
     database->setMasterRealAddress(antennaAddress);
+    database->setNetKey(netKeyStr);
+
     antennaRealAddress = antennaAddress;
 }
 
@@ -1877,6 +1879,13 @@ void sendConfirmEndReplace(WebServer* webServer)
 void sendWriteIDError(WebServer* webServer)
 {
     QString message = QString(WS_SEND_WRITE_ID_ERROR) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendInitAlert(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_INIT_ALERT) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

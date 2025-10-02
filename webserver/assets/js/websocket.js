@@ -1681,6 +1681,11 @@ function processWriteIdError(value)
     alert("Vuelva a escanear el código");
 }
 
+function processInitAlert(value)
+{
+    alert("Ha ocurrido un error durante el arranque, se reintentará automáticamente. Puede desenchufar y enchufar la antena para forzar el reinicio.");
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1741,6 +1746,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
     else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
     else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
+    else if (type == "INIT_ALERT") { processInitAlert(value); }
 }
 
 function sendData(type, value) 
