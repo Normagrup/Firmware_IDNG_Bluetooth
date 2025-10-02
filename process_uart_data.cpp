@@ -67,6 +67,8 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
+            case CONFIRM_RETRY: return 4;
+            case CONFIRM_ERROR_RETRY: return 4;
             default: return -1;
         }
 
@@ -485,13 +487,16 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_RETRY:
                     {
-                        qDebug() << "RETRYYYYYY";
+                        qDebug() << "Second step retry (Write ID)";
                     }
                     break;
 
                     case CONFIRM_ERROR_RETRY:
                     {
+                        // FALLO DURANTE EL PASO 2
                         sendWriteIDError(webServer);
+                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
                     }
                     break;
                 }
@@ -518,7 +523,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         /*delay(1000);
                         sendUartClearInyectedNodes(uartPort, true, database);
                         while(messageState == PENDING) {}*/
+
+                        // FINALIZACIÓN DURANTE EL PASO 3
                         sendRecordedDevice(webServer);
+                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
                     }
                     break;
 
