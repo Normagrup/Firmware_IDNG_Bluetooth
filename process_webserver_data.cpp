@@ -739,6 +739,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_READ_ID_CODE) {
         if(messageState == PENDING) { return; }
 
+        // no se pone embeddedState porque es una funcionalidad a parte (factory)
+        cleanCdbTimer.stop();
+        // no tiene confirmación de inicio, el webserver lo muestra automáticamente
+
         qDebug() << "[ID_CODE] value =" << value;
         QStringList webServerParts = value.split("ñ");
         QString deviceID = webServerParts[1];
@@ -746,8 +750,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendWriteIDCodeFrame(uartPort, deviceID);
         while(messageState == PENDING) {}
 
+        // FALLO DURANTE EL PASO 1
         if(messageState == MISSED) {
             sendWriteIDError(webServer);
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            // no se pone embeddedState porque es una funcionalidad a parte (factory)
         }
     }
     else if (type == WS_GET_DEVICES_COUNT) {
