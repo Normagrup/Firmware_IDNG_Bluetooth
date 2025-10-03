@@ -56,7 +56,6 @@ extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 extern QTimer replaceP2Timer; // para ejecutar la parte2 del replace
 extern QTimer replaceP3Timer; // para ejecutar la parte3 del replace
 extern QTimer cleanCdbTimer;
-extern QTimer askInitDataFromMicroTimer;
 
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;

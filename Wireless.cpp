@@ -38,8 +38,6 @@ Wireless::Wireless(QObject *parent)
     connect(&replaceP3Timer, &QTimer::timeout, this, &Wireless::replaceP3TimerHandler);
     replaceP3Timer.setSingleShot(true);
     connect(&cleanCdbTimer, &QTimer::timeout, this, &Wireless::cleanCdbTimerHandler);
-    connect(&askInitDataFromMicroTimer, &QTimer::timeout, this, &Wireless::askInitDataFromMicroTimerHandler);
-    askInitDataFromMicroTimer.setSingleShot(true);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
@@ -63,33 +61,11 @@ void Wireless::runNetwork()
 
     _database->loadFailComCycles();
 
-    bool notRan = true;
-
-    while(notRan) {
-        sendSetAntennaAddressAndNetKey(_uartPort, _database);
-        while(messageState == PENDING) {}
-
-        if(messageState == RECEIVED) {
-            sendGetAntennaAddressAndNetKey(_uartPort);
-            while(messageState == PENDING) {}
-
-            if(messageState == RECEIVED) {
-                delay(300);
-                notRan = false;
-                qDebug() << "EXITO!!! La antena se inició correctamente";
-            }
-            else {
-                qDebug() << "ERROR!!! El micro no respondió al segundo mensaje de inicio";
-                sendInitAlert(_webServer);
-                delay(1000);
-            }
-        }
-        else {
-            qDebug() << "ERROR!!! El micro no respondió al primer mensaje de inicio";
-            sendInitAlert(_webServer);
-            delay(1000);
-        }
-    }
+    sendNetKey(_uartPort, _database);
+    delay(300); // posible unificar estos dos mensajes
+    sendAntennaAddress(_uartPort, _database);
+    delay(1200);
+    sendAntennaGetAddress(_uartPort);
 
     pollingTimer.start(POLLING_TIMER_MS);
 /*
@@ -489,18 +465,4 @@ void Wireless::replaceP3TimerHandler()
 void Wireless::cleanCdbTimerHandler()
 {
     sendUartClearInyectedNodes(_uartPort, true, _database);
-}
-
-void Wireless::askInitDataFromMicroTimerHandler()
-{
-    sendSetAntennaAddressAndNetKey(_uartPort, _database);
-    while(messageState == PENDING) {}
-
-    if(messageState == RECEIVED) {
-        qDebug() << "Se han cargado los datos de inicio de la antena correctamente";
-    }
-    else {
-        qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
-        sendInitAlert(_webServer);
-    }
 }

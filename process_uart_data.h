@@ -67,6 +67,9 @@
 #define SET_RELAY                       0x65
 #define SCAN_FROM_NODE                  0x67
 #define SCAN_NODE_NOT_FOUND             0x68
+#define SEND_ANTENNA_ADDRESS            0x70    // mandar al micro la address que tiene el embebido
+#define GET_ANTENNA_ADDRESS             0x71    // solicitar la address del micro (solicitud)
+#define CONFIRM_GET_ANTENNA_ADDRESS     0x72    // solicitar la address del micro (respuesta)
 #define SEND_RECOVERY_NODE              0x73
 #define CONFIRM_END_LINE_SCANNING       0x74
 #define CONFIRM_START_LINE_SCANNING     0x75
@@ -79,10 +82,7 @@
 #define RECOVERY_GROUPS                 0x85
 #define CHANGE_FATHER                   0x87
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
-#define SET_ANTENNA_ADDRESS_AND_NET_KEY 0xAA
-#define GET_ANTENNA_ADDRESS_AND_NET_KEY 0xAB
-#define ADDRESS_AND_NET_KEY_ANSWER      0xAC
-#define ASK_INIT_DATA                   0xAD
+#define SEND_NET_KEY                    0x89
 #define START_LINE_SCANNING             0x91
 #define END_LINE_SCANNING               0x92
 #define ADDRESS_AND_NET_KEY             0x93
@@ -130,8 +130,9 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
-void sendSetAntennaAddressAndNetKey(UartPort* _uartPort, Database* _database);
-void sendGetAntennaAddressAndNetKey(UartPort* _uartPort);
+void sendNetKey(UartPort* _uartPort, Database* database);
+void sendAntennaAddress(UartPort* _uartPort, Database* database);
+void sendAntennaGetAddress(UartPort* _uartPort);
 void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, bool netKeyHasChanged);
 void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
