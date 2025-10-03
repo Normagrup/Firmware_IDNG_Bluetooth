@@ -72,6 +72,7 @@
 #define WS_SET_STOP                         "SET_STOP"
 #define WS_SET_SCAN_FROM_NODE               "SET_SCAN_FROM_NODE"
 #define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
+#define WS_SEND_RECOVERING_MICRO            "IS_RECOVERING_MICRO"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -137,6 +138,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
+void sendRecoveringMicro(WebServer* webServer);
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
