@@ -63,6 +63,8 @@ void Wireless::runNetwork()
 
     _database->loadFailComCycles();
 
+    bool notRan = true;
+
     while(notRan) {
         sendSetAntennaAddressAndNetKey(_uartPort, _database);
         while(messageState == PENDING) {}
@@ -496,9 +498,9 @@ void Wireless::askInitDataFromMicroTimerHandler()
 
     if(messageState == RECEIVED) {
         qDebug() << "Se han cargado los datos de inicio de la antena correctamente";
-        embeddedState = FREE;
     }
     else {
         qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
+        sendInitAlert(_webServer);
     }
 }

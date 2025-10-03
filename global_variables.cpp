@@ -96,5 +96,3 @@ bool isClearingAllData = false;
 MessageState messageState = EMPTY;
 int TIME_TO_CLEAN_CDB = 120000;
 EmbeddedState embeddedState = FREE;
-
-bool notRan = true;

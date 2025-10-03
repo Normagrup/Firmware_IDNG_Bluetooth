@@ -333,10 +333,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case ASK_INIT_DATA:
                     {
-                        if(!notRan) {
-                            embeddedState = RECOVERING_MICRO;
-                            askInitDataFromMicroTimer.start(50);
-                        }
+                        askInitDataFromMicroTimer.start(50);
                     }
                     break;
 
