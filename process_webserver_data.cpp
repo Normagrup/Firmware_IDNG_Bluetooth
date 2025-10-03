@@ -747,15 +747,21 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QStringList webServerParts = value.split("ñ");
         QString deviceID = webServerParts[1];
         qDebug() << "[ID_CODE] deviceID =" << deviceID;
+
         sendWriteIDCodeFrame(uartPort, deviceID);
         while(messageState == PENDING) {}
+        sendFactoryIDWrote(webServer);
 
-        // FALLO DURANTE EL PASO 1
-        if(messageState == MISSED) {
-            sendWriteIDError(webServer);
-            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-            // no se pone embeddedState porque es una funcionalidad a parte (factory)
-        }
+        sendDaliTestForWriteID(uartPort, deviceID);
+        while(messageState == PENDING) {}
+        sendDaliTested(webServer);
+
+        sendEndRecordDevice(uartPort);
+        while(messageState == PENDING) {}
+
+        // confirmación en la respuesta al finalizar el escaneo
+        // start del cleanCdbTimer en la respuesta al finalizar el escaneo
+        // no se pone embeddedState porque es una funcionalidad a parte (factory)
     }
     else if (type == WS_GET_DEVICES_COUNT) {
         int count = 0;

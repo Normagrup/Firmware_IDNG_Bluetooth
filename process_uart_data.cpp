@@ -67,8 +67,6 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
-            case CONFIRM_RETRY: return 4;
-            case CONFIRM_ERROR_RETRY: return 4;
             default: return -1;
         }
 
@@ -484,21 +482,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndClearAllData(webServer); // no se usa ya que no devuelve confirmación al terminar
                     }
                     break;
-
-                    case CONFIRM_RETRY:
-                    {
-                        qDebug() << "Second step retry (Write ID)";
-                    }
-                    break;
-
-                    case CONFIRM_ERROR_RETRY:
-                    {
-                        // FALLO DURANTE EL PASO 2
-                        sendWriteIDError(webServer);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
-                    }
-                    break;
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(data, database, webServer);
@@ -520,11 +503,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case RECORDED_DEVICE:
                     {
-                        /*delay(1000);
-                        sendUartClearInyectedNodes(uartPort, true, database);
-                        while(messageState == PENDING) {}*/
+                        //delay(1000);
+                        //sendUartClearInyectedNodes(uartPort, true, database);
+                        //while(messageState == PENDING) {}
 
-                        // FINALIZACIÓN DURANTE EL PASO 3
                         sendRecordedDevice(webServer);
                         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
                         // no se pone embeddedState porque es una funcionalidad a parte (factory)
@@ -1525,15 +1507,16 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
 {
+    qDebug() << "[WRITE_ID 1] factoryCode =" << factoryCode;
+
     uint8_t att = 10;
     uint8_t actAtt = 0;
-    int ms[10] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
+    int ms[10] = {400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
         bool ok;
         uint8_t code[4] = {0};
-        qDebug() << "[WRITE_ID] factoryCode =" << factoryCode;
         QStringList factoryCodeParts = factoryCode.split(".");
 
         for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
@@ -1557,8 +1540,77 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
     }
 
     if(messageState == PENDING) {
-        messageState = MISSED;
-        qDebug() << "No se recibió confirmación del WRITE_ID_CODE_FRAME";
+        messageState = RECEIVED; // Se asume que llega (no existe comprobación)
+        //qDebug() << "No se recibió confirmación del WRITE_ID_CODE_FRAME";
+    }
+}
+
+void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode)
+{
+    qDebug() << "[WRITE_ID 2] factoryCode =" << factoryCode;
+
+    uint8_t att = 10;
+    uint8_t actAtt = 0;
+    int ms[10] = {400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        bool ok;
+        uint8_t code[4] = {0};
+        QStringList factoryCodeParts = factoryCode.split(".");
+
+        for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
+        QByteArray frame;
+        unsigned char length = 7;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DALI_TEST_FOR_WRITE_ID);
+        frame.append(code[0]);
+        frame.append(code[1]);
+        frame.append(code[2]);
+        frame.append(code[3]);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = RECEIVED; // Se asume que llega (no existe comprobación)
+        //qDebug() << "No se recibió confirmación del DALI_TEST_FOR_WRITE_ID";
+    }
+}
+
+void sendEndRecordDevice(UartPort* _uartPort)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 3000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 3;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(END_RECORD_DEVICE);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = RECEIVED; // Se asume que llega (no existe comprobación)
+        //qDebug() << "No se recibió confirmación del END_RECORD_DEVICE";
     }
 }
 

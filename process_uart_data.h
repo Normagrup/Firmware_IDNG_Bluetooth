@@ -40,11 +40,11 @@
 #define DEL_GROUP                       0x17
 #define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
-#define CONFIRM_ERROR_RETRY             0x32
 #define WRITE_ID_CODE                   0x33
-#define CONFIRM_RETRY                   0x34
 #define FACTORY_ID_WROTE                0x35
+#define DALI_TEST_FOR_WRITE_ID          0x36
 #define DALI_TESTED                     0x37
+#define END_RECORD_DEVICE               0x38
 #define RECORDED_DEVICE                 0x39
 #define GROUP_ADDED                     0x21
 #define CONFIRM_START_COMMISSION        0x23
@@ -123,6 +123,8 @@ void sendUartDelGroupForAllNodesUnitary(UartPort* _uartPort, uint16_t nodeRealAd
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
+void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode);
+void sendEndRecordDevice(UartPort* uartPort);
 void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);
