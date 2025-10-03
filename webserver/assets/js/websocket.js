@@ -14,14 +14,18 @@ socket.onmessage = function(event) {
     processReceivedData(event.data);
 }
 
-function processAlertCommission(value)
+function askStateToEmbedded(value)
 {
-    alert(value);
+    sendData("ASK_STATE_TO_EMBEDDED", value);
 }
 
-function processAlertLineScanning(value)
+function processAskStateToEmbedded(value)
 {
-    alert(value);
+    var parts = value.split('#');
+    var page = parts[0];
+    var answer = parts[1];
+
+    loadPageAfterAsk(page, answer);
 }
 
 function processLoginInfo(value) 
@@ -188,7 +192,7 @@ function addDeviceToScannedList(value)
     updateAddReplaceScanRelayButtons();
 }
 
-function confirmStartScan(value) 
+function confirmScan(value, init) 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -196,16 +200,17 @@ function confirmStartScan(value)
     var popup = iframeDocument.getElementById('popupScanning');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    var popupHeader = popup.querySelector('h2');
-    popupHeader.textContent = "Scan in progress...";
-    
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
-
-    setTimeout(function() {
+    if(init) {
+        var popupHeader = popup.querySelector('h2');
+        popupHeader.textContent = "Scan in progress...";
+        
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+    else {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
-    }, 12000); // 12 segundos (el escaneo dura 10)
+    }
 }
 
 function confirmStartCommission(value) 
@@ -357,6 +362,12 @@ function addDeviceToNetworkList(value)
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "1");
             else
                 sendData("SET_RELAY_MODE", nodeNetAddress + "_" + "0");
+
+            var popup = iframeDocument.getElementById("popupRelay");
+            var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+            popup.style.visibility = "visible";
+            popupOverlay.style.visibility = "visible";
         };
 
         newNode.style.display = 'flex';
@@ -1146,132 +1157,85 @@ function processLogFile(value) {
 
 function processIsCommissionInProgress(value)
 {
-    var isCommissioning = (value === "true");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var popupHeader = popup.querySelector('h2');
+    popupHeader.textContent = isStoppingCommission ? "Stopping commissioning..." : "Automatic commission in progress...";
+
+    var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
+    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+
+    var stopButton = iframeDocument.getElementById('stopCommissionButton');
+    if(isStoppingCommission)
+        stopButton.classList.add('button-disabled');
+    else
+        stopButton.classList.remove('button-disabled');
+
+    var logCommission = iframeDocument.getElementById('logCommission');
+    logCommission.innerHTML = "";
     
-    if(isCommissioning) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popup = iframeDocument.getElementById('popup');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        var popupHeader = popup.querySelector('h2');
-        popupHeader.textContent = isStoppingCommission ? "Stopping commissioning..." : "Automatic commission in progress...";
-
-        var labelCommissionNodes = iframeDocument.getElementById('labelCommissionNodes');
-        labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
-
-        var stopButton = iframeDocument.getElementById('stopCommissionButton');
-        if(isStoppingCommission)
-            stopButton.classList.add('button-disabled');
-        else
-            stopButton.classList.remove('button-disabled');
-
-        var logCommission = iframeDocument.getElementById('logCommission');
-        logCommission.innerHTML = "";
-        
-        popup.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-    }
-}
-
-function processIsAddManualInProgress(value)
-{
-    var isAddingManual = (value === "true");
-
-    if(isAddingManual) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popupAdd = iframeDocument.getElementById('popupAddDevice');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        popupAdd.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-
-        var logAddManual = iframeDocument.getElementById('logAddManual');
-        logAddManual.innerHTML = "";
-    }
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 }
 
 function processIsLSInProgress(value)
 {
-    var isLS = (value === "true");
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    if(isLS) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    var popupLS = iframeDocument.getElementById('popupLineScanning');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var informerLabel1 = iframeDocument.getElementById('informerLabel1');
+    var informerTotal = iframeDocument.getElementById('informerTotal');
+    var informerLabel2 = iframeDocument.getElementById('informerLabel2');
 
-        var popupLS = iframeDocument.getElementById('popupLineScanning');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-        var informerLabel1 = iframeDocument.getElementById('informerLabel1');
-        var informerTotal = iframeDocument.getElementById('informerTotal');
-        var informerLabel2 = iframeDocument.getElementById('informerLabel2');
+    var btnStop1 = iframeDocument.getElementById('stopButton1');
+    var btnStop2 = iframeDocument.getElementById('stopButton2');
 
-        var btnStop1 = iframeDocument.getElementById('stopButton1');
-        var btnStop2 = iframeDocument.getElementById('stopButton2');
+    popupLS.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    informerLabel1.textContent = "Phase 1: Loading...";
+    informerTotal.textContent = "FOUNDED NODES: ...";
+    informerLabel2.textContent = "Phase 2: Loading...";
 
-        popupLS.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-        informerLabel1.textContent = "Phase 1: Completed.";
-        informerTotal.textContent = "FOUNDED NODES: 0";
-        informerLabel2.textContent = "Phase 2: Waiting...";
+    btnStop1.disabled = true;
+    btnStop2.disabled = true;
 
-        btnStop1.disabled = true;
-        btnStop2.disabled = true;
+    sendData("GET_LINE_SCANNED_NODES", "");
+}
 
-        sendData("GET_LINE_SCANNED_NODES", "");
-    }
+function processIsAddingManualInProgress(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popupAdd = iframeDocument.getElementById('popupAddDevice');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popupAdd.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var logAddManual = iframeDocument.getElementById('logAddManual');
+    logAddManual.innerHTML = "";
 }
 
 function processIsReplacingInProgress(value)
 {
-    var isReplacing = (value === "true");
-
-    if(isReplacing) {
-        var iframe = document.getElementById('mainframe');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-        var popupReplace = iframeDocument.getElementById('popupReplace');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        popupReplace.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-
-        var logReplace = iframeDocument.getElementById('logReplace');
-        logReplace.innerHTML = "";
-    }
-}
-
-function processIsAddingManOrReplacing(value)
-{
-    var parts = value.split("_");
-    var isAddingMan = (parts[0] === "true");
-    var isReplacing = (parts[1] === "true");
-
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    if(isReplacing) {
-        var popupReplace = iframeDocument.getElementById('popupReplace');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var popupReplace = iframeDocument.getElementById('popupReplace');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-        popupReplace.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
+    popupReplace.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
 
-        var logReplace = iframeDocument.getElementById('logReplace');
-        logReplace.innerHTML = "";
-    }
-    else if(isAddingMan) {
-        var popupAdd = iframeDocument.getElementById('popupAddDevice');
-        var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-        popupAdd.style.visibility = "visible";
-        popupOverlay.style.visibility = "visible";
-
-        var logAddManual = iframeDocument.getElementById('logAddManual');
-        logAddManual.innerHTML = "";
-    }
+    var logReplace = iframeDocument.getElementById('logReplace');
+    logReplace.innerHTML = "";
 }
 
 function processDelOneDev(value, init)
@@ -1284,21 +1248,21 @@ function processDelOneDev(value, init)
 
     if(init) // Cuando empieza el borrado
     {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
         var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
         var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
 
         deletingDeviceLabel.textContent = "Deleting the node from the network...";
         deletingDeviceButton.classList.add('button-disabled');
+
+        var closeDelDevPopup = iframeDocument.getElementById('closeDelDevPopup');
+        closeDelDevPopup.style.pointerEvents = "none";
+        closeDelDevPopup.style.opacity = "0.5";
     }
     else // Cuando termina el borrado
     {
-        var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
-        selectedNode.remove();
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-
-        /**
         var networkNodesList = iframeDocument.getElementById('networkNodesList');
         networkNodesList.innerHTML = "";
 
@@ -1307,8 +1271,7 @@ function processDelOneDev(value, init)
         setTimeout(function() {
             popup.style.visibility = "hidden";
             popupOverlay.style.visibility = "hidden";
-        }, 3000);
-         */
+        }, 1000);
     }
 }
 
@@ -1322,11 +1285,18 @@ function processDelAllDev(value, init)
 
     if(init) // Cuando empieza el borrado
     {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
         var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
         var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
 
         deletingAllDevicesLabel.textContent = "Deleting all the nodes from the network...";
         deletingAllDevicesButton.classList.add('button-disabled');
+
+        var closeDelAllPopup = iframeDocument.getElementById('closeDelAllPopup');
+        closeDelAllPopup.style.pointerEvents = "none";
+        closeDelAllPopup.style.opacity = "0.5";
     }
     else // Cuando termina el borrado
     {
@@ -1362,6 +1332,43 @@ function processAddNodeToGroup(value)
         addLabel.textContent = "Adding Node...";
         addLoader.style.animation = "spin 1.5s linear infinite";
     }, 1800);
+}
+
+function processDelNodeFromGroup(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupDeletingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    loadNodesLists();
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 500);
+}
+
+function processDelGroup(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupDeletingGroup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var groupList = iframeDocument.getElementById('groupList');
+    groupList.innerHTML = getDefaultGroupsForSelector();
+
+    setTimeout(function() {
+        loadGroups();
+
+        setTimeout(function() {
+            popup.style.visibility = "hidden";
+            popupOverlay.style.visibility = "hidden";
+        }, 200);
+    }, 100);
 }
 
 function processPowerOnLevelChange(value)
@@ -1428,6 +1435,30 @@ function confirmSetRelay(value)
     }
 }
 
+function processSetRelayInProgress(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupRelay");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
+function confirmManualRelay(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupRelay");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}
+
 function processMasterAddressGet(value)
 {
     antennaID = value - 31767; // variable global
@@ -1487,6 +1518,31 @@ function processConfirmEndLineScanning(value)
     popupOverlay.style.visibility = "hidden";
 }
 
+function processConfirmEndSyncPOL(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    var pageLabel = iframeDocument.getElementById("page");
+
+    if(pageLabel) {
+        var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+        var currentPage = parseInt(currentPageStr, 10);
+
+        pageLabel.textContent = "Page: " + currentPage;
+
+        sendData("GET_POWER_ON_LVL", currentPage);
+    }
+
+    setTimeout(function() {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }, 200);
+}
+
 function processLSInfo(value)
 {
     var parts = value.split("_");
@@ -1504,16 +1560,21 @@ function processLSInfo(value)
 
     if(phase == "1") {
         informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+        informerLabel2.textContent = "Phase 2: Waiting...";
         btnStop1.disabled = false;
+        btnStop2.disabled = true;
     }
     else if(phase == "2") {
+        informerLabel1.textContent = "Phase 1: Completed.";
         informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+        btnStop1.disabled = true;
         btnStop2.disabled = false;
     }
     else if(phase == "0") {
         informerLabel1.textContent = "Phase 1: Completed.";
+        informerLabel2.textContent = "Phase 2: Starting...";
         btnStop1.disabled = true;
-        btnStop2.disabled = false;
+        btnStop2.disabled = true;
     }
 }
 
@@ -1615,21 +1676,32 @@ function processReplacing(value, init)
     }
 }
 
+function processWriteIdError(value)
+{
+    alert("Vuelva a escanear el código");
+}
+
+function processInitAlert(value)
+{
+    alert("Ha ocurrido un error durante el arranque, se reintentará automáticamente. Puede desenchufar y enchufar la antena para forzar el reinicio.");
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
     var type = dataArray[0];
     var value = dataArray[1];
     
-    if(type == 'ALERT_COMMISSION') { processAlertCommission(value); }
-    else if (type == 'ALERT_LINE_SCANNING') { processAlertLineScanning(value); }
+    if (type == 'ASK_STATE_TO_EMBEDDED') { processAskStateToEmbedded(value); }
     else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
     else if (type == 'DATE_TIME_INFO') { processDateTimeInfo(value); }
     else if (type == 'SCANNED_DEVICE') { addDeviceToScannedList(value); }
-    else if (type == 'CONFIRM_START_SCAN') { confirmStartScan(value); }
+    else if (type == 'CONFIRM_START_SCAN') { confirmScan(value, true); }
+    else if (type == 'CONFIRM_END_SCAN') { confirmScan(value, false); }
     else if (type == 'CONFIRM_START_COMMISSION') { confirmStartCommission(value); }
+    else if (type == 'END_AUTO_COMMISSION') { processEndAutoCommission(value); }
     else if (type == 'START_ADDING_DEVICES') { startAddingDevices(value); }
     else if (type == 'CONFIRM_ADDING_DEVICE') { confirmAddingDevice(value); }
     else if (type == 'ADDED_DEVICE') { addDeviceToNetworkList(value); }
@@ -1645,36 +1717,36 @@ function processReceivedData(data)
     else if (type == "DEVICES_COUNTER") { processDevicesCounter(value); }
     else if (type == "FAILURES_COUNTER") { processFailuresCounter(value); }
     else if (type == 'END_NODE_CONFIG') { processEndNodeConfiguration(value); }
-    else if (type == 'END_AUTO_COMMISSION') { processEndAutoCommission(value); }
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
-    else if (type == "IS_COMMISSION_IN_PROGRESS") { processIsCommissionInProgress(value); }
-    else if (type == "IS_ADD_MANUAL_IN_PROGRESS") { processIsAddManualInProgress(value); }
-    else if (type == "IS_LS_IN_PROGRESS") { processIsLSInProgress(value); }
-    else if (type == "IS_REPLACING_IN_PROGRESS") { processIsReplacingInProgress(value); }
-    else if (type == "IS_ADDING_MAN_OR_REPLACING") { processIsAddingManOrReplacing(value); }
     else if (type == 'CONFIRM_START_DEL_ONE_DEV') { processDelOneDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ONE_DEV') { processDelOneDev(value, false); }
     else if (type == 'CONFIRM_START_DEL_ALL_DEV') { processDelAllDev(value, true); }
     else if (type == 'CONFIRM_END_DEL_ALL_DEV') { processDelAllDev(value, false); }
     else if (type == 'CONFIRM_ADD_NODE_TO_GROUP') { processAddNodeToGroup(value); }
+    else if (type == 'CONFIRM_DEL_NODE_FROM_GROUP') { processDelNodeFromGroup(value); }
+    else if (type == 'CONFIRM_DEL_GROUP') { processDelGroup(value); }
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
     else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
-    else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); }
+    else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); } // confirma que ha sido capaz de cambiarlo
+    else if (type == "CONFIRM_MANUAL_RELAY") { confirmManualRelay(value); } // confirma que ha llegado la orden de cambio
     else if (type == 'CONFIRM_M_ADDRESS_GET') { processMasterAddressGet(value); }
     else if (type == "FAIL_COM_CYCLES") { processFailComCycles(value); }
     else if (type == "CONFIRM_START_LS") { processConfirmStartLineScanning(value); }
     else if (type == "CONFIRM_END_LS") { processConfirmEndLineScanning(value); }
+    else if (type == "CONFIRM_END_SYNC_POL") { processConfirmEndSyncPOL(value); }
     else if (type == "LS_INFO") { processLSInfo(value); }
     else if (type == "LS_FOUNDED") { processLSFounded(value); }
     else if (type == "CONFIRM_END_CLEAR_ALL") { processConfirmEndClearAll(value); }
     else if (type == "NET_KEY_GET") { processNetKeyGet(value); }
     else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
     else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
+    else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
+    else if (type == "INIT_ALERT") { processInitAlert(value); }
 }
 
 function sendData(type, value) 
@@ -1820,6 +1892,18 @@ function delAllDevices() {
     sendData("SET_DELETE_DEVICE", "65535");
 }
 
+function addToGroupVisual()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupAddingNode');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+}
+
 function addToGroup() 
 {
     var iframe = document.getElementById('mainframe');
@@ -1831,26 +1915,36 @@ function addToGroup()
 
     if (!selectedNode || groupSelected == '-') { return; }
 
-    var popup = iframeDocument.getElementById('popupAddingNode');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-    popup.style.visibility = "visible";
-    popupOverlay.style.visibility = "visible";
+    addToGroupVisual();
 
     var textNodeSelected = selectedNode.textContent.trim();
     var message = textNodeSelected + ' ' + groupSelected;
     sendData("SET_ADD_GROUP", message);
 }
 
-function delFromGroup() 
+function delFromGroupVisual()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    
+
     var popup = iframeDocument.getElementById('popupDeletingNode');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
     var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
+    var closeDelNodeFromGroupPopup = iframeDocument.getElementById('closeDelNodeFromGroupPopup');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+    deletingNodeLabel.textContent = "Deleting the node from the group...";
+    deletingNodeButton.classList.add('button-disabled');
+    closeDelNodeFromGroupPopup.style.pointerEvents = "none";
+    closeDelNodeFromGroupPopup.style.opacity = "0.5";
+}
+
+function delFromGroup() 
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var selectedNode = iframeDocument.querySelector('#includedNodesList li.selectedDevice');
     var groupList = iframeDocument.getElementById('groupList');
@@ -1860,14 +1954,7 @@ function delFromGroup()
     var message = textNodeSelected + ' ' + groupSelected;
     sendData("SET_DEL_GROUP", message);
 
-    deletingNodeLabel.textContent = "Deleting the node from the group...";
-    deletingNodeButton.classList.add('button-disabled');
-
-    setTimeout(function() {
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-        loadNodesLists();
-    }, 1000);
+    delFromGroupVisual();
 }
 
 function addGroup() 
@@ -1891,24 +1978,43 @@ function addGroup()
     }, 1300);
 }
 
+function delGroupVisual()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById('popupDeletingGroup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingGroupLabel = iframeDocument.getElementById('deletingGroupLabel');
+    var deletingGroupButton = iframeDocument.getElementById('deletingGroupButton');
+    var closeDelGroupPopup = iframeDocument.getElementById('closeDelGroupPopup');
+
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "Visible";
+    deletingGroupLabel.textContent = "Deleting the group...";
+    deletingGroupButton.classList.add('button-disabled');
+    closeDelGroupPopup.style.pointerEvents = "none";
+    closeDelGroupPopup.style.opacity = "0.5";
+}
+
 function delGroup() 
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    closeGroupPopup();
-
     var groupList = iframeDocument.getElementById('groupList');
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
-    if (groupSelected != '-') {
-        groupList.innerHTML = getDefaultGroupsForSelector();
-        sendData("SET_DEL_A_GROUP", groupSelected);
-    }
+    var notIncludedNodesList = iframeDocument.getElementById('notIncludedNodesList');
+    var includedNodesList = iframeDocument.getElementById('includedNodesList');
 
-    setTimeout(function(){
-        loadNodesLists();
-    }, 1000);
+    sendData("SET_DEL_A_GROUP", groupSelected);
+
+    groupList.innerHTML = getDefaultGroupsForSelector();
+    notIncludedNodesList.innerHTML = "";
+    includedNodesList.innerHTML = "";
+
+    delGroupVisual();
 }
 
 function editGroup()
@@ -2179,12 +2285,18 @@ function sendFile()
     reader.readAsArrayBuffer(file);
 }
 
-function clearAllData()
+function clearAllDataVisual()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    sendData("SET_CLEAR_ALL_DATA", "");
+    var popup = iframeDocument.getElementById('popup');
+    var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    popup.style.visibility = "visible";
+    popupOverlay.style.visibility = "visible";
+
+    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
+    confirmDeleteData.textContent = "Deleting ALL data...";
 
     var input = iframeDocument.getElementById('deleteConfirmInput');
     input.value = "";
@@ -2192,8 +2304,16 @@ function clearAllData()
     var button = iframeDocument.getElementById('deletingDataButton');
     button.disabled = true;
 
-    var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
-    confirmDeleteData.textContent = "Deleting ALL data. Don't leave this screen";
+    var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
+    closeClearAllPopup.style.pointerEvents = "none";
+    closeClearAllPopup.style.opacity = "0.5";
+}
+
+function clearAllData()
+{
+    sendData("SET_CLEAR_ALL_DATA", "");
+
+    clearAllDataVisual();
 }
 
 function lineScanning()
@@ -2204,7 +2324,7 @@ function lineScanning()
     var start = parseInt(iframeDocument.getElementById("scanStart").value);
     var end = parseInt(iframeDocument.getElementById("scanEnd").value);
 
-    if(start >= 1 && start <= 2048 && end >= 1 && end <= 2048 && start <= end)
+    if(start >= 1 && end >= 1 && start <= end)
         sendData("LINE_SCANNING", start + "_" + end);
 }
 
@@ -2508,7 +2628,8 @@ function requestDateTime() {
     sendData("GET_DATE_TIME", "");
 }
 
-function syncPOL() {
+function syncPOLVisual()
+{
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -2517,24 +2638,13 @@ function syncPOL() {
     
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+}
+
+function syncPOL() 
+{
+    syncPOLVisual();
 
     sendData("SET_SYNC_POL", "");
-
-    setTimeout(function() {
-        var pageLabel = iframeDocument.getElementById("page");
-
-        if(pageLabel) {
-            var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
-            var currentPage = parseInt(currentPageStr, 10);
-
-            pageLabel.textContent = "Page: " + currentPage;
-
-            sendData("GET_POWER_ON_LVL", currentPage);
-        }
-
-        popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
-    }, 10000);
 }
 
 function setAntennaNumberAndNetKey() {
@@ -2655,7 +2765,6 @@ function stopLS(value)
     if(value == "1") 
     {
         btnStop1.disabled = true;
-        btnStop2.disabled = false;
     } 
     else if(value == "2") 
     {
@@ -2680,5 +2789,21 @@ function replaceDevice()
         var oldNodeId = oldNodeText.trim().split("-")[0]; // Obtener ID del nodo
 
         sendData("REPLACE_NODES", newNodeUUID + "_" + oldNodeId);
+    }
+}
+
+function loadFactoryNetKey()
+{
+    var factoryNetKey = "0123456789ABCDEFEFCDAB8967452301";
+
+    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+    if (isTrue) {
+        sendData("SET_MASTER_ADDR_AND_NETKEY", "" + "_" + factoryNetKey);
+
+        setTimeout(function () {
+            sendData("SET_REBOOT_DEVICE", " ");
+            logoutApp();
+            window.location.href = "http://" + window.location.hostname;
+        }, 2000);
     }
 }

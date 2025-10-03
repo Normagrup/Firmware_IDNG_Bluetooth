@@ -27,6 +27,11 @@ QTimer newIterationTimer;
 
 QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
 
+QTimer replaceP2Timer;
+QTimer replaceP3Timer;
+QTimer cleanCdbTimer;
+QTimer askInitDataFromMicroTimer;
+
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
 ScannedUUID scannedUUIDBackup[20];
@@ -91,3 +96,9 @@ QMap<QString, GroupActionType> groupActionTypeMap;
 
 ReplaceData replaceData = {"", 0x0000, "", 0x0000};
 ReplaceNode replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
+
+bool isClearingAllData = false;
+
+MessageState messageState = EMPTY;
+int TIME_TO_CLEAN_CDB = 1200000000;
+EmbeddedState embeddedState = FREE;

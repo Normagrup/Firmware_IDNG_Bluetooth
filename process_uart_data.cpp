@@ -38,8 +38,8 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case ADD_DEVICES: return 6;
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
-            case SEND_RECOVERY_NODE: return 22;
-            case FEATURES: return 28;
+            case SEND_RECOVERY_NODE: return 38;
+            case FEATURES: return 47;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
             case NODE_DELETED: return 6;
@@ -50,12 +50,16 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_END_REMOVE_ALL_NODES: return 4;
             case CONFIRM_START_REMOVE_ONE_NODE: return 4;
             case CONFIRM_END_REMOVE_ONE_NODE: return 4;
+            case CONFIRM_INYECT: return 4;
+            case CONFIRM_ACTION: return 4;
+            case CONFIRM_RESET_CDB: return 4;
             case RELAY_STATUS: return 7;
             case LINE_SCAN_SEND: return 22;
             case QUERY_RESPONSE: return 7;
             case CONFIRM_SET_POWER_ON_LEVEL: return 7;
             case SCAN_NODE_NOT_FOUND: return 6;
-            case CONFIRM_GET_ANTENNA_ADDRESS: return 6;
+            case ADDRESS_AND_NET_KEY_ANSWER: return 22;
+            case ASK_INIT_DATA: return 4;
             case CONFIRM_END_LINE_SCANNING: return 4;
             case CONFIRM_START_LINE_SCANNING: return 4;
             case SEND_FEATURES_STATUS: return 13;
@@ -165,6 +169,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "CONFIRM START SCAN";
                         isScanning = true;
                         sendConfirmStartScan(webServer);
+                        messageState = RECEIVED;
                         QTimer::singleShot(12000, []() {isScanning = false;});
                     break;
 
@@ -185,6 +190,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         //commissionData.numberOfNodesScanned--;
                         qDebug() << "PARANDO TIMER NEW ITERATION";
                         newIterationTimer.stop();
+                        doneIterations++;
                         addDeviceTimer.start(ADD_DEVICE_TIMER_MS);
                     break;
 
@@ -204,7 +210,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         qDebug() << "DEVICE ERROR";
                         QByteArray uuidBytes = data.mid(3,16);
                         insertCommissionErrorToLog(uuidBytes, database, LOG_COMMISSION_DEVICE_ERROR);
-                        sendDeviceError(data, uartPort, webServer);
+                        sendDeviceError(data, uartPort, webServer, database);
                     }
                     break;
 
@@ -269,28 +275,63 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_START_REMOVE_ONE_NODE:
                     {
-                        if(!isReplacingDevices)
-                            sendConfirmStartRemoveOneNode(webServer);
-                        else
+                        if(!isReplacingDevices) {
+                            //sendConfirmStartRemoveOneNode(webServer);
+                        } else {
                             sendLogCommissionEntry(webServer, "Deleting node from the network...", "INFO");
+                        }
                     }
                     break;
 
                     case CONFIRM_END_REMOVE_ONE_NODE:
                     {
-                        if(!isReplacingDevices)
-                            sendConfirmEndRemoveOneNode(webServer);
-                        else {
-                            sendLogCommissionEntry(webServer, "The node has been deleted.", "INFO");
-                            restoreDataForReplace(webServer, uartPort, database);
+                        messageState = RECEIVED;
+                        if(!isReplacingDevices) {
+                            //sendConfirmEndRemoveOneNode(webServer);
+                        } else {
+                            replaceP3Timer.start(3000); // siguiente paso del replacing
                         }
                     }
                     break;
-
-                    case CONFIRM_GET_ANTENNA_ADDRESS:
+                    case CONFIRM_INYECT:
+                    {
+                        messageState = RECEIVED;
+                    }
+                    break;
+                    case CONFIRM_ACTION:
+                    {
+                        messageState = RECEIVED;
+                    }
+                    break;
+                    case CONFIRM_RESET_CDB:
+                    {
+                        messageState = RECEIVED;
+                    }
+                    break;
+                    case ADDRESS_AND_NET_KEY_ANSWER:
                     {
                         uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
-                        reloadAntennaAddress(webServer, database, antennaAddress);
+                        uint8_t netKey[16];
+                        memcpy(netKey, reinterpret_cast<const uint8_t*>(data.constData()) + 5, sizeof(netKey));
+
+                        QString netKeyStr = "";
+                        for(int i = 0; i < 15; i++)
+                            if(memcmp(netKeys[i], netKey, 16) == 0)
+                                netKeyStr = QString::number(i + 1);
+
+                        if(netKeyStr == "")
+                            for(int j = 0; j < 16; j++)
+                                netKeyStr += QString::asprintf("%02X", netKey[j]);
+
+                        reloadAntennaAddressAndNetKey(webServer, database, antennaAddress, netKeyStr);
+                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                        messageState = RECEIVED;
+                    }
+                    break;
+
+                    case ASK_INIT_DATA:
+                    {
+                        askInitDataFromMicroTimer.start(50);
                     }
                     break;
 
@@ -300,7 +341,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
 
                         isReplacingDevices = false;
+                        sendUartClearInyectedNodes(uartPort, false, database);
+                        while(messageState == PENDING) {}
+
                         sendConfirmEndReplace(webServer);
+                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                        embeddedState = FREE;
                     }
                     break;
 
@@ -314,7 +360,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_START_LINE_SCANNING:
                     {
-                        sendConfirmStartLineScanning(webServer);
                         isLineScanning = true;
                         configuredNodes = database->getConfiguredNodes();
                         lineScanningCounter = 0;
@@ -329,9 +374,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                 meshDevice[i][j].deleteDevice();
                             }
                         }
+
+                        messageState = RECEIVED;
                     }
                     break;
-
                     case SEND_RECOVERY_NODE:
                     {
                         //isLineScanning = true;
@@ -342,11 +388,18 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                reinterpret_cast<const uint8_t*>(data.constData()) + 5,
                                sizeof(uuid));
 
+                        uint8_t dev_key[16];
+                        memcpy(dev_key,
+                               reinterpret_cast<const uint8_t*>(data.constData()) + 21,
+                               sizeof(dev_key));
+
+
                         while(configuredNodes.contains(lineScanningCounter + 1)) {
                             lineScanningCounter++;
                         }
 
                         database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
+                        database->updateNextUnicastAddress(nodeAddress);
 
                         lineScanningCounter++;
                         scannedNodesCounter++;
@@ -354,9 +407,10 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         discovered_nodes[discovered_nodes_count++] = nodeAddress;
 
                         sendFoundNodes(webServer, scannedNodesCounter);
+
+                        database->setRecoveryDevKey(nodeAddress, dev_key);
                     }
                     break;
-
                     case SEND_FEATURES_STATUS:
                         qDebug() << "SEND_FEATURES_STATUS";
                         //isLineScanning = true;
@@ -387,7 +441,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         database->loadNodesFromDatabase();
 
                         isLineScanning = false;
-                        sendConfirmEndLineScanning(webServer);
+                        messageState = RECEIVED;
                     }
                     break;
 
@@ -395,6 +449,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
                         qDebug() << "Nodo no encontrado en base de datos:" << QString::asprintf("0x%04X", nodeAddr);
+                        messageState = RECEIVED;
                     }
                     break;
                     case ANSWER_POWER_ON_LEVEL:
@@ -407,15 +462,20 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                             powerOnQueryMap.remove(nodeAddr);
                         }
                         updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
+                        messageState = RECEIVED;
                     }
                     break;
                     case CONFIRM_ADD_NODE_TO_GROUP:
                     {
                         uint16_t address = ((uint16_t)data[3] << 8) | data[4];
                         uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
-                        bool added = ((uint8_t)data[7] != 0);
-                        sendConfirmAddNodeToGroup(webServer, address, deviceTypeGroupAddress, added, database);
-                        trackGroupUpdateForEth(data);
+                        bool added = ((uint8_t)data[7] != 0); // si se añade o falla porque el micro es incapaz
+
+                        if(added) { 
+                            messageState = RECEIVED;
+                            trackGroupUpdateForEth(data); 
+                        }
+                        else { messageState = MISSED; } // se simula que no ha llegado para que notifique el error en el proceso
                     }
                     break;
                     case CONFIRM_DEL_NODE_FROM_GROUP:
@@ -437,7 +497,19 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                     case CONFIRM_END_CLEAR_ALL_DATA:
                     {
-                        sendConfirmEndClearAllData(webServer);
+                        sendConfirmEndClearAllData(webServer); // no se usa ya que no devuelve confirmación al terminar
+                    }
+                    break;
+
+                    case CONFIRM_RETRY:
+                    {
+                        qDebug() << "RETRYYYYYY";
+                    }
+                    break;
+
+                    case CONFIRM_ERROR_RETRY:
+                    {
+                        sendWriteIDError(webServer);
                     }
                     break;
                 }
@@ -460,7 +532,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     break;
 
                     case RECORDED_DEVICE:
+                    {
+                        /*delay(1000);
+                        sendUartClearInyectedNodes(uartPort, true, database);
+                        while(messageState == PENDING) {}*/
                         sendRecordedDevice(webServer);
+                    }
                     break;
 
                     default:
@@ -482,6 +559,9 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     uint8_t nodeUUID[16];
     uint16_t address;
     uint16_t fatherAddress;
+    uint16_t net_idx;
+    uint8_t num_elem;
+    uint8_t dev_key[16];
 
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
     QString value = "";
@@ -497,8 +577,16 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     physicalMinLvl = (unsigned char)data[24];
     fatherAddress = ((unsigned char)data[25] << 8) + (unsigned char)data[26];
 
+    net_idx = ((unsigned char)data[27] << 8) + (unsigned char)data[28];
+    num_elem = (unsigned char)data[29];
+    QString valueDK = "";
+    for (uint8_t i = 0; i < 16; i++) {
+        dev_key[i] = (unsigned char)data[30 + i];
+        valueDK += QString::asprintf("%02X", dev_key[i]);
+    }
 
     qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+    //qDebug() << "Extra:" << dev_key << net_idx << num_elem;
 
     commissionData.numberOfNodesAdded++;
     numberOfIterations++;
@@ -523,6 +611,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 netAddress = i * 64 + j + 1;
 
                 database->setNewNode(i, j, address, nodeUUID, fatherAddress);
+                database->updateNextUnicastAddress(address);
                 insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");
                 if(isReplacingDevices) { replaceData.newNodeRealAddress = address; }
                 delay(500);
@@ -545,6 +634,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 }
 
                 database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
+                database->setExtraFeatures(address, net_idx, num_elem, dev_key);
 
                 /*
                 QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(i * 64 + j + 1);
@@ -697,10 +787,16 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         doneIterations = 0;
         isManualAddingDevice = false;
 
-        if(!isReplacingDevices)
-            sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device SOLO para el adding manual
-        else
-            deleteNodeForReplace(webServer, uartPort, database); // siguiente paso del replacing
+        if(!isReplacingDevices) {
+            sendUartClearInyectedNodes(uartPort, false, database);
+            while(messageState == PENDING) {}
+
+            sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device (SOLO para el adding manual)
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            embeddedState = FREE;
+        } else {
+            replaceP2Timer.start(300); // siguiente paso del replacing
+        }
 
         return;
     }
@@ -710,8 +806,14 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         if (commissionData.numberOfNodesScanned == commissionData.numberOfNodesAdded) {
             commissionData.numberOfNodesScanned = 0;
             commissionData.numberOfNodesAdded = 0;
-            sendUartNewIteration(uartPort);
-            newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            //uint16_t addressToNextIt = database->getNextNodeAddress(doneIterations);
+            //qDebug() << "[3] DONE ITERATIONS: "<< doneIterations;
+            //delay(300);
+            //sendUartInyectNode(uartPort, addressToNextIt, database);
+            //delay(500);
+            //sendUartNewIteration(uartPort, addressToNextIt);
+            //newIterationTimer.start(NEW_ITERATION_TIMER_MS);
+            addDeviceTimer.start(100);
             break;
         }
         if (memcmp(scannedUUID[i].UUID, emptyUUID, sizeof(emptyUUID)) != 0) {
@@ -800,6 +902,124 @@ void processConfirmGroupFrame(void)
     groupFrameTimer.stop();
 }
 
+void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {500, 2000, 4000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        uint8_t devKey[16] = {0};
+        QString devKeyStr = database->getDevKey(nodeAddress);
+        convertDevKeyStringToByteArray(devKeyStr, devKey);
+
+        QByteArray frame;
+        unsigned char length = 21;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(INYECT_NODE);
+        frame.append((nodeAddress >> 8) & 0xFF);
+        frame.append(nodeAddress & 0xFF);
+        for (uint8_t i = 0; i < 16; i++) {
+            frame.append(devKey[i]);
+        }
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del INYECT_NODE";
+    }
+}
+
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Database* database)
+{
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
+    QString netKey = database->getNetKey();
+    uint8_t netKeyBytes[16];
+
+    if(netKey.size() == 32) {
+        for(uint8_t i = 0; i < 16; i++) {
+            QString byteString = netKey.mid(i * 2, 2);
+            netKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
+        }
+    } else {
+        memcpy(netKeyBytes, netKeys[netKey.toInt() - 1], 16);
+    }
+
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {2000, 3000, 4000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 22;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(CLEAR_INYECTED_NODES);
+        frame.append(isCommissioning ? 0x01 : 0x00);
+        frame.append((masterStoredAddress >> 8) & 0xFF);
+        frame.append(masterStoredAddress & 0xFF);
+        for(uint8_t j = 0; j < 16; j++) {
+            frame.append(netKeyBytes[j]);
+        }
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del CLEAR_INYECTED_NODES";
+    }
+}
+
+void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress)
+{
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(CLEAR_ONE_INYECTED_NODE);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendUartUpdateNextUnicast(UartPort* _uartPort, uint16_t nextUnicastAddress)
+{
+    QByteArray frame;
+    unsigned char length = 5;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(UPDATE_NEXT_UNICAST);
+    frame.append((nextUnicastAddress >> 8) & 0xFF);
+    frame.append(nextUnicastAddress & 0xFF);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
 void sendUartScannedDevices(UartPort* _uartPort)
 {
     QByteArray frame;
@@ -814,36 +1034,43 @@ void sendUartScannedDevices(UartPort* _uartPort)
     _uartPort->sendData(frame);
 }
 
-void sendUartStartCommission(UartPort* _uartPort)
+void sendUartStartCommission(UartPort* _uartPort, uint16_t nextUnicastAddress)
 {
     QByteArray frame;
-    unsigned char length = 3;
+    unsigned char length = 5;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(START_COMMISSION);
+    frame.append((nextUnicastAddress >> 8) & 0xFF);
+    frame.append(nextUnicastAddress & 0xFF);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
 }
 
-void sendUartNewIteration(UartPort* _uartPort)
+void sendUartNewIteration(UartPort* _uartPort, uint16_t addressToNextIt)
 {
     QByteArray frame;
-    unsigned char length = 3;
+    unsigned char length = 5;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(NEW_ITERATION);
+    frame.append((addressToNextIt >> 8) & 0xFF);
+    frame.append(addressToNextIt & 0xFF);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
 }
 
-void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress)
+void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
 {
+    sendUartInyectNode(_uartPort, nodeAddress, database);
+    delay(300);
+
     QByteArray frame;
     unsigned char length = 5;
 
@@ -885,52 +1112,78 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
     _uartPort->sendData(frame);
 }
 
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress)
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast)
 {
-    if (_uartPort == nullptr) {
-        printf("Error: _uartPort no está inicializado.\n");
-        return;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 3000, 3000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        const unsigned char length = 6;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DEL_DEVICES);
+        frame.append((nodeAddress >> 8) & 0xFF);
+        frame.append(nodeAddress & 0xFF);
+        frame.append(isBroadcast ? 0x01 : 0x00);
+
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
     }
-    
-    QByteArray frame;
-    unsigned char length = 5;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(DEL_DEVICES);
-    frame.append((nodeAddress >> 8) & 0xFF);
-    frame.append(nodeAddress & 0xFF);
-    frame.append(UART_END);
-
-    _uartPort->sendData(frame);
-    printf("Comando de eliminación enviado: %04X\n", nodeAddress);
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DEL_DEVICE";
+    }
 }
 
 
 void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 2500, 3500};
+    messageState = PENDING;
 
-    qDebug() << "UART GROUP SEND";
-    unsigned char length = 9;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(ADD_GROUP_MANUAL);
-    frame.append((address[0] >> 8) & 0xFF);
-    frame.append(address[0] & 0xFF);
-    frame.append((address[1] >> 8) & 0xFF);
-    frame.append(address[1] & 0xFF);
-    frame.append((address[2] >> 8) & 0xFF);
-    frame.append(address[2] & 0xFF);
+        qDebug() << "UART GROUP SEND";
+        unsigned char length = 9;
 
-    qDebug() << address[0] << address[1] << address[2];
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(ADD_GROUP_MANUAL);
+        frame.append((address[0] >> 8) & 0xFF);
+        frame.append(address[0] & 0xFF);
+        frame.append((address[1] >> 8) & 0xFF);
+        frame.append(address[1] & 0xFF);
+        frame.append((address[2] >> 8) & 0xFF);
+        frame.append(address[2] & 0xFF);
 
-    frame.append(UART_END);
+        qDebug() << address[0] << address[1] << address[2];
 
-    _uartPort->sendData(frame);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del ADD_GROUP_MANUAL";
+    }
 }
 
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
@@ -960,38 +1213,52 @@ void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database)
 {
-    QByteArray frame;
-    unsigned char length = 7;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 2500, 3500};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(DEL_GROUP);
-    frame.append((address[0] >> 8) & 0xFF);
-    frame.append(address[0] & 0xFF);
-    frame.append((address[1] >> 8) & 0xFF);
-    frame.append(address[1] & 0xFF);
-    frame.append(UART_END);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DEL_GROUP);
+        frame.append((address[0] >> 8) & 0xFF);
+        frame.append(address[0] & 0xFF);
+        frame.append((address[1] >> 8) & 0xFF);
+        frame.append(address[1] & 0xFF);
+        frame.append(UART_END);
 
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == address[0]) {
-                // Log entry
-                QString groupAddressString = QString("%1").arg(address[1], 4, 16, QLatin1Char('0')).toUpper();
-                int globalPos = i * 64 + j + 1;
-                QString devname = "A" + QString::number(globalPos).rightJustified(4, '0');
-                QString name = devname + " - " + database->getGroupName(groupAddressString);
-                QString serialNum = meshDevice[i][j].serialNumberString();
-                int btAddress = globalPos;
-                AntennaInfo info = getAntennaInfo(database);
-                QString eventType = "Groups";
-                insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DEL_FROM_GROUP, eventType);
+        _uartPort->sendData(frame);
 
-                meshDevice[i][j].delGroupSubAddress(address[1]);
-                database->delGroup(address[0], address[1]);
-                return;
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DEL_GROUP";
+    }
+    else {
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == address[0]) {
+                    // Log entry
+                    QString groupAddressString = QString("%1").arg(address[1], 4, 16, QLatin1Char('0')).toUpper();
+                    QString name = "SUB:" + QString::number(i) + " " + "ID:" + QString::number(j) + " - " + database->getGroupName(groupAddressString);
+                    QString serialNum = meshDevice[i][j].serialNumberString();
+                    int btAddress = meshDevice[i][j].getRealAddress();
+                    AntennaInfo info = getAntennaInfo(database);
+                    QString eventType = "Groups";
+                    insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DEL_FROM_GROUP, eventType);
+
+                    meshDevice[i][j].delGroupSubAddress(address[1]);
+                    database->delGroup(address[0], address[1]);
+                    return;
+                }
             }
         }
     }
@@ -1017,67 +1284,133 @@ void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address)
 
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database)
 {
+    bool hasEnteredInSubnet;
+
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+        hasEnteredInSubnet = false;
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getIsConfigured() && meshDevice[i][j].delGroupSubAddress(groupAddress)) {
+                hasEnteredInSubnet = true;
+
                 uint16_t nodeRealAddress = meshDevice[i][j].getRealAddress();
 
-                database->delGroup(nodeRealAddress, groupAddress);
+                sendUartInyectNode(_uartPort, nodeRealAddress, database);
+                while(messageState == PENDING) {}
 
-                QByteArray frame;
-                unsigned char length = 7;
+                if(messageState == RECEIVED) {
+                    sendUartDelGroupForAllNodesUnitary(_uartPort, nodeRealAddress, groupAddress);
+                    while(messageState == PENDING) {}
 
-                frame.append(UART_HEADER);
-                frame.append(length);
-                frame.append(UART_CONFIG_FRAME_TYPE);
-                frame.append(DEL_GROUP);
-                frame.append((nodeRealAddress >> 8) & 0xFF);
-                frame.append(nodeRealAddress & 0xFF);
-                frame.append((groupAddress >> 8) & 0xFF);
-                frame.append(groupAddress & 0xFF);
-                frame.append(UART_END);
-
-                _uartPort->sendData(frame);
+                    if(messageState == RECEIVED) {
+                        database->delGroup(nodeRealAddress, groupAddress);
+                    }
+                }
             }
+        }
+
+        if(hasEnteredInSubnet) {
+            sendUartClearInyectedNodes(_uartPort, false, database);
+            while(messageState == PENDING) {}
         }
     }
 }
 
-void sendUartClearAllData(UartPort* _uartPort)
+void sendUartDelGroupForAllNodesUnitary(UartPort* _uartPort, uint16_t nodeRealAddress, uint16_t groupAddress)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1500, 2500, 3500};
+    messageState = PENDING;
 
-    qDebug() << "UART CLEAR ALL DATA SEND";
-    qDebug() << "[Embebido] Preparando frame de CLEAR_ALL_DATA para el micro...";
-    unsigned char length = 3;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DEL_GROUP);
+        frame.append((nodeRealAddress >> 8) & 0xFF);
+        frame.append(nodeRealAddress & 0xFF);
+        frame.append((groupAddress >> 8) & 0xFF);
+        frame.append(groupAddress & 0xFF);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DEL_GROUP_FOR_ALL_NODES_UNITARY";
+    }
+}
+
+void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 2500};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 5;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(CLEAR_ALL_DATA);
+        frame.append((nodeAddress >> 8) & 0xFF);
+        frame.append(nodeAddress & 0xFF);
+
+        frame.append(UART_END);
+
+        qDebug() << "Enviando borrado a nodo:" << QString::asprintf("%04X", nodeAddress);
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del CLEAR_ALL_DATA";
+    }
 
 
-    frame.append(UART_HEADER);               
-    frame.append(length);                   
-    frame.append(UART_CONFIG_FRAME_TYPE);   
-    frame.append(CLEAR_ALL_DATA);    
-
-    frame.append(UART_END);
-
-    qDebug() << "[Embebido] Enviando frame por UART:" << frame.toHex(' ');
-
-    _uartPort->sendData(frame);
-    qDebug() << "[Embebido] Frame de CLEAR_ALL_DATA enviado correctamente.";
 }
 
 void sendUartStartLineScanning(UartPort* _uartPort)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 3000};
+    messageState = PENDING;
 
-    unsigned char length = 3;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(START_LINE_SCANNING);
-    frame.append(UART_END);
+        unsigned char length = 3;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(START_LINE_SCANNING);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del START_LINE_SCANNING";
+    }
 }
 
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress)
@@ -1101,35 +1434,65 @@ void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddre
 
 void sendUartEndLineScanning(UartPort* _uartPort)
 {
-    QByteArray frame;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 4000};
+    messageState = PENDING;
 
-    unsigned char length = 3;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(END_LINE_SCANNING);
-    frame.append(UART_END);
+        unsigned char length = 3;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(END_LINE_SCANNING);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del END_LINE_SCANNING";
+    }
 }
 
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)
 {
-    QByteArray frame;
-    unsigned char length = 7;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {500, 1500, 2500};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(CHANGE_FATHER);
-    frame.append((childRealAddress >> 8) & 0xFF);
-    frame.append(childRealAddress & 0xFF);
-    frame.append((fatherRealAddress >> 8) & 0xFF);
-    frame.append(fatherRealAddress & 0xFF);
-    frame.append(UART_END);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(CHANGE_FATHER);
+        frame.append((childRealAddress >> 8) & 0xFF);
+        frame.append(childRealAddress & 0xFF);
+        frame.append((fatherRealAddress >> 8) & 0xFF);
+        frame.append(fatherRealAddress & 0xFF);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del CHANGE_FATHER";
+    }
 }
 
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType)
@@ -1153,7 +1516,8 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 {
-    if(isCommissioning || isManualAddingDevice || isScanning || isLineScanning || isReplacingDevices) { return; }
+    if(embeddedState != FREE) { return; }
+    if(nodeAddress == 0x0000) { return; }
 
     QByteArray frame;
     unsigned char length = 4;
@@ -1172,25 +1536,41 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
 {
-    bool ok;
-    uint8_t code[4] = {0};
-    QStringList factoryCodeParts = factoryCode.split(".");
+    uint8_t att = 10;
+    uint8_t actAtt = 0;
+    int ms[10] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
+    messageState = PENDING;
 
-    for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
-    QByteArray frame;
-    unsigned char length = 7;
+    while(actAtt < att && messageState == PENDING) {
+        bool ok;
+        uint8_t code[4] = {0};
+        qDebug() << "[WRITE_ID] factoryCode =" << factoryCode;
+        QStringList factoryCodeParts = factoryCode.split(".");
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(WRITE_ID_CODE);
-    frame.append(code[0]);
-    frame.append(code[1]);
-    frame.append(code[2]);
-    frame.append(code[3]);
-    frame.append(UART_END);
+        for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
+        QByteArray frame;
+        unsigned char length = 7;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(WRITE_ID_CODE);
+        frame.append(code[0]);
+        frame.append(code[1]);
+        frame.append(code[2]);
+        frame.append(code[3]);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del WRITE_ID_CODE_FRAME";
+    }
 }
 
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
@@ -1243,6 +1623,28 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
         uint16_t realAddress = crossedGroupAndNodes[i].first;
 
+        sendUartInyectNode(_uartPort, realAddress, database);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            sendUartPOLForUpdateUnitary(_uartPort, realAddress);
+            while(messageState == PENDING) {}
+        }
+    }
+
+    delay(1250);
+    sendUartClearInyectedNodes(_uartPort, false, database);
+    while(messageState == PENDING) {}
+}
+
+void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {750, 1500, 2500};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
         unsigned char length = 5;
 
@@ -1256,49 +1658,86 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
 
         _uartPort->sendData(frame);
 
-        delay(SLEEP_DALI_TIME_MS * 2);
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del POL_FOR_UPDATE_UNITARY";
     }
 }
 
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable)
 {
-    QByteArray frame;
-    unsigned char length = 6;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {3000, 4000, 5000};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(SET_RELAY);
-    frame.append((nodeAddress >> 8) & 0xFF);
-    frame.append(nodeAddress & 0xFF);
-    frame.append(enable ? 0x01 : 0x00);
-    frame.append(UART_END);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 6;
 
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(SET_RELAY);
+        frame.append((nodeAddress >> 8) & 0xFF);
+        frame.append(nodeAddress & 0xFF);
+        frame.append(enable ? 0x01 : 0x00);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del SET_RELAY";
+    }
 }
 
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
 {
-    QByteArray frame;
-    unsigned char length = 5;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {500, 2000, 2500};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);                
-    frame.append(length);                     
-    frame.append(UART_CONFIG_FRAME_TYPE);    
-    frame.append(SCAN_FROM_NODE);           
-    frame.append((nodeRealAddress >> 8) & 0xFF);
-    frame.append(nodeRealAddress & 0xFF);
-    frame.append(UART_END);                   
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 5;
 
-    qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
-    _uartPort->sendData(frame);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(SCAN_FROM_NODE);
+        frame.append((nodeRealAddress >> 8) & 0xFF);
+        frame.append(nodeRealAddress & 0xFF);
+        frame.append(UART_END);
+
+        qDebug() << "Enviando escaneo desde nodo:" << QString::asprintf("%04X", nodeRealAddress);
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del SCAN_FROM_NODE";
+    }
 }
 
-void sendNetKey(UartPort* _uartPort, Database* database)
+void sendSetAntennaAddressAndNetKey(UartPort* _uartPort, Database* database)
 {
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
+
     QString netKey = database->getNetKey();
     uint8_t netKeyBytes[16];
-
     if(netKey.size() == 32) {
         for(uint8_t i = 0; i < 16; i++) {
             QString byteString = netKey.mid(i * 2, 2);
@@ -1308,51 +1747,67 @@ void sendNetKey(UartPort* _uartPort, Database* database)
         memcpy(netKeyBytes, netKeys[netKey.toInt() - 1], 16);
     }
 
-    QByteArray frame;
-    unsigned char length = 19;
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 2000};
+    messageState = PENDING;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(SEND_NET_KEY);
-    for(uint8_t j = 0; j < 16; j++) {
-        frame.append(netKeyBytes[j]);
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 21;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(SET_ANTENNA_ADDRESS_AND_NET_KEY);
+
+        frame.append((masterStoredAddress >> 8) & 0xFF);
+        frame.append(masterStoredAddress & 0xFF);
+
+        for(uint8_t j = 0; j < 16; j++)
+            frame.append(netKeyBytes[j]);
+
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
     }
-    frame.append(UART_END);
 
-    _uartPort->sendData(frame);
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del SET_ANTENNA_ADDRESS_AND_NET_KEY";
+    }
 }
 
-void sendAntennaAddress(UartPort* _uartPort, Database* database)
+void sendGetAntennaAddressAndNetKey(UartPort* _uartPort)
 {
-    uint16_t masterStoredAddress = database->getMasterRealAddress();
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {500, 1000, 2000};
+    messageState = PENDING;
 
-    QByteArray frame;
-    unsigned char length = 5;
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 3;
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(SEND_ANTENNA_ADDRESS);
-    frame.append((masterStoredAddress >> 8) & 0xFF);
-    frame.append(masterStoredAddress & 0xFF);
-    frame.append(UART_END);
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(GET_ANTENNA_ADDRESS_AND_NET_KEY);
+        frame.append(UART_END);
 
-    _uartPort->sendData(frame);
-}
+        _uartPort->sendData(frame);
 
-void sendAntennaGetAddress(UartPort* _uartPort)
-{
-    QByteArray frame;
-    unsigned char length = 3;
+        delay(ms[actAtt]);
+        actAtt++;
+    }
 
-    frame.append(UART_HEADER);
-    frame.append(length);
-    frame.append(UART_CONFIG_FRAME_TYPE);
-    frame.append(GET_ANTENNA_ADDRESS);
-    frame.append(UART_END);
-
-    _uartPort->sendData(frame);
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del GET_ANTENNA_ADDRESS_AND_NET_KEY";
+    }
 }
 
 void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, bool netKeyHasChanged)

@@ -24,6 +24,12 @@
 #define DEV_TYPE_FAIL                   0x02
 #define NET_ADDR_FAIL                   0x03
 
+#define INYECT_NODE                     0xF1
+#define CLEAR_INYECTED_NODES            0xF2
+#define CLEAR_ONE_INYECTED_NODE         0xF3
+
+#define UPDATE_NEXT_UNICAST             0xF0
+
 #define SCAN_DEVICES                    0x01
 #define START_COMMISSION                0x03
 #define NEW_ITERATION                   0x05
@@ -37,7 +43,9 @@
 #define DEL_GROUP                       0x17
 #define CLEAR_ALL_DATA                  0x18
 #define FEATURES                        0x19
+#define CONFIRM_ERROR_RETRY             0x32
 #define WRITE_ID_CODE                   0x33
+#define CONFIRM_RETRY                   0x34
 #define FACTORY_ID_WROTE                0x35
 #define DALI_TESTED                     0x37
 #define RECORDED_DEVICE                 0x39
@@ -63,9 +71,6 @@
 #define SET_RELAY                       0x65
 #define SCAN_FROM_NODE                  0x67
 #define SCAN_NODE_NOT_FOUND             0x68
-#define SEND_ANTENNA_ADDRESS            0x70    // mandar al micro la address que tiene el embebido
-#define GET_ANTENNA_ADDRESS             0x71    // solicitar la address del micro (solicitud)
-#define CONFIRM_GET_ANTENNA_ADDRESS     0x72    // solicitar la address del micro (respuesta)
 #define SEND_RECOVERY_NODE              0x73
 #define CONFIRM_END_LINE_SCANNING       0x74
 #define CONFIRM_START_LINE_SCANNING     0x75
@@ -78,12 +83,18 @@
 #define RECOVERY_GROUPS                 0x85
 #define CHANGE_FATHER                   0x87
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
-#define SEND_NET_KEY                    0x89
+#define SET_ANTENNA_ADDRESS_AND_NET_KEY 0xAA
+#define GET_ANTENNA_ADDRESS_AND_NET_KEY 0xAB
+#define ADDRESS_AND_NET_KEY_ANSWER      0xAC
+#define ASK_INIT_DATA                   0xAD
 #define START_LINE_SCANNING             0x91
 #define END_LINE_SCANNING               0x92
 #define ADDRESS_AND_NET_KEY             0x93
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
+#define CONFIRM_INYECT                  0x97
+#define CONFIRM_ACTION                  0x98
+#define CONFIRM_RESET_CDB               0x99
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -92,29 +103,37 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);
+void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 int getExpectedFrameSize(const QByteArray& buffer);
 
+void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Database* database);
+void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
+
+void sendUartUpdateNextUnicast(UartPort* _uartPort, uint16_t nextUnicastAddress);
+
 void sendUartScannedDevices(UartPort* _uartPort);
-void sendUartStartCommission(UartPort* _uartPort);
-void sendUartNewIteration(UartPort* _uartPort);
-void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress);
+void sendUartStartCommission(UartPort* _uartPort, uint16_t nextUnicastAddress);
+void sendUartNewIteration(UartPort* _uartPort, uint16_t addressToNextIt);
+void sendUartChangeRelay(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
 void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
-void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress);
+void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
 void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address); // no actualiza el modelo y la bbdd directamente
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);
+void sendUartDelGroupForAllNodesUnitary(UartPort* _uartPort, uint16_t nodeRealAddress, uint16_t groupAddress);
 void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t daliRegister1, uint8_t daliRegister2, uint8_t commandType);
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
-void sendUartClearAllData(UartPort* _uartPort);
+void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
+void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
-void sendNetKey(UartPort* _uartPort, Database* database);
-void sendAntennaAddress(UartPort* _uartPort, Database* database);
-void sendAntennaGetAddress(UartPort* _uartPort);
+void sendSetAntennaAddressAndNetKey(UartPort* _uartPort, Database* _database);
+void sendGetAntennaAddressAndNetKey(UartPort* _uartPort);
 void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, bool netKeyHasChanged);
 void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);

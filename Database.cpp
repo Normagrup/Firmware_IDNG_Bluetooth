@@ -40,7 +40,10 @@ void Database::initDatabase()
                "EmergencyFeatures INTEGER, "
                "PhysicalMinLvl INTEGER, "
                "RelayMode INTEGER, "
-               "FatherRealAddress INTEGER);");
+               "FatherRealAddress INTEGER, "
+               "NetIdx INTEGER, "
+               "NumElem INTEGER, "
+               "DevKey TEXT);");
 
 
 
@@ -90,7 +93,8 @@ void Database::initDatabase()
                "LineName TEXT, "
                "MasterAddress TEXT, "
                "NetKey TEXT, "
-               "FailComCycles INTEGER);");
+               "FailComCycles INTEGER, "
+               "NextUnicastAddress INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -103,7 +107,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles, NextUnicastAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc, :nua)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
@@ -112,6 +116,7 @@ void Database::initDatabase()
             query.bindValue(":masterAddress", "7C18");
             query.bindValue(":nk", "1");
             query.bindValue(":fcc", 5);
+            query.bindValue(":nua", 0);
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
         }
@@ -135,12 +140,12 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
             // Antes se creaban 16 grupos por defecto -> Ahora ninguno. Se conserva el código por si acaso.
-            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+            QStringList groupAddresses = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
             // QStringList groupAddresses = {};
 
             query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
-            int groupNumber = 1;
+            int groupNumber = 4;
             foreach (const QString &groupAddress, groupAddresses) {
                 query.bindValue(":groupAddress", groupAddress);
                 query.bindValue(":groupName", "Group " + QString::number(groupNumber));
@@ -171,7 +176,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
             QStringList groupAddresses = {"C000", "C001", "C002", "C003"};
-            QStringList groupNames = {"Lighting", "Emergency", "Even", "Odd"};
+            QStringList groupNames = {"(Gr0) Lighting", "(Gr1) Emergency", "(Gr2) Even", "(Gr3) Odd"};
 
             query.prepare("INSERT INTO FixedGroups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
@@ -208,7 +213,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
             // Antes se creaba el test de broadcast y de los 16 grupos por defecto -> Ahora solo la entrada de broadcast. Se conserva el código por si acaso.
-            QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+            QStringList groupAddresses = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
             // QStringList groupAddresses = {"FFFF"};
 
             query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
@@ -551,7 +556,38 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     query.bindValue(":rm", 0);
     query.bindValue(":fra", getMasterRealAddress());
 
-    if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
+    if (!query.exec()) { qDebug() << "Error executing INSERT query in setRecoveryNode:" << query.lastError().text(); }
+}
+
+void Database::setRecoveryDevKey(uint16_t addr, const uint8_t devKey[16])
+{
+
+    QString devKeyText;
+    if (devKey) {
+        for (int i = 0; i <= 15; i++) {
+            devKeyText += QString::asprintf("%02X", devKey[i]);
+        }
+    } else {
+        devKeyText = "";
+    }
+
+    /*qInfo() << "[DB] setRecoveryDevKey: addr="
+            << QString("0x%1").arg(addr, 4, 16, QLatin1Char('0')).toUpper()
+            << " devkey=" << devKeyText;*/
+
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET DevKey = :devKey "
+                  "WHERE RealAddress = :addr");
+
+    query.bindValue(":devKey", devKeyText);
+    query.bindValue(":addr", addr);
+
+
+    if (!query.exec()) {
+        qDebug() <<"Error executing UPDATE query in setRecoveryDevKey:"
+                 << query.lastError().text();
+    }
+
 }
 
 void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
@@ -561,7 +597,7 @@ void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAdd
     query.bindValue(":fra", fatherRealAddress);
     query.bindValue(":nodeAddress", nodeAddress);
 
-    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setFatherRealAddress:" << query.lastError().text(); }
 }
 
 void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
@@ -599,6 +635,27 @@ void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t
     query.bindValue(":relayMode", relayMode);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
+}
+
+void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t num_elem, uint8_t* dev_key)
+{
+    QString nodeDevKeyText;
+    if (dev_key) {
+        for (int i = 0; i < 16; i++) {
+            nodeDevKeyText += QString::asprintf("%02X", dev_key[i]);
+        }
+    } else {
+        nodeDevKeyText = "";
+    }
+
+    QSqlQuery query;
+    query.prepare("UPDATE Nodes SET NetIdx = :ni, NumElem = :ne, DevKey = :dk WHERE RealAddress = :nodeAddress");
+    query.bindValue(":ni", net_idx);
+    query.bindValue(":ne", num_elem);
+    query.bindValue(":dk", nodeDevKeyText);
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setExtraFeatures:" << query.lastError().text(); }
 }
 
 void Database::addNode(uint16_t nodeAddress)
@@ -992,7 +1049,7 @@ void Database::createGroup()
     // Si no existe un último GroupAddress, damos el primer valor destinado a las direcciones de grupo
     if(lastGroupAddress.isEmpty()) {
         newGroupAddress = "C010";
-        newGroupName = "Group 1";
+        newGroupName = "Group 4";
     }
     // Si el último GroupAddress no es el máximo, obtenemos el siguiente con un incremento unitario
     else if(lastGroupAddress != "FEFF") {
@@ -1001,7 +1058,7 @@ void Database::createGroup()
         if (!ok) { qDebug() << "Error converting group address:" << lastGroupAddress; return; }
         groupAddr++;
         newGroupAddress = QString("%1").arg(groupAddr, 4, 16, QLatin1Char('0')).toUpper();
-        newGroupName = "Group " + QString::number(groupAddr - 49167); // 49167 es la última dirección no perteneciente a grupos
+        newGroupName = "Group " + QString::number(groupAddr - 49167 + 3); // 49167 es la última dirección no perteneciente a grupos, 3 es un offset
     }
     // Si el último GroupAddress es el máximo, hay que buscar GroupAddress intermedios disponibles
     else {
@@ -1384,6 +1441,23 @@ QString Database::getNextNodeName(uint16_t doneIts)
         return "Node -";
 }
 
+uint16_t Database::getNextNodeAddress(uint16_t doneIts)
+{
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes ORDER BY RealAddress ASC LIMIT 1 OFFSET :offset");
+    query.bindValue(":offset", doneIts);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0x0000; }
+
+    if (query.next()) {
+        uint16_t realAddress = query.value("RealAddress").toUInt();
+
+        return realAddress;
+    }
+    else
+        return 0x0000;
+}
+
 uint16_t Database::getMasterRealAddress()
 {
     QSqlQuery query;
@@ -1411,7 +1485,11 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
     if (!query.exec()) {
         qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
     } else {
-        qDebug() << "MasterAddress updated to" << hexString;
+        if (query.numRowsAffected() == 0) {
+            qDebug() << "No rows were updated. MasterAddress remains unchanged.";
+        } else {
+            qDebug() << "MasterAddress updated to" << hexString;
+        }
     }
 }
 
@@ -1440,7 +1518,11 @@ void Database::setNetKey(QString netKey)
     if (!query.exec()) {
         qDebug() << "Failed to update NetKey:" << query.lastError().text();
     } else {
-        qDebug() << "NetKey updated to" << netKey;
+        if (query.numRowsAffected() == 0) {
+            qDebug() << "No rows were updated. NetKey remains unchanged.";
+        } else {
+            qDebug() << "NetKey updated to" << netKey;
+        }
     }
 }
 
@@ -1719,4 +1801,79 @@ uint16_t Database::getNodeNetAddressForReplace(uint16_t realAddress)
     }
     else
         return 0;
+}
+
+QString Database::getDevKey(uint16_t nodeAddress)
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT DevKey FROM Nodes WHERE RealAddress = :nodeAddress");
+    query.bindValue(":nodeAddress", nodeAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getDevKey:" << query.lastError().text();
+        return QString();
+    }
+
+    if (query.next()) {
+        QString devKeyText = query.value(0).toString().trimmed();
+        if (devKeyText.length() != 32) {
+            qDebug() << "DevKey inválida (longitud incorrecta):" << devKeyText;
+            return QString();
+        }
+        return devKeyText;
+    } else {
+        qDebug() << "No se encontró DevKey para la dirección" << nodeAddress;
+        return QString();
+    }
+}
+
+uint16_t Database::getNextUnicastAddress()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT NextUnicastAddress FROM General");
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getNextUnicastAddress:" << query.lastError().text();
+        return 0;
+    }
+
+    if (query.next()) {
+        return static_cast<uint16_t>(query.value(0).toInt());
+    } else {
+        qDebug() << "No se encontró NextUnicastAddress";
+        return 0;
+    }
+}
+
+void Database::updateNextUnicastAddress(uint16_t nextUnicastAddress)
+{
+    uint16_t actualNextUnicastAddress = getNextUnicastAddress();
+
+    if(actualNextUnicastAddress < nextUnicastAddress) {
+        QSqlQuery query;
+        query.prepare("UPDATE General SET NextUnicastAddress = :nua");
+        query.bindValue(":nua", nextUnicastAddress);
+
+        if (!query.exec()) { qDebug() << "Error executing UPDATE query in General:" << query.lastError().text(); }
+    }
+}
+
+QList<uint16_t> Database::getAddressesDescForGlobalRemove() {
+    QList<uint16_t> addresses;
+
+    QSqlQuery query;
+    query.prepare("SELECT RealAddress FROM Nodes ORDER BY RealAddress DESC");
+
+    if (!query.exec()) {
+        qDebug() << "Error executing SELECT query (RealAddress DESC):" << query.lastError().text();
+        return addresses;
+    }
+
+    while (query.next()) {
+        addresses.append(static_cast<uint16_t>(query.value(0).toUInt()));
+    }
+
+    return addresses;
 }

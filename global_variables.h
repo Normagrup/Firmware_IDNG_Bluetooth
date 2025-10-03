@@ -53,6 +53,10 @@ extern QTimer addDeviceTimer;
 extern QTimer confirmAddDeviceTimer;
 extern QTimer newIterationTimer;
 extern QList<QPair<uint16_t, QStringList>> crossedGroupAndNodes;
+extern QTimer replaceP2Timer; // para ejecutar la parte2 del replace
+extern QTimer replaceP3Timer; // para ejecutar la parte3 del replace
+extern QTimer cleanCdbTimer;
+extern QTimer askInitDataFromMicroTimer;
 
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
@@ -84,5 +88,37 @@ extern QMap<QString, GroupActionType> groupActionTypeMap;
 
 extern ReplaceData replaceData;
 extern ReplaceNode replaceNode;
+
+extern bool isClearingAllData;
+
+enum MessageState {
+    EMPTY,
+    PENDING,
+    RECEIVED,
+    MISSED
+};
+
+extern MessageState messageState;
+extern int TIME_TO_CLEAN_CDB;
+
+enum EmbeddedState {
+    FREE,
+    SCAN,
+    COMMISSION,
+    ADD_MANUAL,
+    REPLACE,
+    DEL_DEV_BC,
+    DEL_DEV,
+    SETTER_RELAY,
+    ADD_NODE_TO_GROUP,
+    DEL_NODE_FROM_GROUP,
+    DEL_COMPLETE_GROUP,
+    CLEAR_ALL,
+    SYNC_POL,
+    SCAN_BY_NODE,
+    LINE_SCAN
+};
+
+extern EmbeddedState embeddedState;
 
 #endif // GLOBAL_VARIABLES_H

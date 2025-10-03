@@ -39,5 +39,6 @@ int mapDayToNumber(const QString& day);
 QString mapWeekdayToName(uchar day);
 QString logTestTypeHelper(uint8_t testType);
 
+void convertDevKeyStringToByteArray(QString devKeyString, uint8_t* devKey);
 
 #endif // AUX_FUNCTIONS_H

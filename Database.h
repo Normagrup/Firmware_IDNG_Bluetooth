@@ -29,6 +29,7 @@ public:
     void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID, uint16_t fatherRealAddress);
     void setGroup(uint16_t realAddress, uint16_t groupAddress);
     void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode);
+    void setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t num_elem, uint8_t* dev_key);
     void setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value);
 
     bool isNodeInDatabase(uint16_t nodeAddress);
@@ -87,6 +88,7 @@ public:
     int getCountOfDirectChildren(uint16_t nodeAddress);
     QList<uint16_t> getChildrenRealAddresses(uint16_t nodeAddress);
     QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
+    uint16_t getNextNodeAddress(uint16_t doneIts);
 
     uint16_t getMasterRealAddress(void);
     void setMasterRealAddress(uint16_t newAntennaAddress);
@@ -105,6 +107,12 @@ public:
     ReplaceNode getNodeDataForReplace(uint16_t realAddress);
     void setNodeDataForReplace(ReplaceNode replaceNode, uint16_t realAddress);
     uint16_t getNodeNetAddressForReplace(uint16_t realAddress);
+    QString getDevKey(uint16_t nodeAddress);
+    void setRecoveryDevKey(uint16_t addr, const uint8_t devKey[16]);
+
+    uint16_t getNextUnicastAddress(void);
+    void updateNextUnicastAddress(uint16_t nextUnicastAddress);
+    QList<uint16_t> getAddressesDescForGlobalRemove();
 
 signals:
 

@@ -26,7 +26,7 @@
             </div>
             
             <div class="popup-subcontainer-small">
-                <span class="closeWindow" onclick="parent.closeManageDataPopup()"> &times; </span>
+                <span id="closeClearAllPopup" class="closeWindow" onclick="parent.closeManageDataPopup()"> &times; </span>
             </div>
         </div>
     </div>
@@ -152,22 +152,17 @@
     </div>
 
     <script>
-        function isLineScanningInProgress() {
-            setTimeout(function() {
-				parent.sendData("SET_IS_LS_IN_PROGRESS", "");
-			}, 10);
-        }
-
         window.onload = function () {
-            isLineScanningInProgress();
-
             const input = document.getElementById('deleteConfirmInput');
             const button = document.getElementById('deletingDataButton');
+
+            const popupHeader = document.getElementById('confirmDeleteData');
 
             if (input && button) {
                 input.addEventListener('input', function () {
                     const text = input.value.trim().toUpperCase();
-                    button.disabled = (text !== "DELETE");
+                    const header = popupHeader.textContent;
+                    button.disabled = (text !== "DELETE") || (header !== "Do you want to delete ALL the data?");
                 });
 
                 // Reiniciar botón por si ya estaba abierto antes

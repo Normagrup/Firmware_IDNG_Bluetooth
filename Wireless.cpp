@@ -33,6 +33,13 @@ Wireless::Wireless(QObject *parent)
     connect(&addDeviceTimer, &QTimer::timeout, this, &Wireless::addDeviceTimerHandler);
     connect(&confirmAddDeviceTimer, &QTimer::timeout, this, &Wireless::confirmAddDeviceTimerHandler);
     connect(&newIterationTimer, &QTimer::timeout, this, &Wireless::newIterationTimerHandler);
+    connect(&replaceP2Timer, &QTimer::timeout, this, &Wireless::replaceP2TimerHandler);
+    replaceP2Timer.setSingleShot(true);
+    connect(&replaceP3Timer, &QTimer::timeout, this, &Wireless::replaceP3TimerHandler);
+    replaceP3Timer.setSingleShot(true);
+    connect(&cleanCdbTimer, &QTimer::timeout, this, &Wireless::cleanCdbTimerHandler);
+    connect(&askInitDataFromMicroTimer, &QTimer::timeout, this, &Wireless::askInitDataFromMicroTimerHandler);
+    askInitDataFromMicroTimer.setSingleShot(true);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
@@ -56,11 +63,33 @@ void Wireless::runNetwork()
 
     _database->loadFailComCycles();
 
-    sendNetKey(_uartPort, _database);
-    delay(1000);
-    sendAntennaAddress(_uartPort, _database);
-    delay(2000);
-    sendAntennaGetAddress(_uartPort);
+    bool notRan = true;
+
+    while(notRan) {
+        sendSetAntennaAddressAndNetKey(_uartPort, _database);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            sendGetAntennaAddressAndNetKey(_uartPort);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) {
+                delay(300);
+                notRan = false;
+                qDebug() << "EXITO!!! La antena se inició correctamente";
+            }
+            else {
+                qDebug() << "ERROR!!! El micro no respondió al segundo mensaje de inicio";
+                sendInitAlert(_webServer);
+                delay(1000);
+            }
+        }
+        else {
+            qDebug() << "ERROR!!! El micro no respondió al primer mensaje de inicio";
+            sendInitAlert(_webServer);
+            delay(1000);
+        }
+    }
 
     pollingTimer.start(POLLING_TIMER_MS);
 /*
@@ -366,17 +395,12 @@ void Wireless::addDeviceTimerHandler()
 
     if (commissionData.isRelayNode && scannedUUID[0].nodeAddressReport != antennaRealAddress) {
         if (numberOfIterations != 0 && !forceStopCommissioning) {
-            qDebug() << "NUEVO ESCANEO" << numberOfIterations;
-            numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
-            doneIterations++;
+            do {
+                qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
+                sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport,_database);
+                delay(5000);
+            } while (!commissionData.isChangeRelayConfirmed);
         }
-
-        do {
-            qDebug() << "CHANGE RELAY NODE" << scannedUUID[0].nodeAddressReport;
-            sendUartChangeRelay(_uartPort, scannedUUID[0].nodeAddressReport);
-            delay(5000);
-        } while (!commissionData.isChangeRelayConfirmed);
     }
 
     qDebug() << "IS CHANGE FALSE";
@@ -400,9 +424,13 @@ void Wireless::addDeviceTimerHandler()
         if (numberOfIterations != 0 && !forceStopCommissioning) {
             qDebug() << "NUEVO ESCANEO" << numberOfIterations;
             numberOfIterations--;
-            sendLogCommissionEntry(_webServer, "New iteration completed from " + _database->getNextNodeName(doneIterations), "INFO");
-            doneIterations++;
-            sendUartNewIteration(_uartPort);
+            sendLogCommissionEntry(_webServer, "- New iteration in process from " + _database->getNextNodeName(doneIterations), "INFO");
+            uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
+            //qDebug() << "[1] DONE ITERATIONS: "<< doneIterations;
+            delay(300);
+            sendUartInyectNode(_uartPort, addressToNextIt, _database);
+            while(messageState == PENDING) {}
+            sendUartNewIteration(_uartPort, addressToNextIt);
             newIterationTimer.start(NEW_ITERATION_TIMER_MS);
         }
         else {
@@ -418,8 +446,14 @@ void Wireless::addDeviceTimerHandler()
                 scannedUUID[i].nodeAddressReport = 0;
             }
 
-            sendEndAutoCommission(_webServer);
+            sendUartClearInyectedNodes(_uartPort, true, _database);
+            while(messageState == PENDING) {}
+
             pollingTimer.start(POLLING_TIMER_MS);
+
+            sendEndAutoCommission(_webServer);   
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            embeddedState = FREE;
         }
     }
 }
@@ -441,7 +475,40 @@ void Wireless::confirmAddDeviceTimerHandler()
 void Wireless::newIterationTimerHandler()
 {
     qDebug() << "NEW ITERATION TIMER";
-    sendUartNewIteration(_uartPort);
+    uint16_t addressToNextIt = _database->getNextNodeAddress(doneIterations);
+    //qDebug() << "[4] DONE ITERATIONS: "<< doneIterations;
+    delay(300);
+    sendUartInyectNode(_uartPort, addressToNextIt, _database);
+    while(messageState == PENDING) {}
+    sendUartNewIteration(_uartPort, addressToNextIt);
 }
 
+void Wireless::replaceP2TimerHandler()
+{
+    deleteNodeForReplace(_webServer, _uartPort, _database);
+}
 
+void Wireless::replaceP3TimerHandler()
+{
+    sendLogCommissionEntry(_webServer, "The node has been deleted.", "INFO");
+    restoreDataForReplace(_webServer, _uartPort, _database);
+}
+
+void Wireless::cleanCdbTimerHandler()
+{
+    sendUartClearInyectedNodes(_uartPort, true, _database);
+}
+
+void Wireless::askInitDataFromMicroTimerHandler()
+{
+    sendSetAntennaAddressAndNetKey(_uartPort, _database);
+    while(messageState == PENDING) {}
+
+    if(messageState == RECEIVED) {
+        qDebug() << "Se han cargado los datos de inicio de la antena correctamente";
+    }
+    else {
+        qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
+        sendInitAlert(_webServer);
+    }
+}

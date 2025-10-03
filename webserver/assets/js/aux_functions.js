@@ -350,10 +350,10 @@ function createGroupButtons()
     for (var i = 1; i <= 4; i++) {
         var button = iframeDocument.createElement('button');
 
-        if (i === 1) { button.textContent = "Lighting"; button.setAttribute('group-address', "C000"); } 
-        else if (i === 2) { button.textContent = "Emergency"; button.setAttribute('group-address', "C001"); } 
-        else if (i === 3) { button.textContent = "Even"; button.setAttribute('group-address', "C002"); } 
-        else if (i === 4) { button.textContent = "Odd"; button.setAttribute('group-address', "C003"); }
+        if (i === 1) { button.textContent = "(Gr0) Lighting"; button.setAttribute('group-address', "C000"); } 
+        else if (i === 2) { button.textContent = "(Gr1) Emergency"; button.setAttribute('group-address', "C001"); } 
+        else if (i === 3) { button.textContent = "(Gr2) Even"; button.setAttribute('group-address', "C002"); } 
+        else if (i === 4) { button.textContent = "(Gr3) Odd"; button.setAttribute('group-address', "C003"); }
         button.onclick = function() {
             openGroupControl(this);
         };
@@ -505,9 +505,16 @@ function delGroupPrev()
 
     var popup = iframeDocument.getElementById('popupDeletingGroup');
 	var popupOverlay = iframeDocument.getElementById('popupOverlay');
+    var deletingGroupLabel = iframeDocument.getElementById('deletingGroupLabel');
+    var deletingGroupButton = iframeDocument.getElementById('deletingGroupButton');
+    var closeDelGroupPopup = iframeDocument.getElementById('closeDelGroupPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+    deletingGroupLabel.textContent = "Do you want to delete the group?";
+    deletingGroupButton.classList.remove('button-disabled');
+    closeDelGroupPopup.style.pointerEvents = "auto";
+    closeDelGroupPopup.style.opacity = "1";
 }
 
 function editGroupPrev()
@@ -559,11 +566,14 @@ function delFromGroupPrev()
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var deletingNodeLabel = iframeDocument.getElementById('deletingNodeLabel');
     var deletingNodeButton = iframeDocument.getElementById('deletingNodeButton');
+    var closeDelNodeFromGroupPopup = iframeDocument.getElementById('closeDelNodeFromGroupPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     deletingNodeLabel.textContent = "Do you want to delete the node from the group?";
     deletingNodeButton.classList.remove('button-disabled');
+    closeDelNodeFromGroupPopup.style.pointerEvents = "auto";
+    closeDelNodeFromGroupPopup.style.opacity = "1";
 }
 
 function addDevicePrev(value)
@@ -599,11 +609,14 @@ function delDevicePrev()
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
         var deletingDeviceLabel = iframeDocument.getElementById('deletingDeviceLabel');
         var deletingDeviceButton = iframeDocument.getElementById('deletingDeviceButton');
+        var closeDelDevPopup = iframeDocument.getElementById('closeDelDevPopup');
 
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
         deletingDeviceLabel.textContent = "Do you want to delete the node from the network?";
         deletingDeviceButton.classList.remove('button-disabled');
+        closeDelDevPopup.style.pointerEvents = "auto";
+        closeDelDevPopup.style.opacity = "1";
 
     } else {
         networkErrorLabel.style.visibility = "visible";
@@ -623,11 +636,14 @@ function delAllDevicesPrev()
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var deletingAllDevicesLabel = iframeDocument.getElementById('deletingAllDevicesLabel');
     var deletingAllDevicesButton = iframeDocument.getElementById('deletingAllDevicesButton');
+    var closeDelAllPopup = iframeDocument.getElementById('closeDelAllPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     deletingAllDevicesLabel.textContent = "Do you want to delete ALL the nodes from the network?";
     deletingAllDevicesButton.classList.remove('button-disabled');
+    closeDelAllPopup.style.pointerEvents = "auto";
+    closeDelAllPopup.style.opacity = "1";
 }
 
 function closeWirelessPopup()
@@ -662,10 +678,10 @@ function closeWirelessPopup()
 function getDefaultGroupsForSelector()
 {
     return "<option value='-'> ---- </option>" +
-            "<option value='C000'> Lighting </option>" +
-            "<option value='C001'> Emergency </option>" +
-            "<option value='C002'> Even </option>" +
-            "<option value='C003'> Odd </option>";
+            "<option value='C000'> (Gr0) Lighting </option>" +
+            "<option value='C001'> (Gr1) Emergency </option>" +
+            "<option value='C002'> (Gr2) Even </option>" +
+            "<option value='C003'> (Gr3) Odd </option>";
 }
 
 function clearAllDataPrev()
@@ -676,10 +692,17 @@ function clearAllDataPrev()
     var popup = iframeDocument.getElementById('popup');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
     var confirmDeleteData = iframeDocument.getElementById('confirmDeleteData');
+    var input = iframeDocument.getElementById('deleteConfirmInput');
+    var button = iframeDocument.getElementById('deletingDataButton');
+    var closeClearAllPopup = iframeDocument.getElementById('closeClearAllPopup');
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
     confirmDeleteData.textContent = "Do you want to delete ALL the data?";
+    input.value = "";
+    button.disabled = true;
+    closeClearAllPopup.style.pointerEvents = "auto";
+    closeClearAllPopup.style.opacity = "1";
 }
 
 function closeManageDataPopup()
