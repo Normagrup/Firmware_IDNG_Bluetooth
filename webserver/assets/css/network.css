@@ -361,6 +361,10 @@ label {
     background-color: #c12026;
 }
 
+.node-container button.orange {
+    background-color: orange;
+}
+
 .node-container button.blue:hover {
     background-color: #63e8f0;
 }
@@ -371,6 +375,10 @@ label {
 
 .node-container button.red:hover {
     background-color: #ff7f7f;
+}
+
+.node-container button.orange:hover {
+    background-color: #fca757;
 }
 
 .fail-count-badge {

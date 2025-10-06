@@ -804,7 +804,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         bool hasFailures = meshDevice[subnet][id].getTotalFailures() > 0;
         bool onOffStatus = meshDevice[subnet][id].getActualLvl() > 0;
 
-        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures, onOffStatus);
+        uint8_t emergencyMode = meshDevice[subnet][id].getEmergencyMode();
+        bool isInEmergency = (emergencyMode >> 2) & 1;
+
+        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures, onOffStatus, isInEmergency);
     }
     else if (type == WS_GET_GROUPS) {
         sendGroups(webServer, database);
@@ -1576,8 +1579,9 @@ void sendRecordedDevice(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus) {
-    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off");
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus, bool isInEmergency)
+{
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off") + "_" + (isInEmergency ? "on" : "off");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1828,9 +1832,9 @@ void sendConfirmEndSyncPOL(WebServer* webServer)
 
 void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase)
 {
-    QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
+    //QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
 
-    QString message = QString(WS_SEND_LS_INFO) + "@" + hexStr + "_" + QString::number(phase);
+    QString message = QString(WS_SEND_LS_INFO) + "@" + QString::number(nodeAddr) + "_" + QString::number(phase);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

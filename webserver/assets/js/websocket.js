@@ -1081,9 +1081,11 @@ function processIsConfig(value)
     var isConfig = parts[2];
     var hasFailures = parts[3];
     var onOffStatus = parts[4];
+    var emergencyState = parts[5];
     var configured = (isConfig === "true");
     var failed = (hasFailures === "true");
     var onOff = (onOffStatus === "on");
+    var inEmergency = (emergencyState === "on");
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -1095,16 +1097,19 @@ function processIsConfig(value)
 
         if(configured) {
             if(failed) {
-                button.classList.remove("blue", "gray");
+                button.classList.remove("blue", "gray", "orange");
                 button.classList.add("red");
+            } else if (inEmergency) {
+                button.classList.remove("red", "gray", "blue");
+                button.classList.add("orange");
             } else {
-                button.classList.remove("red", "gray");
+                button.classList.remove("red", "gray", "orange");
                 button.classList.add("blue");
             }
             button.disabled = false;
             button.innerHTML += '<span class="status-indicator ' + (onOff ? 'on-state' : 'off-state') + '"></span>';
         } else {
-            button.classList.remove("red", "blue"); 
+            button.classList.remove("red", "blue", "orange"); 
             button.classList.add("gray");
             button.disabled = true;
         }
@@ -1559,14 +1564,14 @@ function processLSInfo(value)
     var btnStop2 = iframeDocument.getElementById('stopButton2');
 
     if(phase == "1") {
-        informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+        informerLabel1.textContent = "Phase 1: Scanning Address -> " + actualNode;
         informerLabel2.textContent = "Phase 2: Waiting...";
         btnStop1.disabled = false;
         btnStop2.disabled = true;
     }
     else if(phase == "2") {
         informerLabel1.textContent = "Phase 1: Completed.";
-        informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+        informerLabel2.textContent = "Phase 2: Confirming Address -> " + actualNode;
         btnStop1.disabled = true;
         btnStop2.disabled = false;
     }
@@ -1678,7 +1683,7 @@ function processReplacing(value, init)
 
 function processWriteIdError(value)
 {
-    alert("Vuelva a escanear el código");
+    alert("Scan the code again");
 }
 
 function processReceivedData(data) 
