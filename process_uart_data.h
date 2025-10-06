@@ -141,7 +141,6 @@ void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
-void trackGroupUpdateForEth(QByteArray data);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 
 #endif // PROCESS_UART_DATA_H

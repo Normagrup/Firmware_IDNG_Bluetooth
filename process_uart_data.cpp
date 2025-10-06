@@ -475,7 +475,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         if(added) { 
                             messageState = RECEIVED;
-                            trackGroupUpdateForEth(data); 
                         }
                         else { messageState = MISSED; } // se simula que no ha llegado para que notifique el error en el proceso
                     }
@@ -1857,16 +1856,6 @@ void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddres
     dstAddress.setAddress(rcvAddress);
 
     _udpSocket->sendData(dstAddress, frame);
-}
-
-void trackGroupUpdateForEth(QByteArray data)
-{
-    uint16_t nodeAddress = ((uint16_t)data[3] << 8) | data[4];
-    uint16_t groupAddress = ((uint16_t)data[5] << 8) | data[6];
-    if (!pendingGroupUpdatesEth.isEmpty()) {
-        QString key = QString("%1:%2").arg(nodeAddress).arg(groupAddress);
-        pendingGroupUpdatesEth.remove(key);
-    }
 }
 
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)

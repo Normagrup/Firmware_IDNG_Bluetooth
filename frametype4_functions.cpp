@@ -4,6 +4,8 @@
 #include "aux_functions.h"
 #include "time_functions.h"
 #include "process_webserver_data.h"
+#include <QThread>
+#include <QCoreApplication>
 
 void setIPAddress(QByteArray data, Database* _database)
 {
@@ -258,7 +260,16 @@ void updateGroupsDataFromEth(QByteArray data, Database* _database, UartPort* _ua
     WebServer * webserver;
 
     pendingGroupBitmaps.append(gb);
-    processGroupBitmap(gb, webserver, _database, _uartPort); //Process the group read/write bits from eth
+    processGroupBitmap(gb, webserver, _database, _uartPort); // add/rem device from group
+    const int PER_DEVICE_MS = 4500; // 0.5 + 1.5 + 2.0s first pass worst case
+    const int retryDelay = qMax(1000, numDevicesToUpdate * PER_DEVICE_MS);
+
+    QTimer::singleShot(retryDelay, [=]() {
+        if (!pendingGroupUpdatesEth.isEmpty()) {
+            // run once more to catch stragglers
+            processGroupBitmap(gb, webserver, _database, _uartPort);
+        }
+    });
 }
 
 void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, QByteArray testData)
@@ -547,17 +558,26 @@ void processGroupBitmap(const writeGroupBitmap &gb, WebServer * webserver, Datab
             groupDataConfiguration.configSecondGroup = false;
 
             sendUartInyectNode(_uartPort, address[0], _database);
-            while(messageState == PENDING) {}
+            while(messageState == PENDING) {
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                QThread::msleep(10);
+            }
 
             if(messageState == RECEIVED) {
                 sendUartAddGroupManual(_uartPort, address);
-                while(messageState == PENDING) {}
+                while(messageState == PENDING) {
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                    QThread::msleep(10);
+                }
 
                 if(messageState == RECEIVED) { added = true; }
             }
 
             sendUartClearInyectedNodes(_uartPort, false, _database);
-            while(messageState == PENDING) {}
+            while(messageState == PENDING) {
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                QThread::msleep(10);
+            }
 
             groupUpdateFromEth = true;
 
@@ -565,6 +585,8 @@ void processGroupBitmap(const writeGroupBitmap &gb, WebServer * webserver, Datab
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
             embeddedState = FREE;
             groupUpdateFromEth = false;
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+            QThread::msleep(50);
         }
         else if (!toAddToGroup && isInGroup) {
             numDevicesToUpdate++;
@@ -577,18 +599,29 @@ void processGroupBitmap(const writeGroupBitmap &gb, WebServer * webserver, Datab
             cleanCdbTimer.stop();
 
             sendUartInyectNode(_uartPort, address[0], _database);
-            while(messageState == PENDING) {}
+            while(messageState == PENDING) {
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                QThread::msleep(10);
+            }
 
             if(messageState == RECEIVED) {
                 sendUartDelGroup(_uartPort, address, _database);
-                while(messageState == PENDING) {}
+                while(messageState == PENDING) {
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                    QThread::msleep(10);
+                }
             }
 
             sendUartClearInyectedNodes(_uartPort, false, _database);
-            while(messageState == PENDING) {}
+            while(messageState == PENDING) {
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                QThread::msleep(10);
+            }
 
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
             embeddedState = FREE;
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+            QThread::msleep(50);
         }
     }
 }

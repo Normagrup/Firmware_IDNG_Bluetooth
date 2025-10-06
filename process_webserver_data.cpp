@@ -1673,6 +1673,10 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
                 if(added) {
                     meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress); // Añadir al modelo
                     database->setGroup(address, deviceTypeGroupAddress); // Añadir grupo en la BBDD
+                    if (!pendingGroupUpdatesEth.isEmpty()) {
+                        QString key = QString("%1:%2").arg(address).arg(deviceTypeGroupAddress);
+                        pendingGroupUpdatesEth.remove(key);
+                    }
                 }
                 break;
             }
