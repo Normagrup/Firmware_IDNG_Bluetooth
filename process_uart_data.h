@@ -124,7 +124,7 @@ void sendUartDaliCommand(UartPort* _uartPort, uint16_t targetAddress, uint8_t da
 void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress);
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode);
-void sendEndRecordDevice(UartPort* uartPort);
+void sendEndRecordDevice(UartPort* uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress);
 void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
 void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);

@@ -1565,8 +1565,10 @@ void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode)
     }
 }
 
-void sendEndRecordDevice(UartPort* _uartPort)
+void sendEndRecordDevice(UartPort* _uartPort, QString factoryCode)
 {
+    qDebug() << "[WRITE_ID 3] factoryCode =" << factoryCode;
+
     uint8_t att = 3;
     uint8_t actAtt = 0;
     int ms[3] = {1000, 2000, 3000};
