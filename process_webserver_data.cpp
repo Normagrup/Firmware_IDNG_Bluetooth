@@ -1681,7 +1681,7 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
 
     QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + (added ? "true" : "false");
 
-    if (webServer != nullptr) { webServer->sendData(message); }
+    if (webServer != nullptr && groupUpdateFromEth != true) { webServer->sendData(message); }
 
     // Log entry
     QString groupAddressString = QString("%1").arg(deviceTypeGroupAddress, 4, 16, QLatin1Char('0')).toUpper();

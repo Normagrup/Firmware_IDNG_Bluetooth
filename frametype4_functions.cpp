@@ -249,20 +249,16 @@ void saveGroupFromEth(QByteArray data, Database* _database)
     _database->editGroup(groupAddress, newName);
 }
 
-void updateGroupsDataFromEth(QByteArray data,  Database* _database, UartPort* _uartPort)
+void updateGroupsDataFromEth(QByteArray data, Database* _database, UartPort* _uartPort)
 {
     writeGroupBitmap gb;
     gb.groupId = data[10];
     gb.subnetId = data[11];
     gb.bitmap = data.mid(12, 8);
+    WebServer * webserver;
 
     pendingGroupBitmaps.append(gb);
-    processGroupBitmap(gb, _database, _uartPort);  //First try
-    int durMS = numDevicesToUpdate * 300;
-    QTimer::singleShot(durMS + 200, [=]() {
-        if(!pendingGroupUpdatesEth.isEmpty())
-            processGroupBitmap(gb, _database, _uartPort);  //Retry after delay
-    });
+    processGroupBitmap(gb, webserver, _database, _uartPort); //Process the group read/write bits from eth
 }
 
 void sendTestDataFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, QByteArray testData)
@@ -516,7 +512,7 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
     }
 }
 
-void processGroupBitmap(const writeGroupBitmap &gb, Database* _database, UartPort* _uartPort)
+void processGroupBitmap(const writeGroupBitmap &gb, WebServer * webserver, Database* _database, UartPort* _uartPort)
 {
     uint16_t groupAddress = getMaskedGroupId(gb.groupId);
     uint8_t subnet = gb.subnetId;
@@ -542,8 +538,33 @@ void processGroupBitmap(const writeGroupBitmap &gb, Database* _database, UartPor
             QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
             pendingGroupUpdatesEth.insert(key);
             groupActionTypeMap[key] = Add;
-            sendUartAddGroupManual(_uartPort, address);
-            delay(300);
+
+            embeddedState = ADD_NODE_TO_GROUP;
+            cleanCdbTimer.stop();
+
+            bool added = false;
+
+            groupDataConfiguration.configSecondGroup = false;
+
+            sendUartInyectNode(_uartPort, address[0], _database);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) {
+                sendUartAddGroupManual(_uartPort, address);
+                while(messageState == PENDING) {}
+
+                if(messageState == RECEIVED) { added = true; }
+            }
+
+            sendUartClearInyectedNodes(_uartPort, false, _database);
+            while(messageState == PENDING) {}
+
+            groupUpdateFromEth = true;
+
+            sendConfirmAddNodeToGroup(webserver, address[0], address[1], added, _database);
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            embeddedState = FREE;
+            groupUpdateFromEth = false;
         }
         else if (!toAddToGroup && isInGroup) {
             numDevicesToUpdate++;
@@ -551,8 +572,23 @@ void processGroupBitmap(const writeGroupBitmap &gb, Database* _database, UartPor
             QString key = QString("%1:%2").arg(realAddress).arg(groupAddress);
             pendingGroupUpdatesEth.insert(key);
             groupActionTypeMap[key] = Remove;
-            sendUartDelGroup(_uartPort, address, _database);
-            delay(300);
+
+            embeddedState = DEL_NODE_FROM_GROUP;
+            cleanCdbTimer.stop();
+
+            sendUartInyectNode(_uartPort, address[0], _database);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) {
+                sendUartDelGroup(_uartPort, address, _database);
+                while(messageState == PENDING) {}
+            }
+
+            sendUartClearInyectedNodes(_uartPort, false, _database);
+            while(messageState == PENDING) {}
+
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            embeddedState = FREE;
         }
     }
 }

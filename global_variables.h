@@ -120,5 +120,6 @@ enum EmbeddedState {
 };
 
 extern EmbeddedState embeddedState;
+extern bool groupUpdateFromEth;
 
 #endif // GLOBAL_VARIABLES_H

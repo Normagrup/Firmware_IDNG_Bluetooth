@@ -142,7 +142,6 @@ void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void trackGroupUpdateForEth(QByteArray data);
-void updateDelNodeToDatabase(uint16_t address, uint16_t deviceTypeGroupAddress, bool removed, Database* database);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 
 #endif // PROCESS_UART_DATA_H
