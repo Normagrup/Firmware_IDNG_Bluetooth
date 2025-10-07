@@ -2542,9 +2542,8 @@ function codeReaderChanged()
     settingsContainer.style.display = 'flex';
     confirmationContainer.style.display = 'none';
 
-    var labelParts = codeReader.value.split('ñ');
-    var labelCodeParts = labelParts[1];
-    var codeParts = labelCodeParts.split('.');
+    var labelPart = codeReader.value.slice(-11);
+    var codeParts = labelPart.split('.');
     var labelCode1 = iframeDocument.getElementById('labelCode1');
     var labelCode2 = iframeDocument.getElementById('labelCode2');
     var labelCode3 = iframeDocument.getElementById('labelCode3');
@@ -2558,7 +2557,7 @@ function codeReaderChanged()
     labelContainer.style.display = 'none';
     codeContainer.style.display = 'flex';
 
-    sendData("SET_READ_ID_CODE", codeReader.value);
+    //sendData("SET_READ_ID_CODE", codeReader.value);
 
     codeReader.value = '';
 }
