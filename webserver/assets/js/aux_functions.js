@@ -848,6 +848,45 @@ function randomizeNetKey()
     }
 }
 
+async function copyNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var newNetKey = "";
+
+    for(var i = 0; i < 16; i++) {
+        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const value = input.value.trim().toUpperCase();
+        newNetKey += value;
+
+        if (!/^[0-9A-F]{2}$/.test(value)) {
+            alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
+            return null;
+        }
+    }
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(newNetKey);
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = newNetKey;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            ta.setSelectionRange(0, ta.value.length); // iOS
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        alert('The netKey has been copied');
+    } catch (e) {
+        alert("The netKey couldn't be copied");
+    }
+}
+
 function saveCustomNetKey()
 {
     var iframe = document.getElementById('mainframe');
@@ -939,4 +978,22 @@ function showReplacePopup()
             }
         }
     }
+}
+
+function loadDefaultSettings()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var ip = iframeDocument.querySelector('input[name="ipValue"]');
+    var submask = iframeDocument.querySelector('input[name="submaskValue"]');
+    var gateway = iframeDocument.querySelector('input[name="gatewayValue"]');
+    var building = iframeDocument.querySelector('input[name="buildingName"]');
+    var line = iframeDocument.querySelector('input[name="lineName"]');
+
+    ip.value = "192.168.1.252";
+    submask.value = "255.255.255.0";
+    gateway.value = "1.1.10.100";
+    building.value = "NO_NAME";
+    line.value = "NO_NAME";
 }

@@ -89,3 +89,15 @@ h3 {
     text-align: center;
     margin-top: 10px;
 }
+
+.second-button-container {
+    display: flex;
+}
+
+.second-button-container :first-child {
+    margin-right: 5px;
+}
+
+.second-button-container :last-child {
+    margin-left: 5px;
+}
