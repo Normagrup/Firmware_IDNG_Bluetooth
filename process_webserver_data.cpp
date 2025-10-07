@@ -755,9 +755,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        qDebug() << "[ID_CODE] value =" << value;
-        QStringList webServerParts = value.split("ñ");
-        QString deviceID = webServerParts[1];
+        QString deviceID = value;
         qDebug() << "[ID_CODE] deviceID =" << deviceID;
 
         sendWriteIDCodeFrame(uartPort, deviceID);
