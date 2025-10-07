@@ -126,7 +126,7 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode);
 void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode);
 void sendEndRecordDevice(UartPort* uartPort, QString factoryCode);
 void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress);
-void sendUartPOLForUpdate(UartPort* _uartPort, Database* database);
+void sendUartPOLForUpdate(UartPort* _uartPort, Database* database, WebServer* webServer);
 void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);

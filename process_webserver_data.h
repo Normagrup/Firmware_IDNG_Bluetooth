@@ -124,6 +124,7 @@
 #define WS_SEND_CONFIRM_START_REPLACE       "CONFIRM_START_REPLACE"
 #define WS_SEND_CONFIRM_END_REPLACE         "CONFIRM_END_REPLACE"
 #define WS_SEND_WRITE_ID_ERROR              "WRITE_ID_ERROR"
+#define WS_SEND_ESTIMATED_TIME              "ESTIMATED_TIME"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_NET_KEY_GET                 "NET_KEY_GET"
@@ -193,5 +194,6 @@ void sendConfirmEndClearAllData(WebServer* webServer);
 void sendConfirmStartReplace(WebServer* webServer);
 void sendConfirmEndReplace(WebServer* webServer);
 void sendWriteIDError(WebServer* webServer);
+void sendEstimatedTime(WebServer* webServer, uint16_t time);
 
 #endif // PROCESS_WEBSERVER_DATA_H

@@ -183,6 +183,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             uint8_t counter = 0;
             uint8_t max = 64;
 
+            sendEstimatedTime(webServer, addresses.size() * 4); // 4 segundos por dispositivo
+
             for (const uint16_t nodeAddress : addresses) {
                 sendUartInyectNode(uartPort, nodeAddress, database);
                 while(messageState == PENDING) {}
@@ -421,8 +423,18 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
+
+        int count = 0;
+        for(int i = 0; i < MAX_SUBNET; i++){
+            for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                if(meshDevice[i][j].getIsConfigured() && meshDevice[i][j].isOnSubList(groupAddress))
+                    count++;
+            }
+        }
+        sendEstimatedTime(webServer, 1 + count * 3); // 1 de base, 3 segundos por dispositivo
+
+        database->removeGroup(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         //sendGroups(webServer, database);
 
@@ -756,7 +768,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         while(messageState == PENDING) {}
         sendDaliTested(webServer);
 
-        sendEndRecordDevice(uartPort);
+        sendEndRecordDevice(uartPort, deviceID);
         while(messageState == PENDING) {}
 
         // confirmación en la respuesta al finalizar el escaneo
@@ -901,7 +913,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = SYNC_POL;
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        sendUartPOLForUpdate(uartPort, database);
+        sendUartPOLForUpdate(uartPort, database, webServer);
 
         sendConfirmEndSyncPOL(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
@@ -1614,6 +1626,8 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
     uint8_t counter = 0;
     uint8_t max = 64;
 
+    sendEstimatedTime(webServer, 5 + addresses.size() * 4); // 5 de base, 4 segundos por dispositivo
+
     for (const uint16_t nodeAddress : addresses) {
         sendUartInyectNode(uartPort, nodeAddress, database);
         while(messageState == PENDING) {}
@@ -1898,3 +1912,14 @@ void sendWriteIDError(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendEstimatedTime(WebServer* webServer, uint16_t time)
+{
+    uint8_t hours = time / 3600;
+    uint16_t tmp = time % 3600;
+    uint8_t minutes = tmp / 60;
+    uint8_t seconds = tmp % 60;
+
+    QString message = QString(WS_SEND_ESTIMATED_TIME) + "@" + QString::number(hours) + ":" + QString::number(minutes) + ":" + QString::number(seconds);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}

@@ -5,6 +5,7 @@ var nodesAdded = 0;
 var isStoppingCommission = false;
 var netKey;
 var antennaID;
+var estimatedTime;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -206,10 +207,14 @@ function confirmScan(value, init)
         
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
+
+        processEstimatedTime("0:0:10");
     }
     else {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
+
+        hideToast();
     }
 }
 
@@ -368,6 +373,8 @@ function addDeviceToNetworkList(value)
 
             popup.style.visibility = "visible";
             popupOverlay.style.visibility = "visible";
+
+            processEstimatedTime("0:0:5");
         };
 
         newNode.style.display = 'flex';
@@ -1265,6 +1272,8 @@ function processDelOneDev(value, init)
         var closeDelDevPopup = iframeDocument.getElementById('closeDelDevPopup');
         closeDelDevPopup.style.pointerEvents = "none";
         closeDelDevPopup.style.opacity = "0.5";
+
+        processEstimatedTime("0:0:6");
     }
     else // Cuando termina el borrado
     {
@@ -1276,6 +1285,8 @@ function processDelOneDev(value, init)
         setTimeout(function() {
             popup.style.visibility = "hidden";
             popupOverlay.style.visibility = "hidden";
+
+            hideToast();
         }, 1000);
     }
 }
@@ -1310,6 +1321,8 @@ function processDelAllDev(value, init)
 
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
+
+        hideToast();
     }
 }
 
@@ -1330,6 +1343,8 @@ function processAddNodeToGroup(value)
     addLabel.textContent = added ? "Node correctly added" : "Something went wrong..."
     addLoader.style.animation = "none";
 
+    hideToast();
+
     setTimeout(function() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
@@ -1349,6 +1364,8 @@ function processDelNodeFromGroup(value)
 
     loadNodesLists();
 
+    hideToast();
+
     setTimeout(function() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
@@ -1365,6 +1382,8 @@ function processDelGroup(value)
 
     var groupList = iframeDocument.getElementById('groupList');
     groupList.innerHTML = getDefaultGroupsForSelector();
+
+    hideToast();
 
     setTimeout(function() {
         loadGroups();
@@ -1462,6 +1481,8 @@ function confirmManualRelay(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
+
+    hideToast();
 }
 
 function processMasterAddressGet(value)
@@ -1542,6 +1563,8 @@ function processConfirmEndSyncPOL(value)
         sendData("GET_POWER_ON_LVL", currentPage);
     }
 
+    hideToast();
+
     setTimeout(function() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
@@ -1603,6 +1626,8 @@ function processConfirmEndClearAll(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
+
+    hideToast();
 }
 
 function processNetKeyGet(value)
@@ -1686,6 +1711,11 @@ function processWriteIdError(value)
     alert("Scan the code again");
 }
 
+function processEstimatedTime(value) {
+    estimatedTime = value;
+    showToast();
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1746,6 +1776,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
     else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
     else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
+    else if (type == "ESTIMATED_TIME") { processEstimatedTime(value); }
 }
 
 function sendData(type, value) 
@@ -1901,6 +1932,8 @@ function addToGroupVisual()
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+
+    processEstimatedTime("0:0:5");
 }
 
 function addToGroup() 
@@ -1938,6 +1971,8 @@ function delFromGroupVisual()
     deletingNodeButton.classList.add('button-disabled');
     closeDelNodeFromGroupPopup.style.pointerEvents = "none";
     closeDelNodeFromGroupPopup.style.opacity = "0.5";
+
+    processEstimatedTime("0:0:5");
 }
 
 function delFromGroup() 

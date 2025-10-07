@@ -1596,7 +1596,7 @@ void sendEndRecordDevice(UartPort* _uartPort, QString factoryCode)
     }
 }
 
-void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
+void sendUartPOLForUpdate(UartPort* _uartPort, Database* database, WebServer* webServer)
 {
     // Se genera un SET con todas las direcciones de los grupos existentes (los 4 por defecto y los creados manualmente)
     QSet<QString> groupsSet = {"C000", "C001", "C002", "C003"};
@@ -1642,6 +1642,8 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
         qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
     }
+
+    sendEstimatedTime(webServer, 1 + crossedGroupAndNodes.size() * 3); // 1 de base, 3 segundos por dispositivo
 
     for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
         uint16_t realAddress = crossedGroupAndNodes[i].first;
