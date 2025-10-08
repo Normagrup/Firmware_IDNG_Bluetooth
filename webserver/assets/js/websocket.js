@@ -2557,7 +2557,7 @@ function codeReaderChanged()
     labelContainer.style.display = 'none';
     codeContainer.style.display = 'flex';
 
-    //sendData("SET_READ_ID_CODE", codeReader.value);
+    sendData("SET_READ_ID_CODE", labelPart);
 
     codeReader.value = '';
 }
