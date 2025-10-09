@@ -31,7 +31,7 @@ function processAskStateToEmbedded(value)
 
 function processRecoveringMicro(value)
 {
-    alert("Recuperando comunicación con el micro. Vuelva a intentarlo en 10 segundos.");
+    alert("Recovering communication. Please, try again in 10 seconds.");
 }
 
 function processLoginInfo(value) 
@@ -2727,10 +2727,9 @@ function setAntennaNumberAndNetKey() {
         sendData("SET_MASTER_ADDR_AND_NETKEY", newAntennaID + "_" + newNetKey);
 
         setTimeout(function () {
-            sendData("SET_REBOOT_DEVICE", " ");
             logoutApp();
             window.location.href = "http://" + window.location.hostname;
-        }, 2000);
+        }, 100);
     }
 }
 
@@ -2846,9 +2845,8 @@ function loadFactoryNetKey()
         sendData("SET_MASTER_ADDR_AND_NETKEY", "" + "_" + factoryNetKey);
 
         setTimeout(function () {
-            sendData("SET_REBOOT_DEVICE", " ");
             logoutApp();
             window.location.href = "http://" + window.location.hostname;
-        }, 2000);
+        }, 100);
     }
 }

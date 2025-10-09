@@ -988,6 +988,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(100);
 
         sendAntennaAddressAndNetKey(uartPort, antennaID != "", netKey != "");
+
+        delay(400);
+
+        rebootDevice();
     }
     else if (type == WS_REPLACE_NODES) {
         embeddedState = REPLACE;
