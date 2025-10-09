@@ -1799,9 +1799,11 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
+void reloadAntennaAddressAndNetKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString netKeyStr)
 {
     database->setMasterRealAddress(antennaAddress);
+    database->setNetKey(netKeyStr);
+
     antennaRealAddress = antennaAddress;
 }
 
@@ -1918,6 +1920,13 @@ void sendEstimatedTime(WebServer* webServer, uint16_t time)
     uint8_t seconds = tmp % 60;
 
     QString message = QString(WS_SEND_ESTIMATED_TIME) + "@" + QString::number(hours) + ":" + QString::number(minutes) + ":" + QString::number(seconds);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendInitAlert(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_INIT_ALERT) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

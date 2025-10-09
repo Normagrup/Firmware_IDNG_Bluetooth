@@ -1404,7 +1404,11 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
     if (!query.exec()) {
         qDebug() << "Failed to update MasterAddress:" << query.lastError().text();
     } else {
-        qDebug() << "MasterAddress updated to" << hexString;
+        if (query.numRowsAffected() == 0) {
+            qDebug() << "No rows were updated. MasterAddress remains unchanged.";
+        } else {
+            qDebug() << "MasterAddress updated to" << hexString;
+        }
     }
 }
 
@@ -1433,7 +1437,11 @@ void Database::setNetKey(QString netKey)
     if (!query.exec()) {
         qDebug() << "Failed to update NetKey:" << query.lastError().text();
     } else {
-        qDebug() << "NetKey updated to" << netKey;
+        if (query.numRowsAffected() == 0) {
+            qDebug() << "No rows were updated. NetKey remains unchanged.";
+        } else {
+            qDebug() << "NetKey updated to" << netKey;
+        }
     }
 }
 
