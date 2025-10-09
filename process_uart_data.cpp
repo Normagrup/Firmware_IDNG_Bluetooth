@@ -321,9 +321,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                             for(int j = 0; j < 16; j++)
                                 netKeyStr += QString::asprintf("%02X", netKey[j]);
 
-                        reloadAntennaAddressAndNetKey(webServer, database, antennaAddress, netKeyStr);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        messageState = RECEIVED;
+                        if(antennaAddress != 0 && netKeyStr != "00000000000000000000000000000000") {
+                            reloadAntennaAddressAndNetKey(webServer, database, antennaAddress, netKeyStr);
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                            messageState = RECEIVED;
+                        } else {
+                            qDebug() << "NOTA: Antenna Address y NetKey iguales a 0 recibidas";
+                        }
                     }
                     break;
 
@@ -1815,6 +1819,8 @@ void sendSetAntennaAddressAndNetKey(UartPort* _uartPort, Database* database)
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
+
+        qDebug() << "Intento" << (actAtt + 1) << "-> Address:" << masterStoredAddress << "- NetKey:" << netKey;
 
         delay(ms[actAtt]);
         actAtt++;
