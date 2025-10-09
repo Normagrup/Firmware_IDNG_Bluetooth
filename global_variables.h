@@ -111,9 +111,12 @@ enum EmbeddedState {
     CLEAR_ALL,
     SYNC_POL,
     SCAN_BY_NODE,
-    LINE_SCAN
+    LINE_SCAN,
+    RECOVERING_MICRO
 };
 
 extern EmbeddedState embeddedState;
+
+extern bool notRan;
 
 #endif // GLOBAL_VARIABLES_H
