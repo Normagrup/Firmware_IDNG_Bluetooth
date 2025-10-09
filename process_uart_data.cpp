@@ -645,7 +645,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 //*/
                 //*
                 timerGroupAddress[0] = meshDevice[i][j].getRealAddress();
-                if (deviceType == 0x01) {               // EMERGENCY
+                if (deviceType == 0x01) {               // EMERGENCY 0x01
                     timerGroupAddress[1] = 0xC001;
 
                     if(((j + 1) % 2) != 0) {
@@ -657,17 +657,10 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                         qDebug() << "GROUP PAR";
                     }
                 }
-                else if (deviceType == 0x06) {          // LIGHTING
+                else if (deviceType == 0x06) {          // LIGHTING 0x06
                     timerGroupAddress[1] = 0xC000;
+                    timerGroupAddress[2] = 0x0000;
 
-                    if(((j + 1) % 2) != 0) {
-                        timerGroupAddress[2] = 0xC003;
-                        qDebug() << "GROUP IMPAR";
-                    }
-                    else {
-                        timerGroupAddress[2] = 0xC002;
-                        qDebug() << "GROUP PAR";
-                    }
                 }
                 else {                                  // DEFAULT or UNKNOWN DEV TYPE -> Se mete en emergency
                     if(((j + 1) % 2) != 0) {
