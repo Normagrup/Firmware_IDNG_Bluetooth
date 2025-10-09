@@ -686,6 +686,7 @@ static void processEthFrameType1(QString rcvAddress, QByteArray data, UdpSocket*
             uint8_t nodesubnet = getNodeSubnetFromDaliAddress(daliAddress);
             uint16_t targetAddress = getTargetAddress(subnet, nodesubnet);
             powerOnQueryMap[targetAddress] = { pid, rcvAddress, _udpSocket };
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
             askPowerOnLevelFromEthToDali(_uartPort, subnet, nodesubnet);
             break;
         }
