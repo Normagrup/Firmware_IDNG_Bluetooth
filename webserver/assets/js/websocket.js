@@ -2106,6 +2106,11 @@ function loadNodesLists()
 
     if(groupSelected == "-") { return; }
 
+    var activeButtons = false;
+    if(groupSelected == "-" || groupSelected == "C000" || groupSelected == "C001" || groupSelected == "C002" || groupSelected == "C003") { activeButtons = false; }
+    else { activeButtons = true; }
+    iframeDocument.querySelectorAll('button.action').forEach(btn => { btn.disabled = !activeButtons; });
+
     sendData("GET_GROUP_NODES", groupSelected);
 }
 

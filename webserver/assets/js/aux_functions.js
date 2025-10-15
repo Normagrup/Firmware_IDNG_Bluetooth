@@ -288,7 +288,7 @@ function openGroupControl(button)
 
     // Carga de imágenes del grupo
     if (groupAddress === 'C000') { groupTypeIcon.src = "images/normalLightIcon.png"; }
-    else if (groupAddress === 'C001') { groupTypeIcon.src = "images/emergencyLightIcon.png"; }
+    else if (groupAddress === 'C001' || groupAddress === 'C002' || groupAddress === 'C003') { groupTypeIcon.src = "images/emergencyLightIcon.png"; }
     else { groupTypeIcon.src = "images/defaultLightIcon.png"; }
 
     popupText.textContent = button.textContent;
