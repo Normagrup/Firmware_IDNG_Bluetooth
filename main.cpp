@@ -7,6 +7,8 @@
 #include <atomic> // std::atomic<qint64>
 #include <cstring>    // strlen (write)
 #include "Wireless.h"
+#include "embedded_io.h"
+#include <chrono>
 
 // Tiempo máximo permitido sin responder
 constexpr int WATCHDOG_TIMEOUT_MS = 12000;
@@ -20,8 +22,13 @@ int main(int argc, char *argv[])
 
     qDebug() << "App running...";
 
+    EmbeddedIO io;                   // LED parpadea (estado Booting)
+
     Wireless* wirelessNet = new Wireless(nullptr);
     wirelessNet->runNetwork();
+
+     qDebug() << "READY";
+    io.markReady();                  // LED fijo = operativo
 
     // 1) Se inicializa y el hilo principal responde cada 2 s
     g_lastHeartbeatMs.store(QDateTime::currentMSecsSinceEpoch(), std::memory_order_relaxed);

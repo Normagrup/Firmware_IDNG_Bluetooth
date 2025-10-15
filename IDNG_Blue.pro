@@ -26,7 +26,8 @@ SOURCES += \
         process_eth_data.cpp \
         process_uart_data.cpp \
         process_webserver_data.cpp \
-        time_functions.cpp
+        time_functions.cpp \
+        embedded_io.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -57,7 +58,8 @@ HEADERS += \
     process_webserver_data.h \
     structures.h \
     time_functions.h \
-    version_config.h
+    version_config.h \
+    embedded_io.h
 
 QMAKE_CXXFLAGS += -O3
 
