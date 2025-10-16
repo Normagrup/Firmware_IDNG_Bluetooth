@@ -3,7 +3,7 @@
 
 #include "UdpSocket.h"
 #include "UartPort.h"
-
+#include "embedded_io.h"
 bool checkCRC(QByteArray data);
 bool checkFrameHeader(QByteArray data);
 bool checkRcvAddress(QString rcvAddress);

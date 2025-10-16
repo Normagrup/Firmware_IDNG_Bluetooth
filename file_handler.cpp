@@ -198,7 +198,15 @@ QString getLocalDay()
 
 void rebootDevice()
 {
+    //  estado de LEDs
+    if (QFile f1{"/sys/class/gpio/gpio82/value"}; f1.open(QIODevice::WriteOnly|QIODevice::Text)) {
+        QTextStream out(&f1); out << 1; f1.close();  // LINK OFF
+    }
+    if (QFile f2{"/sys/class/gpio/gpio81/value"}; f2.open(QIODevice::WriteOnly|QIODevice::Text)) {
+        QTextStream out(&f2); out << 0; f2.close();  // FAIL ON
+    }
     QProcess process;
+
     process.start("sudo", QStringList() << "reboot");
     process.waitForFinished(-1);
 }

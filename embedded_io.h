@@ -4,82 +4,88 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <QCoreApplication>
 #include <unistd.h>
+
+#include "file_handler.h"
 #include "Database.h"
 #include "eth_frames.h"
-#include <QCoreApplication>
 
-// ======= CONFIGURA AQUÍ TUS NÚMEROS DE GPIO (Linux) =======
 #define GPIO_I09_BTN_FACTORY   80
-#define GPIO_I06_LINK_LED      81
-#define GPIO_I07_HEARTBEAT     80
-#define GPIO_I08_MCU_REQ_RST   79
-// ===========================================================
-
-// Frecuencias/tiempos
-constexpr int HB_PERIOD_MS = 500;      // ~2 Hz
-constexpr int BOOT_BLINK_MS = 250;     // parpadeo rápido al arrancar
-constexpr int READY_BLINK_MS = 0;      // 0 = fijo
-constexpr int DEGRADED_BLINK_MS = 1000;
-constexpr int FACTORY_HOLD_MS = 2000; // mantener 10 s para reset a fábrica
+#define GPIO_I06_LINK_LED      82
+#define GPIO_I07_HEARTBEAT     81
 #ifndef IFACE_NAME
 #define IFACE_NAME "eth0"
 #endif
 
+constexpr int BOOT_BLINK_MS = 250;     // parpadeo rápido al arrancar
+constexpr int READY_BLINK_MS = 0;
+constexpr int DEGRADED_BLINK_MS = 1000;
+constexpr int FACTORY_HOLD_MS = 2000; // mantener 2 s para reset IP a fábrica
+constexpr int FAIL_BLINK_MS = 250;
+
 constexpr int BTN_SAMPLE_MS   = 20;
+
 
 class EmbeddedIO : public QObject {
     Q_OBJECT
 public:
-    enum class LinkState { Booting, Ready, Degraded };
 
+
+    enum class LedMode { Off, On, Blink };
     explicit EmbeddedIO(QObject* parent=nullptr);
     ~EmbeddedIO();
 
-    // Llamar tras tener todo listo (DB, red, etc.)
-    void markReady() { setLinkState(LinkState::Ready); }
-
-    // O usar esta si quieres indicar estado degradado
-    void setDegraded() { setLinkState(LinkState::Degraded); }
-
-signals:
-    void factoryResetTriggered();  // por si quieres enganchar lógica adicional
+    void markBooting();
+    void markReady();
+    void beginRebootSequence();
 
 private:
-    // ---- GPIO helpers (sysfs) ----
     static bool exportGpio(int n);
-    static bool unexportGpio(int n);
-    static bool setDir(int n, const char* dir); // "in" / "out"
-    static bool setEdge(int n, const char* edge); // "none"/"rising"/"falling"/"both"
+    static bool setDir(int n, const char* dir);
+    static bool setEdge(int n, const char* edge);
     static bool writeVal(int n, int v);
     static int  readVal(int n);
 
     void initGpios();
-    void setLinkState(LinkState s);
-    void updateLinkLed();
+
     void onFactoryButtonSample();
-    void onMcuReqRstSample();
+
     void doFactoryResetAndReboot();
-    void softRebootProcess();
+
     void setIPAddressFileV2(QString ipAddress);
     void setSubmaskAddressFileV2(QString submaskAddress);
     void setGatewayAddressFileV2(QString gatewayAddress);
     void setIPConfigInfoV2(QStringList webServerParts, Database* database);
 
+    // estado/motores de los leds
+    void setLinkMode(LedMode m, int periodMs = 300);
+    void setFailMode(LedMode m, int periodMs = 300);
+    void setLinkLed(bool on);
+    void setFailLed(bool on);
 
-    QTimer _hbTimer;          // toggle a I07
-    QTimer _linkTimer;        // parpadeo LED I06
-    QTimer _btnTimer;         // muestreo botón I09
-    QTimer _mcuReqTimer;      // muestreo I08 (opcional)
+    LedMode _linkMode = LedMode::Off;
+    LedMode _failMode = LedMode::Off;
+
+    QTimer _linkTimer;
+    QTimer _btnTimer;
+    QTimer _mcuReqTimer;
+    QTimer _failTimer;
+
     qint64 _startMs = 0;
     bool   _factoryArmed = false;
+    bool _linkLevel = false;
+    bool   _failLevel = false;
     int    _btnAccumMs = 0;
     int    _btnReleaseMs = 0;
-    int    _btnIdleLevel = 1;   // se autodetecta en initGpios()
+    int    _btnIdleLevel = 1;
 
-
-    LinkState _state = LinkState::Booting;
     int _linkBlinkMs = BOOT_BLINK_MS;
-    bool _linkLevel = false;
-    qint64 _btnPressedSinceMs = 0;
+    int _failBlinkMs = FAIL_BLINK_MS;
+
+private slots:
+    void onLinkTick();
+    void onFailTick();
+
+
 };

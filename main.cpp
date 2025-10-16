@@ -9,6 +9,9 @@
 #include "Wireless.h"
 #include "embedded_io.h"
 #include <chrono>
+#include <csignal>
+#include <fcntl.h>
+#include <unistd.h>
 
 // Tiempo máximo permitido sin responder
 constexpr int WATCHDOG_TIMEOUT_MS = 12000;
@@ -16,19 +19,36 @@ constexpr int WATCHDOG_TIMEOUT_MS = 12000;
 // Guarda el momento desde arranque de la última vez que el hilo principal respondió
 static std::atomic<qint64> g_lastHeartbeatMs{0};
 
+static void link_off_now() {
+    int fd = ::open("/sys/class/gpio/gpio82/value", O_WRONLY);
+    if (fd >= 0) {
+#ifdef FD_CLOEXEC
+        fcntl(fd, F_SETFD, FD_CLOEXEC);  // equivalente a O_CLOEXEC
+#endif
+        const char one = '1';
+        (void)::write(fd, &one, 1);
+        ::close(fd);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    // Apaga LINK al salir
+    QObject::connect(&a, &QCoreApplication::aboutToQuit, &link_off_now);
+    std::signal(SIGINT,  [](int){ link_off_now(); std::_Exit(130); });
+    std::signal(SIGTERM, [](int){ link_off_now(); std::_Exit(143); });
+
     qDebug() << "App running...";
 
-    EmbeddedIO io;                   // LED parpadea (estado Booting)
+    EmbeddedIO io;
 
     Wireless* wirelessNet = new Wireless(nullptr);
     wirelessNet->runNetwork();
 
-     qDebug() << "READY";
-    io.markReady();                  // LED fijo = operativo
+    qDebug() << "READY";
+    io.markReady();
 
     // 1) Se inicializa y el hilo principal responde cada 2 s
     g_lastHeartbeatMs.store(QDateTime::currentMSecsSinceEpoch(), std::memory_order_relaxed);
@@ -53,7 +73,7 @@ int main(int argc, char *argv[])
                 QByteArray path = program.toLocal8Bit();
                 execl(path.constData(), path.constData(), (char*)nullptr);
 
-                // Si execl falla, fuerza salida con error
+                // Si falla, fuerza salida con error
                 _exit(1);
             }
         }

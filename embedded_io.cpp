@@ -1,15 +1,93 @@
 #include "embedded_io.h"
 #include <QDebug>
 #include <QProcess>
-#include "file_handler.h"
 #include <QRegularExpression>
 
-// ===== sysfs helpers =====
+void EmbeddedIO::setLinkLed(bool on) { writeVal(GPIO_I06_LINK_LED, on ? 0 : 1); }
+void EmbeddedIO::setFailLed(bool on) { writeVal(GPIO_I07_HEARTBEAT, on ? 0 : 1); }
+
+void EmbeddedIO::setLinkMode(LedMode m, int blinkMs) {
+    _linkTimer.stop();
+    _linkMode = m;
+
+    switch (m) {
+    case LedMode::Off:
+        setLinkLed(false);
+        break;
+    case LedMode::On:
+        setLinkLed(true);
+        break;
+    case LedMode::Blink:
+        _linkBlinkMs = qMax(100, blinkMs);
+        _linkLevel = false;
+        setLinkLed(false);
+        _linkTimer.start(_linkBlinkMs/2);
+        break;
+    }
+}
+
+void EmbeddedIO::setFailMode(LedMode m, int blinkMs) {
+    _failTimer.stop();
+    _failMode = m;
+
+    switch (m) {
+    case LedMode::Off:
+        setFailLed(false);
+        break;
+    case LedMode::On:
+        setFailLed(true);
+        break;
+    case LedMode::Blink:
+        _failBlinkMs = qMax(100, blinkMs);
+        _failLevel = false;
+        setFailLed(false);
+        _failTimer.start(_failBlinkMs/2);
+        break;
+    }
+}
+
+void EmbeddedIO::onLinkTick() {
+    if (_linkMode != LedMode::Blink) return;
+    _linkLevel = !_linkLevel;
+    setLinkLed(_linkLevel);
+}
+
+void EmbeddedIO::onFailTick() {
+    if (_failMode != LedMode::Blink) return;
+    _failLevel = !_failLevel;
+    setFailLed(_failLevel);
+}
+
+void EmbeddedIO::markBooting(){
+    setLinkMode(LedMode::Off);
+    setFailMode(LedMode::Off);
+}
+
+void EmbeddedIO::markReady(){
+    setFailMode(LedMode::Off);
+    setLinkMode(LedMode::On);
+}
+
+void EmbeddedIO::beginRebootSequence(){
+
+    setLinkMode(LedMode::Off);
+    setFailMode(LedMode::Blink, 400);
+
+    _linkTimer.stop();
+    _failTimer.stop();
+
+    writeVal(GPIO_I06_LINK_LED, 0);
+    writeVal(GPIO_I07_HEARTBEAT, 0);
+
+    rebootDevice();
+}
+
 static QString gpioPath(int n, const char* leaf=nullptr){
     QString p = QString("/sys/class/gpio/gpio%1").arg(n);
     if (leaf) p += "/" + QString::fromLatin1(leaf);
     return p;
 }
+
 bool EmbeddedIO::exportGpio(int n){
     if (n < 0) return true;
     if (QFile::exists(gpioPath(n).toUtf8())) return true;
@@ -17,25 +95,21 @@ bool EmbeddedIO::exportGpio(int n){
     if (!f.open(QIODevice::WriteOnly|QIODevice::Text)) return false;
     QTextStream out(&f); out << n; return true;
 }
-bool EmbeddedIO::unexportGpio(int n){
-    if (n < 0) return true;
-    if (!QFile::exists(gpioPath(n).toUtf8())) return true;
-    QFile f("/sys/class/gpio/unexport");
-    if (!f.open(QIODevice::WriteOnly|QIODevice::Text)) return false;
-    QTextStream out(&f); out << n; return true;
-}
+
 bool EmbeddedIO::setDir(int n, const char* dir){
     if (n < 0) return true;
     QFile f(gpioPath(n, "direction"));
     if (!f.open(QIODevice::WriteOnly|QIODevice::Text)) return false;
     QTextStream out(&f); out << dir; return true;
 }
+
 bool EmbeddedIO::setEdge(int n, const char* edge){
     if (n < 0) return true;
     QFile f(gpioPath(n, "edge"));
     if (!f.open(QIODevice::WriteOnly|QIODevice::Text)) return false;
     QTextStream out(&f); out << edge; return true;
 }
+
 bool EmbeddedIO::writeVal(int n, int v){
     if (n < 0) return true;
     QFile f(gpioPath(n, "value"));
@@ -59,39 +133,30 @@ int EmbeddedIO::readVal(int n){
     return (b=="1") ? 1 : 0;
 }
 
-// ===== class =====
 EmbeddedIO::EmbeddedIO(QObject* parent): QObject(parent) {
     initGpios();
-    _startMs = QDateTime::currentMSecsSinceEpoch();
-    qDebug() << "[BTN] timer cada" << BTN_SAMPLE_MS << "ms";
 
-    // --- Heartbeat GPIO I07 ---
-    connect(&_hbTimer, &QTimer::timeout, [this](){
-        _linkLevel = !_linkLevel;
-        writeVal(GPIO_I07_HEARTBEAT, _linkLevel);
-    });
-    _hbTimer.start(HB_PERIOD_MS);
+    setLinkLed(false);
+    setFailLed(false);
 
-    // --- LINK LED parpadeo/estado ---
-    connect(&_linkTimer, &QTimer::timeout, this, &EmbeddedIO::updateLinkLed);
-    _linkTimer.start(_linkBlinkMs);
+    // Timers: una única conexión a handlers
+    connect(&_linkTimer, &QTimer::timeout, this, &EmbeddedIO::onLinkTick);
+    connect(&_failTimer, &QTimer::timeout, this, &EmbeddedIO::onFailTick);
 
-    // --- Botón de fábrica (muestreo 20ms + antirrebotes SW) ---
+     markBooting();
+
+    // Botón de fábrica
     connect(&_btnTimer, &QTimer::timeout, this, &EmbeddedIO::onFactoryButtonSample);
     _btnTimer.start(BTN_SAMPLE_MS);
-
-    // --- Petición de reset desde MCU (opcional) ---
-    if (GPIO_I08_MCU_REQ_RST >= 0) {
-        connect(&_mcuReqTimer, &QTimer::timeout, this, &EmbeddedIO::onMcuReqRstSample);
-        _mcuReqTimer.start(50);
-    }
 }
 
 EmbeddedIO::~EmbeddedIO(){
-    // Apaga LED y heartbeat al salir
-    writeVal(GPIO_I06_LINK_LED, 0);
-    writeVal(GPIO_I07_HEARTBEAT, 0);
-    // No desexportamos por si otros procesos comparten GPIOs
+
+    _linkTimer.stop();
+    _failTimer.stop();
+    writeVal(GPIO_I06_LINK_LED, 1);
+    writeVal(GPIO_I07_HEARTBEAT, 1);
+
 }
 
 void EmbeddedIO::initGpios(){
@@ -99,34 +164,13 @@ void EmbeddedIO::initGpios(){
     exportGpio(GPIO_I07_HEARTBEAT);   setDir(GPIO_I07_HEARTBEAT, "out");
     exportGpio(GPIO_I09_BTN_FACTORY); setDir(GPIO_I09_BTN_FACTORY, "in");
     setEdge(GPIO_I09_BTN_FACTORY, "none");
-    if (GPIO_I08_MCU_REQ_RST >= 0) { exportGpio(GPIO_I08_MCU_REQ_RST); setDir(GPIO_I08_MCU_REQ_RST, "in"); }
+    writeVal(GPIO_I06_LINK_LED, 1);
+    writeVal(GPIO_I07_HEARTBEAT, 1);
 
-    writeVal(GPIO_I06_LINK_LED, /*valor que apaga*/ 1); // activo-bajo → 1 apaga, 0 enciende
-
-    // Autodetección de polaridad (idle = nivel en reposo)
     _btnIdleLevel = readVal(GPIO_I09_BTN_FACTORY);
     qDebug() << "[BTN] GPIO" << GPIO_I09_BTN_FACTORY
              << "idle=" << _btnIdleLevel
              << "(pressed será" << (_btnIdleLevel? "0" : "1") << ")";
-}
-
-
-void EmbeddedIO::setLinkState(LinkState s){
-    _state = s;
-    switch (_state){
-    case LinkState::Booting:  _linkBlinkMs = BOOT_BLINK_MS; break;
-    case LinkState::Ready:    _linkBlinkMs = READY_BLINK_MS; break;
-    case LinkState::Degraded: _linkBlinkMs = DEGRADED_BLINK_MS; break;
-    }
-    _linkTimer.stop();
-    if (_linkBlinkMs == 0) { writeVal(GPIO_I06_LINK_LED, 1); }
-    else { _linkTimer.start(_linkBlinkMs); }
-}
-
-void EmbeddedIO::updateLinkLed(){
-    if (_linkBlinkMs == 0) { writeVal(GPIO_I06_LINK_LED, 1); return; }
-    static bool lev=false; lev = !lev;
-    writeVal(GPIO_I06_LINK_LED, lev);
 }
 
 void EmbeddedIO::onFactoryButtonSample(){
@@ -139,11 +183,10 @@ void EmbeddedIO::onFactoryButtonSample(){
         return;
     }
 
-    // Lee crudo y normaliza: "pressed" = (raw != idle)
-    const int raw = readVal(GPIO_I09_BTN_FACTORY);     // 0/1 desde sysfs
+    const int raw = readVal(GPIO_I09_BTN_FACTORY);
     const bool pressed = (raw != _btnIdleLevel);
     static int dbgTick = 0;
-    if ((dbgTick++ % (250/BTN_SAMPLE_MS)) == 0) {      // cada ~250 ms
+    if ((dbgTick++ % (250/BTN_SAMPLE_MS)) == 0) {
         qDebug() << "[BTN] raw=" << raw
                  << "pressed=" << pressed
                  << "accum=" << _btnAccumMs
@@ -151,7 +194,6 @@ void EmbeddedIO::onFactoryButtonSample(){
                  << "armed=" << _factoryArmed;
     }
 
-    // Armar sólo tras ver suelto 0.8 s (evita disparar si queda pulsado tras reboot)
     if (!_factoryArmed) {
         if (!pressed) {
             _btnReleaseMs += BTN_SAMPLE_MS;
@@ -166,7 +208,6 @@ void EmbeddedIO::onFactoryButtonSample(){
         return;
     }
 
-    // Integración robusta (antirrebotes)
     if (pressed) {
         _btnAccumMs += BTN_SAMPLE_MS;
         if ((_btnAccumMs % 500) == 0) qDebug() << "[BTN] held ms:" << _btnAccumMs;
@@ -174,26 +215,17 @@ void EmbeddedIO::onFactoryButtonSample(){
             qDebug() << "[BTN] FACTORY threshold reached -> reset";
             _factoryArmed = false;       // evita reentradas
             _btnTimer.stop();
-            _linkBlinkMs = 100; _linkTimer.start(_linkBlinkMs);   // feedback 2 s
-            QTimer::singleShot(2000, this, [this](){ doFactoryResetAndReboot(); });
+            setLinkMode(LedMode::Off);
+            setFailMode(LedMode::Blink, 400);
+
+            // Lanza el reset tras un pequeño margen
+            QTimer::singleShot(800, this, [this](){ doFactoryResetAndReboot(); });
         }
     } else {
         // “descarga” para tolerar rebotes: cae 3x más rápido que sube
         _btnAccumMs = qMax(0, _btnAccumMs - 3*BTN_SAMPLE_MS);
     }
 }
-
-
-void EmbeddedIO::onMcuReqRstSample(){
-    if (readVal(GPIO_I08_MCU_REQ_RST)==0){ // nivel bajo = petición
-        // Feedback corto
-        for (int i=0;i<6;i++){ writeVal(GPIO_I06_LINK_LED, (i&1)); usleep(100*1000); }
-        softRebootProcess();
-    }
-}
-
-
-// --------- TUS FUNCIONES, ARREGLADAS (mismos nombres) ---------
 
 void EmbeddedIO::setIPAddressFileV2(QString ipAddress)
 {
@@ -209,7 +241,6 @@ void EmbeddedIO::setIPAddressFileV2(QString ipAddress)
         interfacesFile.close();
     }
 
-    // Reemplaza línea que empiece por "address " si existe; si no, añádela
     bool replaced = false;
     QRegularExpression re(R"(^\s*address\s+)");
     for (int i=0; i<lines.size(); ++i) {
@@ -217,7 +248,6 @@ void EmbeddedIO::setIPAddressFileV2(QString ipAddress)
     }
     if (!replaced) lines << ("address " + ipAddress);
 
-    // Escribe truncando (no seek)
     if (!interfacesFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         qWarning() << "NO SE PUEDE ABRIR INTERFACES (escribir)";
         return;
@@ -287,26 +317,22 @@ void EmbeddedIO::setGatewayAddressFileV2(QString gatewayAddress)
 
 void EmbeddedIO::setIPConfigInfoV2(QStringList webServerParts, Database* database)
 {
-    // Asegura 5 campos para tu DB: [ip, mask, gw, building, line]
     while (webServerParts.size() < 5) webServerParts << "NO_NAME";
 
     const QString ip      = webServerParts.value(0);
     const QString submask = webServerParts.value(1);
     const QString gateway = webServerParts.value(2);
 
-    // 1) SOLO escribe estas líneas con tus setters (sin añadir stanzas nuevas)
     setIPAddressFileV2(ip);
     setSubmaskAddressFileV2(submask);
     setGatewayAddressFileV2(gateway);
 
-    // 2) Guarda en DB (tus 5 parámetros)
     if (database) database->setInterfaceParameters(webServerParts);
 
-    // 3) Aplicar en caliente sin romper ifupdown
     //    - Para DHCP si estuviera activo
     QProcess::execute("sh", {"-c", "pkill -f 'dhclient|udhcpc' 2>/dev/null || true"});
 
-    //    - Baja y limpia estado previo (evita “RTNETLINK: File exists”)
+    //    - Baja y limpia estado previo
     QProcess::execute("sh", {"-c", QString("ifdown --force %1 2>/dev/null || true").arg(IFACE_NAME)});
     QProcess::execute("sh", {"-c", QString("ip addr flush dev %1").arg(IFACE_NAME)});
     QProcess::execute("sh", {"-c", "ip route del default 2>/dev/null || true"});
@@ -341,10 +367,8 @@ void EmbeddedIO::setIPConfigInfoV2(QStringList webServerParts, Database* databas
 
 
 void EmbeddedIO::doFactoryResetAndReboot()
-    // --- 1) Persistente: escribe en tu DB + /etc/network/interfaces usando TU función ---
+    //escribe en tu DB + /etc/network/interfaces
     {
-        _linkBlinkMs = 100;
-        _linkTimer.start(_linkBlinkMs);
         Database db;
         db.initDatabase();
 
@@ -354,16 +378,9 @@ void EmbeddedIO::doFactoryResetAndReboot()
                 << "192.168.1.1"
                 << "NO_NAME"
                 << "NO_NAME";
+
         setIPConfigInfoV2(factory, &db);
 
-    rebootDevice();
+        beginRebootSequence();
 
-}
-
-void EmbeddedIO::softRebootProcess(){
-    // Reinicia el propio binario (igual que tu watchdog)
-    QString program = QCoreApplication::applicationFilePath();
-    QByteArray path = program.toLocal8Bit();
-    execl(path.constData(), path.constData(), (char*)nullptr);
-    _exit(1);
 }
