@@ -242,3 +242,13 @@ button {
 button:hover {
     background-color: #315f7a;
 }
+
+button.disabled {
+    background-color: gray;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+button.disabled:hover {
+    background-color: rgb(112, 112, 112);
+}
