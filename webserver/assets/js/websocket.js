@@ -2684,8 +2684,8 @@ function codeReaderChanged()
     var loader2 = iframeDocument.getElementById('loader2');
     var loader3 = iframeDocument.getElementById('loader3');
     loader1.classList.remove('complete'); loader1.classList.remove('error');
-    loader2.classList.remove('complete'); loader1.classList.remove('error');
-    loader3.classList.remove('complete'); loader1.classList.remove('error');
+    loader2.classList.remove('complete'); loader2.classList.remove('error');
+    loader3.classList.remove('complete'); loader3.classList.remove('error');
 
     settingsContainer.style.display = 'flex';
     confirmationContainer.style.display = 'none';
