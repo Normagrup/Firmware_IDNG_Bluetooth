@@ -9,7 +9,7 @@
 #include "Device.h"
 #include "WebServer.h"
 #include "Database.h"
-
+class EmbeddedIO;
 class Wireless : public QObject
 {
     Q_OBJECT
@@ -20,6 +20,7 @@ public:
     void udpReceivedData(QQueue <QPair <QString, QByteArray> >* rcvData);
     void uartReceivedData(QByteArray data);
     void webServerReceivedData(QString data);
+    void setEmbeddedIO(EmbeddedIO* io);
 
 private slots:
     void pollingTimerHandler(void);
@@ -36,6 +37,7 @@ private slots:
 
     void updateLogsByPollings(Device &device);
     void updateLogsByTests(uint8_t i, uint8_t code);
+    void onTestButtonPressed();
 
 signals:
 
@@ -44,6 +46,7 @@ private:
     UdpSocket* _udpSocket;
     WebServer* _webServer;
     Database* _database;
+    EmbeddedIO* _io;
 };
 
 #endif // WIRELESS_H

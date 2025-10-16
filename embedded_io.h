@@ -14,6 +14,7 @@
 #define GPIO_I09_BTN_FACTORY   80
 #define GPIO_I06_LINK_LED      82
 #define GPIO_I07_HEARTBEAT     81
+#define GPIO_I08_TEST          79
 #ifndef IFACE_NAME
 #define IFACE_NAME "eth0"
 #endif
@@ -29,9 +30,8 @@ constexpr int BTN_SAMPLE_MS   = 20;
 
 class EmbeddedIO : public QObject {
     Q_OBJECT
+
 public:
-
-
     enum class LedMode { Off, On, Blink };
     explicit EmbeddedIO(QObject* parent=nullptr);
     ~EmbeddedIO();
@@ -39,6 +39,9 @@ public:
     void markBooting();
     void markReady();
     void beginRebootSequence();
+
+signals:
+        void testButtonPressed();
 
 private:
     static bool exportGpio(int n);

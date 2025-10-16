@@ -7,9 +7,9 @@
 #include "aux_functions.h"
 #include "dali_headers.h"
 #include "log.h"
+#include "embedded_io.h"
 #include <QSqlQuery>
 #include <QDateTime>
-
 #include "file_handler.h"
 
 Wireless::Wireless(QObject *parent)
@@ -43,6 +43,16 @@ Wireless::Wireless(QObject *parent)
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
+
+void Wireless::setEmbeddedIO(EmbeddedIO* io) {
+    _io = io;
+    QObject::connect(_io, SIGNAL(testButtonPressed()),
+                     this, SLOT(onTestButtonPressed()));
+
+    qDebug() << "[TEST] recibido en Wireless::onTestButtonPressed()";
+
+}
+
 
 void Wireless::runNetwork()
 {
@@ -501,4 +511,37 @@ void Wireless::askInitDataFromMicroTimerHandler()
     else {
         qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
     }
+}
+
+void Wireless::onTestButtonPressed() {
+    qDebug() << "[TEST] recibido en Wireless::onTestButtonPressed()";
+    const uint16_t grupoC001 = 0xC001;
+    const uint8_t  r1 = BROADCAST_ADDR;
+    const uint8_t  r2 = RECALL_MAX_LVL;
+    const uint8_t  ct = IS_NORMAL;
+
+    /*qDebug() << "[TEST] TX MAX -> addr=0x" << hex << grupoC001
+             << " r1=" << (int)r1 << " r2=0x" << hex << (int)r2 << " ct=" << (int)ct;*/
+
+    if (!_uartPort) {
+        qWarning() << "[TEST] _uartPort == nullptr";
+        return;
+    }
+
+    sendUartDaliCommand(_uartPort, grupoC001, r1, r2, ct);
+
+    QTimer::singleShot(10000, this, [this, grupoC001](){
+        const uint8_t r1 = BROADCAST_ADDR;
+        const uint8_t r2 = OFF;
+        const uint8_t ct = IS_NORMAL;
+
+        /*qDebug() << "[TEST] TX OFF -> addr=0x" << hex << grupoC001
+                 << " r1=" << (int)r1 << " r2=0x" << hex << (int)r2 << " ct=" << (int)ct;*/
+
+        if (!_uartPort) {
+            qWarning() << "[TEST] _uartPort == nullptr (OFF)";
+            return;
+        }
+        sendUartDaliCommand(_uartPort, grupoC001, r1, r2, ct);
+    });
 }

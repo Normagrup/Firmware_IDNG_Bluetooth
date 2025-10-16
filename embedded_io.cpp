@@ -163,14 +163,14 @@ void EmbeddedIO::initGpios(){
     exportGpio(GPIO_I06_LINK_LED);    setDir(GPIO_I06_LINK_LED, "out");
     exportGpio(GPIO_I07_HEARTBEAT);   setDir(GPIO_I07_HEARTBEAT, "out");
     exportGpio(GPIO_I09_BTN_FACTORY); setDir(GPIO_I09_BTN_FACTORY, "in");
+    exportGpio(GPIO_I08_TEST);        setDir(GPIO_I08_TEST, "in");
     setEdge(GPIO_I09_BTN_FACTORY, "none");
     writeVal(GPIO_I06_LINK_LED, 1);
     writeVal(GPIO_I07_HEARTBEAT, 1);
 
+    int v = readVal(GPIO_I08_TEST);
     _btnIdleLevel = readVal(GPIO_I09_BTN_FACTORY);
-    qDebug() << "[BTN] GPIO" << GPIO_I09_BTN_FACTORY
-             << "idle=" << _btnIdleLevel
-             << "(pressed será" << (_btnIdleLevel? "0" : "1") << ")";
+
 }
 
 void EmbeddedIO::onFactoryButtonSample(){
@@ -179,7 +179,7 @@ void EmbeddedIO::onFactoryButtonSample(){
     // Ignora picos de arranque 3 s
     if (now - _startMs < 3000) {
         static bool once=false;
-        if (!once) { qDebug() << "[BTN] Ignorando durante warmup (3s)"; once=true; }
+        if (!once) { /*qDebug() << "[BTN] Ignorando durante warmup (3s)"; */once=true; }
         return;
     }
 
@@ -187,11 +187,11 @@ void EmbeddedIO::onFactoryButtonSample(){
     const bool pressed = (raw != _btnIdleLevel);
     static int dbgTick = 0;
     if ((dbgTick++ % (250/BTN_SAMPLE_MS)) == 0) {
-        qDebug() << "[BTN] raw=" << raw
+        /*qDebug() << "[BTN] raw=" << raw
                  << "pressed=" << pressed
                  << "accum=" << _btnAccumMs
                  << "rel=" << _btnReleaseMs
-                 << "armed=" << _factoryArmed;
+                 << "armed=" << _factoryArmed;*/
     }
 
     if (!_factoryArmed) {
@@ -200,7 +200,7 @@ void EmbeddedIO::onFactoryButtonSample(){
             if (_btnReleaseMs >= 800) {
                 _factoryArmed = true;
                 _btnAccumMs = 0;
-                qDebug() << "[BTN] ARMED";
+                /*qDebug() << "[BTN] ARMED";*/
             }
         } else {
             _btnReleaseMs = 0;
@@ -210,9 +210,9 @@ void EmbeddedIO::onFactoryButtonSample(){
 
     if (pressed) {
         _btnAccumMs += BTN_SAMPLE_MS;
-        if ((_btnAccumMs % 500) == 0) qDebug() << "[BTN] held ms:" << _btnAccumMs;
+        //if ((_btnAccumMs % 500) == 0) /*qDebug() << "[BTN] held ms:" << _btnAccumMs*/;
         if (_btnAccumMs >= FACTORY_HOLD_MS) {
-            qDebug() << "[BTN] FACTORY threshold reached -> reset";
+            /*qDebug() << "[BTN] FACTORY threshold reached -> reset";*/
             _factoryArmed = false;       // evita reentradas
             _btnTimer.stop();
             setLinkMode(LedMode::Off);
@@ -221,11 +221,33 @@ void EmbeddedIO::onFactoryButtonSample(){
             // Lanza el reset tras un pequeño margen
             QTimer::singleShot(800, this, [this](){ doFactoryResetAndReboot(); });
         }
-    } else {
-        // “descarga” para tolerar rebotes: cae 3x más rápido que sube
-        _btnAccumMs = qMax(0, _btnAccumMs - 3*BTN_SAMPLE_MS);
     }
-}
+
+    // Botón de Test ( GPIO_I08_TEST)
+    static int   testLastRaw      = -1;
+    static bool  testPrevPressed  = false;
+    static qint64 testLastFireMs  = 0;
+
+    const int rawTest = readVal(GPIO_I08_TEST);
+    if (rawTest != testLastRaw) {
+        qDebug() << "[TEST] gpio" << GPIO_I08_TEST << "change ->" << rawTest;
+        testLastRaw = rawTest;
+    }
+
+    const bool pressedTest = (rawTest == 0);
+    const qint64 now2 = QDateTime::currentMSecsSinceEpoch();
+
+    // flanco + antirrebote 300 ms
+    if (pressedTest && !testPrevPressed && (now2 - testLastFireMs > 300)) {
+        testLastFireMs = now2;
+        qDebug() << "[TEST] SHORT press -> emit testButtonPressed()";
+        emit testButtonPressed();
+    }
+    testPrevPressed = pressedTest;
+
+
+    }
+
 
 void EmbeddedIO::setIPAddressFileV2(QString ipAddress)
 {

@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
     EmbeddedIO io;
 
     Wireless* wirelessNet = new Wireless(nullptr);
+    wirelessNet->setEmbeddedIO(&io);
     wirelessNet->runNetwork();
 
     qDebug() << "READY";
