@@ -754,8 +754,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         isOpenNodeControl = false;
     }
     else if (type == WS_SET_READ_ID_CODE) {
-        if(messageState == PENDING) { return; }
-
         // no se pone embeddedState porque es una funcionalidad a parte (factory)
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
@@ -765,14 +763,21 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendWriteIDCodeFrame(uartPort, deviceID);
         while(messageState == PENDING) {}
-        sendFactoryIDWrote(webServer);
+        sendFactoryIDWrote(webServer, messageState == RECEIVED);
 
-        sendDaliTestForWriteID(uartPort, deviceID);
-        while(messageState == PENDING) {}
-        sendDaliTested(webServer);
+        if(messageState == RECEIVED) {
+            delay(1000);
+            sendDaliTestForWriteID(uartPort, deviceID);
+            while(messageState == PENDING) {}
+            sendDaliTested(webServer, messageState == RECEIVED);
 
-        sendEndRecordDevice(uartPort, deviceID);
-        while(messageState == PENDING) {}
+            if(messageState == RECEIVED) {
+                delay(1000);
+                sendEndRecordDevice(uartPort, deviceID);
+                while(messageState == PENDING) {}
+                sendRecordedDevice(webServer, messageState == RECEIVED);
+            }
+        }
 
         // confirmación en la respuesta al finalizar el escaneo
         // start del cleanCdbTimer en la respuesta al finalizar el escaneo
@@ -1584,23 +1589,30 @@ void sendEndAutoCommission(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendFactoryIDWrote(WebServer* webServer)
+void sendFactoryIDWrote(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_FACTORY_ID_WROTE) + "@" + " ";
+    QString message = QString(WS_SEND_FACTORY_ID_WROTE) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendDaliTested(WebServer* webServer)
+void sendDaliTested(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_DALI_TESTED) + "@" + " ";
+    QString message = QString(WS_SEND_DALI_TESTED) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendRecordedDevice(WebServer* webServer)
+void sendRecordedDevice(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + " ";
+    QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + (received ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendSerialClosure(WebServer* webServer, bool done)
+{
+    QString message = QString(WS_SEND_SERIAL_CLOSURE) + "@" + (done ? "done" : "notDone");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

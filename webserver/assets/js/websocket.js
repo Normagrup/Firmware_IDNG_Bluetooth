@@ -6,6 +6,7 @@ var isStoppingCommission = false;
 var netKey;
 var antennaID;
 var estimatedTime;
+var isFactoryIDInProgress = false;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -1045,44 +1046,168 @@ function processEndAutoCommission(value)
 
 function processFactoryIDWrote(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader1 = iframeDocument.getElementById('loader1');
-    loader1.classList.add('complete');
+
+    if(received) 
+    {
+        loader1.classList.add('complete');
+    }
+    else
+    {
+        loader1.classList.add('error');
+
+        var loader2 = iframeDocument.getElementById('loader2');
+        var loader3 = iframeDocument.getElementById('loader3');
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+        var codeContainer = iframeDocument.getElementById('codeContainer');
+
+        setTimeout(function() {
+            loader2.classList.add('error');
+            
+            setTimeout(function() {
+                loader3.classList.add('error');
+
+                setTimeout(function() {
+                    settingsContainer.style.display = 'none';
+                    errorContainer.style.display = 'flex';
+
+                    setTimeout(function() {
+                        labelContainer.style.display = 'flex';
+                        codeContainer.style.display = 'none';
+
+                        isFactoryIDInProgress = false;
+                    }, 3000);
+                }, 1000);
+            }, 500);
+        }, 500);
+    }
 }
 
 function processDaliTested(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader2 = iframeDocument.getElementById('loader2');
-    loader2.classList.add('complete');
+
+    if(received) 
+    {
+        loader2.classList.add('complete');
+    }
+    else
+    {
+        loader2.classList.add('error');
+
+        var loader3 = iframeDocument.getElementById('loader3');
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+        var codeContainer = iframeDocument.getElementById('codeContainer');
+ 
+        setTimeout(function() {
+            loader3.classList.add('error');
+
+            setTimeout(function() {
+                settingsContainer.style.display = 'none';
+                errorContainer.style.display = 'flex';
+
+                setTimeout(function() {
+                    labelContainer.style.display = 'flex';
+                    codeContainer.style.display = 'none';
+
+                    isFactoryIDInProgress = false;
+                }, 3000);
+            }, 1000);
+        }, 500);
+    }
 }
 
 function processRecordedDevice(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader3 = iframeDocument.getElementById('loader3');
-    loader3.classList.add('complete');
+    
+    if(received)
+    {
+        loader3.classList.add('complete');
+    }
+    else
+    {
+        loader3.classList.add('error');
+
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+        var codeContainer = iframeDocument.getElementById('codeContainer');
+
+        setTimeout(function() {
+            settingsContainer.style.display = 'none';
+            errorContainer.style.display = 'flex';
+
+            setTimeout(function() {
+                labelContainer.style.display = 'flex';
+                codeContainer.style.display = 'none';
+
+                isFactoryIDInProgress = false;
+            }, 3000);
+        }, 1000);
+    }
+}
+
+function processSerialClosure(value) 
+{
+    var done = (value === "done");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var labelContainer = iframeDocument.getElementById('labelContainer');
     var settingsContainer = iframeDocument.getElementById('settingsContainer');
     var confirmationContainer = iframeDocument.getElementById('confirmationContainer');
+    var errorContainer = iframeDocument.getElementById('errorContainer');
     var codeContainer = iframeDocument.getElementById('codeContainer');
 
-    setTimeout(function() {
-        settingsContainer.style.display = 'none';
-        confirmationContainer.style.display = 'flex';
-    }, 3800);
+    if(done)
+    {
+        setTimeout(function() {
+            settingsContainer.style.display = 'none';
+            confirmationContainer.style.display = 'flex';
 
-    setTimeout(function() {
-        labelContainer.style.display = 'flex';
-        codeContainer.style.display = 'none';
-    }, 7300);
+            setTimeout(function() {
+                labelContainer.style.display = 'flex';
+                codeContainer.style.display = 'none';
+
+                isFactoryIDInProgress = false;
+            }, 3000);
+        }, 500);
+    }
+    else
+    {
+        setTimeout(function() {
+            settingsContainer.style.display = 'none';
+            errorContainer.style.display = 'flex';
+
+            setTimeout(function() {
+                labelContainer.style.display = 'flex';
+                codeContainer.style.display = 'none';
+
+                isFactoryIDInProgress = false;
+            }, 3000);
+        }, 500);
+    }
 }
 
 function processIsConfig(value)
@@ -1761,6 +1886,7 @@ function processReceivedData(data)
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
+    else if (type == 'SERIAL_CLOSURE') { processSerialClosure(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
@@ -2540,6 +2666,10 @@ function closeNodeControl(buttonText)
 
 function codeReaderChanged()
 {
+    if(isFactoryIDInProgress) { return; }
+    
+    isFactoryIDInProgress = true;
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -2548,16 +2678,18 @@ function codeReaderChanged()
     var codeContainer = iframeDocument.getElementById('codeContainer');
     var settingsContainer = iframeDocument.getElementById('settingsContainer');
     var confirmationContainer = iframeDocument.getElementById('confirmationContainer');
+    var errorContainer = iframeDocument.getElementById('errorContainer');
 
     var loader1 = iframeDocument.getElementById('loader1');
     var loader2 = iframeDocument.getElementById('loader2');
     var loader3 = iframeDocument.getElementById('loader3');
-    loader1.classList.remove('complete');
-    loader2.classList.remove('complete');
-    loader3.classList.remove('complete');
+    loader1.classList.remove('complete'); loader1.classList.remove('error');
+    loader2.classList.remove('complete'); loader1.classList.remove('error');
+    loader3.classList.remove('complete'); loader1.classList.remove('error');
 
     settingsContainer.style.display = 'flex';
     confirmationContainer.style.display = 'none';
+    errorContainer.style.display = 'none';
 
     var labelPart = codeReader.value.slice(-11);
     var codeParts = labelPart.split('.');
