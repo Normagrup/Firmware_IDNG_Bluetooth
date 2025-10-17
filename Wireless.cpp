@@ -49,7 +49,7 @@ void Wireless::setEmbeddedIO(EmbeddedIO* io) {
     QObject::connect(_io, SIGNAL(testButtonPressed()),
                      this, SLOT(onTestButtonPressed()));
 
-    qDebug() << "[TEST] recibido en Wireless::onTestButtonPressed()";
+    //qDebug() << "[TEST] recibido en Wireless::onTestButtonPressed()";
 
 }
 
@@ -514,7 +514,7 @@ void Wireless::askInitDataFromMicroTimerHandler()
 }
 
 void Wireless::onTestButtonPressed() {
-    qDebug() << "[TEST] recibido en Wireless::onTestButtonPressed()";
+    //qDebug() << "[TEST] recibido en Wireless::onTestButtonPressed()";
     const uint16_t grupoC001 = 0xC001;
     const uint8_t  r1 = BROADCAST_ADDR;
     const uint8_t  r2 = RECALL_MAX_LVL;

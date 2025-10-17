@@ -230,7 +230,7 @@ void EmbeddedIO::onFactoryButtonSample(){
 
     const int rawTest = readVal(GPIO_I08_TEST);
     if (rawTest != testLastRaw) {
-        qDebug() << "[TEST] gpio" << GPIO_I08_TEST << "change ->" << rawTest;
+        //qDebug() << "[TEST] gpio" << GPIO_I08_TEST << "change ->" << rawTest;
         testLastRaw = rawTest;
     }
 
@@ -240,7 +240,7 @@ void EmbeddedIO::onFactoryButtonSample(){
     // flanco + antirrebote 300 ms
     if (pressedTest && !testPrevPressed && (now2 - testLastFireMs > 300)) {
         testLastFireMs = now2;
-        qDebug() << "[TEST] SHORT press -> emit testButtonPressed()";
+        //qDebug() << "[TEST] SHORT press -> emit testButtonPressed()";
         emit testButtonPressed();
     }
     testPrevPressed = pressedTest;
