@@ -1,7 +1,7 @@
 #ifndef ETH_FRAMES_H
 #define ETH_FRAMES_H
 
-#define DEFAULT_IP_ADDRESS                  "192.168.1.56"
+#define DEFAULT_IP_ADDRESS                  "192.168.1.254"
 #define DEFAULT_SUBMASK_ADDRESS             "255.255.255.0"
 
 #define FRAME_HEADER_0                      0x54
