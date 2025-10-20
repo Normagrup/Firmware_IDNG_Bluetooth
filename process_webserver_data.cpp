@@ -1958,3 +1958,31 @@ void sendInitAlert(WebServer* webServer)
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
+
+void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer)
+{
+    isFactoryProgramOn = true;
+    factoryProgramSerial = dataBuffer.split(';').value(1);
+
+    cleanCdbTimer.stop();
+
+    QString deviceID = factoryProgramSerial;
+    qDebug() << "[ID_CODE] deviceID =" << deviceID;
+
+    sendWriteIDCodeFrame(uartPort, deviceID);
+    while(messageState == PENDING) {}
+
+    if(messageState == RECEIVED) {
+        delay(500);
+        sendDaliTestForWriteID(uartPort, deviceID);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            delay(500);
+            sendEndRecordDevice(uartPort, deviceID);
+            while(messageState == PENDING) {}
+        }
+    }
+
+    // start del cleanCdbTimer en la respuesta al finalizar el escaneo
+}

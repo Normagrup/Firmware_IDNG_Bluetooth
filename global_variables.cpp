@@ -31,6 +31,7 @@ QTimer replaceP2Timer;
 QTimer replaceP3Timer;
 QTimer cleanCdbTimer;
 QTimer askInitDataFromMicroTimer;
+QTimer answerFactoryProgramTimer;
 
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
@@ -98,3 +99,7 @@ int TIME_TO_CLEAN_CDB = 120000;
 EmbeddedState embeddedState = FREE;
 
 bool notRan = true;
+
+QString factoryProgramSerial = "";
+bool isFactoryProgramOn = false;
+QString rcvAddressFactoryProgram = "";

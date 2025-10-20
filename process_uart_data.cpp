@@ -513,9 +513,17 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         bool done = ((uint8_t)data[3] != 0);
 
-                        sendSerialClosure(webServer, done);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
+                        if(!isFactoryProgramOn) {
+                            sendSerialClosure(webServer, done);
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                            // no se pone embeddedState porque es una funcionalidad a parte (factory)
+                        }
+                        else {
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+
+                            isFactoryProgramOn = done; // pasamos a esa variable el valor del done (si se ha grabado bien o no) para usarlo en el handler
+                            answerFactoryProgramTimer.start(50);
+                        }
                     }
                     break;
 

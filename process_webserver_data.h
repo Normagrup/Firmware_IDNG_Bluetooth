@@ -202,4 +202,6 @@ void sendWriteIDError(WebServer* webServer);
 void sendEstimatedTime(WebServer* webServer, uint16_t time);
 void sendInitAlert(WebServer* webServer);
 
+void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
+
 #endif // PROCESS_WEBSERVER_DATA_H

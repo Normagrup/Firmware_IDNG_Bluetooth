@@ -33,6 +33,7 @@ private slots:
     void replaceP3TimerHandler(void);
     void cleanCdbTimerHandler(void);
     void askInitDataFromMicroTimerHandler(void);
+    void answerFactoryProgramTimerHandler(void);
 
     void updateLogsByPollings(Device &device);
     void updateLogsByTests(uint8_t i, uint8_t code);
