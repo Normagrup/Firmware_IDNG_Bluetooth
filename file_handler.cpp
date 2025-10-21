@@ -487,3 +487,140 @@ QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
 
     return obj;
 }
+
+static bool readWholeFile(const QString& path, QByteArray* out) {
+    QFile f(path);
+    if (!f.exists()) return false;
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+    *out = f.readAll();
+    return true;
+}
+
+static QDateTime readSystemUtc() {
+    return QDateTime::currentDateTimeUtc();
+}
+
+static QDateTime readRtcFromSysfs()
+{
+    // /sys/class/rtc/rtc0/date -> YYYY-MM-DD
+    // /sys/class/rtc/rtc0/time -> HH:MM:SS
+    QByteArray dateRaw, timeRaw;
+    if (!readWholeFile("/sys/class/rtc/rtc0/date", &dateRaw)) return {};
+    if (!readWholeFile("/sys/class/rtc/rtc0/time", &timeRaw)) return {};
+
+    const QString date = QString::fromUtf8(dateRaw).trimmed();
+    const QString time = QString::fromUtf8(timeRaw).trimmed();
+
+    const QDate d = QDate::fromString(date, "yyyy-MM-dd");
+    const QTime t = QTime::fromString(time, "HH:mm:ss");
+    if (!d.isValid() || !t.isValid()) return {};
+    // El RTC de Linux normalmente está en UTC → créalo como UTC directamente
+    return QDateTime(d, t, Qt::LocalTime);
+}
+
+static bool procRtcBatteryOK(bool* hasField)
+{
+    *hasField = false;
+    QByteArray raw;
+    if (!readWholeFile("/proc/driver/rtc", &raw)) return true; // si no existe, no penalizamos
+    const QString s = QString::fromUtf8(raw);
+    // Busca "battery : okay" o "battery : empty" si lo expone
+    QRegularExpression rx("^battery\\s*:\\s*(\\w+)", QRegularExpression::MultilineOption);
+    auto m = rx.match(s);
+    if (!m.hasMatch()) return true;
+    *hasField = true;
+    const QString v = m.captured(1).toLower();
+    return (v == "okay" || v == "good" || v == "ok");
+}
+
+QDateTime readRtcDateTime()
+{
+    QByteArray dateRaw, timeRaw;
+    if (!readWholeFile("/sys/class/rtc/rtc0/date", &dateRaw)) return {};
+    if (!readWholeFile("/sys/class/rtc/rtc0/time", &timeRaw)) return {};
+
+    const QString date = QString::fromUtf8(dateRaw).trimmed(); // "YYYY-MM-DD"
+    const QString time = QString::fromUtf8(timeRaw).trimmed(); // "HH:MM:SS"
+
+    // Construir ISO en UTC explícito
+    const QString iso = date + "T" + time + "Z";
+    QDateTime dt = QDateTime::fromString(iso, Qt::ISODate);
+    if (!dt.isValid()) return {};
+    dt.setTimeSpec(Qt::UTC);            // redundante, pero explícito
+    return dt;                          // ya es UTC correcto
+}
+
+bool rtcLooksUsable()
+{
+    const QDateTime rtc = readRtcDateTime();
+    if (!rtc.isValid()) { qWarning() << "[RTC] inválido"; return false; }
+
+    qInfo() << "[RTC] valor" << rtc.toString(Qt::ISODate) << "año" << rtc.date().year();
+    if (rtc.date().year() < 2020) {
+        qWarning() << "[RTC] año < 2020";
+        return false;
+    }
+
+    QByteArray sinceRaw;
+    if (readWholeFile("/sys/class/rtc/rtc0/since_epoch", &sinceRaw)) {
+        bool ok = false;
+        const qint64 since = QString::fromUtf8(sinceRaw).trimmed().toLongLong(&ok);
+        qInfo() << "[RTC] since_epoch raw:" << sinceRaw << "ok?" << ok << "value:" << since;
+        if (ok && since < 24*3600) {
+            qWarning() << "[RTC] since_epoch < 1 día";
+            return false;
+        }
+    } else {
+        qInfo() << "[RTC] since_epoch no disponible";
+    }
+
+    bool hasBatt = false;
+    const bool battOK = procRtcBatteryOK(&hasBatt);
+    if (hasBatt && !battOK) {
+        qWarning() << "[RTC] batería marcada como NO OK";
+        return false;
+    }
+    return true;
+}
+
+void syncTimeFromRTCIfNeeded(int maxDriftSeconds)
+{
+    if (!rtcLooksUsable()) {
+        qWarning() << "[RTC] No parece fiable (fecha/batería/epoch). No sincronizo desde RTC.";
+        return;
+    }
+
+    const QDateTime rtc = readRtcDateTime();
+    if (!rtc.isValid()) {
+        qWarning() << "[RTC] No se pudo leer la hora del RTC.";
+        return;
+    }
+
+    const QDateTime sys = readSystemUtc();
+    const QDateTime cutoff(QDate(2015,1,1), QTime(0,0), Qt::UTC);
+    const bool systemLooksWrong = (sys < cutoff);
+    const qint64 drift = std::llabs(sys.secsTo(rtc));
+
+    if (systemLooksWrong || drift > maxDriftSeconds) {
+        QProcess p;
+        //const QString epoch = QString::number(rtc.toSecsSinceEpoch());
+        //p.start("sudo", {"timedatectl", "set-time", "@" + epoch});
+        // Copia el RTC (UTC) al reloj del sistema sin ambigüedad
+        p.start("sudo", {"hwclock", "--hctosys", "--utc", "-f", "/dev/rtc0"});
+        p.waitForFinished(-1);
+        //qInfo() << "[RTC] Sistema ajustado desde RTC (epoch=" << epoch << ")";
+         qInfo() << "[RTC] Sistema ajustado desde RTC via hwclock --hctosys --utc";
+    } else {
+        qInfo() << "[RTC] Desfase" << drift << "s, no se ajusta.";
+    }
+}
+
+void syncRTCFromSystem()
+{
+    QProcess p;
+    // Escribir hora del sistema al RTC rk808 (UTC)
+    p.start("sudo", {"hwclock", "-w", "--utc", "-f", "/dev/rtc0"});
+    p.waitForFinished(-1);
+    const int rc = p.exitCode();
+    qInfo() << "[RTC] hwclock -w rc=" << rc << "stderr:" << p.readAllStandardError();
+}
