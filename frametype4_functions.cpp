@@ -434,10 +434,17 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         if(name.contains("[G]")){
             subnet = 255;
             id = 255;
-            group_id = log[2].toUInt();
-        } else {
-            subnet = (log[2].toUInt() - 1) / 64;
-            id = (log[2].toUInt() - 1) % 64;
+            uint16_t maskedGroupId = log[2].toUInt();
+            group_id = getGroupIdFromMasked(maskedGroupId);
+        }
+
+        if (name.startsWith("A", Qt::CaseInsensitive)){
+            bool ok = false;
+            uint globalPos = name.mid(1).toUInt(&ok);
+            if (ok && globalPos > 0) {
+                subnet = (globalPos - 1) / 64;
+                id = (globalPos - 1) % 64;
+            }
         }
 
         QByteArray frame;
@@ -481,6 +488,7 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
         if(ev == LOG_ADDED_TO_GROUP_OK || ev ==  LOG_ADDED_TO_GROUP_FAIL || ev == LOG_DEL_FROM_GROUP ){
             int sep = name.indexOf(" - ");
             QString groupName = (sep >= 0) ? name.mid(sep + 3).trimmed() : name.trimmed();
+            QString deviceName = (sep >= 0) ? name.left(sep).trimmed() : name.trimmed();
             QString groupAddress = _database->getGroupAdress(groupName).trimmed().toUpper();
 
             bool okHex = false;
@@ -488,8 +496,14 @@ void sendLogDataToEth(QString rcvAddress, uint8_t commandHigh, uint8_t commandLo
             int groupId = -1;
             if(okHex)
                 groupId = getGroupIdFromMasked(masked);
-            subnet = (log[2].toUInt() - 1) / 64;
-            id = (log[2].toUInt() - 1) % 64;
+            if (deviceName.startsWith("A", Qt::CaseInsensitive)){
+                bool ok = false;
+                uint globalPos = deviceName.mid(1).toUInt(&ok);
+                if (ok && globalPos > 0) {
+                    subnet = (globalPos - 1) / 64;
+                    id = (globalPos - 1) % 64;
+                }
+            }
             payload[1] = subnet;
             payload[2] = id;
             payload[13] = groupId;

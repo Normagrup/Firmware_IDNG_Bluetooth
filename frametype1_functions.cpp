@@ -96,8 +96,8 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
 
         sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
         if(commandLow == 227 || commandLow == 228 || commandLow == 229){
-            int globalPos = subnet * 64 + nodesubnet + 1;
-            logTestRequest(database, globalPos, false, logTestTypeHelper(commandLow));
+            int btAddress = targetAddress;
+            logTestRequest(database, btAddress, false, logTestTypeHelper(commandLow));
         }
     }
 }

@@ -301,8 +301,8 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
     }
 
     int btAddress = isGroup
-                    ? getGroupIdFromMasked(targetAddr)
-                    : targetAddr;
+                    ? targetAddr
+                    : meshDevice[(targetAddr - 1) / 64][(targetAddr - 1) % 64].getRealAddress();
 
     AntennaInfo info = getAntennaInfo(db);
     QString eventType = "Test";
@@ -346,7 +346,7 @@ void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString e
                 int globalPos = i * 64 + j + 1;
                 name = "A" + QString::number(globalPos).rightJustified(4, '0');
                 serial = meshDevice[i][j].serialNumberString();
-                btAddress = globalPos;
+                btAddress = nodeAddress;
             }
         }
     }
@@ -382,7 +382,7 @@ void insertCommissionErrorToLog(const QByteArray& uuidArray, Database *db, int e
     if (uuidArray.size() < 16) return;
 
     QString name = QString("DEV ERR: %1").arg(currentNodeAddress);
-    int btAddress = -1;
+    int btAddress = currentNodeAddress;
     QString serial = QString("%1.%2.%3.%4")
                          .arg(static_cast<uint8_t>(uuidArray[15]), 2, 16, QChar('0'))
                          .arg(static_cast<uint8_t>(uuidArray[14]), 2, 16, QChar('0'))
@@ -472,6 +472,9 @@ QString logTestTypeHelper(uint8_t testType)
 
 int getGroupIdFromMasked(uint16_t maskedGroupId)
 {
+    if (maskedGroupId == 0xFFFF)
+        return -1;
+
     if (maskedGroupId >= 0xC000 && maskedGroupId <= 0xC003)
         return maskedGroupId - 0xC000; //Fixed groups: 0–3
     else if (maskedGroupId >= 0xC010)

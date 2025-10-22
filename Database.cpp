@@ -1099,7 +1099,7 @@ void Database::createGroup()
     LogInfo log;
     log.name = newGroupName + " [G]";
     log.serialNum = "FF.FF.FF.FF";
-    log.btAddress = getGroupIdFromMasked(newGroupAddress.toUShort(nullptr, 16));
+    log.btAddress = newGroupAddress.toUShort(nullptr, 16);
     log.devIP = getAntennaInfo(this).ip;
     log.timestamp = getAntennaInfo(this).timestamp.toSecsSinceEpoch();;
     log.event = LOG_GROUP_CREATED;
@@ -1143,7 +1143,7 @@ void Database::removeGroup(QString address)
     LogInfo log;
     log.name = groupName + " [G]";
     log.serialNum = "FF.FF.FF.FF";
-    log.btAddress = getGroupIdFromMasked(address.toUShort(nullptr, 16));
+    log.btAddress = address.toUShort(nullptr, 16);
     log.devIP = getAntennaInfo(this).ip;
     log.timestamp = getAntennaInfo(this).timestamp.toSecsSinceEpoch();;
     log.event = LOG_GROUP_DELETED;

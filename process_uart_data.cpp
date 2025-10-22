@@ -1252,7 +1252,7 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
                     QString devname = "A" + QString::number(globalPos).rightJustified(4, '0');
                     QString name = devname + " - " + database->getGroupName(groupAddressString);
                     QString serialNum = meshDevice[i][j].serialNumberString();
-                    int btAddress = globalPos;
+                    int btAddress = meshDevice[i][j].getRealAddress();
                     AntennaInfo info = getAntennaInfo(database);
                     QString eventType = "Groups";
                     insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_DEL_FROM_GROUP, eventType);

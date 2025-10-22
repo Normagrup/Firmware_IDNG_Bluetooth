@@ -1693,7 +1693,7 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
     QString devname = "A" + QString::number(globalPos).rightJustified(4, '0');
     QString name = devname + " - " + database->getGroupName(groupAddressString);
     QString serialNum = meshDevice[subnetAddress][nodeSubnetAddress].serialNumberString();
-    int btAddress = globalPos;
+    int btAddress = meshDevice[subnetAddress][nodeSubnetAddress].getRealAddress();;
     AntennaInfo info = getAntennaInfo(database);
     QString eventType = "Groups";
     insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, added ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
@@ -1733,7 +1733,7 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
     // Log entry
     QString name = database->getGroupName(groupAddressString) + " [G]";
     QString serialNum = "FF.FF.FF.FF";
-    int btAddress = getGroupIdFromMasked(groupAddress);
+    int btAddress =  groupAddress;
     AntennaInfo info = getAntennaInfo(database);
     int eventCode = powerOnLevel == 0 ? POL_OFF : (powerOnLevel == 254 ? POL_MAX : POL_LAST_VALUE);
     QString eventType = "PowerOnLevel";

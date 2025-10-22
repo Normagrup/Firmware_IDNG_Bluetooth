@@ -199,7 +199,7 @@ void Wireless::updateLogsByPollings(Device &device)
     int globalPos = subnetCount * 64 + nodeSubnetCount + 1;
     QString name = "A" + QString::number(globalPos).rightJustified(4, '0');
     QString serialNum = device.serialNumberString();
-    int btAddress = globalPos;
+    int btAddress = device.getRealAddress();
     AntennaInfo info = getAntennaInfo(_database);
     QString eventType = "Fail";
 
@@ -241,13 +241,7 @@ void Wireless::updateLogsByTests(uint8_t i, uint8_t code)
 {
     QString name = _database->getGroupName(tests[i].getGroupAddress()) + " [G]";
     QString serailNum = "FF.FF.FF.FF";
-    int groupAddress = tests[i].getGroupAddress().toUInt(NULL, 16);
-    int btAddress;
-    if(groupAddress == 0xFFFF){
-        btAddress = -1;
-    } else {
-        btAddress = getGroupIdFromMasked(groupAddress);
-    }
+    int btAddress = tests[i].getGroupAddress().toUInt(NULL, 16);
     QString eventType = "Test";
     AntennaInfo info = getAntennaInfo(_database);
 
@@ -363,7 +357,7 @@ void Wireless::checkTestResultsHandler()
                     int globalPos = subnet * 64 + node + 1;
                     QString name = "A" + QString::number(globalPos).rightJustified(4, '0');
                     QString serial = device.serialNumberString();
-                    int btAddress = globalPos;
+                    int btAddress = device.getRealAddress();
 
                     if (check.testType == "FUNCTIONAL") {
                         insertLogEvent(_database, name, serial, btAddress, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
