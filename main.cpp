@@ -6,14 +6,12 @@
 #include <unistd.h>   // para execl, _exit
 #include <atomic> // std::atomic<qint64>
 #include <cstring>    // strlen (write)
+#include "Wireless.h"
+#include "embedded_io.h"
 #include <chrono>
 #include <csignal>
 #include <fcntl.h>
 #include <unistd.h>
-
-#include "Wireless.h"
-#include "embedded_io.h"
-#include "file_handler.h"
 
 // Tiempo máximo permitido sin responder
 constexpr int WATCHDOG_TIMEOUT_MS = 12000;
@@ -36,9 +34,6 @@ static void link_off_now() {
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-
-    // Arranque: si el RTC está bien y el sistema está mal / desfasado, copia RTC -> sistema
-    syncTimeFromRTCIfNeeded(/*maxDriftSeconds=*/300);
 
     // Apaga LINK al salir
     QObject::connect(&a, &QCoreApplication::aboutToQuit, &link_off_now);
