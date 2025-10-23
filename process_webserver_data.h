@@ -72,6 +72,7 @@
 #define WS_SET_STOP                         "SET_STOP"
 #define WS_SET_SCAN_FROM_NODE               "SET_SCAN_FROM_NODE"
 #define WS_SET_RELAY_MODE                   "SET_RELAY_MODE"
+#define WS_SEND_RECOVERING_MICRO            "IS_RECOVERING_MICRO"
 #define WS_SEND_LOGIN_INFO                  "LOG_IN_INFO"
 #define WS_SEND_INTERFACES_INFO             "INTERFACES_INFO"
 #define WS_SEND_DATE_TIME_INFO              "DATE_TIME_INFO"
@@ -106,6 +107,7 @@
 #define WS_SEND_FACTORY_ID_WROTE            "FACTORY_ID_WROTE"
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
+#define WS_SEND_SERIAL_CLOSURE              "SERIAL_CLOSURE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 #define WS_SEND_LOG_DATA                    "LOG_DATA"
 #define WS_SEND_LOG_FILE                    "LOG_FILE"
@@ -124,6 +126,7 @@
 #define WS_SEND_CONFIRM_START_REPLACE       "CONFIRM_START_REPLACE"
 #define WS_SEND_CONFIRM_END_REPLACE         "CONFIRM_END_REPLACE"
 #define WS_SEND_WRITE_ID_ERROR              "WRITE_ID_ERROR"
+#define WS_SEND_ESTIMATED_TIME              "ESTIMATED_TIME"
 #define WS_SEND_INIT_ALERT                  "INIT_ALERT"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
@@ -137,6 +140,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 void addNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
 void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database);
+void sendRecoveringMicro(WebServer* webServer);
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo);
 void sendInterfaceInfo(WebServer* webServer, QString info);
 void sendDateTimeInfo(WebServer* webServer, QString info);
@@ -163,13 +167,14 @@ void sendDevicesCount(WebServer* webServer, int count);
 void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
 void sendEndNodeConfiguration(WebServer* webServer);
 void sendEndAutoCommission(WebServer* webServer);
-void sendFactoryIDWrote(WebServer* webServer);
-void sendDaliTested(WebServer* webServer);
-void sendRecordedDevice(WebServer* webServer);
+void sendFactoryIDWrote(WebServer* webServer, bool received);
+void sendDaliTested(WebServer* webServer, bool received);
+void sendRecordedDevice(WebServer* webServer, bool received);
+void sendSerialClosure(WebServer* webServer, bool done);
 void sendLogData(WebServer* webServer, QList<QStringList> logs);
 void sendLogFile(WebServer* webServer, QString fileDir);
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort);
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus);
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus, bool isInEmergency);
 void sendConfirmStartRemoveAllNodes(WebServer* webServer);
 void sendConfirmEndRemoveAllNodes(WebServer* webServer);
 void sendConfirmStartRemoveOneNode(WebServer* webServer);
@@ -194,6 +199,9 @@ void sendConfirmEndClearAllData(WebServer* webServer);
 void sendConfirmStartReplace(WebServer* webServer);
 void sendConfirmEndReplace(WebServer* webServer);
 void sendWriteIDError(WebServer* webServer);
+void sendEstimatedTime(WebServer* webServer, uint16_t time);
 void sendInitAlert(WebServer* webServer);
+
+void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

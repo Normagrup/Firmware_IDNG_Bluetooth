@@ -56,6 +56,7 @@ function loadPageAfterAsk(page, answer)
 		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			processDelAllDev("", true);
+			showToast(); // variable
 		}, 300);
 	}
 	else if(answer === "DEL_DEV") {
@@ -68,6 +69,7 @@ function loadPageAfterAsk(page, answer)
 		frame.src = "s_wireless.html";
 		setTimeout(function() {
 			processSetRelayInProgress("");
+			processEstimatedTime("0:0:5");
 		}, 300);
 	}
 	else if(answer === "ADD_NODE_TO_GROUP") {
@@ -86,18 +88,21 @@ function loadPageAfterAsk(page, answer)
 		frame.src = "s_groups.html";
 		setTimeout(function() {
 			delGroupVisual();
+			showToast(); // variable
 		}, 300);
 	}
 	else if(answer === "CLEAR_ALL") {
 		frame.src = "s_general_config.html";
 		setTimeout(function() {
 			clearAllDataVisual();
+			showToast(); // variable
 		}, 300);
 	}
 	else if(answer === "SYNC_POL") {
 		frame.src = "s_power_on_level.html";
 		setTimeout(function() {
 			syncPOLVisual();
+			showToast(); // variable
 		}, 300);
 	}
 	else if(answer === "SCAN_BY_NODE") {

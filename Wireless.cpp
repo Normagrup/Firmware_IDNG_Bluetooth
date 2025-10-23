@@ -40,6 +40,8 @@ Wireless::Wireless(QObject *parent)
     connect(&cleanCdbTimer, &QTimer::timeout, this, &Wireless::cleanCdbTimerHandler);
     connect(&askInitDataFromMicroTimer, &QTimer::timeout, this, &Wireless::askInitDataFromMicroTimerHandler);
     askInitDataFromMicroTimer.setSingleShot(true);
+    connect(&answerFactoryProgramTimer, &QTimer::timeout, this, &Wireless::answerFactoryProgramTimerHandler);
+    answerFactoryProgramTimer.setSingleShot(true);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
@@ -62,8 +64,6 @@ void Wireless::runNetwork()
     _database->loadTestsFromDatabase();
 
     _database->loadFailComCycles();
-
-    bool notRan = true;
 
     while(notRan) {
         sendSetAntennaAddressAndNetKey(_uartPort, _database);
@@ -119,6 +119,10 @@ void Wireless::udpReceivedData(QQueue <QPair <QString, QByteArray> >* rcvData)
 
     if (checkFrameHeader(dataBuffer) && checkCRC(dataBuffer) && checkRcvAddress(rcvAddress)) {
         processEthFrame(rcvAddress, dataBuffer, _udpSocket, _database, _uartPort);
+    }
+    else if(dataBuffer.startsWith("NORMALINK-G")) {
+        rcvAddressFactoryProgram = rcvAddress;
+        processFactoryProgramSerial(_uartPort, dataBuffer);
     }
 }
 
@@ -500,9 +504,30 @@ void Wireless::askInitDataFromMicroTimerHandler()
 
     if(messageState == RECEIVED) {
         qDebug() << "Se han cargado los datos de inicio de la antena correctamente";
+        embeddedState = FREE;
     }
     else {
         qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
-        sendInitAlert(_webServer);
     }
+}
+
+void Wireless::answerFactoryProgramTimerHandler()
+{
+    // en isFactoryProgramOn está la variable "done", que indica el éxito/fracaso del grabado
+    bool done = isFactoryProgramOn;
+
+    QString reply = QString("%1;%2;%3").arg("-", factoryProgramSerial, done ? "OK" : "FAIL"); // modelo "-" ya que no se puede leer
+    QByteArray ba = reply.toUtf8();
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddressFactoryProgram);
+
+    delay(3000);
+    _udpSocket->sendData(dstAddress, ba);
+
+    qDebug() << "SE HA GRABADO" << (isFactoryProgramOn ? "BIEN" : "MAL");
+
+    factoryProgramSerial = "";
+    isFactoryProgramOn = false;
+    rcvAddressFactoryProgram = "";
 }

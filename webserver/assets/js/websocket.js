@@ -5,6 +5,8 @@ var nodesAdded = 0;
 var isStoppingCommission = false;
 var netKey;
 var antennaID;
+var estimatedTime;
+var isFactoryIDInProgress = false;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -26,6 +28,11 @@ function processAskStateToEmbedded(value)
     var answer = parts[1];
 
     loadPageAfterAsk(page, answer);
+}
+
+function processRecoveringMicro(value)
+{
+    alert("Recovering communication. Please, try again in 10 seconds.");
 }
 
 function processLoginInfo(value) 
@@ -206,10 +213,14 @@ function confirmScan(value, init)
         
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
+
+        processEstimatedTime("0:0:10");
     }
     else {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
+
+        hideToast();
     }
 }
 
@@ -368,6 +379,8 @@ function addDeviceToNetworkList(value)
 
             popup.style.visibility = "visible";
             popupOverlay.style.visibility = "visible";
+
+            processEstimatedTime("0:0:5");
         };
 
         newNode.style.display = 'flex';
@@ -1033,44 +1046,168 @@ function processEndAutoCommission(value)
 
 function processFactoryIDWrote(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader1 = iframeDocument.getElementById('loader1');
-    loader1.classList.add('complete');
+
+    if(received) 
+    {
+        loader1.classList.add('complete');
+    }
+    else
+    {
+        loader1.classList.add('error');
+
+        var loader2 = iframeDocument.getElementById('loader2');
+        var loader3 = iframeDocument.getElementById('loader3');
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+
+        setTimeout(function() {
+            loader2.classList.add('error');
+            
+            setTimeout(function() {
+                loader3.classList.add('error');
+
+                setTimeout(function() {
+                    labelCodeContainer.style.display = 'none';
+                    settingsContainer.style.display = 'none';
+                    errorContainer.style.display = 'flex';
+                    labelContainer.style.display = 'flex';
+
+                    var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+                    factoryNetKey.classList.remove('disabled');
+
+                    isFactoryIDInProgress = false;
+                }, 1000);
+            }, 500);
+        }, 500);
+    }
 }
 
 function processDaliTested(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader2 = iframeDocument.getElementById('loader2');
-    loader2.classList.add('complete');
+
+    if(received) 
+    {
+        loader2.classList.add('complete');
+    }
+    else
+    {
+        loader2.classList.add('error');
+
+        var loader3 = iframeDocument.getElementById('loader3');
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+ 
+        setTimeout(function() {
+            loader3.classList.add('error');
+
+            setTimeout(function() {
+                labelCodeContainer.style.display = 'none';
+                settingsContainer.style.display = 'none';
+                errorContainer.style.display = 'flex';
+                labelContainer.style.display = 'flex';
+
+                var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+                factoryNetKey.classList.remove('disabled');
+
+                isFactoryIDInProgress = false;
+            }, 1000);
+        }, 500);
+    }
 }
 
 function processRecordedDevice(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader3 = iframeDocument.getElementById('loader3');
-    loader3.classList.add('complete');
+    
+    if(received)
+    {
+        loader3.classList.add('complete');
+    }
+    else
+    {
+        loader3.classList.add('error');
+
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+
+        setTimeout(function() {
+            labelCodeContainer.style.display = 'none';
+            settingsContainer.style.display = 'none';
+            errorContainer.style.display = 'flex';
+            labelContainer.style.display = 'flex';
+
+            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+            factoryNetKey.classList.remove('disabled');
+
+            isFactoryIDInProgress = false;
+        }, 1000);
+    }
+}
+
+function processSerialClosure(value) 
+{
+    var done = (value === "done");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var labelContainer = iframeDocument.getElementById('labelContainer');
+    var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
     var settingsContainer = iframeDocument.getElementById('settingsContainer');
     var confirmationContainer = iframeDocument.getElementById('confirmationContainer');
-    var codeContainer = iframeDocument.getElementById('codeContainer');
+    var errorContainer = iframeDocument.getElementById('errorContainer');
 
-    setTimeout(function() {
-        settingsContainer.style.display = 'none';
-        confirmationContainer.style.display = 'flex';
-    }, 3800);
+    if(done)
+    {
+        setTimeout(function() {
+            labelCodeContainer.style.display = 'none';
+            settingsContainer.style.display = 'none';
+            confirmationContainer.style.display = 'flex';
+            labelContainer.style.display = 'flex';
 
-    setTimeout(function() {
-        labelContainer.style.display = 'flex';
-        codeContainer.style.display = 'none';
-    }, 7300);
+            isFactoryIDInProgress = false;
+
+            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+            factoryNetKey.classList.remove('disabled');
+        }, 2000);
+    }
+    else
+    {
+        setTimeout(function() {
+            labelCodeContainer.style.display = 'none';
+            settingsContainer.style.display = 'none';
+            errorContainer.style.display = 'flex';
+            labelContainer.style.display = 'flex';
+
+            isFactoryIDInProgress = false;
+
+            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+            factoryNetKey.classList.remove('disabled');
+        }, 2000);
+    }
 }
 
 function processIsConfig(value)
@@ -1081,9 +1218,11 @@ function processIsConfig(value)
     var isConfig = parts[2];
     var hasFailures = parts[3];
     var onOffStatus = parts[4];
+    var emergencyState = parts[5];
     var configured = (isConfig === "true");
     var failed = (hasFailures === "true");
     var onOff = (onOffStatus === "on");
+    var inEmergency = (emergencyState === "on");
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -1095,16 +1234,19 @@ function processIsConfig(value)
 
         if(configured) {
             if(failed) {
-                button.classList.remove("blue", "gray");
+                button.classList.remove("blue", "gray", "orange");
                 button.classList.add("red");
+            } else if (inEmergency) {
+                button.classList.remove("red", "gray", "blue");
+                button.classList.add("orange");
             } else {
-                button.classList.remove("red", "gray");
+                button.classList.remove("red", "gray", "orange");
                 button.classList.add("blue");
             }
             button.disabled = false;
             button.innerHTML += '<span class="status-indicator ' + (onOff ? 'on-state' : 'off-state') + '"></span>';
         } else {
-            button.classList.remove("red", "blue"); 
+            button.classList.remove("red", "blue", "orange"); 
             button.classList.add("gray");
             button.disabled = true;
         }
@@ -1260,6 +1402,8 @@ function processDelOneDev(value, init)
         var closeDelDevPopup = iframeDocument.getElementById('closeDelDevPopup');
         closeDelDevPopup.style.pointerEvents = "none";
         closeDelDevPopup.style.opacity = "0.5";
+
+        processEstimatedTime("0:0:6");
     }
     else // Cuando termina el borrado
     {
@@ -1271,6 +1415,8 @@ function processDelOneDev(value, init)
         setTimeout(function() {
             popup.style.visibility = "hidden";
             popupOverlay.style.visibility = "hidden";
+
+            hideToast();
         }, 1000);
     }
 }
@@ -1305,6 +1451,8 @@ function processDelAllDev(value, init)
 
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
+
+        hideToast();
     }
 }
 
@@ -1325,6 +1473,8 @@ function processAddNodeToGroup(value)
     addLabel.textContent = added ? "Node correctly added" : "Something went wrong..."
     addLoader.style.animation = "none";
 
+    hideToast();
+
     setTimeout(function() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
@@ -1344,6 +1494,8 @@ function processDelNodeFromGroup(value)
 
     loadNodesLists();
 
+    hideToast();
+
     setTimeout(function() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
@@ -1360,6 +1512,8 @@ function processDelGroup(value)
 
     var groupList = iframeDocument.getElementById('groupList');
     groupList.innerHTML = getDefaultGroupsForSelector();
+
+    hideToast();
 
     setTimeout(function() {
         loadGroups();
@@ -1457,6 +1611,8 @@ function confirmManualRelay(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
+
+    hideToast();
 }
 
 function processMasterAddressGet(value)
@@ -1537,6 +1693,8 @@ function processConfirmEndSyncPOL(value)
         sendData("GET_POWER_ON_LVL", currentPage);
     }
 
+    hideToast();
+
     setTimeout(function() {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
@@ -1559,14 +1717,14 @@ function processLSInfo(value)
     var btnStop2 = iframeDocument.getElementById('stopButton2');
 
     if(phase == "1") {
-        informerLabel1.textContent = "Phase 1: Scanning Address " + actualNode;
+        informerLabel1.textContent = "Phase 1: Scanning Address -> " + actualNode;
         informerLabel2.textContent = "Phase 2: Waiting...";
         btnStop1.disabled = false;
         btnStop2.disabled = true;
     }
     else if(phase == "2") {
         informerLabel1.textContent = "Phase 1: Completed.";
-        informerLabel2.textContent = "Phase 2: Confirming Address " + actualNode;
+        informerLabel2.textContent = "Phase 2: Confirming Address -> " + actualNode;
         btnStop1.disabled = true;
         btnStop2.disabled = false;
     }
@@ -1598,6 +1756,8 @@ function processConfirmEndClearAll(value)
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
+
+    hideToast();
 }
 
 function processNetKeyGet(value)
@@ -1678,7 +1838,12 @@ function processReplacing(value, init)
 
 function processWriteIdError(value)
 {
-    alert("Vuelva a escanear el código");
+    alert("Scan the code again");
+}
+
+function processEstimatedTime(value) {
+    estimatedTime = value;
+    showToast();
 }
 
 function processInitAlert(value)
@@ -1693,6 +1858,7 @@ function processReceivedData(data)
     var value = dataArray[1];
     
     if (type == 'ASK_STATE_TO_EMBEDDED') { processAskStateToEmbedded(value); }
+    else if(type == "IS_RECOVERING_MICRO") { processRecoveringMicro(value); }
     else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }
@@ -1720,6 +1886,7 @@ function processReceivedData(data)
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
+    else if (type == 'SERIAL_CLOSURE') { processSerialClosure(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
@@ -1746,6 +1913,7 @@ function processReceivedData(data)
     else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
     else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
     else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
+    else if (type == "ESTIMATED_TIME") { processEstimatedTime(value); }
     else if (type == "INIT_ALERT") { processInitAlert(value); }
 }
 
@@ -1902,6 +2070,8 @@ function addToGroupVisual()
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
+
+    processEstimatedTime("0:0:5");
 }
 
 function addToGroup() 
@@ -1939,6 +2109,8 @@ function delFromGroupVisual()
     deletingNodeButton.classList.add('button-disabled');
     closeDelNodeFromGroupPopup.style.pointerEvents = "none";
     closeDelNodeFromGroupPopup.style.opacity = "0.5";
+
+    processEstimatedTime("0:0:5");
 }
 
 function delFromGroup() 
@@ -2059,6 +2231,11 @@ function loadNodesLists()
     var groupSelected = groupList.options[groupList.selectedIndex].value;
 
     if(groupSelected == "-") { return; }
+
+    var activeButtons = false;
+    if(groupSelected == "-" || groupSelected == "C000" || groupSelected == "C001" || groupSelected == "C002" || groupSelected == "C003") { activeButtons = false; }
+    else { activeButtons = true; }
+    iframeDocument.querySelectorAll('button.action').forEach(btn => { btn.disabled = !activeButtons; });
 
     sendData("GET_GROUP_NODES", groupSelected);
 }
@@ -2493,40 +2670,56 @@ function codeReaderChanged()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var codeReader = iframeDocument.getElementById('codeReader');
+    console.log(codeReader.value);
+
+    if(isFactoryIDInProgress) { codeReader.value = ''; return; } // Si ya está grabando, se vacía el codeReader y se corta
+    if(codeReader.value.length < 11) { codeReader.value = ''; return; } // Si lo escrito es más corto que 11, se vacía el codeReader y se corta
+
+    var label = codeReader.value.slice(-11);
+    var regex = /\b(?:[0-9A-F]{2}\.){3}[0-9A-F]{2}\b/g;
+    if(!label.match(regex)) { codeReader.value = ''; return; } // Si lo escrito y parseado no coincide con XX.XX.XX.XX, se vacía el codeReader y se corta
+
+    isFactoryIDInProgress = true;
+    
     var labelContainer = iframeDocument.getElementById('labelContainer');
     var codeContainer = iframeDocument.getElementById('codeContainer');
+    var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
     var settingsContainer = iframeDocument.getElementById('settingsContainer');
     var confirmationContainer = iframeDocument.getElementById('confirmationContainer');
+    var errorContainer = iframeDocument.getElementById('errorContainer');
 
     var loader1 = iframeDocument.getElementById('loader1');
     var loader2 = iframeDocument.getElementById('loader2');
     var loader3 = iframeDocument.getElementById('loader3');
-    loader1.classList.remove('complete');
-    loader2.classList.remove('complete');
-    loader3.classList.remove('complete');
+    loader1.classList.remove('complete'); loader1.classList.remove('error');
+    loader2.classList.remove('complete'); loader2.classList.remove('error');
+    loader3.classList.remove('complete'); loader3.classList.remove('error');
 
+    labelCodeContainer.style.display = 'flex';
     settingsContainer.style.display = 'flex';
     confirmationContainer.style.display = 'none';
+    errorContainer.style.display = 'none';
 
-    var labelParts = codeReader.value.split('ñ');
-    var labelCodeParts = labelParts[1];
-    var codeParts = labelCodeParts.split('.');
+    var labelParts = label.split('.');
     var labelCode1 = iframeDocument.getElementById('labelCode1');
     var labelCode2 = iframeDocument.getElementById('labelCode2');
     var labelCode3 = iframeDocument.getElementById('labelCode3');
     var labelCode4 = iframeDocument.getElementById('labelCode4');
 
-    labelCode1.innerHTML = codeParts[0];
-    labelCode2.innerHTML = codeParts[1];
-    labelCode3.innerHTML = codeParts[2];
-    labelCode4.innerHTML = codeParts[3];
+    labelCode1.innerHTML = labelParts[0];
+    labelCode2.innerHTML = labelParts[1];
+    labelCode3.innerHTML = labelParts[2];
+    labelCode4.innerHTML = labelParts[3];
 
     labelContainer.style.display = 'none';
     codeContainer.style.display = 'flex';
 
-    sendData("SET_READ_ID_CODE", codeReader.value);
+    sendData("SET_READ_ID_CODE", label);
 
     codeReader.value = '';
+
+    var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+    factoryNetKey.classList.add('disabled');
 }
 
 function requestDevicesAndFailuresCount() {
@@ -2682,10 +2875,9 @@ function setAntennaNumberAndNetKey() {
         sendData("SET_MASTER_ADDR_AND_NETKEY", newAntennaID + "_" + newNetKey);
 
         setTimeout(function () {
-            sendData("SET_REBOOT_DEVICE", " ");
             logoutApp();
             window.location.href = "http://" + window.location.hostname;
-        }, 2000);
+        }, 100);
     }
 }
 
@@ -2801,9 +2993,8 @@ function loadFactoryNetKey()
         sendData("SET_MASTER_ADDR_AND_NETKEY", "" + "_" + factoryNetKey);
 
         setTimeout(function () {
-            sendData("SET_REBOOT_DEVICE", " ");
             logoutApp();
             window.location.href = "http://" + window.location.hostname;
-        }, 2000);
+        }, 100);
     }
 }

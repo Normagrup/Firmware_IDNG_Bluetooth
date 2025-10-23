@@ -69,8 +69,6 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
-            case CONFIRM_RETRY: return 4;
-            case CONFIRM_ERROR_RETRY: return 4;
             default: return -1;
         }
 
@@ -84,8 +82,9 @@ int getExpectedFrameSize(const QByteArray& buffer)
         switch (subType) {
             case FACTORY_ID_WROTE:
             case DALI_TESTED:
-            case RECORDED_DEVICE:
                 return 4;
+            case RECORDED_DEVICE:
+                return 5;
             default: return -1;
         }
 
@@ -325,15 +324,22 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                             for(int j = 0; j < 16; j++)
                                 netKeyStr += QString::asprintf("%02X", netKey[j]);
 
-                        reloadAntennaAddressAndNetKey(webServer, database, antennaAddress, netKeyStr);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        messageState = RECEIVED;
+                        if(antennaAddress != 0 && netKeyStr != "00000000000000000000000000000000") {
+                            reloadAntennaAddressAndNetKey(webServer, database, antennaAddress, netKeyStr);
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                            messageState = RECEIVED;
+                        } else {
+                            qDebug() << "NOTA: Antenna Address y NetKey iguales a 0 recibidas";
+                        }
                     }
                     break;
 
                     case ASK_INIT_DATA:
                     {
-                        askInitDataFromMicroTimer.start(50);
+                        if(!notRan) {
+                            embeddedState = RECOVERING_MICRO;
+                            askInitDataFromMicroTimer.start(50);
+                        }
                     }
                     break;
 
@@ -493,21 +499,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndClearAllData(webServer); // no se usa ya que no devuelve confirmación al terminar
                     }
                     break;
-
-                    case CONFIRM_RETRY:
-                    {
-                        qDebug() << "Second step retry (Write ID)";
-                    }
-                    break;
-
-                    case CONFIRM_ERROR_RETRY:
-                    {
-                        // FALLO DURANTE EL PASO 2
-                        sendWriteIDError(webServer);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
-                    }
-                    break;
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(data, database, webServer);
@@ -520,23 +511,28 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
             case UART_ID_FRAME_TYPE:
                 switch ((unsigned char)data[2]) {
                     case FACTORY_ID_WROTE:
-                        sendFactoryIDWrote(webServer);
+                        sendFactoryIDWrote(webServer, true);
                     break;
 
                     case DALI_TESTED:
-                        sendDaliTested(webServer);
+                        sendDaliTested(webServer, true);
                     break;
 
                     case RECORDED_DEVICE:
                     {
-                        /*delay(1000);
-                        sendUartClearInyectedNodes(uartPort, true, database);
-                        while(messageState == PENDING) {}*/
+                        bool done = ((uint8_t)data[3] != 0);
 
-                        // FINALIZACIÓN DURANTE EL PASO 3
-                        sendRecordedDevice(webServer);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
+                        if(!isFactoryProgramOn) {
+                            sendSerialClosure(webServer, done);
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                            // no se pone embeddedState porque es una funcionalidad a parte (factory)
+                        }
+                        else {
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+
+                            isFactoryProgramOn = done; // pasamos a esa variable el valor del done (si se ha grabado bien o no) para usarlo en el handler
+                            answerFactoryProgramTimer.start(50);
+                        }
                     }
                     break;
 
@@ -667,7 +663,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 //*/
                 //*
                 timerGroupAddress[0] = meshDevice[i][j].getRealAddress();
-                if (deviceType == 0x01) {               // EMERGENCY
+                if (deviceType == 0x01) {               // EMERGENCY 0x01
                     timerGroupAddress[1] = 0xC001;
 
                     if(((j + 1) % 2) != 0) {
@@ -679,17 +675,10 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                         qDebug() << "GROUP PAR";
                     }
                 }
-                else if (deviceType == 0x06) {          // LIGHTING
+                else if (deviceType == 0x06) {          // LIGHTING 0x06
                     timerGroupAddress[1] = 0xC000;
+                    timerGroupAddress[2] = 0x0000;
 
-                    if(((j + 1) % 2) != 0) {
-                        timerGroupAddress[2] = 0xC003;
-                        qDebug() << "GROUP IMPAR";
-                    }
-                    else {
-                        timerGroupAddress[2] = 0xC002;
-                        qDebug() << "GROUP PAR";
-                    }
                 }
                 else {                                  // DEFAULT or UNKNOWN DEV TYPE -> Se mete en emergency
                     if(((j + 1) % 2) != 0) {
@@ -1542,15 +1531,16 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
 
 void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
 {
-    uint8_t att = 10;
+    qDebug() << "[WRITE_ID 1] factoryCode =" << factoryCode;
+
+    uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[10] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
+    int ms[3] = {1000, 2000, 3000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
         bool ok;
         uint8_t code[4] = {0};
-        qDebug() << "[WRITE_ID] factoryCode =" << factoryCode;
         QStringList factoryCodeParts = factoryCode.split(".");
 
         for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
@@ -1579,7 +1569,69 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
     }
 }
 
-void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
+void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode)
+{
+    qDebug() << "[WRITE_ID 2] factoryCode =" << factoryCode;
+
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 3000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 3;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(DALI_TEST_FOR_WRITE_ID);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DALI_TEST_FOR_WRITE_ID";
+    }
+}
+
+void sendEndRecordDevice(UartPort* _uartPort, QString factoryCode)
+{
+    qDebug() << "[WRITE_ID 3] factoryCode =" << factoryCode;
+
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {1000, 2000, 3000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 3;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(END_RECORD_DEVICE);
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del END_RECORD_DEVICE";
+    }
+}
+
+void sendUartPOLForUpdate(UartPort* _uartPort, Database* database, WebServer* webServer)
 {
     // Se genera un SET con todas las direcciones de los grupos existentes (los 4 por defecto y los creados manualmente)
     QSet<QString> groupsSet = {"C000", "C001", "C002", "C003"};
@@ -1625,6 +1677,8 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database)
     for(int i = 0; i < crossedGroupAndNodes.size(); i++) {
         qDebug() << "[" << i << "] -" << crossedGroupAndNodes[i].first << "-" << crossedGroupAndNodes[i].second;
     }
+
+    sendEstimatedTime(webServer, 1 + crossedGroupAndNodes.size() * 3); // 1 de base, 3 segundos por dispositivo
 
     for (int i = 0; i < crossedGroupAndNodes.size(); i++) {
         uint16_t realAddress = crossedGroupAndNodes[i].first;
@@ -1776,6 +1830,8 @@ void sendSetAntennaAddressAndNetKey(UartPort* _uartPort, Database* database)
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
+
+        qDebug() << "Intento" << (actAtt + 1) << "-> Address:" << masterStoredAddress << "- NetKey:" << netKey;
 
         delay(ms[actAtt]);
         actAtt++;

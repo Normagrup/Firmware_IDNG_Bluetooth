@@ -16,6 +16,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     qDebug() << "WEBSERVER FRAME RECEIVED: " << type;
 
+    if(embeddedState == RECOVERING_MICRO) {
+        sendRecoveringMicro(webServer);
+        return;
+    }
+
     pollingTimer.stop();
 
     if (type == WS_SET_LOG_IN) {
@@ -182,6 +187,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
             uint8_t counter = 0;
             uint8_t max = 64;
+
+            sendEstimatedTime(webServer, addresses.size() * 4); // 4 segundos por dispositivo
 
             for (const uint16_t nodeAddress : addresses) {
                 sendUartInyectNode(uartPort, nodeAddress, database);
@@ -421,8 +428,18 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        database->removeGroup(value);
         uint16_t groupAddress = getOneGroupAddress(value);
+
+        int count = 0;
+        for(int i = 0; i < MAX_SUBNET; i++){
+            for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+                if(meshDevice[i][j].getIsConfigured() && meshDevice[i][j].isOnSubList(groupAddress))
+                    count++;
+            }
+        }
+        sendEstimatedTime(webServer, 1 + count * 3); // 1 de base, 3 segundos por dispositivo
+
+        database->removeGroup(value);
         sendUartDelGroupForAllNodes(uartPort, groupAddress, database);
         //sendGroups(webServer, database);
 
@@ -737,25 +754,34 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         isOpenNodeControl = false;
     }
     else if (type == WS_SET_READ_ID_CODE) {
-        if(messageState == PENDING) { return; }
-
         // no se pone embeddedState porque es una funcionalidad a parte (factory)
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        qDebug() << "[ID_CODE] value =" << value;
-        QStringList webServerParts = value.split("ñ");
-        QString deviceID = webServerParts[1];
+        QString deviceID = value;
         qDebug() << "[ID_CODE] deviceID =" << deviceID;
+
         sendWriteIDCodeFrame(uartPort, deviceID);
         while(messageState == PENDING) {}
+        sendFactoryIDWrote(webServer, messageState == RECEIVED);
 
-        // FALLO DURANTE EL PASO 1
-        if(messageState == MISSED) {
-            sendWriteIDError(webServer);
-            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-            // no se pone embeddedState porque es una funcionalidad a parte (factory)
+        if(messageState == RECEIVED) {
+            delay(1000);
+            sendDaliTestForWriteID(uartPort, deviceID);
+            while(messageState == PENDING) {}
+            sendDaliTested(webServer, messageState == RECEIVED);
+
+            if(messageState == RECEIVED) {
+                delay(1000);
+                sendEndRecordDevice(uartPort, deviceID);
+                while(messageState == PENDING) {}
+                sendRecordedDevice(webServer, messageState == RECEIVED);
+            }
         }
+
+        // confirmación en la respuesta al finalizar el escaneo
+        // start del cleanCdbTimer en la respuesta al finalizar el escaneo
+        // no se pone embeddedState porque es una funcionalidad a parte (factory)
     }
     else if (type == WS_GET_DEVICES_COUNT) {
         int count = 0;
@@ -798,7 +824,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         bool hasFailures = meshDevice[subnet][id].getTotalFailures() > 0;
         bool onOffStatus = meshDevice[subnet][id].getActualLvl() > 0;
 
-        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures, onOffStatus);
+        uint8_t emergencyMode = meshDevice[subnet][id].getEmergencyMode();
+        bool isInEmergency = (emergencyMode >> 2) & 1;
+
+        sendIsConfig(webServer, value, serialNumber, isConfig, hasFailures, onOffStatus, isInEmergency);
     }
     else if (type == WS_GET_GROUPS) {
         sendGroups(webServer, database);
@@ -892,7 +921,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = SYNC_POL;
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
-        sendUartPOLForUpdate(uartPort, database);
+        sendUartPOLForUpdate(uartPort, database, webServer);
 
         sendConfirmEndSyncPOL(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
@@ -964,6 +993,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(100);
 
         sendAntennaAddressAndNetKey(uartPort, antennaID != "", netKey != "");
+
+        delay(400);
+
+        rebootDevice();
     }
     else if (type == WS_REPLACE_NODES) {
         embeddedState = REPLACE;
@@ -1135,6 +1168,13 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
 
     delay(5000);
     sendUartConfirmReplacing(uartPort, replaceData.newNodeRealAddress);
+}
+
+void sendRecoveringMicro(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_RECOVERING_MICRO) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo)
@@ -1549,29 +1589,37 @@ void sendEndAutoCommission(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendFactoryIDWrote(WebServer* webServer)
+void sendFactoryIDWrote(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_FACTORY_ID_WROTE) + "@" + " ";
+    QString message = QString(WS_SEND_FACTORY_ID_WROTE) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendDaliTested(WebServer* webServer)
+void sendDaliTested(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_DALI_TESTED) + "@" + " ";
+    QString message = QString(WS_SEND_DALI_TESTED) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendRecordedDevice(WebServer* webServer)
+void sendRecordedDevice(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + " ";
+    QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus) {
-    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off");
+void sendSerialClosure(WebServer* webServer, bool done)
+{
+    QString message = QString(WS_SEND_SERIAL_CLOSURE) + "@" + (done ? "done" : "notDone");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendIsConfig(WebServer* webServer, QString device, QString serialNumber, bool isConfig, bool hasFailures, bool onOffStatus, bool isInEmergency)
+{
+    QString message = QString(WS_SEND_IS_CONFIG) + "@" + device + "_" + serialNumber + "_" + (isConfig ? "true" : "false") + "_" + (hasFailures ? "true" : "false") + "_" + (onOffStatus ? "on" : "off") + "_" + (isInEmergency ? "on" : "off");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1603,6 +1651,8 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
     QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
     uint8_t counter = 0;
     uint8_t max = 64;
+
+    sendEstimatedTime(webServer, 5 + addresses.size() * 4); // 5 de base, 4 segundos por dispositivo
 
     for (const uint16_t nodeAddress : addresses) {
         sendUartInyectNode(uartPort, nodeAddress, database);
@@ -1830,9 +1880,9 @@ void sendConfirmEndSyncPOL(WebServer* webServer)
 
 void sendLSInfo(WebServer* webServer, uint16_t nodeAddr, uint8_t phase)
 {
-    QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
+    //QString hexStr = QString("0x%1").arg(nodeAddr, 4, 16, QChar('0')).toUpper();
 
-    QString message = QString(WS_SEND_LS_INFO) + "@" + hexStr + "_" + QString::number(phase);
+    QString message = QString(WS_SEND_LS_INFO) + "@" + QString::number(nodeAddr) + "_" + QString::number(phase);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1901,6 +1951,18 @@ void sendWriteIDError(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void sendEstimatedTime(WebServer* webServer, uint16_t time)
+{
+    uint8_t hours = time / 3600;
+    uint16_t tmp = time % 3600;
+    uint8_t minutes = tmp / 60;
+    uint8_t seconds = tmp % 60;
+
+    QString message = QString(WS_SEND_ESTIMATED_TIME) + "@" + QString::number(hours) + ":" + QString::number(minutes) + ":" + QString::number(seconds);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
 void sendInitAlert(WebServer* webServer)
 {
     QString message = QString(WS_SEND_INIT_ALERT) + "@" + " ";
@@ -1908,3 +1970,30 @@ void sendInitAlert(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
+void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer)
+{
+    isFactoryProgramOn = true;
+    factoryProgramSerial = dataBuffer.split(';').value(1);
+
+    cleanCdbTimer.stop();
+
+    QString deviceID = factoryProgramSerial;
+    qDebug() << "[ID_CODE] deviceID =" << deviceID;
+
+    sendWriteIDCodeFrame(uartPort, deviceID);
+    while(messageState == PENDING) {}
+
+    if(messageState == RECEIVED) {
+        delay(500);
+        sendDaliTestForWriteID(uartPort, deviceID);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            delay(500);
+            sendEndRecordDevice(uartPort, deviceID);
+            while(messageState == PENDING) {}
+        }
+    }
+
+    // start del cleanCdbTimer en la respuesta al finalizar el escaneo
+}

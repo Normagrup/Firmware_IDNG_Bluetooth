@@ -57,6 +57,7 @@ extern QTimer replaceP2Timer; // para ejecutar la parte2 del replace
 extern QTimer replaceP3Timer; // para ejecutar la parte3 del replace
 extern QTimer cleanCdbTimer;
 extern QTimer askInitDataFromMicroTimer;
+extern QTimer answerFactoryProgramTimer;
 
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
@@ -116,10 +117,17 @@ enum EmbeddedState {
     CLEAR_ALL,
     SYNC_POL,
     SCAN_BY_NODE,
-    LINE_SCAN
+    LINE_SCAN,
+    RECOVERING_MICRO
 };
 
 extern EmbeddedState embeddedState;
 extern bool groupUpdateFromEth;
+
+extern bool notRan;
+
+extern QString factoryProgramSerial;
+extern bool isFactoryProgramOn;
+extern QString rcvAddressFactoryProgram;
 
 #endif // GLOBAL_VARIABLES_H

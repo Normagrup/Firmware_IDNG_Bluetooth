@@ -288,7 +288,7 @@ function openGroupControl(button)
 
     // Carga de imágenes del grupo
     if (groupAddress === 'C000') { groupTypeIcon.src = "images/normalLightIcon.png"; }
-    else if (groupAddress === 'C001') { groupTypeIcon.src = "images/emergencyLightIcon.png"; }
+    else if (groupAddress === 'C001' || groupAddress === 'C002' || groupAddress === 'C003') { groupTypeIcon.src = "images/emergencyLightIcon.png"; }
     else { groupTypeIcon.src = "images/defaultLightIcon.png"; }
 
     popupText.textContent = button.textContent;
@@ -848,6 +848,45 @@ function randomizeNetKey()
     }
 }
 
+async function copyNetKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var newNetKey = "";
+
+    for(var i = 0; i < 16; i++) {
+        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const value = input.value.trim().toUpperCase();
+        newNetKey += value;
+
+        if (!/^[0-9A-F]{2}$/.test(value)) {
+            alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
+            return null;
+        }
+    }
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(newNetKey);
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = newNetKey;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            ta.setSelectionRange(0, ta.value.length); // iOS
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        alert('The netKey has been copied');
+    } catch (e) {
+        alert("The netKey couldn't be copied");
+    }
+}
+
 function saveCustomNetKey()
 {
     var iframe = document.getElementById('mainframe');
@@ -939,4 +978,68 @@ function showReplacePopup()
             }
         }
     }
+}
+
+function loadDefaultSettings()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var ip = iframeDocument.querySelector('input[name="ipValue"]');
+    var submask = iframeDocument.querySelector('input[name="submaskValue"]');
+    var gateway = iframeDocument.querySelector('input[name="gatewayValue"]');
+    var building = iframeDocument.querySelector('input[name="buildingName"]');
+    var line = iframeDocument.querySelector('input[name="lineName"]');
+
+    ip.value = "192.168.1.254";
+    submask.value = "255.255.255.0";
+    gateway.value = "192.168.1.1";
+    building.value = "NO_NAME";
+    line.value = "NO_NAME";
+}
+
+function showToast() {
+    if(!estimatedTime) { return; }
+
+    var parts = estimatedTime.split(":");
+    var hours = parts[0];
+    var minutes = parts[1];
+    var seconds = parts[2];
+
+    let t = document.getElementById('toast-br');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast-br';
+        Object.assign(t.style, {
+            position: 'fixed', right: '16px', bottom: '16px',
+            maxWidth: '360px', padding: '10px 14px',
+            background: '#4682b4', color: '#fff', borderRadius: '8px',
+            boxShadow: '0 6px 20px rgba(0,0,0,.25)', font: '14px/1.3 system-ui, sans-serif',
+            zIndex: 99999, opacity: 0, transform: 'translateY(8px)',
+            transition: 'opacity .2s ease, transform .2s ease', cursor: 'pointer'
+        });
+        t.addEventListener('click', hideToast);
+        document.body.appendChild(t);
+        requestAnimationFrame(() => { t.style.opacity = 1; t.style.transform = 'translateY(0)'; });
+    }
+
+    var text = "Estimated time: ";
+    if(hours > 0) {
+        text += hours + "h " + minutes + "m " + seconds + "s"
+    }
+    else if (minutes > 0) {
+        text += minutes + "m " + seconds + "s"
+    }
+    else {
+        text += seconds + "s"
+    }
+    t.textContent = text;
+}
+
+function hideToast() {
+    const t = document.getElementById('toast-br');
+    if (!t) return;
+    t.style.opacity = 0;
+    t.style.transform = 'translateY(8px)';
+    t.addEventListener('transitionend', () => t.remove(), { once: true });
 }

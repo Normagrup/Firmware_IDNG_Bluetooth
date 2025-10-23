@@ -130,6 +130,27 @@ h2 {
     width: 100%;
 }
 
+.error-container {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    height: 100%;
+    width: 100%;
+    border-top: 1px solid #999;
+    padding-top: 20px;
+}
+
+.error-container label {
+    color: #ce1717;
+    font-size: 20px;
+    font-weight: bold;
+    margin-left: 25%;
+    width: 100%;
+}
+
 .label-settings-container {
     z-index: 1;
     display: flex;
@@ -180,6 +201,28 @@ h2 {
     line-height: 20px; 
 }
 
+.loader.error {
+    animation: none;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background-color: transparent;
+    position: relative;
+}
+
+.loader.error::before {
+    content: "✖";
+    font-size: 20px;
+    color: #c12026;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+    line-height: 20px;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -198,4 +241,14 @@ button {
 
 button:hover {
     background-color: #315f7a;
+}
+
+button.disabled {
+    background-color: gray;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+button.disabled:hover {
+    background-color: rgb(112, 112, 112);
 }

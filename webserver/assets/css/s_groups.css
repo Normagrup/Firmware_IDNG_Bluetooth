@@ -311,3 +311,12 @@ input[type="text"]:focus {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+button.action { 
+    background-color: #4682b4;
+}
+
+button.action:disabled { 
+    background-color: gray;
+    cursor: not-allowed;
+}

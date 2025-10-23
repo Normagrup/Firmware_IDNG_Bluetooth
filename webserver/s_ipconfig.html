@@ -30,8 +30,11 @@
             <h3> Password <input type="password" name="adminPass"></h3>
             
             <div class="button-container">
-                <button onclick="parent.sendIPConfig()"> Apply </button>
-                <button onclick="parent.rebootDevice()"> Reboot </button>
+                <button onclick="parent.loadDefaultSettings()"> LOAD DEFAULT SETTINGS </button>
+                <div class="second-button-container">
+                    <button onclick="parent.sendIPConfig()"> Apply </button>
+                    <button onclick="parent.rebootDevice()"> Reboot </button>
+                </div>
             </div>
         </div>
         <label id="ipConfigLabel" style="visibility: hidden; margin-top: 10px;"> ‎ </label>
