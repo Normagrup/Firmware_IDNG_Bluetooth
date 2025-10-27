@@ -7,7 +7,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include <QDateTime>
 #include "Device.h"
 #include "Database.h"
 #include "aux_functions.h"
@@ -19,7 +18,6 @@
 #define GENERAL_CONFIG_PATH         "/normagrup/generalConfig/"
 #define TREE_DATA_PATH              "/normagrup/www/assets/data/arf.json"
 
-bool rtcLooksUsable();
 void setWebServerData(Database* database);
 
 QString getInterfacesConfig(QString config);
@@ -33,7 +31,6 @@ void getRtcSeconds(uint8_t* data);
 QString getLocalDate(void);
 QString getLocalTime(void);
 QString getLocalDay(void);
-QDateTime readRtcDateTime();
 
 void rebootDevice(void);
 
@@ -51,7 +48,5 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
 void saveNetKeyAndMasterAddress(QString date, QString time, QString key, uint16_t masterRealAddress);
 void buildJsonTree();
 QJsonObject buildJsonTreeRecursively(uint16_t realAddress);
-void syncTimeFromRTCIfNeeded(int maxDriftSeconds = 300);
-void syncRTCFromSystem();
 
 #endif // FILE_HANDLER_H
