@@ -332,7 +332,7 @@ void setRtcTime(QString time)
     process.start("sudo", command);
     process.waitForFinished(-1);
 }
-
+/*
 void setLocalDateTime(QStringList dateTimeParts)
 {
     QString date = dateTimeParts[0];
@@ -344,6 +344,93 @@ void setLocalDateTime(QStringList dateTimeParts)
     command << "timedatectl" << "set-time" << dateTime;
     process.start("sudo", command);
     process.waitForFinished(-1);
+}*/
+
+// Convierte decimal [0..99] a BCD (entero 0..255)
+static int decToBcd(int v) { return ((v/10)<<4) | (v%10); }
+
+// Devuelve "0xHH" con cero a la izquierda
+static QString hex0x(int byte) {
+    return QString("0x%1").arg(byte, 2, 16, QChar('0')).toLower();
+}
+void setLocalDateTime(QStringList dateTimeParts)
+{
+    const QString date = dateTimeParts.value(0);           // "YYYY-MM-DD"
+    const QString time = dateTimeParts.value(1) + ":00";   // "HH:MM:SS"
+    const QString dateTime = date + " " + time;
+
+
+    // 2) Convierte esa hora local a UTC (RTC en UTC recomendado)
+    QDateTime local = QDateTime::fromString(dateTime, "yyyy-MM-dd HH:mm:ss");
+    local.setTimeSpec(Qt::LocalTime);
+    const QDateTime utc = local.toUTC();
+
+    const QDate d = utc.date();
+    const QTime t = utc.time();
+
+    const int yy = d.year() % 100;          // 00..99
+    int wday = d.dayOfWeek() % 7;           // Qt: 1=Mon..7=Sun → %7: Sun=0
+    if (wday < 0) wday = 0;
+
+    // 3) BCD de cada campo (seg con bit7=0 → limpia OSF)
+    const int bSS = decToBcd(t.second() & 0x7F);
+    const int bMM = decToBcd(t.minute());
+    const int bHH = decToBcd(t.hour());
+    const int bDD = decToBcd(d.day());
+    const int bWK = decToBcd(wday);
+    const int bMO = decToBcd(d.month());
+    const int bYY = decToBcd(yy);
+
+    // 4) Escribir en el PCF con i2c-tools (replica EXACTA del comando que te funciona)
+    {
+        static const QString I2CTRANSFER = "/usr/sbin/i2ctransfer";
+        static const QString I2CSET      = "/usr/sbin/i2cset";     // por si quieres STOP=1/0
+
+        // Construimos los mismos argumentos que tu comando manual:
+        // i2ctransfer -y 1 w8@0x51 0x04  0xSS 0xMM 0xHH 0xDD 0xWK 0xMO 0xYY
+        QStringList args;
+        args << "-y" << "1"
+             << "w8@0x51"
+             << "0x04"
+             << hex0x(bSS) << hex0x(bMM) << hex0x(bHH)
+             << hex0x(bDD) << hex0x(bWK) << hex0x(bMO) << hex0x(bYY);
+
+        // Log del comando exacto (para que veas qué se ejecuta):
+        qInfo() << "[RTC] write cmd:" << I2CTRANSFER << args;
+
+        QProcess p2;
+        p2.start(I2CTRANSFER, args);
+        p2.waitForFinished(-1);
+
+        const QByteArray out = p2.readAllStandardOutput();
+        const QByteArray err = p2.readAllStandardError();
+        if (!out.isEmpty()) qInfo()  << "[RTC] i2ctransfer stdout:" << out.trimmed();
+        if (!err.isEmpty()) qWarning() << "[RTC] i2ctransfer stderr:" << err.trimmed();
+
+        if (p2.exitStatus()!=QProcess::NormalExit || p2.exitCode()!=0) {
+            qWarning() << "i2ctransfer write failed (code" << p2.exitCode() << ")";
+            // Fallback “forzado” con shell por si el PATH/capabilities molestan:
+            QProcess pf;
+            QString oneLine = I2CTRANSFER + " -y 1 w8@0x51 0x04 "
+                              + hex0x(bSS) + " " + hex0x(bMM) + " " + hex0x(bHH) + " "
+                              + hex0x(bDD) + " " + hex0x(bWK) + " " + hex0x(bMO) + " " + hex0x(bYY);
+            pf.start("/bin/sh", {"-c", oneLine});
+            pf.waitForFinished(-1);
+            qInfo() << "[RTC] fallback shell exit:" << pf.exitCode()
+                    << "stderr:" << pf.readAllStandardError().trimmed();
+        }
+
+        // Reanudar reloj: CONTROL1 STOP=0
+        {
+            QProcess p;
+            p.start(I2CSET, {"-y","1","0x51","0x00","0x00"});
+            p.waitForFinished(-1);
+            if (p.exitCode()!=0)
+                qWarning() << "i2cset STOP=0 failed:" << p.readAllStandardError();
+        }
+    }
+
+    qInfo() << "RTC (PCF85063A) actualizado a (UTC):" << utc.toString("yyyy-MM-dd HH:mm:ss");
 }
 
 void setAdminPasswordFile(QString adminPassword)
