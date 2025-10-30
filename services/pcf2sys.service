@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync system clock from PCF85063A, then write to /dev/rtc0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/pcf85063-sync
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
