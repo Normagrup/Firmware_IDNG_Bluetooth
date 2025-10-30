@@ -31,6 +31,7 @@ QTimer replaceP2Timer;
 QTimer replaceP3Timer;
 QTimer cleanCdbTimer;
 QTimer askInitDataFromMicroTimer;
+QTimer answerFactoryProgramTimer;
 
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
@@ -88,6 +89,12 @@ uint8_t netKeys[15][16] = {
     {0x87, 0xFA, 0x2B, 0x68, 0x9C, 0x03, 0xD7, 0x51, 0xE4, 0x19, 0xA8, 0xBC, 0x0F, 0xC9, 0x74, 0x26}
 };
 
+QMap<uint16_t, POLQueryContext> powerOnQueryMap;
+QSet<QString> pendingGroupUpdatesEth;
+QList<writeGroupBitmap> pendingGroupBitmaps;
+int numDevicesToUpdate;
+QMap<QString, GroupActionType> groupActionTypeMap;
+
 ReplaceData replaceData = {"", 0x0000, "", 0x0000};
 ReplaceNode replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
 
@@ -97,4 +104,9 @@ MessageState messageState = EMPTY;
 int TIME_TO_CLEAN_CDB = 120000;
 EmbeddedState embeddedState = FREE;
 
+bool groupUpdateFromEth = false;
 bool notRan = true;
+
+QString factoryProgramSerial = "";
+bool isFactoryProgramOn = false;
+QString rcvAddressFactoryProgram = "";

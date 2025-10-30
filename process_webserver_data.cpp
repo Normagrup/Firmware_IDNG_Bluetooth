@@ -754,8 +754,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         isOpenNodeControl = false;
     }
     else if (type == WS_SET_READ_ID_CODE) {
-        if(messageState == PENDING) { return; }
-
         // no se pone embeddedState porque es una funcionalidad a parte (factory)
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
@@ -765,14 +763,21 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendWriteIDCodeFrame(uartPort, deviceID);
         while(messageState == PENDING) {}
-        sendFactoryIDWrote(webServer);
+        sendFactoryIDWrote(webServer, messageState == RECEIVED);
 
-        sendDaliTestForWriteID(uartPort, deviceID);
-        while(messageState == PENDING) {}
-        sendDaliTested(webServer);
+        if(messageState == RECEIVED) {
+            delay(1000);
+            sendDaliTestForWriteID(uartPort, deviceID);
+            while(messageState == PENDING) {}
+            sendDaliTested(webServer, messageState == RECEIVED);
 
-        sendEndRecordDevice(uartPort, deviceID);
-        while(messageState == PENDING) {}
+            if(messageState == RECEIVED) {
+                delay(1000);
+                sendEndRecordDevice(uartPort, deviceID);
+                while(messageState == PENDING) {}
+                sendRecordedDevice(webServer, messageState == RECEIVED);
+            }
+        }
 
         // confirmación en la respuesta al finalizar el escaneo
         // start del cleanCdbTimer en la respuesta al finalizar el escaneo
@@ -1584,23 +1589,30 @@ void sendEndAutoCommission(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendFactoryIDWrote(WebServer* webServer)
+void sendFactoryIDWrote(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_FACTORY_ID_WROTE) + "@" + " ";
+    QString message = QString(WS_SEND_FACTORY_ID_WROTE) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendDaliTested(WebServer* webServer)
+void sendDaliTested(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_DALI_TESTED) + "@" + " ";
+    QString message = QString(WS_SEND_DALI_TESTED) + "@" + (received ? "true" : "false");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendRecordedDevice(WebServer* webServer)
+void sendRecordedDevice(WebServer* webServer, bool received)
 {
-    QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + " ";
+    QString message = QString(WS_SEND_RECORDED_DEVICE) + "@" + (received ? "true" : "false");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendSerialClosure(WebServer* webServer, bool done)
+{
+    QString message = QString(WS_SEND_SERIAL_CLOSURE) + "@" + (done ? "done" : "notDone");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -1711,6 +1723,10 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
                 if(added) {
                     meshDevice[i][j].setGroupSubAddress(deviceTypeGroupAddress); // Añadir al modelo
                     database->setGroup(address, deviceTypeGroupAddress); // Añadir grupo en la BBDD
+                    if (!pendingGroupUpdatesEth.isEmpty()) {
+                        QString key = QString("%1:%2").arg(address).arg(deviceTypeGroupAddress);
+                        pendingGroupUpdatesEth.remove(key);
+                    }
                 }
                 break;
             }
@@ -1719,13 +1735,15 @@ void sendConfirmAddNodeToGroup(WebServer* webServer, uint16_t address, uint16_t 
 
     QString message = QString(WS_SEND_CONFIRM_ADD_NODE_TO_GROUP) + "@" + (added ? "true" : "false");
 
-    if (webServer != nullptr) { webServer->sendData(message); }
+    if (webServer != nullptr && groupUpdateFromEth != true) { webServer->sendData(message); }
 
     // Log entry
     QString groupAddressString = QString("%1").arg(deviceTypeGroupAddress, 4, 16, QLatin1Char('0')).toUpper();
-    QString name = "SUB:" + QString::number(subnetAddress) + " " + "ID:" + QString::number(nodeSubnetAddress) + " - " + database->getGroupName(groupAddressString);
+    int globalPos = subnetAddress * 64 + nodeSubnetAddress + 1;
+    QString devname = "A" + QString::number(globalPos).rightJustified(4, '0');
+    QString name = devname + " - " + database->getGroupName(groupAddressString);
     QString serialNum = meshDevice[subnetAddress][nodeSubnetAddress].serialNumberString();
-    int btAddress = meshDevice[subnetAddress][nodeSubnetAddress].getRealAddress();
+    int btAddress = meshDevice[subnetAddress][nodeSubnetAddress].getRealAddress();;
     AntennaInfo info = getAntennaInfo(database);
     QString eventType = "Groups";
     insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, added ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
@@ -1765,7 +1783,7 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
     // Log entry
     QString name = database->getGroupName(groupAddressString) + " [G]";
     QString serialNum = "FF.FF.FF.FF";
-    int btAddress = groupAddress;
+    int btAddress =  groupAddress;
     AntennaInfo info = getAntennaInfo(database);
     int eventCode = powerOnLevel == 0 ? POL_OFF : (powerOnLevel == 254 ? POL_MAX : POL_LAST_VALUE);
     QString eventType = "PowerOnLevel";
@@ -1898,6 +1916,11 @@ void changePositions(Database* database, uint16_t pos1, uint16_t pos2)
     // Reemplazo en la base de datos
     if(realAddressDev1 != 0x0000) { database->changePosition(indexIPos2, indexJPos2, realAddressDev1); }
     if(realAddressDev2 != 0x0000) { database->changePosition(indexIPos1, indexJPos1, realAddressDev2); }
+
+    // update subnet count for eth
+    if(!polling.isSubnetConfigured(indexIPos2)){
+        polling.setConfiguredSubnets();
+    }
 }
 
 void sendConfirmEndClearAllData(WebServer* webServer)
@@ -1945,4 +1968,32 @@ void sendInitAlert(WebServer* webServer)
     QString message = QString(WS_SEND_INIT_ALERT) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer)
+{
+    isFactoryProgramOn = true;
+    factoryProgramSerial = dataBuffer.split(';').value(1);
+
+    cleanCdbTimer.stop();
+
+    QString deviceID = factoryProgramSerial;
+    qDebug() << "[ID_CODE] deviceID =" << deviceID;
+
+    sendWriteIDCodeFrame(uartPort, deviceID);
+    while(messageState == PENDING) {}
+
+    if(messageState == RECEIVED) {
+        delay(500);
+        sendDaliTestForWriteID(uartPort, deviceID);
+        while(messageState == PENDING) {}
+
+        if(messageState == RECEIVED) {
+            delay(500);
+            sendEndRecordDevice(uartPort, deviceID);
+            while(messageState == PENDING) {}
+        }
+    }
+
+    // start del cleanCdbTimer en la respuesta al finalizar el escaneo
 }

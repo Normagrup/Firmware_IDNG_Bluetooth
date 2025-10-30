@@ -31,6 +31,14 @@ QString getUUIDAsString(uint8_t UUID[16]);
 
 void setTests(QStringList webServerParts, Database* database);
 void transformEventCodes(QList<QStringList>* logs);
+int getNodeSubnetFromDaliAddress(uint8_t daliAddr);
+uint16_t getGroupAddressFromDaliAddress(uint8_t daliAddress);
+uint16_t getMaskedGroupId(uint8_t groupId);
+int getGroupIdFromMasked(uint16_t maskedGroupId);
+int mapDayToNumber(const QString& day);
+QString mapWeekdayToName(uchar day);
+QString logTestTypeHelper(uint8_t testType);
+
 void convertDevKeyStringToByteArray(QString devKeyString, uint8_t* devKey);
 
 #endif // AUX_FUNCTIONS_H

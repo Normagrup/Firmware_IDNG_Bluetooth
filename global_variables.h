@@ -57,6 +57,7 @@ extern QTimer replaceP2Timer; // para ejecutar la parte2 del replace
 extern QTimer replaceP3Timer; // para ejecutar la parte3 del replace
 extern QTimer cleanCdbTimer;
 extern QTimer askInitDataFromMicroTimer;
+extern QTimer answerFactoryProgramTimer;
 
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
@@ -80,6 +81,11 @@ extern QString startDate;
 extern QString endDate;
 
 extern uint8_t netKeys[15][16];
+extern QMap<uint16_t, POLQueryContext> powerOnQueryMap;
+extern QSet<QString> pendingGroupUpdatesEth;
+extern QList<writeGroupBitmap> pendingGroupBitmaps;
+extern int numDevicesToUpdate;
+extern QMap<QString, GroupActionType> groupActionTypeMap;
 
 extern ReplaceData replaceData;
 extern ReplaceNode replaceNode;
@@ -116,7 +122,12 @@ enum EmbeddedState {
 };
 
 extern EmbeddedState embeddedState;
+extern bool groupUpdateFromEth;
 
 extern bool notRan;
+
+extern QString factoryProgramSerial;
+extern bool isFactoryProgramOn;
+extern QString rcvAddressFactoryProgram;
 
 #endif // GLOBAL_VARIABLES_H

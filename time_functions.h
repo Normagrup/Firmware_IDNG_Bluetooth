@@ -1,6 +1,8 @@
 #ifndef TIME_FUNCTIONS_H
 #define TIME_FUNCTIONS_H
 
+#include <QCoreApplication>
+
 #define SLEEP_DALI_TIME_MS              150
 #define SLEEP_CONFIG_TIME_MS            1000
 #define POLLING_TIMER_MS                2000
@@ -11,6 +13,7 @@
 #define GROUP_FRAME_TIMER_MS            2000
 #define COM_TIMER_MS                    2000
 #define WEBSERVER_SEND_TIME_MS          50
+#define ETH_SEND_TIME_MS                50
 #define LOG_DATA_TIME_MS                5000
 
 void delay(uint16_t deadTimeMs);

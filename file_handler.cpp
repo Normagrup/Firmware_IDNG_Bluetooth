@@ -5,7 +5,6 @@
 #include <QDir>
 #include <QDate>
 
-
 #include "file_handler.h"
 #include "global_variables.h"
 #include "Device.h"
@@ -119,9 +118,9 @@ void getRtcDate(uint8_t* data)
         if (match.hasMatch()) {
             QString rtcDate = match.captured(1);
             QStringList rtcDateParts = rtcDate.split("-");
-
-            for (uint8_t i = 0; i < 3; i++) { data[i] = rtcDateParts[i].trimmed().toUInt(); }
-
+            data[0] = rtcDateParts[0].right(2).toUInt();
+            data[1] = rtcDateParts[1].toUInt();
+            data[2] = rtcDateParts[2].toUInt();
             data[3] = data[2] / 7 + (data[2] % 7 > 0 ? 1 : 0);
         }
     }
@@ -261,15 +260,22 @@ void setGatewayAddressFile(QString gatewayAddress)
         QTextStream interfacesInput(&interfacesFile);
         QStringList interfacesLines;
         while (!interfacesInput.atEnd()) {
-            QString line = interfacesInput.readLine();
-            interfacesLines.append(line);
+            interfacesLines.append(interfacesInput.readLine());
         }
+        while (interfacesLines.size() < 5)
+            interfacesLines.append(QString());
 
         interfacesLines[4] = "gateway " + gatewayAddress;
+        interfacesLines = interfacesLines.mid(0, 5);
+
+        interfacesFile.resize(0);
         interfacesFile.seek(0);
 
         QTextStream interfacesOutput(&interfacesFile);
-        for (const QString& line : interfacesLines) { interfacesOutput << line << endl; }
+        for (const QString& line : interfacesLines) { interfacesOutput << line << '\n'; }
+
+        interfacesOutput.flush();
+        interfacesFile.flush();
         interfacesFile.close();
     }
 }
@@ -334,17 +340,195 @@ void setRtcTime(QString time)
     process.waitForFinished(-1);
 }
 
+// Convierte decimal [0..99] a BCD (entero 0..255)
+static int decToBcd(int v) { return ((v/10)<<4) | (v%10); }
+
+// Devuelve "0xHH"
+static QString hex0x(int byte) {
+    return QString("0x%1").arg(byte, 2, 16, QChar('0')).toLower();
+}
+
+// Lee hora del sistema tras el cambio (UTC) para verificar
+static QDateTime readSystemUtc()
+{
+    return QDateTime::currentDateTimeUtc();
+}
+
+// Convierte "YYYY-MM-DD HH:MM:SS" a QDateTime válido
+static QDateTime parseLocal(const QString& localDT)
+{
+    QDateTime dt = QDateTime::fromString(localDT, "yyyy-MM-dd HH:mm:ss");
+    dt.setTimeSpec(Qt::LocalTime);
+    return dt;
+}
+
+// Establece la hora
+static bool setClockWithSyscall(const QDateTime& local)
+{
+    if (!local.isValid()) return false;
+
+    QDateTime utc = local.toUTC();
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
+    const qint64 sec  = utc.toSecsSinceEpoch();
+    const long   nsec = utc.time().msec() * 1000000L;
+#else
+    const qint64 sec  = utc.toTime_t();
+    const long   nsec = 0;
+#endif
+
+    struct timespec ts;
+    ts.tv_sec  = sec;
+    ts.tv_nsec = nsec;
+
+    if (clock_settime(CLOCK_REALTIME, &ts) == 0) {
+        qInfo() << "[SYSCLK] clock_settime OK (UTC):" << utc.toString("yyyy-MM-dd HH:mm:ss");
+        return true;
+    } else {
+        qWarning() << "[SYSCLK] clock_settime fallo:" << strerror(errno) << "errno=" << errno;
+        return false;
+    }
+}
+
+// ult opción: usa /bin/date -s "YYYY-MM-DD HH:MM:SS"
+static bool setClockWithDate(const QString& localDT, int timeoutMs = 5000)
+{
+    QProcess p;
+    p.start("/bin/date", {"-s", localDT});
+    if (!p.waitForFinished(timeoutMs)) {
+        qWarning() << "[SYSCLK] date -s timeout; killed";
+        p.kill();
+        p.waitForFinished(1000);
+        return false;
+    }
+    qInfo() << "[SYSCLK] date -s" << localDT
+            << "exit:"   << p.exitCode()
+            << "stderr:" << QString::fromLocal8Bit(p.readAllStandardError()).trimmed();
+    return (p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0);
+}
+
+static bool setSystemClockLocal(const QString& localDT)
+{
+    const QDateTime before = readSystemUtc();
+
+    // 1) Parsear local
+    const QDateTime local = parseLocal(localDT);
+    if (!local.isValid()) {
+        qWarning() << "[SYSCLK] Fecha/hora LOCAL inválida:" << localDT;
+        return false;
+    }
+
+    // 2) Intento 1: syscall directa (evita cuelgues de timedatectl/DBus)
+    bool ok = setClockWithSyscall(local);
+
+    // 3) Si no funciona lo intentamos con date -s
+    if (!ok) ok = setClockWithDate(localDT);
+
+    // 4) Verificación (≥ 1 s de diferencia).
+    const QDateTime after = readSystemUtc();
+    const bool changed = (qAbs(before.secsTo(after)) >= 1);
+
+    qInfo() << "[SYSCLK] Resultado:" << (ok && changed ? "OK" : "FALLO")
+            << "antes(UTC)="   << before.toString("yyyy-MM-dd HH:mm:ss")
+            << "despues(UTC)=" << after.toString("yyyy-MM-dd HH:mm:ss");
+
+    return ok && changed;
+}
+
+static void syncOnboardRtcFromSystem()
+{
+    // Actualiza el RTC del kernel (rk808) con la hora del sistema
+    QString hw = QFile::exists("/sbin/hwclock") ? "/sbin/hwclock" : "/usr/sbin/hwclock";
+    QProcess p;
+    p.start(hw, {"--systohc"});   // system → hardware clock
+    p.waitForFinished(3000);
+    qInfo() << "[SYSCLK] hwclock --systohc exit:" << p.exitCode()
+            << "stderr:" << QString::fromLocal8Bit(p.readAllStandardError()).trimmed();
+}
+
 void setLocalDateTime(QStringList dateTimeParts)
 {
-    QString date = dateTimeParts[0];
-    QString time = dateTimeParts[1] + ":00";
-    QString dateTime = date + " " + time;
+    const QString date = dateTimeParts.value(0);           // "YYYY-MM-DD"
+    const QString time = dateTimeParts.value(1) + ":00";   // "HH:MM:SS"
+    const QString dateTime = date + " " + time;
 
-    QProcess process;
-    QStringList command;
-    command << "timedatectl" << "set-time" << dateTime;
-    process.start("sudo", command);
-    process.waitForFinished(-1);
+    const bool sysOk = setSystemClockLocal(dateTime);
+    if (!sysOk) {
+        qWarning() << "[SYSCLK] No se pudo ajustar la hora del sistema.";
+    }
+    syncOnboardRtcFromSystem();
+
+    // 2) Convierte esa hora local a UTC (RTC en UTC recomendado)
+    QDateTime local = QDateTime::fromString(dateTime, "yyyy-MM-dd HH:mm:ss");
+    local.setTimeSpec(Qt::LocalTime);
+    const QDateTime utc = local.toUTC();
+
+    const QDate d = utc.date();
+    const QTime t = utc.time();
+
+    const int yy = d.year() % 100;          // 00..99
+    int wday = d.dayOfWeek() % 7;           // Qt: 1=Mon..7=Sun → %7: Sun=0
+    if (wday < 0) wday = 0;
+
+    // 3) BCD de cada campo (seg con bit7=0 → limpia OSF)
+    const int bSS = decToBcd(t.second() & 0x7F);
+    const int bMM = decToBcd(t.minute());
+    const int bHH = decToBcd(t.hour());
+    const int bDD = decToBcd(d.day());
+    const int bWK = decToBcd(wday);
+    const int bMO = decToBcd(d.month());
+    const int bYY = decToBcd(yy);
+
+    // 4) Escribir en el PCF con i2c-tools (replica EXACTA del comando que te funciona)
+    {
+        static const QString I2CTRANSFER = "/usr/sbin/i2ctransfer";
+        static const QString I2CSET      = "/usr/sbin/i2cset";     // por si quieres STOP=1/0
+
+        // Construimos los mismos argumentos que tu comando manual:
+        // i2ctransfer -y 1 w8@0x51 0x04  0xSS 0xMM 0xHH 0xDD 0xWK 0xMO 0xYY
+        QStringList args;
+        args << "-y" << "1"
+             << "w8@0x51"
+             << "0x04"
+             << hex0x(bSS) << hex0x(bMM) << hex0x(bHH)
+             << hex0x(bDD) << hex0x(bWK) << hex0x(bMO) << hex0x(bYY);
+
+        // Log del comando exacto (para que veas qué se ejecuta):
+        qInfo() << "[RTC] write cmd:" << I2CTRANSFER << args;
+
+        QProcess p2;
+        p2.start(I2CTRANSFER, args);
+        p2.waitForFinished(-1);
+
+        const QByteArray out = p2.readAllStandardOutput();
+        const QByteArray err = p2.readAllStandardError();
+        if (!out.isEmpty()) qInfo()  << "[RTC] i2ctransfer stdout:" << out.trimmed();
+        if (!err.isEmpty()) qWarning() << "[RTC] i2ctransfer stderr:" << err.trimmed();
+
+        if (p2.exitStatus()!=QProcess::NormalExit || p2.exitCode()!=0) {
+            qWarning() << "i2ctransfer write failed (code" << p2.exitCode() << ")";
+            // Fallback “forzado” con shell por si el PATH/capabilities molestan:
+            QProcess pf;
+            QString oneLine = I2CTRANSFER + " -y 1 w8@0x51 0x04 "
+                              + hex0x(bSS) + " " + hex0x(bMM) + " " + hex0x(bHH) + " "
+                              + hex0x(bDD) + " " + hex0x(bWK) + " " + hex0x(bMO) + " " + hex0x(bYY);
+            pf.start("/bin/sh", {"-c", oneLine});
+            pf.waitForFinished(-1);
+            qInfo() << "[RTC] fallback shell exit:" << pf.exitCode()
+                    << "stderr:" << pf.readAllStandardError().trimmed();
+        }
+
+        // Reanudar reloj: CONTROL1 STOP=0
+        {
+            QProcess p;
+            p.start(I2CSET, {"-y","1","0x51","0x00","0x00"});
+            p.waitForFinished(-1);
+            if (p.exitCode()!=0)
+                qWarning() << "i2cset STOP=0 failed:" << p.readAllStandardError();
+        }
+    }
+
+    qInfo() << "RTC (PCF85063A) actualizado a (UTC):" << utc.toString("yyyy-MM-dd HH:mm:ss");
 }
 
 void setAdminPasswordFile(QString adminPassword)
@@ -486,4 +670,26 @@ QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
     }
 
     return obj;
+}
+
+void getBuildingNameDB(Database *database, uint8_t *data)
+{
+    QString buildingName = database->getGeneralData("BuildingName").trimmed().left(16);
+    QByteArray byteArray = buildingName.toLatin1();
+
+    for (int i = 0; i < byteArray.size(); i++)
+        data[i] = byteArray[i];
+    for (int i = byteArray.size(); i < 16; i++)
+        data[i] = 0;
+}
+
+void getLineNameDB(Database *database, uint8_t *data)
+{
+    QString lineName = database->getGeneralData("LineName").trimmed().left(16);
+    QByteArray byteArray = lineName.toLatin1();
+
+    for (int i = 0; i < byteArray.size(); i++)
+        data[i] = byteArray[i];
+    for (int i = byteArray.size(); i < 16; i++)
+        data[i] = 0;
 }

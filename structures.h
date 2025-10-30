@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QDateTime>
+#include "UdpSocket.h"
 
 typedef struct {
     QString networkIP;
@@ -65,6 +66,29 @@ typedef struct {
     uint16_t fatherRealAddress;
     QString serialNumber;
 } NodeInfo;
+
+typedef struct {
+    uint8_t groupId;
+    uint8_t subnetId;
+    QByteArray bitmap;
+} GroupBitmap;
+
+typedef struct {
+    uint16_t pid;
+    QString rcvAddress;
+    UdpSocket* socket;
+} POLQueryContext;
+
+typedef struct {
+    uint16_t groupId;
+    uint8_t subnetId;
+    QByteArray bitmap;
+} writeGroupBitmap;
+
+typedef enum {
+    Add,
+    Remove
+} GroupActionType;
 
 typedef struct {
     QString newNodeUUID;

@@ -15,14 +15,14 @@
 
     <div class="wrap-container">
         <div class="wrap-code-container">
-            <input type="text" id="codeReader">
+            <input type="text" id="codeReader" autocomplete="off">
             <h2> Grabación ID Wireless </h2>
 
             <button onclick="parent.loadFactoryNetKey()" id="factoryNetKey">LOAD FACTORY NETKEY</button>
             <br>
 
             <div class="code-container" id="codeContainer">
-                <div class="label-code-container">
+                <div class="label-code-container" id="labelCodeContainer">
                     <div class="tag-container">
                         <label id="labelCode1"> </label>
                     </div>
@@ -54,6 +54,10 @@
 
                 <div class="confirmation-container" id="confirmationContainer">
                     <label id="confirmationLabel"> Dispositivo grabado correctamente </label>
+                </div>
+
+                <div class="error-container" id="errorContainer">
+                    <label id="errorLabel"> Ha ocurrido un error en el grabado </label>
                 </div>
             </div>
 

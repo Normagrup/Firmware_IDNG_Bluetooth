@@ -21,6 +21,8 @@ public:
     QStringList getLoginParameters(void);
     QStringList getInterfaceParameters(void);
     void setInterfaceParameters(QStringList interfaceParameters);
+    void setGeneralData(const QString& key, const QString& value);
+    QString getGeneralData(const QString& key);
     void loadNodesFromDatabase(void);
     void loadTestsFromDatabase(void);
 
@@ -40,6 +42,7 @@ public:
     void setTestEnable(QString groupAddress, bool isFunctionalEnable, bool isDurationEnable);
     void setFunctionalTest(QString groupAddress, QString functionalDays, QString functionalTime);
     void setDurationTest(QString groupAddress, QString durationPeriodicity, QString durationDate, QString durationTime);
+    bool groupExistsInTestTable(QString groupAddress);
 
     QList<uint16_t> getConfiguredNodes(void);
     QList<QString> getConfiguredNodesAndSerialNumbers(void);
@@ -52,6 +55,7 @@ public:
     void removeTestEntry(QString address);
     void editGroup(QString address, QString name);
     QString getGroupName(QString groupAddress);
+    QString getGroupAdress(QString groupName);
     void setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel);
     QStringList getPowerOnLevel(int page);
 
@@ -75,6 +79,8 @@ public:
     QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
     QList<QStringList> getLogEventPaged(const QString &type, qint64 startDate, qint64 endDate, int page);
     QList<QStringList> getAllTestLogs();
+    QList<QStringList> getLastNLogEvents(int count);
+    int getLogSize();
 
     void readNodesForTree();
     void updateRelayMode(uint16_t nodeAddress, bool enabled);

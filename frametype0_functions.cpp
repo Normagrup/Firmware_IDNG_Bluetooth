@@ -114,13 +114,13 @@ void sendMacAddressFrame(QString rcvAddress, uint8_t commandHigh, uint8_t comman
     _udpSocket->sendData(dstAddress, frame);
 }
 
-void sendBuildingNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
+void sendBuildingNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database)
 {
     QByteArray frame;
     unsigned char crc = 0;
     uint8_t data[16];
 
-    getBuildingName(&data[0]);
+    getBuildingNameDB(_database, &data[0]);
 
     frame.append(FRAME_HEADER_0);
     frame.append(FRAME_HEADER_1);
@@ -156,13 +156,13 @@ void sendBuildingNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t comm
     _udpSocket->sendData(dstAddress, frame);
 }
 
-void sendLineNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket)
+void sendLineNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database)
 {
     QByteArray frame;
     unsigned char crc = 0;
     uint8_t data[16];
 
-    getLineName(&data[0]);
+    getLineNameDB(_database, &data[0]);
 
     frame.append(FRAME_HEADER_0);
     frame.append(FRAME_HEADER_1);
@@ -400,8 +400,8 @@ void sendPingFrame(QString rcvAddress, uint8_t packetID, UdpSocket* _udpSocket)
     frame.append(FRAME_HEADER_1);
     frame.append(FRAME_HEADER_2);
     frame.append(FRAME_TYPE_82);
-    frame.append(packetID);
-    frame.append(RANDOM_BYTE);
+    frame.append((uint8_t)(C_PING >> 8));     // com high
+    frame.append((uint8_t)(C_PING & 0xFF));   // com low
     frame.append(0x01);
     frame.append(DEVICE_ID);
 
@@ -609,4 +609,76 @@ void sendDaliLineQueryFailureStatus(QString rcvAddress, uint8_t commandHigh, uin
             _udpSocket->sendData(dstAddress, frame);
         }
     }
+}
+
+void sendDaliLineReadDevicesSerials(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket)
+{
+    for (uint8_t subnet = SUBNET_OFFSET; subnet  <  MAX_SUBNET; subnet++) {
+        if (polling.isSubnetConfigured(subnet - SUBNET_OFFSET)) {
+            QByteArray frame;
+            unsigned char crc = 0;
+
+            int configuredDevCount = 0;
+            QByteArray serials;
+            for (int i = MAX_NODES_SUBNET - 1; i >= 0; i--) {
+                if (meshDevice[subnet][i].getIsConfigured()) {
+                    configuredDevCount++;
+                    uint8_t* sn = meshDevice[subnet][i].serialNumber();
+                    if (sn) {
+                        serials.append(static_cast<char>(i));
+                        serials.append(reinterpret_cast<const char*>(sn), 4);
+                        delete[] sn;
+                    }
+                }
+            }
+
+            frame.append(FRAME_HEADER_0);
+            frame.append(FRAME_HEADER_1);
+            frame.append(FRAME_HEADER_2);
+            frame.append(FRAME_TYPE_95);
+            frame.append(subnet - SUBNET_OFFSET);
+            frame.append(commandHigh);
+            frame.append(commandLow);
+            frame.append(configuredDevCount);
+            frame.append(serials);
+
+            for (uint8_t i = 3; i < frame.size(); i++) { crc += frame[i]; }
+
+            frame.append(crc);
+
+            QHostAddress dstAddress;
+            dstAddress.setAddress(rcvAddress);
+
+            _udpSocket->sendData(dstAddress, frame);
+        }
+    }
+}
+
+void sendLogDataSize(QString rcvAddress, uint8_t pidHigh, uint8_t pidLow, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, Database *_database)
+{
+    QByteArray frame;
+    unsigned char crc = 0;
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_83);
+    frame.append(commandHigh);
+    frame.append(commandLow);
+
+    uint16_t totalLogs = _database->getLogSize();
+
+    frame.append(0x02);
+    frame.append((totalLogs >> 8) & 0xFF);
+    frame.append(totalLogs & 0xFF);
+
+
+    for (uint8_t i = 3; i < frame.size(); i++) { crc += frame[i]; }
+
+    frame.append(crc);
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddress);
+
+    _udpSocket->sendData(dstAddress, frame);
 }

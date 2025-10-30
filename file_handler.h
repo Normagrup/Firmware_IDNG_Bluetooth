@@ -31,6 +31,8 @@ void getRtcSeconds(uint8_t* data);
 QString getLocalDate(void);
 QString getLocalTime(void);
 QString getLocalDay(void);
+void getBuildingNameDB(Database* database, uint8_t* data);
+void getLineNameDB(Database* database, uint8_t* data);
 
 void rebootDevice(void);
 

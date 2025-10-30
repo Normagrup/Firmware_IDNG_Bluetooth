@@ -296,7 +296,8 @@ void logTestRequest(Database* db, uint16_t targetAddr, bool isGroup, const QStri
         QString hexAddr = QString("%1").arg(targetAddr, 4, 16, QChar('0')).toUpper();
         name = db->getGroupName(hexAddr) + " [G]";
     } else {
-        name = "SUB:" + QString::number((targetAddr - 1) / 64) + " ID:" + QString::number((targetAddr - 1) % 64);
+        int globalPos = targetAddr;
+        name = "A" + QString::number(globalPos).rightJustified(4, '0');
     }
 
     int btAddress = isGroup
@@ -342,7 +343,8 @@ void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString e
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == nodeAddress) {
-                name = "SUB:" + QString::number(i) + " ID:" + QString::number(j);
+                int globalPos = i * 64 + j + 1;
+                name = "A" + QString::number(globalPos).rightJustified(4, '0');
                 serial = meshDevice[i][j].serialNumberString();
                 btAddress = nodeAddress;
             }
@@ -393,4 +395,90 @@ void insertCommissionErrorToLog(const QByteArray& uuidArray, Database *db, int e
 
     insertLogEvent(db, name, serial, btAddress, info.ip, info.timestamp, eventCode, eventType);
     currentNodeAddress = 0;
+}
+
+int getNodeSubnetFromDaliAddress(uint8_t daliAddr)
+{
+    if (daliAddr < 0 || daliAddr > 127 || daliAddr % 2 == 0)
+        return 0; // Invalid DALI address
+
+    int id = daliAddr >> 1;
+    uint8_t nodesubnet = id % 64;
+
+    return nodesubnet;
+}
+
+uint16_t getGroupAddressFromDaliAddress(uint8_t daliAddress)
+{
+    switch (daliAddress) {
+    case 129: return 0xC000;
+    case 131: return 0xC001;
+    case 133: return 0xC002;
+    case 135: return 0xC003;
+    default:
+        int baseDali = 137;
+        int index = (daliAddress - baseDali) / 2;
+        return 0xC010 + index;
+    }
+}
+
+uint16_t getMaskedGroupId(uint8_t groupId)
+{
+    if (groupId < 4)
+        return 0xC000 + groupId; //Fixed groups: C000–C003
+    else
+        return 0xC010 + (groupId - 4); //Dynamic groups: C010, C011, ...
+}
+
+int mapDayToNumber(const QString &day)
+{
+    QString d = day.trimmed().toLower();
+
+    if (d == "mon") return 1;
+    if (d == "tue") return 2;
+    if (d == "wed") return 3;
+    if (d == "thu") return 4;
+    if (d == "fri") return 5;
+    if (d == "sat") return 6;
+    if (d == "sun") return 7;
+
+    return 0;
+}
+
+QString mapWeekdayToName(uchar day)
+{
+    switch (day) {
+    case 1: return "Mon";
+    case 2: return "Tue";
+    case 3: return "Wed";
+    case 4: return "Thu";
+    case 5: return "Fri";
+    case 6: return "Sat";
+    case 7: return "Sun";
+    default: return "";
+    }
+}
+
+QString logTestTypeHelper(uint8_t testType)
+{
+    if (testType == 227){
+        return "FUNCTIONAL";
+    } else if (testType == 228){
+        return "DURATION";
+    } else if (testType == 229) {
+        return "STOP";
+    }
+}
+
+int getGroupIdFromMasked(uint16_t maskedGroupId)
+{
+    if (maskedGroupId == 0xFFFF)
+        return -1;
+
+    if (maskedGroupId >= 0xC000 && maskedGroupId <= 0xC003)
+        return maskedGroupId - 0xC000; //Fixed groups: 0–3
+    else if (maskedGroupId >= 0xC010)
+        return 4 + (maskedGroupId - 0xC010); //Dynamic groups: 4+
+    else
+        return -1;
 }

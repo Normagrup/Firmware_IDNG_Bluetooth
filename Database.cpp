@@ -386,6 +386,25 @@ void Database::setInterfaceParameters(QStringList interfaceParameters)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setInterfaceParameters" << query.lastError().text(); }
 }
 
+void Database::setGeneralData(const QString &key, const QString &value)
+{
+    QSqlQuery query;
+    QString sql = QString("UPDATE General SET %1 = :value").arg(key);
+    query.prepare(sql);
+    query.bindValue(":value", value.trimmed().left(16));
+
+    if (!query.exec()) {
+        qDebug() << "Error updating" << key << "in DB:" << query.lastError().text();
+    }
+}
+
+QString Database::getGeneralData(const QString &key)
+{
+    QSqlQuery query(QString("SELECT %1 FROM General").arg(key));
+    if (query.next()) return query.value(0).toString();
+    return "";
+}
+
 void Database::loadNodesFromDatabase()
 {
     QSqlQuery query;
@@ -412,6 +431,7 @@ void Database::loadNodesFromDatabase()
         meshDevice[subnetAddress][nodeSubnetAddress].setEmergencyFeatures(query.value("EmergencyFeatures").toUInt());
         meshDevice[subnetAddress][nodeSubnetAddress].setPhysicalMinLvl(query.value("PhysicalMinLvl").toUInt());
     }
+    polling.setConfiguredSubnets(); // polling for eth send data
 }
 
 void Database::loadTestsFromDatabase()
@@ -893,6 +913,23 @@ void Database::setDurationTest(QString groupAddress, QString durationPeriodicity
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
+bool Database::groupExistsInTestTable(QString groupAddress)
+{
+    QSqlQuery query;
+    if(groupAddress == "C000" || groupAddress == "C001" || groupAddress == "C002" || groupAddress == "C003")
+        query.prepare("SELECT 1 FROM FixedTest WHERE GroupAddress = :groupAddress");
+    else
+        query.prepare("SELECT 1 FROM Test WHERE GroupAddress = :groupAddress");
+    query.bindValue(":groupAddress", groupAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error checking if group exists in Test table:" << query.lastError().text();
+        return false;
+    }
+
+    return query.next();
+}
+
 QList<uint16_t> Database::getConfiguredNodes()
 {
     QSqlQuery query;
@@ -1263,6 +1300,50 @@ QList<QStringList> Database::getAllTestLogs()
     return results;
 }
 
+QList<QStringList> Database::getLastNLogEvents(int count)
+{
+    QList<QStringList> results;
+    QSqlQuery query;
+
+    query.prepare("SELECT Name, Serial, BtAddress, IP, Timestamp, Event "
+                  "FROM Log ORDER BY Timestamp DESC LIMIT :limit");
+    query.bindValue(":limit", count);
+
+    if (!query.exec()) {
+        qDebug() << "Error in getLastNLogEvents:" << query.lastError().text();
+        return results;
+    }
+
+    while (query.next()) {
+        QStringList row;
+        row << query.value(0).toString();
+        row << query.value(1).toString();
+        row << query.value(2).toString();
+        row << query.value(3).toString();
+        QDateTime dt = QDateTime::fromSecsSinceEpoch(query.value(4).toLongLong());
+        row << dt.toString("yyyy-MM-dd HH:mm:ss");
+        row << query.value(5).toString();
+        results.append(row);
+    }
+
+    return results;
+}
+
+int Database::getLogSize()
+{
+    QSqlQuery query;
+    if (!query.exec("SELECT COUNT(*) FROM Log")) {
+        qDebug() << "Error in getLogSize:" << query.lastError().text();
+        return 0;
+    }
+
+    if (query.next()) {
+        return query.value(0).toInt();
+    }
+
+    return 0;
+}
+
 void Database::readNodesForTree()
 {
     nodesByRealAddress = {};
@@ -1493,6 +1574,23 @@ QString Database::getGroupName(QString groupAddress)
 
     if(query.next()) { return query.value("GroupName").toString(); }
     else { return "Group -"; }
+}
+
+QString Database::getGroupAdress(QString groupName)
+{
+    QSqlQuery query;
+
+    if(groupName == "Lighting" || groupName == "Emergency" || groupName == "Even" || groupName == "Odd")
+        query.prepare("SELECT GroupAddress FROM FixedGroups WHERE GroupName = :groupName");
+    else
+        query.prepare("SELECT GroupAddress FROM Groups WHERE GroupName = :groupName");
+
+    query.bindValue(":groupName", groupName);
+
+    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return "-1"; }
+
+    if(query.next()) { return query.value("GroupAddress").toString(); }
+    else { return "-1"; }
 }
 
 void Database::setPowerOnLevel(QString groupAddress, uint8_t powerOnLevel)

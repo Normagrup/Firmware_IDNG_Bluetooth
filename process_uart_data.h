@@ -6,6 +6,9 @@
 #include "WebServer.h"
 #include  "Database.h"
 #include "global_variables.h"
+#include "UdpSocket.h"
+
+
 
 #define UART_HEADER                     0xAF
 #define UART_END                        0xAD
@@ -60,6 +63,7 @@
 #define CONFIRM_START_REMOVE_ALL_NODES  0x51
 #define CONFIRM_END_REMOVE_ALL_NODES    0x53
 #define CONFIRM_ADD_NODE_TO_GROUP       0x55
+#define CONFIRM_DEL_NODE_FROM_GROUP     0x56
 #define CONFIRM_SET_POWER_ON_LEVEL      0x57
 #define CONFIRM_START_REMOVE_ONE_NODE   0x59
 #define CONFIRM_END_REMOVE_ONE_NODE     0x61
@@ -137,6 +141,8 @@ void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
 void sendUartEndLineScanning(UartPort* _uartPort);
 void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress);
+void processRecoveryFeaturesFrame(QByteArray data, Database* database);
+void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 
 #endif // PROCESS_UART_DATA_H

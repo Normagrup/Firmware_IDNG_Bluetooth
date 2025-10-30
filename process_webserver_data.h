@@ -107,6 +107,7 @@
 #define WS_SEND_FACTORY_ID_WROTE            "FACTORY_ID_WROTE"
 #define WS_SEND_DALI_TESTED                 "DALI_TESTED"
 #define WS_SEND_RECORDED_DEVICE             "RECORDED_DEVICE"
+#define WS_SEND_SERIAL_CLOSURE              "SERIAL_CLOSURE"
 #define WS_SEND_IS_CONFIG                   "IS_CONFIG"
 #define WS_SEND_LOG_DATA                    "LOG_DATA"
 #define WS_SEND_LOG_FILE                    "LOG_FILE"
@@ -166,9 +167,10 @@ void sendDevicesCount(WebServer* webServer, int count);
 void sendFailuresCount(WebServer* webServer, int count, int lampFailCounter, int batFailCounter, int durFailCounter, int comFailCounter);
 void sendEndNodeConfiguration(WebServer* webServer);
 void sendEndAutoCommission(WebServer* webServer);
-void sendFactoryIDWrote(WebServer* webServer);
-void sendDaliTested(WebServer* webServer);
-void sendRecordedDevice(WebServer* webServer);
+void sendFactoryIDWrote(WebServer* webServer, bool received);
+void sendDaliTested(WebServer* webServer, bool received);
+void sendRecordedDevice(WebServer* webServer, bool received);
+void sendSerialClosure(WebServer* webServer, bool done);
 void sendLogData(WebServer* webServer, QList<QStringList> logs);
 void sendLogFile(WebServer* webServer, QString fileDir);
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort);
@@ -199,5 +201,7 @@ void sendConfirmEndReplace(WebServer* webServer);
 void sendWriteIDError(WebServer* webServer);
 void sendEstimatedTime(WebServer* webServer, uint16_t time);
 void sendInitAlert(WebServer* webServer);
+
+void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 
 #endif // PROCESS_WEBSERVER_DATA_H

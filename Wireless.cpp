@@ -40,6 +40,8 @@ Wireless::Wireless(QObject *parent)
     connect(&cleanCdbTimer, &QTimer::timeout, this, &Wireless::cleanCdbTimerHandler);
     connect(&askInitDataFromMicroTimer, &QTimer::timeout, this, &Wireless::askInitDataFromMicroTimerHandler);
     askInitDataFromMicroTimer.setSingleShot(true);
+    connect(&answerFactoryProgramTimer, &QTimer::timeout, this, &Wireless::answerFactoryProgramTimerHandler);
+    answerFactoryProgramTimer.setSingleShot(true);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
 }
@@ -126,7 +128,11 @@ void Wireless::udpReceivedData(QQueue <QPair <QString, QByteArray> >* rcvData)
     QByteArray dataBuffer = data.second;
 
     if (checkFrameHeader(dataBuffer) && checkCRC(dataBuffer) && checkRcvAddress(rcvAddress)) {
-        processEthFrame(rcvAddress, dataBuffer, _udpSocket, _uartPort);
+        processEthFrame(rcvAddress, dataBuffer, _udpSocket, _database, _uartPort);
+    }
+    else if(dataBuffer.startsWith("NORMALINK-G")) {
+        rcvAddressFactoryProgram = rcvAddress;
+        processFactoryProgramSerial(_uartPort, dataBuffer);
     }
 }
 
@@ -204,7 +210,8 @@ void Wireless::updateLogsByPollings(Device &device)
     bool commNow = device.hasCommunicationFailure();
     bool commPrev = device.getPrevCommFail();
 
-    QString name = "SUB:" + QString::number(subnetCount) + " " + "ID:" + QString::number(nodeSubnetCount);
+    int globalPos = subnetCount * 64 + nodeSubnetCount + 1;
+    QString name = "A" + QString::number(globalPos).rightJustified(4, '0');
     QString serialNum = device.serialNumberString();
     int btAddress = device.getRealAddress();
     AntennaInfo info = getAntennaInfo(_database);
@@ -361,9 +368,10 @@ void Wireless::checkTestResultsHandler()
 
                     QString eventType = "Test";
                     AntennaInfo info = getAntennaInfo(_database);
-                    QString name = "SUB:" + QString::number(subnet) + " ID:" + QString::number(node);
+                    int globalPos = subnet * 64 + node + 1;
+                    QString name = "A" + QString::number(globalPos).rightJustified(4, '0');
                     QString serial = device.serialNumberString();
-                    int btAddress = realAddress;
+                    int btAddress = device.getRealAddress();
 
                     if (check.testType == "FUNCTIONAL") {
                         insertLogEvent(_database, name, serial, btAddress, info.ip, info.timestamp, LOG_TEST_COMPLETED_FUNCTIONAL, eventType);
@@ -544,4 +552,26 @@ void Wireless::onTestButtonPressed() {
         }
         sendUartDaliCommand(_uartPort, grupoC001, r1, r2, ct);
     });
+
+}
+
+void Wireless::answerFactoryProgramTimerHandler()
+{
+    // en isFactoryProgramOn está la variable "done", que indica el éxito/fracaso del grabado
+    bool done = isFactoryProgramOn;
+
+    QString reply = QString("%1;%2;%3").arg("-", factoryProgramSerial, done ? "OK" : "FAIL"); // modelo "-" ya que no se puede leer
+    QByteArray ba = reply.toUtf8();
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddressFactoryProgram);
+
+    delay(3000);
+    _udpSocket->sendData(dstAddress, ba);
+
+    qDebug() << "SE HA GRABADO" << (isFactoryProgramOn ? "BIEN" : "MAL");
+
+    factoryProgramSerial = "";
+    isFactoryProgramOn = false;
+    rcvAddressFactoryProgram = "";
 }

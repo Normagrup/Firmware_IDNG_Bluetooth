@@ -6,6 +6,7 @@ var isStoppingCommission = false;
 var netKey;
 var antennaID;
 var estimatedTime;
+var isFactoryIDInProgress = false;
 
 socket.onopen = function(event) { console.log('WebSocket connection established.'); };
 
@@ -1045,44 +1046,168 @@ function processEndAutoCommission(value)
 
 function processFactoryIDWrote(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader1 = iframeDocument.getElementById('loader1');
-    loader1.classList.add('complete');
+
+    if(received) 
+    {
+        loader1.classList.add('complete');
+    }
+    else
+    {
+        loader1.classList.add('error');
+
+        var loader2 = iframeDocument.getElementById('loader2');
+        var loader3 = iframeDocument.getElementById('loader3');
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+
+        setTimeout(function() {
+            loader2.classList.add('error');
+            
+            setTimeout(function() {
+                loader3.classList.add('error');
+
+                setTimeout(function() {
+                    labelCodeContainer.style.display = 'none';
+                    settingsContainer.style.display = 'none';
+                    errorContainer.style.display = 'flex';
+                    labelContainer.style.display = 'flex';
+
+                    var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+                    factoryNetKey.classList.remove('disabled');
+
+                    isFactoryIDInProgress = false;
+                }, 1000);
+            }, 500);
+        }, 500);
+    }
 }
 
 function processDaliTested(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader2 = iframeDocument.getElementById('loader2');
-    loader2.classList.add('complete');
+
+    if(received) 
+    {
+        loader2.classList.add('complete');
+    }
+    else
+    {
+        loader2.classList.add('error');
+
+        var loader3 = iframeDocument.getElementById('loader3');
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+ 
+        setTimeout(function() {
+            loader3.classList.add('error');
+
+            setTimeout(function() {
+                labelCodeContainer.style.display = 'none';
+                settingsContainer.style.display = 'none';
+                errorContainer.style.display = 'flex';
+                labelContainer.style.display = 'flex';
+
+                var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+                factoryNetKey.classList.remove('disabled');
+
+                isFactoryIDInProgress = false;
+            }, 1000);
+        }, 500);
+    }
 }
 
 function processRecordedDevice(value) 
 {
+    var received = (value === "true");
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var loader3 = iframeDocument.getElementById('loader3');
-    loader3.classList.add('complete');
+    
+    if(received)
+    {
+        loader3.classList.add('complete');
+    }
+    else
+    {
+        loader3.classList.add('error');
+
+        var labelContainer = iframeDocument.getElementById('labelContainer');
+        var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
+        var settingsContainer = iframeDocument.getElementById('settingsContainer');
+        var errorContainer = iframeDocument.getElementById('errorContainer');
+
+        setTimeout(function() {
+            labelCodeContainer.style.display = 'none';
+            settingsContainer.style.display = 'none';
+            errorContainer.style.display = 'flex';
+            labelContainer.style.display = 'flex';
+
+            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+            factoryNetKey.classList.remove('disabled');
+
+            isFactoryIDInProgress = false;
+        }, 1000);
+    }
+}
+
+function processSerialClosure(value) 
+{
+    var done = (value === "done");
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var labelContainer = iframeDocument.getElementById('labelContainer');
+    var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
     var settingsContainer = iframeDocument.getElementById('settingsContainer');
     var confirmationContainer = iframeDocument.getElementById('confirmationContainer');
-    var codeContainer = iframeDocument.getElementById('codeContainer');
+    var errorContainer = iframeDocument.getElementById('errorContainer');
 
-    setTimeout(function() {
-        settingsContainer.style.display = 'none';
-        confirmationContainer.style.display = 'flex';
-    }, 3800);
+    if(done)
+    {
+        setTimeout(function() {
+            labelCodeContainer.style.display = 'none';
+            settingsContainer.style.display = 'none';
+            confirmationContainer.style.display = 'flex';
+            labelContainer.style.display = 'flex';
 
-    setTimeout(function() {
-        labelContainer.style.display = 'flex';
-        codeContainer.style.display = 'none';
-    }, 7300);
+            isFactoryIDInProgress = false;
+
+            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+            factoryNetKey.classList.remove('disabled');
+        }, 2000);
+    }
+    else
+    {
+        setTimeout(function() {
+            labelCodeContainer.style.display = 'none';
+            settingsContainer.style.display = 'none';
+            errorContainer.style.display = 'flex';
+            labelContainer.style.display = 'flex';
+
+            isFactoryIDInProgress = false;
+
+            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+            factoryNetKey.classList.remove('disabled');
+        }, 2000);
+    }
 }
 
 function processIsConfig(value)
@@ -1761,6 +1886,7 @@ function processReceivedData(data)
     else if (type == 'FACTORY_ID_WROTE') { processFactoryIDWrote(value); }
     else if (type == 'DALI_TESTED') { processDaliTested(value); }
     else if (type == 'RECORDED_DEVICE') { processRecordedDevice(value); }
+    else if (type == 'SERIAL_CLOSURE') { processSerialClosure(value); }
     else if (type == 'IS_CONFIG') { processIsConfig(value); }
     else if (type == 'LOG_DATA') { processLogData(value); }
     else if (type == 'LOG_FILE') { processLogFile(value); }
@@ -2544,39 +2670,56 @@ function codeReaderChanged()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var codeReader = iframeDocument.getElementById('codeReader');
+    console.log(codeReader.value);
+
+    if(isFactoryIDInProgress) { codeReader.value = ''; return; } // Si ya está grabando, se vacía el codeReader y se corta
+    if(codeReader.value.length < 11) { codeReader.value = ''; return; } // Si lo escrito es más corto que 11, se vacía el codeReader y se corta
+
+    var label = codeReader.value.slice(-11);
+    var regex = /\b(?:[0-9A-F]{2}\.){3}[0-9A-F]{2}\b/g;
+    if(!label.match(regex)) { codeReader.value = ''; return; } // Si lo escrito y parseado no coincide con XX.XX.XX.XX, se vacía el codeReader y se corta
+
+    isFactoryIDInProgress = true;
+    
     var labelContainer = iframeDocument.getElementById('labelContainer');
     var codeContainer = iframeDocument.getElementById('codeContainer');
+    var labelCodeContainer = iframeDocument.getElementById('labelCodeContainer');
     var settingsContainer = iframeDocument.getElementById('settingsContainer');
     var confirmationContainer = iframeDocument.getElementById('confirmationContainer');
+    var errorContainer = iframeDocument.getElementById('errorContainer');
 
     var loader1 = iframeDocument.getElementById('loader1');
     var loader2 = iframeDocument.getElementById('loader2');
     var loader3 = iframeDocument.getElementById('loader3');
-    loader1.classList.remove('complete');
-    loader2.classList.remove('complete');
-    loader3.classList.remove('complete');
+    loader1.classList.remove('complete'); loader1.classList.remove('error');
+    loader2.classList.remove('complete'); loader2.classList.remove('error');
+    loader3.classList.remove('complete'); loader3.classList.remove('error');
 
+    labelCodeContainer.style.display = 'flex';
     settingsContainer.style.display = 'flex';
     confirmationContainer.style.display = 'none';
+    errorContainer.style.display = 'none';
 
-    var labelPart = codeReader.value.slice(-11);
-    var codeParts = labelPart.split('.');
+    var labelParts = label.split('.');
     var labelCode1 = iframeDocument.getElementById('labelCode1');
     var labelCode2 = iframeDocument.getElementById('labelCode2');
     var labelCode3 = iframeDocument.getElementById('labelCode3');
     var labelCode4 = iframeDocument.getElementById('labelCode4');
 
-    labelCode1.innerHTML = codeParts[0];
-    labelCode2.innerHTML = codeParts[1];
-    labelCode3.innerHTML = codeParts[2];
-    labelCode4.innerHTML = codeParts[3];
+    labelCode1.innerHTML = labelParts[0];
+    labelCode2.innerHTML = labelParts[1];
+    labelCode3.innerHTML = labelParts[2];
+    labelCode4.innerHTML = labelParts[3];
 
     labelContainer.style.display = 'none';
     codeContainer.style.display = 'flex';
 
-    sendData("SET_READ_ID_CODE", labelPart);
+    sendData("SET_READ_ID_CODE", label);
 
     codeReader.value = '';
+
+    var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
+    factoryNetKey.classList.add('disabled');
 }
 
 function requestDevicesAndFailuresCount() {

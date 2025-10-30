@@ -9,5 +9,6 @@
 #define DALI_NORMAGROUP_TYPE        0x05
 
 void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subnet, uint8_t daliAddress, uint8_t commandLow, uint8_t commandType);
+void askPowerOnLevelFromEthToDali(UartPort* _uartPort, uint8_t subnet, uint8_t daliAddress);
 
 #endif // FRAMETYPE1_FUNCTIONS_H

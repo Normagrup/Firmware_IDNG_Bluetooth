@@ -5,6 +5,7 @@
 #include "time_functions.h"
 #include "global_variables.h"
 #include "log.h"
+#include "eth_frames.h"
 
 static bool checkCRC(QByteArray data)
 {
@@ -44,6 +45,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case NODE_DELETED: return 6;
             case CONFIRM_START_SCAN: return 4;
             case CONFIRM_ADD_NODE_TO_GROUP: return 9;
+            case CONFIRM_DEL_NODE_FROM_GROUP: return 9;
             case CONFIRM_START_REMOVE_ALL_NODES: return 4;
             case CONFIRM_END_REMOVE_ALL_NODES: return 4;
             case CONFIRM_START_REMOVE_ONE_NODE: return 4;
@@ -80,8 +82,9 @@ int getExpectedFrameSize(const QByteArray& buffer)
         switch (subType) {
             case FACTORY_ID_WROTE:
             case DALI_TESTED:
-            case RECORDED_DEVICE:
                 return 4;
+            case RECORDED_DEVICE:
+                return 5;
             default: return -1;
         }
 
@@ -461,6 +464,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     {
                         uint16_t nodeAddr = (data[3] << 8) | data[4];
                         uint8_t powerOnLevel = (uint8_t)data[5];
+                        if(powerOnQueryMap.contains(nodeAddr)){
+                            POLQueryContext ctx = powerOnQueryMap[nodeAddr];
+                            sendPowerOnLeveltoEth(ctx.pid, powerOnLevel, ctx.rcvAddress, ctx.socket);
+                            powerOnQueryMap.remove(nodeAddr);
+                        }
                         updatePowerOnLevels(webServer, database, nodeAddr, powerOnLevel);
                         messageState = RECEIVED;
                     }
@@ -471,7 +479,9 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint16_t deviceTypeGroupAddress = ((uint16_t)data[5] << 8) | data[6];
                         bool added = ((uint8_t)data[7] != 0); // si se añade o falla porque el micro es incapaz
 
-                        if(added) { messageState = RECEIVED; }
+                        if(added) { 
+                            messageState = RECEIVED;
+                        }
                         else { messageState = MISSED; } // se simula que no ha llegado para que notifique el error en el proceso
                     }
                     break;
@@ -501,22 +511,28 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
             case UART_ID_FRAME_TYPE:
                 switch ((unsigned char)data[2]) {
                     case FACTORY_ID_WROTE:
-                        sendFactoryIDWrote(webServer);
+                        sendFactoryIDWrote(webServer, true);
                     break;
 
                     case DALI_TESTED:
-                        sendDaliTested(webServer);
+                        sendDaliTested(webServer, true);
                     break;
 
                     case RECORDED_DEVICE:
                     {
-                        //delay(1000);
-                        //sendUartClearInyectedNodes(uartPort, true, database);
-                        //while(messageState == PENDING) {}
+                        bool done = ((uint8_t)data[3] != 0);
 
-                        sendRecordedDevice(webServer);
-                        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-                        // no se pone embeddedState porque es una funcionalidad a parte (factory)
+                        if(!isFactoryProgramOn) {
+                            sendSerialClosure(webServer, done);
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+                            // no se pone embeddedState porque es una funcionalidad a parte (factory)
+                        }
+                        else {
+                            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+
+                            isFactoryProgramOn = done; // pasamos a esa variable el valor del done (si se ha grabado bien o no) para usarlo en el handler
+                            answerFactoryProgramTimer.start(50);
+                        }
                     }
                     break;
 
@@ -585,6 +601,8 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
                 meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
                 meshDevice[i][j].setIsConfigured(true);
+
+                polling.setConfiguredSubnets(); // polling for eth send
 
                 netAddress = i * 64 + j + 1;
 
@@ -1219,7 +1237,9 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
                 if (meshDevice[i][j].getRealAddress() == address[0]) {
                     // Log entry
                     QString groupAddressString = QString("%1").arg(address[1], 4, 16, QLatin1Char('0')).toUpper();
-                    QString name = "SUB:" + QString::number(i) + " " + "ID:" + QString::number(j) + " - " + database->getGroupName(groupAddressString);
+                    int globalPos = i * 64 + j + 1;
+                    QString devname = "A" + QString::number(globalPos).rightJustified(4, '0');
+                    QString name = devname + " - " + database->getGroupName(groupAddressString);
                     QString serialNum = meshDevice[i][j].serialNumberString();
                     int btAddress = meshDevice[i][j].getRealAddress();
                     AntennaInfo info = getAntennaInfo(database);
@@ -1228,6 +1248,10 @@ void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database
 
                     meshDevice[i][j].delGroupSubAddress(address[1]);
                     database->delGroup(address[0], address[1]);
+                    if (!pendingGroupUpdatesEth.isEmpty()) {
+                        QString key = QString("%1:%2").arg(address[0]).arg(address[1]);
+                        pendingGroupUpdatesEth.remove(key);
+                    }
                     return;
                 }
             }
@@ -1509,9 +1533,9 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
 {
     qDebug() << "[WRITE_ID 1] factoryCode =" << factoryCode;
 
-    uint8_t att = 10;
+    uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[10] = {400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
+    int ms[3] = {1000, 2000, 3000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
@@ -1540,8 +1564,8 @@ void sendWriteIDCodeFrame(UartPort* _uartPort, QString factoryCode)
     }
 
     if(messageState == PENDING) {
-        messageState = RECEIVED; // Se asume que llega (no existe comprobación)
-        //qDebug() << "No se recibió confirmación del WRITE_ID_CODE_FRAME";
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del WRITE_ID_CODE_FRAME";
     }
 }
 
@@ -1549,28 +1573,19 @@ void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode)
 {
     qDebug() << "[WRITE_ID 2] factoryCode =" << factoryCode;
 
-    uint8_t att = 10;
+    uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[10] = {400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
+    int ms[3] = {1000, 2000, 3000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
-        bool ok;
-        uint8_t code[4] = {0};
-        QStringList factoryCodeParts = factoryCode.split(".");
-
-        for (uint8_t i = 0; i < factoryCodeParts.size(); i++) { code[i] = factoryCodeParts[i].toInt(&ok, 16); }
         QByteArray frame;
-        unsigned char length = 7;
+        unsigned char length = 3;
 
         frame.append(UART_HEADER);
         frame.append(length);
         frame.append(UART_CONFIG_FRAME_TYPE);
         frame.append(DALI_TEST_FOR_WRITE_ID);
-        frame.append(code[0]);
-        frame.append(code[1]);
-        frame.append(code[2]);
-        frame.append(code[3]);
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
@@ -1580,8 +1595,8 @@ void sendDaliTestForWriteID(UartPort* _uartPort, QString factoryCode)
     }
 
     if(messageState == PENDING) {
-        messageState = RECEIVED; // Se asume que llega (no existe comprobación)
-        //qDebug() << "No se recibió confirmación del DALI_TEST_FOR_WRITE_ID";
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del DALI_TEST_FOR_WRITE_ID";
     }
 }
 
@@ -1611,8 +1626,8 @@ void sendEndRecordDevice(UartPort* _uartPort, QString factoryCode)
     }
 
     if(messageState == PENDING) {
-        messageState = RECEIVED; // Se asume que llega (no existe comprobación)
-        //qDebug() << "No se recibió confirmación del END_RECORD_DEVICE";
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del END_RECORD_DEVICE";
     }
 }
 
@@ -1871,6 +1886,32 @@ void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, 
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
+}
+
+void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket *_udpSocket)
+{
+    QByteArray frame;
+    unsigned char crc = 0;
+
+    frame.append(FRAME_HEADER_0);
+    frame.append(FRAME_HEADER_1);
+    frame.append(FRAME_HEADER_2);
+    frame.append(FRAME_TYPE_82);
+    frame.append((pid >> 8) & 0xFF);
+    frame.append(pid & 0xFF);
+    frame.append(0x01);
+    frame.append(powerOnLevel);
+
+    for (uint8_t i = 3; i < frame.size(); i++) {
+        crc += frame[i];
+    }
+
+    frame.append(crc);
+
+    QHostAddress dstAddress;
+    dstAddress.setAddress(rcvAddress);
+
+    _udpSocket->sendData(dstAddress, frame);
 }
 
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)

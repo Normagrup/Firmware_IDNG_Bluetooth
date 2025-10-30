@@ -5,13 +5,14 @@
 
 #include "UdpSocket.h"
 #include "eth_frames.h"
+#include "Database.h"
 
 void sendIPAddressFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendSubmaskAddressFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendGatewayAddressFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendMacAddressFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
-void sendBuildingNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
-void sendLineNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
+void sendBuildingNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database);
+void sendLineNameFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket, Database* _database);
 void sendRtcDateDayFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendRtcDateDaySeconds(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendModelVersionFrame(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
@@ -23,10 +24,12 @@ void sendPingFrame(QString rcvAddress, uint8_t packetID, UdpSocket* _udpSocket);
 
 void sendDaliLineInstalledDevices(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket* _udpSocket);
 void sendDaliLineReadDevicesType(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
+void sendDaliLineReadDevicesSerials(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineReadComunicationState(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryActualLvl(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryStatus(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryEmergencyMode(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryFailureStatus(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
+void sendLogDataSize(QString rcvAddress,  uint8_t pidHigh, uint8_t pidLow, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, Database* _database);
 
 #endif // FRAMETYPE0_FUNCTIONS_H
