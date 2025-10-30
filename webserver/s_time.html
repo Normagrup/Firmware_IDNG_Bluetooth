@@ -39,9 +39,21 @@
 
     <script>
         window.onload = function () {
-            setTimeout(function() {
-                parent.sendData("GET_DATE_TIME", "");
-            }, 10);
+            var datePicker = document.getElementById("datePicker");
+            var timePicker = document.getElementById("timePicker");
+
+            var now = new Date();
+
+            // Fecha en formato YYYY-MM-DD
+            var year  = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day   = String(now.getDate()).padStart(2, '0');
+            datePicker.value = `${year}-${month}-${day}`;
+
+            // Hora en formato HH:MM (24h)
+            var hours   = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            timePicker.value = `${hours}:${minutes}`;
         };
     </script>
 </body>
