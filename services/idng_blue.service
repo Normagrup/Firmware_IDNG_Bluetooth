@@ -1,17 +1,23 @@
-
-// Poner este archivo en ruta "etc/systemd/system"
-
 [Unit]
 Description=Servicio IDNG_Blue embebido
 After=network.target
 
 [Service]
 Type=simple
+
 WorkingDirectory=/projects/IDNG_Blue/build-output
+
 ExecStartPre=/bin/sleep 1
+
 ExecStart=/projects/IDNG_Blue/build-output/IDNG_Blue
+
 Restart=on-failure
 RestartSec=2
+
+KillSignal=SIGINT
+ExecStopPost=/bin/sh -c 'echo 1 > /sys/class/gpio/gpio82/value || true' 
+TimeoutStopSec=3s 
+SendSIGKILL=no
 
 [Install]
 WantedBy=multi-user.target
