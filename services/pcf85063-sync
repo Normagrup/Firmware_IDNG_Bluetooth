@@ -1,0 +1,39 @@
+#!/bin/sh
+set -eu
+
+BUS=1
+ADDR=0x51
+
+# ---- helpers ----
+rb() { i2cget -y "$BUS" "$ADDR" "$1" b; }   # lee 1 byte BCD de un registro
+bcd() { v=${1#0x}; printf "%02d" $(( ((0x$v >> 4) * 10) + (0x$v & 0x0F) )); }
+
+# ---- lee PCF85063A ----
+S=$(rb 0x24)  # seconds (bit7=OSF)
+M=$(rb 0x25)  # minutes
+H=$(rb 0x26)  # hours
+D=$(rb 0x27)  # day
+O=$(rb 0x29)  # month
+Y=$(rb 0x2A)  # year (00..99 => 2000..2099)
+
+# limpia OSF si estuviera a 1 (bit7 de seg)
+if [ $(( (0x${S#0x}) & 0x80 )) -ne 0 ]; then
+  S_CLEAN=$(printf "0x%02x" $(( (0x${S#0x}) & 0x7F )))
+  i2cset -y "$BUS" "$ADDR" 0x24 "$S_CLEAN"
+  S=$S_CLEAN
+fi
+
+ISO_UTC=$(printf "20%s-%s-%s %s:%s:%s" \
+          "$(bcd "$Y")" "$(bcd "$O")" "$(bcd "$D")" \
+          "$(bcd "$H")" "$(bcd "$M")" "$(bcd "$S")")
+
+# ---- pone reloj del sistema en UTC con la hora del PCF ----
+date -u -s "$ISO_UTC"
+
+# asegura adjtime en UTC (opcional, recomendable)
+printf '0.0 0 0.0\n0\nUTC\n' > /etc/adjtime
+
+# ---- copia sistema -> RTC del SoC (/dev/rtc0) ----
+hwclock --systohc --utc --rtc=/dev/rtc0 --noadjfile
+
+echo "PCF->System OK: $ISO_UTC ; System->RTC0 OK"
