@@ -5,7 +5,6 @@
 #include <QDir>
 #include <QDate>
 
-
 #include "file_handler.h"
 #include "global_variables.h"
 #include "Device.h"
@@ -332,33 +331,124 @@ void setRtcTime(QString time)
     process.start("sudo", command);
     process.waitForFinished(-1);
 }
-/*
-void setLocalDateTime(QStringList dateTimeParts)
-{
-    QString date = dateTimeParts[0];
-    QString time = dateTimeParts[1] + ":00";
-    QString dateTime = date + " " + time;
-
-    QProcess process;
-    QStringList command;
-    command << "timedatectl" << "set-time" << dateTime;
-    process.start("sudo", command);
-    process.waitForFinished(-1);
-}*/
 
 // Convierte decimal [0..99] a BCD (entero 0..255)
 static int decToBcd(int v) { return ((v/10)<<4) | (v%10); }
 
-// Devuelve "0xHH" con cero a la izquierda
+// Devuelve "0xHH"
 static QString hex0x(int byte) {
     return QString("0x%1").arg(byte, 2, 16, QChar('0')).toLower();
 }
+
+// Lee hora del sistema tras el cambio (UTC) para verificar
+static QDateTime readSystemUtc()
+{
+    return QDateTime::currentDateTimeUtc();
+}
+
+// Convierte "YYYY-MM-DD HH:MM:SS" a QDateTime válido
+static QDateTime parseLocal(const QString& localDT)
+{
+    QDateTime dt = QDateTime::fromString(localDT, "yyyy-MM-dd HH:mm:ss");
+    dt.setTimeSpec(Qt::LocalTime);
+    return dt;
+}
+
+// Establece la hora
+static bool setClockWithSyscall(const QDateTime& local)
+{
+    if (!local.isValid()) return false;
+
+    QDateTime utc = local.toUTC();
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
+    const qint64 sec  = utc.toSecsSinceEpoch();
+    const long   nsec = utc.time().msec() * 1000000L;
+#else
+    const qint64 sec  = utc.toTime_t();
+    const long   nsec = 0;
+#endif
+
+    struct timespec ts;
+    ts.tv_sec  = sec;
+    ts.tv_nsec = nsec;
+
+    if (clock_settime(CLOCK_REALTIME, &ts) == 0) {
+        qInfo() << "[SYSCLK] clock_settime OK (UTC):" << utc.toString("yyyy-MM-dd HH:mm:ss");
+        return true;
+    } else {
+        qWarning() << "[SYSCLK] clock_settime fallo:" << strerror(errno) << "errno=" << errno;
+        return false;
+    }
+}
+
+// ult opción: usa /bin/date -s "YYYY-MM-DD HH:MM:SS"
+static bool setClockWithDate(const QString& localDT, int timeoutMs = 5000)
+{
+    QProcess p;
+    p.start("/bin/date", {"-s", localDT});
+    if (!p.waitForFinished(timeoutMs)) {
+        qWarning() << "[SYSCLK] date -s timeout; killed";
+        p.kill();
+        p.waitForFinished(1000);
+        return false;
+    }
+    qInfo() << "[SYSCLK] date -s" << localDT
+            << "exit:"   << p.exitCode()
+            << "stderr:" << QString::fromLocal8Bit(p.readAllStandardError()).trimmed();
+    return (p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0);
+}
+
+static bool setSystemClockLocal(const QString& localDT)
+{
+    const QDateTime before = readSystemUtc();
+
+    // 1) Parsear local
+    const QDateTime local = parseLocal(localDT);
+    if (!local.isValid()) {
+        qWarning() << "[SYSCLK] Fecha/hora LOCAL inválida:" << localDT;
+        return false;
+    }
+
+    // 2) Intento 1: syscall directa (evita cuelgues de timedatectl/DBus)
+    bool ok = setClockWithSyscall(local);
+
+    // 3) Si no funciona lo intentamos con date -s
+    if (!ok) ok = setClockWithDate(localDT);
+
+    // 4) Verificación (≥ 1 s de diferencia).
+    const QDateTime after = readSystemUtc();
+    const bool changed = (qAbs(before.secsTo(after)) >= 1);
+
+    qInfo() << "[SYSCLK] Resultado:" << (ok && changed ? "OK" : "FALLO")
+            << "antes(UTC)="   << before.toString("yyyy-MM-dd HH:mm:ss")
+            << "despues(UTC)=" << after.toString("yyyy-MM-dd HH:mm:ss");
+
+    return ok && changed;
+}
+
+static void syncOnboardRtcFromSystem()
+{
+    // Actualiza el RTC del kernel (rk808) con la hora del sistema
+    QString hw = QFile::exists("/sbin/hwclock") ? "/sbin/hwclock" : "/usr/sbin/hwclock";
+    QProcess p;
+    p.start(hw, {"--systohc"});   // system → hardware clock
+    p.waitForFinished(3000);
+    qInfo() << "[SYSCLK] hwclock --systohc exit:" << p.exitCode()
+            << "stderr:" << QString::fromLocal8Bit(p.readAllStandardError()).trimmed();
+}
+
 void setLocalDateTime(QStringList dateTimeParts)
 {
     const QString date = dateTimeParts.value(0);           // "YYYY-MM-DD"
     const QString time = dateTimeParts.value(1) + ":00";   // "HH:MM:SS"
     const QString dateTime = date + " " + time;
 
+    const bool sysOk = setSystemClockLocal(dateTime);
+    if (!sysOk) {
+        qWarning() << "[SYSCLK] No se pudo ajustar la hora del sistema.";
+    }
+    syncOnboardRtcFromSystem();
 
     // 2) Convierte esa hora local a UTC (RTC en UTC recomendado)
     QDateTime local = QDateTime::fromString(dateTime, "yyyy-MM-dd HH:mm:ss");
