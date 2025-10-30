@@ -127,12 +127,11 @@ int main(int argc, char *argv[])
     std::signal(SIGTERM, [](int){ link_off_now(); std::_Exit(143); });
 
     qDebug() << "App running...";
-
-
-    EmbeddedIO io;
      
     // Hora al sistema
     syncSystemFromRtc();
+
+    EmbeddedIO io;
 
     Wireless* wirelessNet = new Wireless(nullptr);
     wirelessNet->setEmbeddedIO(&io);
