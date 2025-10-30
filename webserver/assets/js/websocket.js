@@ -112,23 +112,6 @@ function processDateTimeInfo(value)
     var dateString = `${year}-${month}-${day}`;
     var timeString = `${hour}:${minutes}`;
 
-    if (iframeDocument.location.href.includes('s_time.html')) {
-        var datePicker = iframeDocument.getElementById('datePicker');
-        var timePicker = iframeDocument.getElementById('timePicker');
-
-        datePicker.value = dateString;
-        timePicker.value = timeString;
-    }
-    else if (iframeDocument.location.href.includes('s_tests.html')) {
-        var durationDatePicker = iframeDocument.getElementById('durationDatePicker');
-        var functionTimePicker = iframeDocument.getElementById('functionTimePicker');
-        var durationTimePicker = iframeDocument.getElementById('durationTimePicker');
-
-        durationDatePicker.value = dateString;
-        functionTimePicker.value = timeString;
-        durationTimePicker.value = timeString;
-    }
-
     // Para actualizar el valor del campo general para la fecha y hora
     var navDateTimeElem = document.getElementById("antennaDateTime");
     if (navDateTimeElem) {
@@ -896,7 +879,13 @@ function processTestData(value) {
 
     var durationDateElem = iframeDocument.getElementById('durationDatePicker');
     if(durationDate !== "0000-00-00") { durationDateElem.value = durationDate; }
-    else { durationDateElem.value = "2000-01-01"}
+    else { 
+        var now = new Date();
+        var year  = now.getFullYear();
+        var month = String(now.getMonth() + 1).padStart(2, '0');
+        var day   = String(now.getDate()).padStart(2, '0');
+        durationDateElem.value = `${year}-${month}-${day}`;
+    }
 
     var durationTimeElem = iframeDocument.getElementById('durationTimePicker');
     durationTimeElem.value = durationTime;
@@ -2438,7 +2427,14 @@ function loadTests()
 
         var periodicityList = iframeDocument.getElementById('periodicityList'); periodicityList.selectedIndex = 0;
 
-        parent.sendData("GET_DATE_TIME", "");
+        var durationDatePicker = iframeDocument.getElementById('durationDatePicker');
+        var functionTimePicker = iframeDocument.getElementById('functionTimePicker');
+        var durationTimePicker = iframeDocument.getElementById('durationTimePicker');
+
+        durationDatePicker.value = '';
+        durationDatePicker.valueAsDate = null; 
+        functionTimePicker.value = '';
+        durationTimePicker.value = '';
     }
 
     var testErrorLabel = iframeDocument.getElementById('testError'); testErrorLabel.innerHTML = " ‎ ";
