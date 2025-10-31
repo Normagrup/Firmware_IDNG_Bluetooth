@@ -31,5 +31,6 @@ void sendDaliLineQueryStatus(QString rcvAddress, uint8_t commandHigh, uint8_t co
 void sendDaliLineQueryEmergencyMode(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendDaliLineQueryFailureStatus(QString rcvAddress, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket);
 void sendLogDataSize(QString rcvAddress,  uint8_t pidHigh, uint8_t pidLow, uint8_t commandHigh, uint8_t commandLow, UdpSocket *_udpSocket, Database* _database);
+void eraseLogData(Database* _database);
 
 #endif // FRAMETYPE0_FUNCTIONS_H

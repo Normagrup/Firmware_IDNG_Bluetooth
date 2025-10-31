@@ -81,6 +81,7 @@ public:
     QList<QStringList> getAllTestLogs();
     QList<QStringList> getLastNLogEvents(int count);
     int getLogSize();
+    void eraseAllLogData(void);
 
     void readNodesForTree();
     void updateRelayMode(uint16_t nodeAddress, bool enabled);

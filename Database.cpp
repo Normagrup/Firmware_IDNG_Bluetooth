@@ -1344,6 +1344,14 @@ int Database::getLogSize()
     return 0;
 }
 
+void Database::eraseAllLogData()
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM Log");
+
+    if (!query.exec()) { qDebug() << "Error executing DELETE query in deletFromAllLogs:" << query.lastError().text(); }
+}
+
 void Database::readNodesForTree()
 {
     nodesByRealAddress = {};

@@ -108,7 +108,7 @@ static void processEthFrameType0(QString rcvAddress, QByteArray data, UdpSocket*
             break;
 
         case 0x88: // HISTORIC RESET
-            // ???????
+            eraseLogData(_database);
             break;
 
         default:

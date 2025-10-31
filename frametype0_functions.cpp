@@ -682,3 +682,8 @@ void sendLogDataSize(QString rcvAddress, uint8_t pidHigh, uint8_t pidLow, uint8_
 
     _udpSocket->sendData(dstAddress, frame);
 }
+
+void eraseLogData(Database *_database)
+{
+    _database->eraseAllLogData();
+}
