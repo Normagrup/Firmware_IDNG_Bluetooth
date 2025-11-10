@@ -108,7 +108,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_IP_CONFIG) {
         QStringList webServerParts = value.split(" ");
-        QString password = webServerParts[5];
+        QString password = webServerParts[webServerParts.size() - 1];
 
         QStringList databaseLoginParametersList = database->getLoginParameters();
         bool passwordFound = false;
