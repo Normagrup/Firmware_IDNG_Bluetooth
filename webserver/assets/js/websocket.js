@@ -42,10 +42,20 @@ function processLoginInfo(value)
     console.log(value);
 
     if (value == 1) { 
+        var username = document.getElementById('usernameInput');
+        var password = document.getElementById('passwordInput');
+        username.value = "";
+        password.value = "";
+
         loadAdminMenu();
         signErrorLabel.style.visibility = "hidden";
     }
     else if (value == 2) {
+        var username = document.getElementById('usernameInput');
+        var password = document.getElementById('passwordInput');
+        username.value = "";
+        password.value = "";
+        
         loadFactoryMenu();
         signErrorLabel.style.visibility = "hidden";
     }
