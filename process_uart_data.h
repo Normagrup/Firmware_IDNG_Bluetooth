@@ -95,6 +95,7 @@
 #define CONFIRM_INYECT                  0x97
 #define CONFIRM_ACTION                  0x98
 #define CONFIRM_RESET_CDB               0x99
+#define MICRO_REBOOT                    0xAE
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -144,5 +145,5 @@ void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16
 void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
-
+void sendUartMicroReboot(UartPort* _uartPort);
 #endif // PROCESS_UART_DATA_H

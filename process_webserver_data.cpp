@@ -28,6 +28,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendLoginInfo(webServer, loginInfo);
     }
     else if (type == WS_SET_REBOOT_DEVICE) {
+        sendUartMicroReboot(uartPort);
         rebootDevice();
     }
     else if (type == WS_ASK_STATE_TO_EMBEDDED) {

@@ -891,6 +891,21 @@ void processConfirmGroupFrame(void)
     groupFrameTimer.stop();
 }
 
+
+void sendUartMicroReboot(UartPort* _uartPort)
+{
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(MICRO_REBOOT);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
 {
     uint8_t att = 3;
