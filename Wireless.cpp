@@ -505,6 +505,10 @@ void Wireless::replaceP3TimerHandler()
 void Wireless::cleanCdbTimerHandler()
 {
     sendUartClearInyectedNodes(_uartPort, true, _database);
+    while(messageState == PENDING) {}
+    delay(300);
+    sendUartMicroReboot(_uartPort);
+
 }
 
 void Wireless::askInitDataFromMicroTimerHandler()
