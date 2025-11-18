@@ -32,7 +32,7 @@ function processAskStateToEmbedded(value)
 
 function processRecoveringMicro(value)
 {
-    alert("Recovering communication. Please, try again in 10 seconds.");
+    console.log("Recovering communication with microcontroller.");
 }
 
 function processLoginInfo(value) 

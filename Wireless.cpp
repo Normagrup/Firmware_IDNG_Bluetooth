@@ -516,9 +516,10 @@ void Wireless::askInitDataFromMicroTimerHandler()
     sendSetAntennaAddressAndNetKey(_uartPort, _database);
     while(messageState == PENDING) {}
 
+    embeddedState = FREE;
+
     if(messageState == RECEIVED) {
         qDebug() << "Se han cargado los datos de inicio de la antena correctamente";
-        embeddedState = FREE;
     }
     else {
         qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
