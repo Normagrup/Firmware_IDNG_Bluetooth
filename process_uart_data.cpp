@@ -1118,35 +1118,22 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned)
 
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast)
 {
-    uint8_t att = 3;
-    uint8_t actAtt = 0;
-    int ms[3] = {1500, 3000, 3000};
-    messageState = PENDING;
 
-    while(actAtt < att && messageState == PENDING) {
-        QByteArray frame;
-        const unsigned char length = 6;
+    QByteArray frame;
+    const unsigned char length = 6;
 
-        frame.append(UART_HEADER);
-        frame.append(length);
-        frame.append(UART_CONFIG_FRAME_TYPE);
-        frame.append(DEL_DEVICES);
-        frame.append((nodeAddress >> 8) & 0xFF);
-        frame.append(nodeAddress & 0xFF);
-        frame.append(isBroadcast ? 0x01 : 0x00);
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(DEL_DEVICES);
+    frame.append((nodeAddress >> 8) & 0xFF);
+    frame.append(nodeAddress & 0xFF);
+    frame.append(isBroadcast ? 0x01 : 0x00);
 
-        frame.append(UART_END);
+    frame.append(UART_END);
 
-        _uartPort->sendData(frame);
+    _uartPort->sendData(frame);
 
-        delay(ms[actAtt]);
-        actAtt++;
-    }
-
-    if(messageState == PENDING) {
-        messageState = MISSED;
-        qDebug() << "No se recibió confirmación del DEL_DEVICE";
-    }
 }
 
 
