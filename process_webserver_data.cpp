@@ -185,30 +185,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             embeddedState = DEL_DEV_BC;
             sendConfirmStartRemoveAllNodes(webServer);
 
-            QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
-            uint8_t counter = 0;
-            uint8_t max = 64;
+            sendEstimatedTime(webServer, 90);
 
-            sendEstimatedTime(webServer, addresses.size() * 4); // 4 segundos por dispositivo
-
-            for (const uint16_t nodeAddress : addresses) {
-                sendUartInyectNode(uartPort, nodeAddress, database);
-                while(messageState == PENDING) {}
-
-                if(messageState == RECEIVED) {
-                    counter++;
-                    sendUartDelDevice(uartPort, nodeAddress, true);
-                    while(messageState == PENDING) {}
-
-                    if(messageState == RECEIVED) { insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device"); }
-                }
-
-                if(counter >= max) {
-                    counter = 0;
-                    sendUartClearInyectedNodes(uartPort, false, database);
-                    while(messageState == PENDING) {}
-                }
-            }
+            uint16_t dummyAddress = 0xFFFF;
+            sendUartDelDevice(uartPort, dummyAddress, true);
 
             database->deleteAllNodes();
 
@@ -216,8 +196,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 for (int j = 0; j < MAX_NODES_SUBNET; j++)
                     meshDevice[i][j].deleteDevice();
 
-            sendUartClearInyectedNodes(uartPort, false, database);
-            while(messageState == PENDING) {}
 
             sendConfirmEndRemoveAllNodes(webServer);
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
@@ -1649,9 +1627,7 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
-    QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
-
-    sendEstimatedTime(webServer, 5 + addresses.size() * 4); // 5 de base, 4 segundos por dispositivo
+    sendEstimatedTime(webServer, 90);
 
     uint16_t dummyAddress = 0xFFFF;
     sendUartClearAllData(uartPort, dummyAddress);

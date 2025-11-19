@@ -1360,8 +1360,12 @@ void sendUartDelGroupForAllNodesUnitary(UartPort* _uartPort, uint16_t nodeRealAd
 
 void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress)
 {
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
     int ms[3] = {1000, 2000, 2500};
+    messageState = PENDING;
 
+    while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
         unsigned char length = 5;
 
@@ -1376,6 +1380,15 @@ void sendUartClearAllData(UartPort* _uartPort, uint16_t nodeAddress)
 
         qDebug() << "Enviando borrado a nodo:" << QString::asprintf("%04X", nodeAddress);
         _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+        if(messageState == PENDING) {
+            messageState = MISSED;
+            qDebug() << "No se recibió confirmación del CLEAR_ALL_DATA";
+        }
 }
 
 void sendUartStartLineScanning(UartPort* _uartPort)
