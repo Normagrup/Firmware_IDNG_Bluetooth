@@ -185,8 +185,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             embeddedState = DEL_DEV_BC;
             sendConfirmStartRemoveAllNodes(webServer);
 
-            QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
-            sendEstimatedTime(webServer, addresses.size() * 4);
+            sendEstimatedTime(webServer, 90);
 
             uint16_t dummyAddress = 0xFFFF;
             sendUartDelDevice(uartPort, dummyAddress, true);
@@ -1628,9 +1627,7 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
-    QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
-
-    sendEstimatedTime(webServer, 5 + addresses.size() * 4); // 5 de base, 4 segundos por dispositivo
+    sendEstimatedTime(webServer, 90);
 
     uint16_t dummyAddress = 0xFFFF;
     sendUartClearAllData(uartPort, dummyAddress);
