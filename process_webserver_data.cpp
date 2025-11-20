@@ -1650,27 +1650,11 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
     QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
-    uint8_t counter = 0;
-    uint8_t max = 64;
 
     sendEstimatedTime(webServer, 5 + addresses.size() * 4); // 5 de base, 4 segundos por dispositivo
 
-    for (const uint16_t nodeAddress : addresses) {
-        sendUartInyectNode(uartPort, nodeAddress, database);
-        while(messageState == PENDING) {}
-
-        if(messageState == RECEIVED) {
-            counter++;
-            sendUartClearAllData(uartPort, nodeAddress);
-            while(messageState == PENDING) {}
-        }
-
-        if(counter >= max) {
-            counter = 0;
-            sendUartClearInyectedNodes(uartPort, false, database);
-            while(messageState == PENDING) {}
-        }
-    }
+    uint16_t dummyAddress = 0xFFFF;
+    sendUartClearAllData(uartPort, dummyAddress);
 
     database->clearAllData();
 
@@ -1680,9 +1664,6 @@ void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPor
 
     for (int i = 0; i < MAX_TEST; i++)
         tests[i].deleteTest();
-
-    sendUartClearInyectedNodes(uartPort, false, database);
-    while(messageState == PENDING) {}
 }
 
 void sendConfirmStartRemoveAllNodes(WebServer* webServer)
