@@ -185,10 +185,13 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             embeddedState = DEL_DEV_BC;
             sendConfirmStartRemoveAllNodes(webServer);
 
-            sendEstimatedTime(webServer, 90);
+            sendEstimatedTime(webServer, 60); // 1min de margen para que se borren todos los nodos
 
             uint16_t dummyAddress = 0xFFFF;
             sendUartDelDevice(uartPort, dummyAddress, true);
+            while(messageState == PENDING) {}
+
+            if(messageState == RECEIVED) { insertDevToLog(0xFFFF, database, LOG_DEVICE_REMOVED, "Device"); }
 
             database->deleteAllNodes();
 
@@ -196,7 +199,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 for (int j = 0; j < MAX_NODES_SUBNET; j++)
                     meshDevice[i][j].deleteDevice();
 
-
+            delay(60000);
             sendConfirmEndRemoveAllNodes(webServer);
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
             embeddedState = FREE;
@@ -828,6 +831,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         isClearingAllData = false;
 
+        delay(60000);
         sendConfirmEndClearAllData(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
@@ -1627,10 +1631,11 @@ void sendLogFile(WebServer *webServer, QString fileDir)
 
 void clearSystemData(WebServer* webServer, Database* database, UartPort* uartPort)
 {
-    sendEstimatedTime(webServer, 90);
+    sendEstimatedTime(webServer, 60); // 1min de margen para que se borren todos los nodos
 
     uint16_t dummyAddress = 0xFFFF;
     sendUartClearAllData(uartPort, dummyAddress);
+    while(messageState == PENDING) {}
 
     database->clearAllData();
 

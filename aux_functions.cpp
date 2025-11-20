@@ -340,13 +340,21 @@ void insertDevToLog(uint16_t nodeAddress, Database *db, int eventCode, QString e
     QString name, serial;
     int btAddress;
 
-    for (uint8_t i = 0; i < MAX_SUBNET; i++) {
-        for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
-            if (meshDevice[i][j].getRealAddress() == nodeAddress) {
-                int globalPos = i * 64 + j + 1;
-                name = "A" + QString::number(globalPos).rightJustified(4, '0');
-                serial = meshDevice[i][j].serialNumberString();
-                btAddress = nodeAddress;
+    if(nodeAddress == 0xFFFF)
+    {
+        name = "BROADCAST";
+        serial = "FF.FF.FF.FF";
+        btAddress = nodeAddress;
+    }
+    else {
+        for (uint8_t i = 0; i < MAX_SUBNET; i++) {
+            for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
+                if (meshDevice[i][j].getRealAddress() == nodeAddress) {
+                    int globalPos = i * 64 + j + 1;
+                    name = "A" + QString::number(globalPos).rightJustified(4, '0');
+                    serial = meshDevice[i][j].serialNumberString();
+                    btAddress = nodeAddress;
+                }
             }
         }
     }
