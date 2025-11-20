@@ -186,10 +186,29 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendConfirmStartRemoveAllNodes(webServer);
 
             QList<uint16_t> addresses = database->getAddressesDescForGlobalRemove();
-            sendEstimatedTime(webServer, addresses.size() * 4);
+            uint8_t counter = 0;
+            uint8_t max = 64;
 
-            uint16_t dummyAddress = 0xFFFF;
-            sendUartDelDevice(uartPort, dummyAddress, true);
+            sendEstimatedTime(webServer, addresses.size() * 4); // 4 segundos por dispositivo
+
+            for (const uint16_t nodeAddress : addresses) {
+                sendUartInyectNode(uartPort, nodeAddress, database);
+                while(messageState == PENDING) {}
+
+                if(messageState == RECEIVED) {
+                    counter++;
+                    sendUartDelDevice(uartPort, nodeAddress, true);
+                    while(messageState == PENDING) {}
+
+                    if(messageState == RECEIVED) { insertDevToLog(nodeAddress, database, LOG_DEVICE_REMOVED, "Device"); }
+                }
+
+                if(counter >= max) {
+                    counter = 0;
+                    sendUartClearInyectedNodes(uartPort, false, database);
+                    while(messageState == PENDING) {}
+                }
+            }
 
             database->deleteAllNodes();
 
@@ -197,6 +216,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 for (int j = 0; j < MAX_NODES_SUBNET; j++)
                     meshDevice[i][j].deleteDevice();
 
+            sendUartClearInyectedNodes(uartPort, false, database);
+            while(messageState == PENDING) {}
 
             sendConfirmEndRemoveAllNodes(webServer);
             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
