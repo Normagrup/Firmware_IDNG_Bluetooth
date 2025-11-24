@@ -563,7 +563,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         uint16_t nodeNetAddress = value.toUInt();
         if (nodeNetAddress < 0xC000) {
             uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-            sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, IDENTIFY_DEVICE, IS_TWICE);
+            //qDebug() << "RealAddress =" << QString::number(nodeAddress, 16);
+            sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
+            delay(SLEEP_DALI_TIME_MS);
+            sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, 0xF0, IS_TWICE);
         }
         else {
             sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, IDENTIFY_DEVICE, IS_TWICE);
