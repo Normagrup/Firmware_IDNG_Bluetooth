@@ -2278,6 +2278,11 @@ function identifyButton()
     sendData("SET_IDENTIFY", addressClicked);
 }
 
+function stopIdentifyButton()
+{
+    sendData("STOP_IDENTIFY", addressClicked);
+}
+
 function resetButton() 
 {
     sendData("SET_RESET", addressClicked);
