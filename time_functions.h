@@ -15,6 +15,8 @@
 #define WEBSERVER_SEND_TIME_MS          50
 #define ETH_SEND_TIME_MS                50
 #define LOG_DATA_TIME_MS                5000
+#define IDENTIFY_TIMER_MS               5000
+#define IDENTIFY_MAX_ITERATIONS         180   //15 minutos
 
 void delay(uint16_t deadTimeMs);
 

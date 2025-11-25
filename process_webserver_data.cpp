@@ -8,6 +8,21 @@
 #include "log.h"
 #include <QThread>
 
+void sendIdentify(UartPort* uartPort, uint16_t nodeNetAddress)
+{
+    if (nodeNetAddress < 0xC000) {
+        uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64]
+                                         [(nodeNetAddress - 1) % 64]
+                                             .getRealAddress();
+
+        sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
+        delay(SLEEP_DALI_TIME_MS);
+        sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, 0xF0, IS_TWICE);
+    } else {
+        sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, IDENTIFY_DEVICE, IS_TWICE);
+    }
+}
+
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database)
 {
     QStringList dataParts = data.split("@");
@@ -559,18 +574,28 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_SET_IDENTIFY) {
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-
         uint16_t nodeNetAddress = value.toUInt();
-        if (nodeNetAddress < 0xC000) {
-            uint16_t nodeAddress =  meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
-            //qDebug() << "RealAddress =" << QString::number(nodeAddress, 16);
-            sendUartDaliCommand(uartPort, nodeAddress, ENABLE_DEVICE_TYPE, 0x01, IS_NORMAL);
-            delay(SLEEP_DALI_TIME_MS);
-            sendUartDaliCommand(uartPort, nodeAddress, BROADCAST_ADDR, 0xF0, IS_TWICE);
+
+        // Si ya había un identify en marcha, lo paramos
+        if (identifyTimer.isActive()) {
+            identifyTimer.stop();
         }
-        else {
-            sendUartDaliCommand(uartPort, nodeNetAddress, BROADCAST_ADDR, IDENTIFY_DEVICE, IS_TWICE);
+
+        identifyNodeNetAddress = nodeNetAddress;
+        identifyIteration = 0;
+
+        sendIdentify(uartPort, identifyNodeNetAddress);
+
+        // timer para hacer bucles de 5 seg hasta 15 min
+        identifyTimer.start();
+
+    }
+    else if (type == WS_STOP_IDENTIFY) {
+        if (identifyTimer.isActive()) {
+            identifyTimer.stop();
         }
+        identifyNodeNetAddress = 0;
+        identifyIteration = 0;
     }
     else if (type == WS_SET_FACTORY_SETTINGS) {
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);

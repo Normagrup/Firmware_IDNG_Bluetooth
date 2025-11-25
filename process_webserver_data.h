@@ -65,6 +65,7 @@
 #define WS_SET_RESET                        "SET_RESET"
 #define WS_SET_ACTUAL_LVL                   "SET_ACTUAL_LVL"
 #define WS_SET_IDENTIFY                     "SET_IDENTIFY"
+#define WS_STOP_IDENTIFY                    "STOP_IDENTIFY"
 #define WS_SET_FACTORY_SETTINGS             "SET_FACTORY_SETTINGS"
 #define WS_SET_REBOOT                       "SET_REBOOT"
 #define WS_SET_FUNCTION_TEST                "SET_FUNCTION_TEST"
@@ -201,6 +202,7 @@ void sendConfirmEndReplace(WebServer* webServer);
 void sendWriteIDError(WebServer* webServer);
 void sendEstimatedTime(WebServer* webServer, uint16_t time);
 void sendInitAlert(WebServer* webServer);
+void sendIdentify(UartPort* uartPort, uint16_t nodeNetAddress);
 
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 

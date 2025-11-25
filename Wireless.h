@@ -39,6 +39,7 @@ private slots:
     void updateLogsByPollings(Device &device);
     void updateLogsByTests(uint8_t i, uint8_t code);
     void onTestButtonPressed();
+    void identifyTimerHandler();
 
 signals:
 

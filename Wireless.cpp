@@ -44,6 +44,10 @@ Wireless::Wireless(QObject *parent)
     answerFactoryProgramTimer.setSingleShot(true);
     connect(&testResultCheckTimer, SIGNAL(timeout()), this, SLOT(checkTestResultsHandler()));
     testResultCheckTimer.start(LOG_DATA_TIME_MS);
+    identifyTimer.setInterval(IDENTIFY_TIMER_MS);
+    identifyTimer.setSingleShot(false);
+    connect(&identifyTimer, &QTimer::timeout, this, &Wireless::identifyTimerHandler);
+
 }
 
 void Wireless::setEmbeddedIO(EmbeddedIO* io) {
@@ -579,4 +583,27 @@ void Wireless::answerFactoryProgramTimerHandler()
     factoryProgramSerial = "";
     isFactoryProgramOn = false;
     rcvAddressFactoryProgram = "";
+}
+
+void Wireless::identifyTimerHandler()
+{
+    // Parar si llegamos a tiempo máximo
+    if (identifyIteration >= IDENTIFY_MAX_ITERATIONS) {
+        qDebug() << "[IDENTIFY] Tiempo máximo alcanzado, deteniendo identify";
+        identifyTimer.stop();
+        return;
+    }
+
+    if (identifyNodeNetAddress == 0) {
+        identifyTimer.stop();
+        return;
+    }
+
+    qDebug() << "[IDENTIFY] Iteración" << identifyIteration
+             << "para nodeNetAddress=0x"
+             << QString::number(identifyNodeNetAddress, 16);
+
+    sendIdentify(_uartPort, identifyNodeNetAddress);
+
+    identifyIteration++;
 }

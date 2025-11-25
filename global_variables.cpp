@@ -32,6 +32,7 @@ QTimer replaceP3Timer;
 QTimer cleanCdbTimer;
 QTimer askInitDataFromMicroTimer;
 QTimer answerFactoryProgramTimer;
+QTimer identifyTimer;
 
 uint16_t lastNetAddressClicked = 0;
 ScannedUUID scannedUUID[20];
@@ -66,6 +67,8 @@ uint16_t discovered_nodes[2048] = {0};
 uint16_t discovered_nodes_count = -1;
 bool forceStopLS1;
 bool forceStopLS2;
+uint16_t identifyNodeNetAddress = 0;
+int identifyIteration = 0;
 
 QString reportType;
 QString startDate;

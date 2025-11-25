@@ -44,6 +44,8 @@ extern uint16_t numberOfIterations;
 extern uint16_t doneIterations;
 extern uint16_t netAddress;
 extern uint16_t currentNodeAddress;
+extern uint16_t identifyNodeNetAddress;
+extern int identifyIteration;
 
 extern QTimer pollingTimer;
 extern QTimer testResultCheckTimer;
@@ -58,6 +60,7 @@ extern QTimer replaceP3Timer; // para ejecutar la parte3 del replace
 extern QTimer cleanCdbTimer;
 extern QTimer askInitDataFromMicroTimer;
 extern QTimer answerFactoryProgramTimer;
+extern QTimer identifyTimer;
 
 extern bool forceStopCommissioning;
 extern bool isManualAddingDevice;
