@@ -80,6 +80,9 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
             delay(SLEEP_DALI_TIME_MS);
         }
 
+        int nodePos;
+        bool found = false;
+
         for(int i = 0; i < MAX_SUBNET; i++){
             for(int j = 0; j < MAX_NODES_SUBNET; j++) {
                 Device& device = meshDevice[i][j];
@@ -90,14 +93,19 @@ void sendDaliCommand(UartPort* _uartPort, uint8_t daliMessageType, uint8_t subne
                         device.setActualLvl(3);
                     else if (commandLow == OFF)
                         device.setActualLvl(0);
+
+                    nodePos = i * 64 + j + 1;
+                    found = true;
+                    break;
                 }
             }
+
+            if(found) { break; } // Evitar recorrer innecesariamente tras encontrar
         }
 
         sendUartDaliCommand(_uartPort, targetAddress, BROADCAST_ADDR, commandLow, commandType);
         if(commandLow == 227 || commandLow == 228 || commandLow == 229){
-            int btAddress = targetAddress;
-            logTestRequest(database, btAddress, false, logTestTypeHelper(commandLow));
+            logTestRequest(database, nodePos, false, logTestTypeHelper(commandLow));
         }
     }
 }
