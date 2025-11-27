@@ -179,9 +179,16 @@ QByteArray Pollings::getArrayQueryFailureStatus(uint8_t subnet)
     frame.append(this->getByteFailureStatusConfigured(subnet, 0));
 
     for (int i = (MAX_NODES_SUBNET - 1); i >= 0; i--){
-        if (meshDevice[subnet][i].getIsConfigured()) {
-            if (!meshDevice[subnet][i].getComunicationFailure()) { frame.append(meshDevice[subnet][i].getEmergencyFailureStatus()); }
-            else { frame.append(0x80); }
+        Device &device = meshDevice[subnet][i];
+        if (device.getIsConfigured()) {
+            if(device.hasCommunicationFailure()) { frame.append(0x80); }
+            else {
+            uint8_t failuresData = 0x00;
+            if(device.hasBatteryFailure()) { failuresData = failuresData | 0b00000100; }
+            if(device.hasBatteryDurationFailure()) { failuresData = failuresData | 0b00000010; }
+            if(device.hasLampFailure()) { failuresData = failuresData | 0b00001000; }
+            frame.append(failuresData);
+            }
         }
         else { frame.append((unsigned char)0x00); }
     }
