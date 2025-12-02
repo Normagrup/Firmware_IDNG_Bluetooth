@@ -107,7 +107,8 @@ function createSettingsButton()
 
     var settingsIPConfig = document.createElement('li');
     var settingsTime = document.createElement('li');
-    var settingsWirelessConfig = document.createElement('li');
+    var settingsIDAssignment = document.createElement('li');
+    var settingsNodesConfig = document.createElement('li');
     var settingsGroupsConfig = document.createElement('li');
     var settingsLogs = document.createElement('li');
     var settingsTests = document.createElement('li');
@@ -123,9 +124,13 @@ function createSettingsButton()
     settingsTimeLink.onclick = function() { loadPage('s_time.html') };
     settingsTimeLink.textContent = "Time";
 
-    var settingsWirelessConfigLink = document.createElement('a');
-    settingsWirelessConfigLink.onclick = function() { loadPage('s_wireless.html') };
-    settingsWirelessConfigLink.textContent = "Wireless Config";
+    var settingsIDAssignmentLink = document.createElement('a');
+    settingsIDAssignmentLink.onclick = function() { loadPage('s_assignment.html') };
+    settingsIDAssignmentLink.textContent = "ID Assignment";
+
+    var settingsNodesConfigLink = document.createElement('a');
+    settingsNodesConfigLink.onclick = function() { loadPage('s_nodes.html') };
+    settingsNodesConfigLink.textContent = "Nodes Config";
 
     var settingsGroupsConfigLink = document.createElement('a');
     settingsGroupsConfigLink.onclick = function() { loadPage('s_groups.html') };
@@ -153,7 +158,8 @@ function createSettingsButton()
 
     settingsIPConfig.appendChild(settingsIPConfigLink);
     settingsTime.appendChild(settingsTimeLink);
-    settingsWirelessConfig.appendChild(settingsWirelessConfigLink);
+    settingsIDAssignment.appendChild(settingsIDAssignmentLink);
+    settingsNodesConfig.appendChild(settingsNodesConfigLink);
     settingsGroupsConfig.appendChild(settingsGroupsConfigLink);
     settingsLogs.appendChild(settingsLogsLink);
     settingsTests.appendChild(settingsTestsLink);
@@ -163,7 +169,8 @@ function createSettingsButton()
 
     settingsButtonMenu.appendChild(settingsIPConfig);
     settingsButtonMenu.appendChild(settingsTime);
-    settingsButtonMenu.appendChild(settingsWirelessConfig);
+    settingsButtonMenu.appendChild(settingsIDAssignment);
+    settingsButtonMenu.appendChild(settingsNodesConfig);
     settingsButtonMenu.appendChild(settingsGroupsConfig);
     settingsButtonMenu.appendChild(settingsLogs);
     settingsButtonMenu.appendChild(settingsTests);
@@ -247,7 +254,7 @@ function selectDevice(device)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
 
-    // Botones de nodos en s_wireless.html
+    // Botones de nodos en s_nodes.html
     if(scannedDevicesList && networkNodesList) {
         var scannedDevices = scannedDevicesList.getElementsByTagName('li');
         var networkDevices = networkNodesList.getElementsByTagName('li');

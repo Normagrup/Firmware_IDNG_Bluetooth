@@ -29,44 +29,44 @@ function loadPageAfterAsk(page, answer)
 
 	if(answer === "FREE") { frame.src = page; }
 	else if(answer === "SCAN") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			confirmScan("", true);
 		}, 300);
 	}
 	else if(answer === "COMMISSION") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			processIsCommissionInProgress("");
 		}, 300);
 	}
 	else if(answer === "ADD_MANUAL") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			processIsAddingManualInProgress("");
 		}, 300);
 	}
 	else if(answer === "REPLACE") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			processIsReplacingInProgress("");
 		}, 300);
 	}
 	else if(answer === "DEL_DEV_BC") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			processDelAllDev("", true);
 			showToast(); // variable
 		}, 300);
 	}
 	else if(answer === "DEL_DEV") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			processDelOneDev("", true);
 		}, 300);
 	}
 	else if(answer === "SETTER_RELAY") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			processSetRelayInProgress("");
 			processEstimatedTime("0:0:5");
@@ -106,7 +106,7 @@ function loadPageAfterAsk(page, answer)
 		}, 300);
 	}
 	else if(answer === "SCAN_BY_NODE") {
-		frame.src = "s_wireless.html";
+		frame.src = "s_nodes.html";
 		setTimeout(function() {
 			confirmScan("", true);
 		}, 300);
