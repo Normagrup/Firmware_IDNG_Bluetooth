@@ -357,7 +357,9 @@ function addDeviceToNetworkList(value)
         var relayButton = iframeDocument.createElement('button');
         relayButton.textContent = "RELAY";
         relayButton.setAttribute('class', 'deviceRelayButton');
-        relayButton.style.backgroundColor = relayStatus ? "#4682b4" : "gray";
+        relayButton.style.backgroundColor = "#4682b4";
+        // ACTUALIZAR CUANDO EL RELAY MODE ESTE CORRECTAMENTE GUARDADO EN BBDD
+        //relayButton.style.backgroundColor = relayStatus ? "#4682b4" : "gray"; 
         relayButton.onclick = function(e) {
             e.stopPropagation();
 
