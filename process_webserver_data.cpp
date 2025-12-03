@@ -71,7 +71,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if (webServer != nullptr) { webServer->sendData(message); }
     }
-    else if (type == WS_SET_SCANNED_DEVICES) {
+    /*else if (type == WS_SET_SCANNED_DEVICES) {
         embeddedState = SCAN;
         cleanCdbTimer.stop();
         // confirmación de inicio en respuesta de UART
@@ -84,7 +84,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendConfirmEndScan(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
-    }
+    }*/
     else if (type == WS_SET_SCAN_FROM_NODE) {
         embeddedState = SCAN_BY_NODE;
         cleanCdbTimer.stop();
@@ -153,6 +153,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QStringList webServerParts = value.split(" ");
         setLocalDateTime(webServerParts);
     }
+    else if (type == WS_SET_SCANNED_DEVICES) {
+        QString serial = "4294967295"; //COGER NUM SERIE DEL WS
+        QString appKeyInst = "ABABABABABABABABABABABABABABABAB"; //COGER APPKEY DEL WS
+
+        sendUartInstallAppKey(uartPort, serial, appKeyInst);
+
+        webServer->sendData("CONFIRM_INSTALL_APPKEY@OK");
+    }
+
     else if (type == WS_SET_START_ACTION) {
         embeddedState = COMMISSION;
         cleanCdbTimer.stop();

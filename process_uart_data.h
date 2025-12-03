@@ -96,6 +96,7 @@
 #define CONFIRM_ACTION                  0x98
 #define CONFIRM_RESET_CDB               0x99
 #define MICRO_REBOOT                    0xAE
+#define SET_INSTALL_APPKEY              0x6B
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -146,4 +147,5 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartMicroReboot(UartPort* _uartPort);
+void sendUartInstallAppKey(UartPort* _uartPort, QString serial, QString appKeyHex);
 #endif // PROCESS_UART_DATA_H

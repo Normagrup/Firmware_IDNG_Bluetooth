@@ -58,6 +58,7 @@
 #define WS_STOP_LS                          "STOP_LS"
 #define WS_SET_MASTER_ADDR_AND_NETKEY       "SET_MASTER_ADDR_AND_NETKEY"
 #define WS_REPLACE_NODES                    "REPLACE_NODES"
+#define WS_SET_INSTALL_APPKEY               "SET_INSTALL_APPKEY"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
