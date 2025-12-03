@@ -118,6 +118,8 @@ public:
     uint16_t getUnassignedNodesCount();
     QStringList getUnassignedNodesPaged(uint16_t page);
 
+    bool doAutoAssignment();
+
 signals:
 
 private:

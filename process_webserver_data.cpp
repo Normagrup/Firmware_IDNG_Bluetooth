@@ -1026,18 +1026,23 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         addNodeForReplace(webServer, uartPort, database);
     }
     else if (type == WS_ADD_UNASSIGNED_NODE) {
-        database->addUnassignedNode(value);
+        if(database->addUnassignedNode(value))
+        {
+            uint16_t unassignedNodesCount = database->getUnassignedNodesCount();
+            uint16_t page;
 
-        uint16_t unassignedNodesCount = database->getUnassignedNodesCount();
-        uint16_t page;
+            if(unassignedNodesCount == 0) { page = 1; }
+            else { page = ((unassignedNodesCount - 1) / 16) + 1; }
 
-        if(unassignedNodesCount == 0) { page = 1; }
-        else { page = ((unassignedNodesCount - 1) / 16) + 1; }
-
-        sendUnassignedNodesPaged(webServer, database, page);
+            sendUnassignedNodesPaged(webServer, database, page);
+        }
     }
     else if (type == WS_GET_UNASSIGNED_NODES_PAGED) {
         sendUnassignedNodesPaged(webServer, database, value.toInt());
+    }
+    else if (type == WS_AUTOASSIGNMENT) {
+        if(database->doAutoAssignment())
+            sendUnassignedNodesPaged(webServer, database, value.toInt());
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {

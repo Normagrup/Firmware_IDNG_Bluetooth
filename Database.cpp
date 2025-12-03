@@ -1895,28 +1895,47 @@ bool Database::addUnassignedNode(QString serial)
 {
     QSqlQuery query;
 
-    query.prepare("SELECT * FROM UnassignedNodes WHERE Serial = :serial");
-    query.bindValue(":serial", serial);
+    QString s = serial;                 // "12.34.56.78"
+    s.remove(".");                      // "12345678"
+
+    // --- Comprobar si ya existe en Nodes ---
+    query.prepare("SELECT UUID FROM Nodes WHERE UUID LIKE :uuid");
+    query.bindValue(":uuid", "%" + s);
 
     if (!query.exec()) {
-        qDebug() << "Error ejecutando SELECT en addUnassignedNode:" << query.lastError().text();
+        qDebug() << "Error ejecutando SELECT en addUnassignedNode (I):" << query.lastError().text();
         return false;
     }
 
     if (query.next()) {
-        qDebug() << "Ya está registrado ese serial";
+        qDebug() << "Ya está registrado ese serial como nodo asignado";
         return false;
-    } else {
-        query.prepare("INSERT INTO UnassignedNodes (Serial) VALUES (:serial)");
-        query.bindValue(":serial", serial);
-
-        if (!query.exec()) {
-            qDebug() << "Error ejecutando INSERT en addUnassignedNode:" << query.lastError().text();
-            return false;
-        }
-
-        return true;
     }
+
+    // --- Comprobar si ya existe en UnassignedNodes ---
+    query.prepare("SELECT Serial FROM UnassignedNodes WHERE Serial = :serial");
+    query.bindValue(":serial", serial);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en addUnassignedNode (II):" << query.lastError().text();
+        return false;
+    }
+
+    if (query.next()) {
+        qDebug() << "Ya está registrado ese serial como nodo no asignado";
+        return false;
+    }
+
+    // --- Insertar ---
+    query.prepare("INSERT INTO UnassignedNodes (Serial) VALUES (:serial)");
+    query.bindValue(":serial", serial);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando INSERT en addUnassignedNode:" << query.lastError().text();
+        return false;
+    }
+
+    return true;
 }
 
 uint16_t Database::getUnassignedNodesCount()
@@ -1962,4 +1981,77 @@ QStringList Database::getUnassignedNodesPaged(uint16_t page)
     }
 
     return unassignedNodesPaged;
+}
+
+bool Database::doAutoAssignment()
+{
+    QSqlQuery q;
+
+    QVector<uint16_t> netAddresses;
+
+    // Obtener direcciones ocupadas
+    if (!q.exec("SELECT SubnetAddress, NodeSubnetAddress FROM Nodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    while (q.next()) {
+        int sub = q.value(0).toInt();
+        int node = q.value(1).toInt();
+        int net = sub * 64 + node + 1;
+        netAddresses.append(net);
+    }
+
+    std::sort(netAddresses.begin(), netAddresses.end());
+
+    // Conteo de nodos sin asignar
+    if (!q.exec("SELECT count(*) FROM UnassignedNodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    int nodesForAddressing = 0;
+    if (q.next()) { nodesForAddressing = q.value(0).toInt(); }
+
+    if(nodesForAddressing == 0) { return true; }
+
+    // Encontrar direcciones libres
+    QVector<uint16_t> freeNetAddresses;
+    int buscado = 1;
+    int idx = 0;
+
+    while (freeNetAddresses.size() < nodesForAddressing) {
+        if (idx < netAddresses.size() && netAddresses[idx] == buscado) {
+            idx++;
+        } else {
+            freeNetAddresses.append(buscado);
+        }
+        buscado++;
+    }
+
+    // Obtener seriales en orden
+    QVector<QString> seriales;
+
+    if (!q.exec("SELECT Serial FROM UnassignedNodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    while (q.next())
+        seriales.append(q.value(0).toString());
+
+    // Reescribir todas las NetAddress
+    q.prepare("UPDATE UnassignedNodes SET NetAddress = :na WHERE Serial = :serial");
+
+    for (int i = 0; i < seriales.size(); i++) {
+        q.bindValue(":na", freeNetAddresses[i]);
+        q.bindValue(":serial", seriales[i]);
+
+        if (!q.exec()) {
+            qDebug() << q.lastError().text();
+            return false;
+        }
+    }
+
+    return true;
 }

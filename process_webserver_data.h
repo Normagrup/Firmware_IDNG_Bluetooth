@@ -60,6 +60,7 @@
 #define WS_REPLACE_NODES                    "REPLACE_NODES"
 #define WS_ADD_UNASSIGNED_NODE              "ADD_UNASSIGNED_NODE"
 #define WS_GET_UNASSIGNED_NODES_PAGED       "GET_UNASSIGNED_NODES_PAGED"
+#define WS_AUTOASSIGNMENT                   "AUTOASSIGNMENT"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
