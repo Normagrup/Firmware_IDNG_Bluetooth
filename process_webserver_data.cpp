@@ -1025,6 +1025,20 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         addNodeForReplace(webServer, uartPort, database);
     }
+    else if (type == WS_ADD_UNASSIGNED_NODE) {
+        database->addUnassignedNode(value);
+
+        uint16_t unassignedNodesCount = database->getUnassignedNodesCount();
+        uint16_t page;
+
+        if(unassignedNodesCount == 0) { page = 1; }
+        else { page = ((unassignedNodesCount - 1) / 16) + 1; }
+
+        sendUnassignedNodesPaged(webServer, database, page);
+    }
+    else if (type == WS_GET_UNASSIGNED_NODES_PAGED) {
+        sendUnassignedNodesPaged(webServer, database, value.toInt());
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -1988,4 +2002,13 @@ void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer)
     }
 
     // start del cleanCdbTimer en la respuesta al finalizar el escaneo
+}
+
+void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t page)
+{
+    QString unassignedNodes = database->getUnassignedNodesPaged(page).join("#");
+
+    QString message = QString(WS_SEND_UNASSIGNED_NODES) + "@" + QString::number(page) + "=" + unassignedNodes;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }

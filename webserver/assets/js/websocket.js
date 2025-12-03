@@ -1850,6 +1850,40 @@ function processInitAlert(value)
     alert("Ha ocurrido un error durante el arranque, se reintentará automáticamente. Puede desenchufar y enchufar la antena para forzar el reinicio.");
 }
 
+function processUnassignedNodes(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var totalContent = value.split("=");
+    var page = totalContent[0];
+    var content = totalContent[1];
+
+    var unassignedNodes = content.split("#");
+
+    for(var i = 0; i < unassignedNodes.length; i++) {
+        var parts = unassignedNodes[i].split("_");
+        var serialNumber = parts[0];
+        var netAddress = parts[1];
+        var bluetoothAddress = parts[2];
+        var appKey = parts[3];
+
+        // Actualizar fila en la tabla
+        var tableSerialNumber = iframeDocument.getElementById("sn" + i);
+        var tableNetAddress = iframeDocument.getElementById("na" + i);
+        var tableBluetoothAddress = iframeDocument.getElementById("ba" + i);
+        var tableAppKey = iframeDocument.getElementById("ak" + i);
+
+        tableSerialNumber.textContent = serialNumber;
+        tableNetAddress.textContent = netAddress;
+        tableBluetoothAddress = bluetoothAddress;
+        tableAppKey = appKey;
+    }
+
+    var pageLabel = iframeDocument.getElementById("page");
+    pageLabel.textContent = "Page: " + page;
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1914,6 +1948,7 @@ function processReceivedData(data)
     else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
     else if (type == "ESTIMATED_TIME") { processEstimatedTime(value); }
     else if (type == "INIT_ALERT") { processInitAlert(value); }
+    else if (type == "UNASSIGNED_NODES") { processUnassignedNodes(value); }
 }
 
 function sendData(type, value) 
@@ -3008,4 +3043,83 @@ function loadFactoryNetKey()
             window.location.href = "http://" + window.location.hostname;
         }, 100);
     }
+}
+
+function addUnassignedNode()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var serialNumber = iframeDocument.getElementById("serialNumberInput").value.toUpperCase().trim();
+    const regex = /[0-9A-F]{2}(?:\.[0-9A-F]{2}){3}/;
+
+    const found = serialNumber.match(regex);
+
+    if(found) {
+        const serial = found[0];
+        sendData("ADD_UNASSIGNED_NODE", serial);
+        iframeDocument.getElementById("serialNumberInput").value = "";
+    }
+}
+
+function prevUnassigned() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var pageLabel = iframeDocument.getElementById("page");
+    
+    if(pageLabel.textContent.trim() === "Page: 1") { return; } // Si es la primera página
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+    currentPage--;
+    pageLabel.textContent = "Page: " + currentPage;
+
+    sendData("GET_UNASSIGNED_NODES_PAGED", currentPage);
+}
+
+function nextUnassigned() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var pageLabel = iframeDocument.getElementById("page");
+    var tableSerialNumberLast = iframeDocument.getElementById("sn15");
+
+    if(tableSerialNumberLast.textContent.trim() === "-") { return; } // Si es la última página
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+    currentPage++;
+    pageLabel.textContent = "Page: " + currentPage;
+
+    sendData("GET_UNASSIGNED_NODES_PAGED", currentPage);
+}
+
+function loadUnassignedNodesFromFile()
+{
+    const inputFile = document.createElement("input");
+    inputFile.type = "file";
+    inputFile.accept = ".txt";
+
+    inputFile.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const contenido = reader.result.split(/\r?\n/);
+            const regex = /[0-9A-F]{2}(?:\.[0-9A-F]{2}){3}/i;
+
+            for (const linea of contenido) {
+                const m = linea.toUpperCase().match(regex);
+                if (m)
+                    sendData("ADD_UNASSIGNED_NODE", m[0]);
+            }
+        };
+
+        reader.readAsText(file);
+    };
+
+    inputFile.click();
 }

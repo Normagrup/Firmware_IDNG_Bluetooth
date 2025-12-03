@@ -135,9 +135,9 @@
                 </tbody>
             </table>
             <div class="pagination-container">
-                <button id="prevPage" onclick="parent"> &#8592; </button>
+                <button id="prevPage" onclick="parent.prevUnassigned()"> &#8592; </button>
                 <label id="page"> Page: 1 </label>
-                <button id="nextPage" onclick="parent"> &#8594; </button>
+                <button id="nextPage" onclick="parent.nextUnassigned()"> &#8594; </button>
             </div>
         </div>
 
@@ -145,17 +145,29 @@
             <h2>Manage IDs</h2>
             <div class="assignment-container">
                 <label>Serial Number</label>
-                <input type="text" placeholder="00.00.00.00"/>
-                <button onclick="parent">Add</button>
-                <button onclick="parent">Load from file</button>
+                <input id="serialNumberInput" type="text" placeholder="00.00.00.00" autocomplete="off"/>
+                <button onclick="parent.addUnassignedNode()">Add</button>
+                <button onclick="parent.loadUnassignedNodesFromFile()">Load from file</button>
 
                 <br><br><br><br>
 
-                <button onclick="parent">Auto Assignment</button>
-                <button onclick="parent">Apply</button>
+                <button onclick="parent" style="background-color: gray;">Auto Assignment</button>
+                <button onclick="parent" style="background-color: gray;">Apply</button>
             </div>
         </div>
     </div>
 </body>
+
+<script>
+    function getUnassignedNodesPaged() {
+		setTimeout(function() {
+			parent.sendData("GET_UNASSIGNED_NODES_PAGED", "1");
+		}, 10);
+	}
+	
+	window.onload = function() {
+        getUnassignedNodesPaged();
+    };
+</script>
 
 </html>
