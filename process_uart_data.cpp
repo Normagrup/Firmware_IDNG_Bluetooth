@@ -1942,11 +1942,11 @@ void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)
     _uartPort->sendData(frame);
 }
 
-void sendUartInstallAppKey(UartPort* _uartPort, QString serial, QString appKeyHex)
+void sendUartInstallAppKey(UartPort* _uartPort, QString serial, QString appKeyHex, uint16_t bleID)
 {
     QByteArray frame;
 
-    unsigned char length = 3 + 16 + 4;
+    unsigned char length = 3 + 16 + 4 + 2;
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -1964,6 +1964,9 @@ void sendUartInstallAppKey(UartPort* _uartPort, QString serial, QString appKeyHe
         frame.append(static_cast<uint8_t>(byteString.toUInt(nullptr, 16)));
     }
 
+    frame.append((uint8_t)((bleID >> 8) & 0xFF));
+    frame.append((uint8_t)(bleID & 0xFF));
+
     frame.append(UART_END);
 
     QString dbg;
@@ -1972,7 +1975,8 @@ void sendUartInstallAppKey(UartPort* _uartPort, QString serial, QString appKeyHe
 
     qDebug().noquote() << "SEND INSTALL APPKEY FRAME:" << dbg;
     qDebug().noquote() << "Serial:" << serial
-                       << "| AppKey:" << appKeyHex;
+                       << "| AppKey:" << appKeyHex
+                       << "| BLE_ID:" << bleID;
 
     _uartPort->sendData(frame);
 }

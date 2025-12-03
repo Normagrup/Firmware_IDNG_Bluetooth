@@ -156,12 +156,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_SCANNED_DEVICES) {
         QString serial = "4294967295"; //COGER NUM SERIE DEL WS
         QString appKeyInst = "ABABABABABABABABABABABABABABABAB"; //COGER APPKEY DEL WS
-
-        sendUartInstallAppKey(uartPort, serial, appKeyInst);
+        uint16_t bleID = 0x1234; //coger BLEID DEL WS
+        sendUartInstallAppKey(uartPort, serial, appKeyInst, bleID);
 
         webServer->sendData("CONFIRM_INSTALL_APPKEY@OK");
     }
-
     else if (type == WS_SET_START_ACTION) {
         embeddedState = COMMISSION;
         cleanCdbTimer.stop();
