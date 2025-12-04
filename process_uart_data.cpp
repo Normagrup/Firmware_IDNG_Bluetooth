@@ -283,7 +283,11 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
-
+                    case NODE_DEVTYPE:
+                    {
+                        //GUARDAR INFO EN BBDD EN FUNCION SERIAL Y BLEID
+                    }
+                    break;
                     case CONFIRM_END_REMOVE_ONE_NODE:
                     {
                         messageState = RECEIVED;
