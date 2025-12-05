@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
     wirelessNet->setEmbeddedIO(&io);
     wirelessNet->runNetwork();
 
-    qDebug() << "READY";
     io.markReady();
 
     // 1) Se inicializa y el hilo principal responde cada 2 s

@@ -121,7 +121,8 @@ enum EmbeddedState {
     SYNC_POL,
     SCAN_BY_NODE,
     LINE_SCAN,
-    RECOVERING_MICRO
+    RECOVERING_MICRO,
+    APPLY_AUTOASSIGNMENT
 };
 
 extern EmbeddedState embeddedState;

@@ -119,6 +119,7 @@ public:
     QStringList getUnassignedNodesPaged(uint16_t page);
 
     bool doAutoAssignment();
+    bool allNodesHaveAutoAssignment();
 
 signals:
 

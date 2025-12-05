@@ -1044,6 +1044,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         if(database->doAutoAssignment())
             sendUnassignedNodesPaged(webServer, database, value.toInt());
     }
+    else if (type == WS_APPLY_AUTOASSIGNMENT) {
+        applyAutoAssignment(webServer, database);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -2014,6 +2017,35 @@ void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t
     QString unassignedNodes = database->getUnassignedNodesPaged(page).join("#");
 
     QString message = QString(WS_SEND_UNASSIGNED_NODES) + "@" + QString::number(page) + "=" + unassignedNodes;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void applyAutoAssignment(WebServer* webServer, Database* database)
+{
+    if(!database->allNodesHaveAutoAssignment()) { return; }
+
+    embeddedState = APPLY_AUTOASSIGNMENT;
+    cleanCdbTimer.stop();
+    sendConfirmStartApplyAutoAssignment(webServer);
+
+    delay(5000);
+
+    sendConfirmEndApplyAutoAssignment(webServer);
+    cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+    embeddedState = FREE;
+}
+
+void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_START_APPLY_ASSIGN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

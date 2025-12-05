@@ -2013,9 +2013,9 @@ bool Database::doAutoAssignment()
     int nodesForAddressing = 0;
     if (q.next()) { nodesForAddressing = q.value(0).toInt(); }
 
-    if(nodesForAddressing == 0) { return true; }
+    if(nodesForAddressing == 0) { return false; }
 
-    // Encontrar direcciones libres
+    // Encontrar direcciones libres (Net Address)
     QVector<uint16_t> freeNetAddresses;
     int buscado = 1;
     int idx = 0;
@@ -2029,6 +2029,13 @@ bool Database::doAutoAssignment()
         buscado++;
     }
 
+    // Encontrar la primera dirección a usar (Bluetooth Address)
+    uint16_t nextUnicastAddress = getNextUnicastAddress() + 1;
+
+    // Encontrar la appkey
+    QString appKey = getNetKey();
+    appKey = appKey.size() == 32 ? "16" : appKey;
+
     // Obtener seriales en orden
     QVector<QString> seriales;
 
@@ -2041,17 +2048,41 @@ bool Database::doAutoAssignment()
         seriales.append(q.value(0).toString());
 
     // Reescribir todas las NetAddress
-    q.prepare("UPDATE UnassignedNodes SET NetAddress = :na WHERE Serial = :serial");
+    q.prepare("UPDATE UnassignedNodes SET NetAddress = :na, BluetoothAddress = :ba, AppKey = :ak WHERE Serial = :serial");
 
     for (int i = 0; i < seriales.size(); i++) {
         q.bindValue(":na", freeNetAddresses[i]);
+        q.bindValue(":ba", nextUnicastAddress);
+        q.bindValue(":ak", appKey);
         q.bindValue(":serial", seriales[i]);
 
         if (!q.exec()) {
             qDebug() << q.lastError().text();
             return false;
+        } else {
+            nextUnicastAddress++;
         }
     }
 
     return true;
+}
+
+bool Database::allNodesHaveAutoAssignment()
+{
+    QSqlQuery q;
+
+    // Conteo de nodos sin asignar
+    if (!q.exec("SELECT count(*) FROM UnassignedNodes WHERE "
+            "NetAddress IS NULL OR NetAddress = '' "
+            "OR BluetoothAddress IS NULL OR BluetoothAddress = '' "
+            "OR AppKey IS NULL OR AppKey = ''")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    int missing = 0;
+    if (q.next())
+        missing = q.value(0).toInt();
+
+    return (missing == 0);
 }

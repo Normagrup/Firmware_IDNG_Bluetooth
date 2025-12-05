@@ -1876,12 +1876,32 @@ function processUnassignedNodes(value)
 
         tableSerialNumber.textContent = serialNumber;
         tableNetAddress.textContent = netAddress;
-        tableBluetoothAddress = bluetoothAddress;
-        tableAppKey = appKey;
+        tableBluetoothAddress.textContent = bluetoothAddress;
+        tableAppKey.textContent = appKey;
     }
 
     var pageLabel = iframeDocument.getElementById("page");
     pageLabel.textContent = "Page: " + page;
+}
+
+function processApplyAssign(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popup");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    if (init) 
+    {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+    else 
+    {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }
 }
 
 function processReceivedData(data) 
@@ -1949,6 +1969,8 @@ function processReceivedData(data)
     else if (type == "ESTIMATED_TIME") { processEstimatedTime(value); }
     else if (type == "INIT_ALERT") { processInitAlert(value); }
     else if (type == "UNASSIGNED_NODES") { processUnassignedNodes(value); }
+    else if (type == "START_APPLY_ASSIGN") { processApplyAssign(value, true); }
+    else if (type == "END_APPLY_ASSIGN") { processApplyAssign(value, false); }
 }
 
 function sendData(type, value) 
@@ -3135,4 +3157,9 @@ function autoAssignment()
     var currentPage = parseInt(currentPageStr, 10);
 
     sendData("AUTOASSIGNMENT", currentPage);
+}
+
+function applyAutoAssignment()
+{
+    sendData("APPLY_AUTOASSIGNMENT", "");
 }
