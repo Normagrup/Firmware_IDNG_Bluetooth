@@ -117,6 +117,13 @@ function loadPageAfterAsk(page, answer)
 			processIsLSInProgress("");
 		}, 300);
 	}
+	else if(answer === "APPLY_AUTOASSIGNMENT") {
+		frame.src = "s_assignment.html";
+		setTimeout(function() {
+			processApplyAssign("", true);
+		}, 300);
+	}
+
 
 	requestDateTime();
 }

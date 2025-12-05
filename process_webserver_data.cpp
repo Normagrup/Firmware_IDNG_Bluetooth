@@ -65,6 +65,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             case SYNC_POL: st = "SYNC_POL"; break;
             case SCAN_BY_NODE: st = "SCAN_BY_NODE"; break;
             case LINE_SCAN: st = "LINE_SCAN"; break;
+            case APPLY_AUTOASSIGNMENT: st = "APPLY_AUTOASSIGNMENT"; break;
         }
 
         QString message = QString(WS_ASK_STATE_TO_EMBEDDED) + "@" + value + "#" + st;
@@ -2029,11 +2030,15 @@ void applyAutoAssignment(WebServer* webServer, Database* database)
     cleanCdbTimer.stop();
     sendConfirmStartApplyAutoAssignment(webServer);
 
-    delay(5000);
+    // TODO I: código que recorre los nodos y manda los comandos UART de asignación de direcciones
 
-    sendConfirmEndApplyAutoAssignment(webServer);
-    cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-    embeddedState = FREE;
+    // TODO II: implementar un mensaje desde el micro que lo mande cuando haya terminado todas las asignaciones, para ejecutar lo de abajo
+    // confirmación en la respuesta al finalizar el apply // sendConfirmEndApplyAutoAssignment(webServer);
+    // start del cleanCdbTimer en la respuesta al finalizar el apply // cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+    // actualización del embeddedState en la respuesta al finalizar el apply // embeddedState = FREE;
+
+    // TODO III: Tener en cuenta vaciar la tabla de autoasignaciones cuando se hace un commission (solo las 3 ultimas columnas, dejar los seriales)
+    // TODO IV: Al acabar la autoasignación, vaciar la tabla de autoasignaciones completa y actualizar nextUnicastAddress en la tabla General con la ultima dirección del apply
 }
 
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
