@@ -1540,7 +1540,7 @@ void sendPollingFrame(UartPort* _uartPort, uint16_t nodeAddress)
     frame.append(nodeAddress & 0xFF);
     frame.append(UART_END);
 
-    qDebug() << "ENVIANDO POLLING " << nodeAddress;
+    //qDebug() << "ENVIANDO POLLING " << nodeAddress;
 
     _uartPort->sendData(frame);
 }

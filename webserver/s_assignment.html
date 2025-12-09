@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_assignment.css">
+</head>
+
+<body>
+    <div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popup">
+        <h2> Applying IDs to the nodes... </h2>
+        <br>
+        <div class="loader"></div>
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-table-container">
+            <div class="title-container">
+                <h2>ID Assignment</h2>
+            </div>
+
+            <table id="idAssignmentTable">
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>Net Address</th>
+                        <th>Bluetooth Address</th>
+                        <th>AppKey</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="sn0">-</td>
+                        <td id="na0">-</td>
+                        <td id="ba0">-</td>
+                        <td id="ak0">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn1">-</td>
+                        <td id="na1">-</td>
+                        <td id="ba1">-</td>
+                        <td id="ak1">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn2">-</td>
+                        <td id="na2">-</td>
+                        <td id="ba2">-</td>
+                        <td id="ak2">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn3">-</td>
+                        <td id="na3">-</td>
+                        <td id="ba3">-</td>
+                        <td id="ak3">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn4">-</td>
+                        <td id="na4">-</td>
+                        <td id="ba4">-</td>
+                        <td id="ak4">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn5">-</td>
+                        <td id="na5">-</td>
+                        <td id="ba5">-</td>
+                        <td id="ak5">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn6">-</td>
+                        <td id="na6">-</td>
+                        <td id="ba6">-</td>
+                        <td id="ak6">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn7">-</td>
+                        <td id="na7">-</td>
+                        <td id="ba7">-</td>
+                        <td id="ak7">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn8">-</td>
+                        <td id="na8">-</td>
+                        <td id="ba8">-</td>
+                        <td id="ak8">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn9">-</td>
+                        <td id="na9">-</td>
+                        <td id="ba9">-</td>
+                        <td id="ak9">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn10">-</td>
+                        <td id="na10">-</td>
+                        <td id="ba10">-</td>
+                        <td id="ak10">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn11">-</td>
+                        <td id="na11">-</td>
+                        <td id="ba11">-</td>
+                        <td id="ak11">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn12">-</td>
+                        <td id="na12">-</td>
+                        <td id="ba12">-</td>
+                        <td id="ak12">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn13">-</td>
+                        <td id="na13">-</td>
+                        <td id="ba13">-</td>
+                        <td id="ak13">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn14">-</td>
+                        <td id="na14">-</td>
+                        <td id="ba14">-</td>
+                        <td id="ak14">-</td>
+                    </tr>
+                    <tr>
+                        <td id="sn15">-</td>
+                        <td id="na15">-</td>
+                        <td id="ba15">-</td>
+                        <td id="ak15">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination-container">
+                <button id="prevPage" onclick="parent.prevUnassigned()"> &#8592; </button>
+                <label id="page"> Page: 1 </label>
+                <button id="nextPage" onclick="parent.nextUnassigned()"> &#8594; </button>
+            </div>
+        </div>
+
+        <div class="wrap-assignment-container">
+            <h2>Manage IDs</h2>
+            <div class="assignment-container">
+                <label>Serial Number</label>
+                <input id="serialNumberInput" type="text" placeholder="00.00.00.00" autocomplete="off"/>
+                <button onclick="parent.addUnassignedNode()">Add</button>
+                <button onclick="parent.loadUnassignedNodesFromFile()">Load from file</button>
+
+                <br><br><br><br>
+
+                <button onclick="parent.autoAssignment()">Auto Assignment</button>
+                <button onclick="parent.applyAutoAssignment()">Apply</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    function getUnassignedNodesPaged() {
+		setTimeout(function() {
+			parent.sendData("GET_UNASSIGNED_NODES_PAGED", "1");
+		}, 10);
+	}
+	
+	window.onload = function() {
+        getUnassignedNodesPaged();
+    };
+</script>
+
+</html>

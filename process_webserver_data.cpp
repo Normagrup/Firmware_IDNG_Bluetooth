@@ -65,6 +65,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             case SYNC_POL: st = "SYNC_POL"; break;
             case SCAN_BY_NODE: st = "SCAN_BY_NODE"; break;
             case LINE_SCAN: st = "LINE_SCAN"; break;
+            case APPLY_AUTOASSIGNMENT: st = "APPLY_AUTOASSIGNMENT"; break;
         }
 
         QString message = QString(WS_ASK_STATE_TO_EMBEDDED) + "@" + value + "#" + st;
@@ -1033,6 +1034,28 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         addNodeForReplace(webServer, uartPort, database);
     }
+    else if (type == WS_ADD_UNASSIGNED_NODE) {
+        if(database->addUnassignedNode(value))
+        {
+            uint16_t unassignedNodesCount = database->getUnassignedNodesCount();
+            uint16_t page;
+
+            if(unassignedNodesCount == 0) { page = 1; }
+            else { page = ((unassignedNodesCount - 1) / 16) + 1; }
+
+            sendUnassignedNodesPaged(webServer, database, page);
+        }
+    }
+    else if (type == WS_GET_UNASSIGNED_NODES_PAGED) {
+        sendUnassignedNodesPaged(webServer, database, value.toInt());
+    }
+    else if (type == WS_AUTOASSIGNMENT) {
+        if(database->doAutoAssignment())
+            sendUnassignedNodesPaged(webServer, database, value.toInt());
+    }
+    else if (type == WS_APPLY_AUTOASSIGNMENT) {
+        applyAutoAssignment(webServer, database);
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -1996,4 +2019,46 @@ void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer)
     }
 
     // start del cleanCdbTimer en la respuesta al finalizar el escaneo
+}
+
+void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t page)
+{
+    QString unassignedNodes = database->getUnassignedNodesPaged(page).join("#");
+
+    QString message = QString(WS_SEND_UNASSIGNED_NODES) + "@" + QString::number(page) + "=" + unassignedNodes;
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void applyAutoAssignment(WebServer* webServer, Database* database)
+{
+    if(!database->allNodesHaveAutoAssignment()) { return; }
+
+    embeddedState = APPLY_AUTOASSIGNMENT;
+    cleanCdbTimer.stop();
+    sendConfirmStartApplyAutoAssignment(webServer);
+
+    // TODO I: código que recorre los nodos y manda los comandos UART de asignación de direcciones
+
+    // TODO II: implementar un mensaje desde el micro que lo mande cuando haya terminado todas las asignaciones, para ejecutar lo de abajo
+    // confirmación en la respuesta al finalizar el apply // sendConfirmEndApplyAutoAssignment(webServer);
+    // start del cleanCdbTimer en la respuesta al finalizar el apply // cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+    // actualización del embeddedState en la respuesta al finalizar el apply // embeddedState = FREE;
+
+    // TODO III: Tener en cuenta vaciar la tabla de autoasignaciones cuando se hace un commission (solo las 3 ultimas columnas, dejar los seriales)
+    // TODO IV: Al acabar la autoasignación, vaciar la tabla de autoasignaciones completa y actualizar nextUnicastAddress en la tabla General con la ultima dirección del apply
+}
+
+void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_START_APPLY_ASSIGN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
 }

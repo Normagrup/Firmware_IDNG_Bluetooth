@@ -49,6 +49,19 @@ void Database::initDatabase()
 
     /* **************************************************
      *                                                  *
+     *                UNASSIGNED NODES                  *
+     *                                                  *
+     * **************************************************/
+    query.exec("CREATE TABLE IF NOT EXISTS UnassignedNodes "
+               "(Serial	TEXT, "
+               "NetAddress INTEGER, "
+               "BluetoothAddress INTEGER, "
+               "AppKey TEXT);");
+
+
+
+    /* **************************************************
+     *                                                  *
      *                      USERS                       *
      *                                                  *
      * **************************************************/
@@ -1876,4 +1889,200 @@ QList<uint16_t> Database::getAddressesDescForGlobalRemove() {
     }
 
     return addresses;
+}
+
+bool Database::addUnassignedNode(QString serial)
+{
+    QSqlQuery query;
+
+    QString s = serial;                 // "12.34.56.78"
+    s.remove(".");                      // "12345678"
+
+    // --- Comprobar si ya existe en Nodes ---
+    query.prepare("SELECT UUID FROM Nodes WHERE UUID LIKE :uuid");
+    query.bindValue(":uuid", "%" + s);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en addUnassignedNode (I):" << query.lastError().text();
+        return false;
+    }
+
+    if (query.next()) {
+        qDebug() << "Ya está registrado ese serial como nodo asignado";
+        return false;
+    }
+
+    // --- Comprobar si ya existe en UnassignedNodes ---
+    query.prepare("SELECT Serial FROM UnassignedNodes WHERE Serial = :serial");
+    query.bindValue(":serial", serial);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en addUnassignedNode (II):" << query.lastError().text();
+        return false;
+    }
+
+    if (query.next()) {
+        qDebug() << "Ya está registrado ese serial como nodo no asignado";
+        return false;
+    }
+
+    // --- Insertar ---
+    query.prepare("INSERT INTO UnassignedNodes (Serial) VALUES (:serial)");
+    query.bindValue(":serial", serial);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando INSERT en addUnassignedNode:" << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+uint16_t Database::getUnassignedNodesCount()
+{
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM UnassignedNodes");
+
+    if (!query.exec()) {
+        qDebug() << "Error executing SELECT query in getUnassignedNodesCount:" << query.lastError().text();
+        return 0;
+    }
+
+    int count = 0;
+    if (query.next()) { count = query.value(0).toInt(); }
+
+    return count;
+}
+
+QStringList Database::getUnassignedNodesPaged(uint16_t page)
+{
+    if(page < 1) { return QStringList{}; }
+
+    QSqlQuery query;
+
+    QStringList unassignedNodesGeneral;
+    QStringList unassignedNodesPaged;
+
+    if (!query.exec("SELECT * FROM UnassignedNodes")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        QString netAddress = query.value("NetAddress").toString();
+        QString bluetoothAddress = query.value("BluetoothAddress").toString();
+        QString appKey = query.value("AppKey").toString();
+        unassignedNodesGeneral.append(query.value("Serial").toString() + "_" + (netAddress == "" ? "-" : netAddress) + "_" + (bluetoothAddress == "" ? "-" : bluetoothAddress) + "_" + (appKey == "" ? "-" : appKey));
+    }
+
+    for(int i = page * 16 - 16; i < page * 16; i++) {
+        if(i < unassignedNodesGeneral.size()) {
+            unassignedNodesPaged.append(unassignedNodesGeneral[i]);
+        } else {
+            unassignedNodesPaged.append("-_-_-_-"); // empty entry
+        }
+    }
+
+    return unassignedNodesPaged;
+}
+
+bool Database::doAutoAssignment()
+{
+    QSqlQuery q;
+
+    QVector<uint16_t> netAddresses;
+
+    // Obtener direcciones ocupadas
+    if (!q.exec("SELECT SubnetAddress, NodeSubnetAddress FROM Nodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    while (q.next()) {
+        int sub = q.value(0).toInt();
+        int node = q.value(1).toInt();
+        int net = sub * 64 + node + 1;
+        netAddresses.append(net);
+    }
+
+    std::sort(netAddresses.begin(), netAddresses.end());
+
+    // Conteo de nodos sin asignar
+    if (!q.exec("SELECT count(*) FROM UnassignedNodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    int nodesForAddressing = 0;
+    if (q.next()) { nodesForAddressing = q.value(0).toInt(); }
+
+    if(nodesForAddressing == 0) { return false; }
+
+    // Encontrar direcciones libres (Net Address)
+    QVector<uint16_t> freeNetAddresses;
+    int buscado = 1;
+    int idx = 0;
+
+    while (freeNetAddresses.size() < nodesForAddressing) {
+        if (idx < netAddresses.size() && netAddresses[idx] == buscado) {
+            idx++;
+        } else {
+            freeNetAddresses.append(buscado);
+        }
+        buscado++;
+    }
+
+    // Encontrar la primera dirección a usar (Bluetooth Address)
+    uint16_t nextUnicastAddress = getNextUnicastAddress() + 1;
+
+    // Encontrar la appkey
+    QString appKey = getNetKey();
+    appKey = appKey.size() == 32 ? "16" : appKey;
+
+    // Obtener seriales en orden
+    QVector<QString> seriales;
+
+    if (!q.exec("SELECT Serial FROM UnassignedNodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    while (q.next())
+        seriales.append(q.value(0).toString());
+
+    // Reescribir todas las NetAddress
+    q.prepare("UPDATE UnassignedNodes SET NetAddress = :na, BluetoothAddress = :ba, AppKey = :ak WHERE Serial = :serial");
+
+    for (int i = 0; i < seriales.size(); i++) {
+        q.bindValue(":na", freeNetAddresses[i]);
+        q.bindValue(":ba", nextUnicastAddress);
+        q.bindValue(":ak", appKey);
+        q.bindValue(":serial", seriales[i]);
+
+        if (!q.exec()) {
+            qDebug() << q.lastError().text();
+            return false;
+        } else {
+            nextUnicastAddress++;
+        }
+    }
+
+    return true;
+}
+
+bool Database::allNodesHaveAutoAssignment()
+{
+    QSqlQuery q;
+
+    // Conteo de nodos sin asignar
+    if (!q.exec("SELECT count(*) FROM UnassignedNodes WHERE "
+            "NetAddress IS NULL OR NetAddress = '' "
+            "OR BluetoothAddress IS NULL OR BluetoothAddress = '' "
+            "OR AppKey IS NULL OR AppKey = ''")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    int missing = 0;
+    if (q.next())
+        missing = q.value(0).toInt();
+
+    return (missing == 0);
 }

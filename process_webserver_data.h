@@ -59,6 +59,10 @@
 #define WS_SET_MASTER_ADDR_AND_NETKEY       "SET_MASTER_ADDR_AND_NETKEY"
 #define WS_REPLACE_NODES                    "REPLACE_NODES"
 #define WS_SET_INSTALL_APPKEY               "SET_INSTALL_APPKEY"
+#define WS_ADD_UNASSIGNED_NODE              "ADD_UNASSIGNED_NODE"
+#define WS_GET_UNASSIGNED_NODES_PAGED       "GET_UNASSIGNED_NODES_PAGED"
+#define WS_AUTOASSIGNMENT                   "AUTOASSIGNMENT"
+#define WS_APPLY_AUTOASSIGNMENT             "APPLY_AUTOASSIGNMENT"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -130,6 +134,9 @@
 #define WS_SEND_WRITE_ID_ERROR              "WRITE_ID_ERROR"
 #define WS_SEND_ESTIMATED_TIME              "ESTIMATED_TIME"
 #define WS_SEND_INIT_ALERT                  "INIT_ALERT"
+#define WS_SEND_UNASSIGNED_NODES            "UNASSIGNED_NODES"
+#define WS_SEND_START_APPLY_ASSIGN          "START_APPLY_ASSIGN"
+#define WS_SEND_END_APPLY_ASSIGN            "END_APPLY_ASSIGN"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_NET_KEY_GET                 "NET_KEY_GET"
@@ -204,6 +211,10 @@ void sendWriteIDError(WebServer* webServer);
 void sendEstimatedTime(WebServer* webServer, uint16_t time);
 void sendInitAlert(WebServer* webServer);
 void sendIdentify(UartPort* uartPort, uint16_t nodeNetAddress);
+void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t page);
+void applyAutoAssignment(WebServer* webServer, Database* database);
+void sendConfirmStartApplyAutoAssignment(WebServer* webServer);
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer);
 
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 
