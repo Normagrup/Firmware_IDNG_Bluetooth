@@ -72,7 +72,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if (webServer != nullptr) { webServer->sendData(message); }
     }
-    /*else if (type == WS_SET_SCANNED_DEVICES) {
+    else if (type == WS_SET_SCANNED_DEVICES) {
         embeddedState = SCAN;
         cleanCdbTimer.stop();
         // confirmación de inicio en respuesta de UART
@@ -85,7 +85,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendConfirmEndScan(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
-    }*/
+    }
     else if (type == WS_SET_SCAN_FROM_NODE) {
         embeddedState = SCAN_BY_NODE;
         cleanCdbTimer.stop();
@@ -154,20 +154,14 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         QStringList webServerParts = value.split(" ");
         setLocalDateTime(webServerParts);
     }
-    else if (type == WS_SET_SCANNED_DEVICES) {
-        QString serial = "4294967295"; //COGER NUM SERIE DEL WS
-        QString appKeyInst = "ABABABABABABABABABABABABABABABAB"; //COGER APPKEY DEL WS
-        uint16_t bleID = 0x1234; //coger BLEID DEL WS
-        sendUartInstallAppKey(uartPort, serial, appKeyInst, bleID);
-
-        webServer->sendData("CONFIRM_INSTALL_APPKEY@OK");
-    }
     else if (type == WS_SET_START_ACTION) {
         embeddedState = COMMISSION;
         cleanCdbTimer.stop();
         // confirmación de inicio en respuesta de UART
 
         qDebug() << "START COMMISSION";
+
+        database->clearPartialUnassignedNodes();
 
         numberOfIterations = 0;
         doneIterations = 0;
@@ -1054,7 +1048,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUnassignedNodesPaged(webServer, database, value.toInt());
     }
     else if (type == WS_APPLY_AUTOASSIGNMENT) {
-        applyAutoAssignment(webServer, database);
+        applyAutoAssignment(webServer, uartPort, database);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -2030,7 +2024,7 @@ void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void applyAutoAssignment(WebServer* webServer, Database* database)
+void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database)
 {
     if(!database->allNodesHaveAutoAssignment()) { return; }
 
@@ -2038,15 +2032,36 @@ void applyAutoAssignment(WebServer* webServer, Database* database)
     cleanCdbTimer.stop();
     sendConfirmStartApplyAutoAssignment(webServer);
 
-    // TODO I: código que recorre los nodos y manda los comandos UART de asignación de direcciones
+    QList<UnassignedNode> unassignedNodes = database->getUnassignedNodes();
 
-    // TODO II: implementar un mensaje desde el micro que lo mande cuando haya terminado todas las asignaciones, para ejecutar lo de abajo
-    // confirmación en la respuesta al finalizar el apply // sendConfirmEndApplyAutoAssignment(webServer);
-    // start del cleanCdbTimer en la respuesta al finalizar el apply // cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
-    // actualización del embeddedState en la respuesta al finalizar el apply // embeddedState = FREE;
+    for(UnassignedNode unassignedNode : unassignedNodes)
+    {
+        uint8_t appKey[16] = {0};
+        if(unassignedNode.appKey != "16")
+        {
+            memcpy(appKey, netKeys[unassignedNode.appKey.toInt() - 1], 16);
+        }
+        else
+        {
+            QString appKeyStr = database->getNetKey();
 
-    // TODO III: Tener en cuenta vaciar la tabla de autoasignaciones cuando se hace un commission (solo las 3 ultimas columnas, dejar los seriales)
-    // TODO IV: Al acabar la autoasignación, vaciar la tabla de autoasignaciones completa y actualizar nextUnicastAddress en la tabla General con la ultima dirección del apply
+            for (int i = 0; i < 16; ++i) {
+                appKey[i] = static_cast<uint8_t>(appKeyStr.mid(i * 2, 2).toUInt(nullptr, 16));
+            }
+        }
+
+        sendUartInstallAppKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, appKey);
+        delay(5000);
+    }
+
+    uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
+    if(newNextUnicastAddress > 0)
+        database->updateNextUnicastAddress(newNextUnicastAddress);
+    database->clearUnassignedNodes();
+
+    sendConfirmEndApplyAutoAssignment(webServer);
+    cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+    embeddedState = FREE;
 }
 
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer)

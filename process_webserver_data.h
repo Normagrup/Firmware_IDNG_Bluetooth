@@ -58,7 +58,6 @@
 #define WS_STOP_LS                          "STOP_LS"
 #define WS_SET_MASTER_ADDR_AND_NETKEY       "SET_MASTER_ADDR_AND_NETKEY"
 #define WS_REPLACE_NODES                    "REPLACE_NODES"
-#define WS_SET_INSTALL_APPKEY               "SET_INSTALL_APPKEY"
 #define WS_ADD_UNASSIGNED_NODE              "ADD_UNASSIGNED_NODE"
 #define WS_GET_UNASSIGNED_NODES_PAGED       "GET_UNASSIGNED_NODES_PAGED"
 #define WS_AUTOASSIGNMENT                   "AUTOASSIGNMENT"
@@ -212,7 +211,7 @@ void sendEstimatedTime(WebServer* webServer, uint16_t time);
 void sendInitAlert(WebServer* webServer);
 void sendIdentify(UartPort* uartPort, uint16_t nodeNetAddress);
 void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t page);
-void applyAutoAssignment(WebServer* webServer, Database* database);
+void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer);
 void sendConfirmEndApplyAutoAssignment(WebServer* webServer);
 

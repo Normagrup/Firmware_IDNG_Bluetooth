@@ -105,4 +105,11 @@ typedef struct {
     uint16_t fatherRealAddress;
 } ReplaceNode;
 
+typedef struct {
+    QString serial;
+    uint16_t netAddress;
+    uint16_t bluetoothAddress;
+    QString appKey;
+} UnassignedNode;
+
 #endif // STRUCTURES_H

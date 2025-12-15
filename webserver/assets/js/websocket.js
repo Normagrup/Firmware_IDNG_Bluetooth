@@ -357,9 +357,7 @@ function addDeviceToNetworkList(value)
         var relayButton = iframeDocument.createElement('button');
         relayButton.textContent = "RELAY";
         relayButton.setAttribute('class', 'deviceRelayButton');
-        relayButton.style.backgroundColor = "#4682b4";
-        // ACTUALIZAR CUANDO EL RELAY MODE ESTE CORRECTAMENTE GUARDADO EN BBDD
-        //relayButton.style.backgroundColor = relayStatus ? "#4682b4" : "gray"; 
+        relayButton.style.backgroundColor = relayStatus ? "#4682b4" : "gray"; 
         relayButton.onclick = function(e) {
             e.stopPropagation();
 
@@ -1901,6 +1899,10 @@ function processApplyAssign(value, init)
     }
     else 
     {
+        var pageLabel = iframeDocument.getElementById("page");
+        pageLabel.textContent = "Page: 1";
+        sendData("GET_UNASSIGNED_NODES_PAGED", "1");
+
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
     }

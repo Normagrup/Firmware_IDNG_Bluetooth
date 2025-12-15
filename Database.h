@@ -60,20 +60,6 @@ public:
     QStringList getPowerOnLevel(int page);
 
     void clearAllData(void);
-    void addNode(uint16_t nodeAddress);
-    void addOrUpdateNode(
-        uint8_t subnetAddress,
-        uint8_t nodeSubnetAddress,
-        uint16_t realAddress,
-        const QString &uuid,
-        const QString &groupSub,
-        uint8_t deviceType,
-        uint8_t ratedDuration,
-        uint8_t emergencyFeatures,
-        uint8_t physicalMinLvl,
-        bool relayMode,
-        uint16_t fatherRealAddress
-    );
 
     bool insertLogEvent(const LogInfo log);
     QList<QStringList> getLogEvent(const QString &type, qint64 startDate, qint64 endDate);
@@ -117,6 +103,10 @@ public:
     bool addUnassignedNode(QString serial);
     uint16_t getUnassignedNodesCount();
     QStringList getUnassignedNodesPaged(uint16_t page);
+    QList<UnassignedNode> getUnassignedNodes();
+    void clearUnassignedNodes();
+    void clearPartialUnassignedNodes();
+    uint16_t getMayorUnicastAddressOfUnassignedNodes();
 
     bool doAutoAssignment();
     bool allNodesHaveAutoAssignment();

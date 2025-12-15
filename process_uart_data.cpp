@@ -1946,41 +1946,29 @@ void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)
     _uartPort->sendData(frame);
 }
 
-void sendUartInstallAppKey(UartPort* _uartPort, QString serial, QString appKeyHex, uint16_t bleID)
+void sendUartInstallAppKey(UartPort* _uartPort, QString serial, uint16_t bluetoothAddress, const uint8_t* appKey)
 {
     QByteArray frame;
 
-    unsigned char length = 3 + 16 + 4 + 2;
+    unsigned char length = 3 + 4 + 16 + 2; // Se pasan los datos en este orden: serial, appKey y bluetoothAddress
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(SET_INSTALL_APPKEY);
 
-    uint32_t serialNum = serial.toUInt(nullptr, 10);
-    frame.append((serialNum >> 24) & 0xFF);
-    frame.append((serialNum >> 16) & 0xFF);
-    frame.append((serialNum >> 8) & 0xFF);
-    frame.append(serialNum & 0xFF);
+    QStringList parsedSerial = serial.split(".");
+    frame.append(static_cast<uint8_t>(parsedSerial[0].toUInt(nullptr, 16)));
+    frame.append(static_cast<uint8_t>(parsedSerial[1].toUInt(nullptr, 16)));
+    frame.append(static_cast<uint8_t>(parsedSerial[2].toUInt(nullptr, 16)));
+    frame.append(static_cast<uint8_t>(parsedSerial[3].toUInt(nullptr, 16)));
 
-    for (int i = 0; i < 16; i++) {
-        QString byteString = appKeyHex.mid(i*2, 2);
-        frame.append(static_cast<uint8_t>(byteString.toUInt(nullptr, 16)));
-    }
+    for (int i = 0; i < 16; i++) { frame.append(appKey[i]); }
 
-    frame.append((uint8_t)((bleID >> 8) & 0xFF));
-    frame.append((uint8_t)(bleID & 0xFF));
+    frame.append((bluetoothAddress >> 8) & 0xFF);
+    frame.append(bluetoothAddress & 0xFF);
 
     frame.append(UART_END);
-
-    QString dbg;
-    for (uint8_t b : frame)
-        dbg += QString("%1 ").arg((uint8_t)b, 2, 16, QLatin1Char('0')).toUpper();
-
-    qDebug().noquote() << "SEND INSTALL APPKEY FRAME:" << dbg;
-    qDebug().noquote() << "Serial:" << serial
-                       << "| AppKey:" << appKeyHex
-                       << "| BLE_ID:" << bleID;
 
     _uartPort->sendData(frame);
 }

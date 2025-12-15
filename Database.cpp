@@ -671,108 +671,6 @@ void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setExtraFeatures:" << query.lastError().text(); }
 }
 
-void Database::addNode(uint16_t nodeAddress)
-{
-    QSqlQuery query;
-    query.prepare("INSERT INTO Nodes (RealAddress) VALUES (:nodeAddress)");
-    query.bindValue(":nodeAddress", nodeAddress);
-
-    if (!query.exec()) {
-        qDebug() << "Error executing INSERT query in addNode:"
-                 << query.lastError().text();
-    }
-}
-
-void Database::addOrUpdateNode(
-    uint8_t subnetAddress,
-    uint8_t nodeSubnetAddress,
-    uint16_t realAddress,
-    const QString &uuid,
-    const QString &groupSub,
-    uint8_t deviceType,
-    uint8_t ratedDuration,
-    uint8_t emergencyFeatures,
-    uint8_t physicalMinLvl,
-    bool relayMode,
-    uint16_t fatherRealAddress
-)
-{
-    // Abre la BD, si no está abierta.
-    if (!openDatabase()) {
-        qDebug() << "Error opening DB in addOrUpdateNode()";
-        return;
-    }
-
-    // 1. Verificar si YA existe un registro con el mismo RealAddress.
-    QSqlQuery query;
-    query.prepare("SELECT COUNT(*) FROM Nodes WHERE RealAddress = :rAddr");
-    query.bindValue(":rAddr", static_cast<int>(realAddress));
-
-    if (!query.exec()) {
-        qDebug() << "Error SELECT in addOrUpdateNode:" << query.lastError().text();
-        return;
-    }
-
-    bool exists = false;
-    if (query.next()) {
-        exists = (query.value(0).toInt() > 0);  
-    }
-
-    // 2. Si NO existe → INSERT
-    //    Si SÍ existe → UPDATE
-    if (!exists) {
-        query.prepare(
-         "INSERT INTO Nodes ("
-         "   SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, "
-         "   DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl, RelayMode, FatherRealAddress"
-         ") VALUES ("
-         "   :subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, "
-         "   :deviceType, :ratedDuration, :emergencyFeatures, :physicalMinLvl, :relayMode, :fatherRealAddress"
-         ")"
-        );
-        qDebug() << "[DB] Insertando nodo nuevo (RealAddress:" << realAddress << ")";
-    } else {
-        query.prepare(
-         "UPDATE Nodes SET "
-         "   SubnetAddress = :subnetAddress, "
-         "   NodeSubnetAddress = :nodeSubnetAddress, "
-         "   UUID = :uuid, "
-         "   GroupSub = :groupSub, "
-         "   DeviceType = :deviceType, "
-         "   RatedDuration = :ratedDuration, "
-         "   EmergencyFeatures = :emergencyFeatures, "
-         "   PhysicalMinLvl = :physicalMinLvl, "
-         "   RelayMode = :relayMode, "
-         "   FatherRealAddress = :fatherRealAddress"
-         "WHERE RealAddress = :realAddress"
-        );
-        qDebug() << "[DB] Actualizando nodo existente (RealAddress:" << realAddress << ")";
-    }
-
-    // 3. Vincular todos los valores
-    query.bindValue(":subnetAddress",     static_cast<int>(subnetAddress));
-    query.bindValue(":nodeSubnetAddress", static_cast<int>(nodeSubnetAddress));
-    query.bindValue(":realAddress",       static_cast<int>(realAddress));
-    query.bindValue(":uuid",             uuid);
-    query.bindValue(":groupSub",         groupSub);
-    query.bindValue(":deviceType",       static_cast<int>(deviceType));
-    query.bindValue(":ratedDuration",    static_cast<int>(ratedDuration));
-    query.bindValue(":emergencyFeatures",static_cast<int>(emergencyFeatures));
-    query.bindValue(":physicalMinLvl",   static_cast<int>(physicalMinLvl));
-    query.bindValue(":relayMode",        relayMode);
-    query.bindValue(":fatherRealAddress",fatherRealAddress);
-
-    // 4. Ejecutar la sentencia SQL
-    if (!query.exec()) {
-        qDebug() << "[DB] Error en INSERT/UPDATE addOrUpdateNode:" << query.lastError().text();
-    } else {
-        if (!exists) {
-            qDebug() << "[DB] Nodo insertado correctamente en la tabla Nodes.";
-        } else {
-            qDebug() << "[DB] Nodo actualizado correctamente en la tabla Nodes.";
-        }
-    }
-}
 void Database::setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value)
 {
     QSqlQuery query;
@@ -1981,6 +1879,63 @@ QStringList Database::getUnassignedNodesPaged(uint16_t page)
     }
 
     return unassignedNodesPaged;
+}
+
+QList<UnassignedNode> Database::getUnassignedNodes()
+{
+    QSqlQuery query;
+
+    QList<UnassignedNode> unassignedNodes;
+
+    if (!query.exec("SELECT * FROM UnassignedNodes")) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); }
+
+    while (query.next()) {
+        QString serial = query.value("Serial").toString();
+        uint16_t netAddress = query.value("NetAddress").toUInt();
+        uint16_t bluetoothAddress = query.value("BluetoothAddress").toUInt();
+        QString appKey = query.value("AppKey").toString();
+        unassignedNodes.append(UnassignedNode{serial, netAddress, bluetoothAddress, appKey});
+    }
+
+    return unassignedNodes;
+}
+
+void Database::clearUnassignedNodes()
+{
+    QSqlQuery query;
+
+    if (!query.exec("DELETE FROM UnassignedNodes")) {
+        qDebug() << "Error deleting rows:" << query.lastError().text();
+    }
+}
+
+void Database::clearPartialUnassignedNodes()
+{
+    QSqlQuery query;
+
+    if (!query.exec("UPDATE UnassignedNodes SET NetAddress = NULL, BluetoothAddress = NULL, AppKey = NULL")) {
+        qDebug() << "Error clearing UnassignedNodes:" << query.lastError().text();
+    }
+}
+
+uint16_t Database::getMayorUnicastAddressOfUnassignedNodes()
+{
+    QSqlQuery query;
+
+    if (!query.exec("SELECT MAX(BluetoothAddress) FROM UnassignedNodes")) {
+        qDebug() << "Error executing MAX query:" << query.lastError().text();
+        return 0;
+    }
+
+    if (query.next()) {
+        QVariant value = query.value(0);
+        if (!value.isNull())
+            return static_cast<uint16_t>(value.toUInt()); // Si hay unassignedNodes, devuelve la mayor de las direcciones
+        else
+            return 0; // Si no hay unassignedNodes, devuelve 0
+    }
+
+    return 0;
 }
 
 bool Database::doAutoAssignment()
