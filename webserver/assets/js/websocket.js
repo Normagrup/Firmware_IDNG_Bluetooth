@@ -3167,3 +3167,18 @@ function applyAutoAssignment()
 {
     sendData("APPLY_AUTOASSIGNMENT", "");
 }
+
+function deleteUnassignedNode(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var pageLabel = iframeDocument.getElementById("page");
+
+    var currentPageStr = pageLabel.textContent.replace("Page:", "").trim();
+    var currentPage = parseInt(currentPageStr, 10);
+
+    if(value === "-") { return; }
+    
+    sendData("DEL_UNASSIGNED_NODE", value + "_" + currentPage);
+}

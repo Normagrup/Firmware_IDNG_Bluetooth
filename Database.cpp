@@ -1987,6 +1987,20 @@ void Database::addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8
     }
 }
 
+bool Database::delUnassignedNode(QString serial)
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM UnassignedNodes WHERE Serial = :serial");
+    query.bindValue(":serial", serial);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando DELETE query:" << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
 bool Database::doAutoAssignment()
 {
     QSqlQuery q;

@@ -62,6 +62,7 @@
 #define WS_GET_UNASSIGNED_NODES_PAGED       "GET_UNASSIGNED_NODES_PAGED"
 #define WS_AUTOASSIGNMENT                   "AUTOASSIGNMENT"
 #define WS_APPLY_AUTOASSIGNMENT             "APPLY_AUTOASSIGNMENT"
+#define WS_DEL_UNASSIGNED_NODE              "DEL_UNASSIGNED_NODE"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"

@@ -1060,6 +1060,16 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_APPLY_AUTOASSIGNMENT) {
         applyAutoAssignment(webServer, uartPort, database);
     }
+    else if (type == WS_DEL_UNASSIGNED_NODE) {
+        QStringList parts = value.split("_");
+        QString serial = parts[0];
+        uint16_t page = parts[1].toUInt();
+
+        if(database->delUnassignedNode(serial))
+        {
+            sendUnassignedNodesPaged(webServer, database, page);
+        }
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);

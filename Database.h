@@ -108,6 +108,7 @@ public:
     void clearPartialUnassignedNodes();
     uint16_t getMayorUnicastAddressOfUnassignedNodes();
     void addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8_t devType);
+    bool delUnassignedNode(QString serial);
 
     bool doAutoAssignment();
     bool allNodesHaveAutoAssignment();
