@@ -97,7 +97,7 @@
 #define CONFIRM_RESET_CDB               0x99
 #define MICRO_REBOOT                    0xAE
 #define SET_INSTALL_APPKEY              0x6B
-#define NODE_DEVTYPE                    0x6C
+#define UUID_AND_DEVTYPE                0x6C
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
