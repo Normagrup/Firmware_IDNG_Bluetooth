@@ -196,6 +196,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SET_DELETE_DEVICE) {
         cleanCdbTimer.stop();
 
+        database->clearPartialUnassignedNodes();
+
         uint16_t nodeNetAddress = getNodeNetAddress(value);
 
         if(nodeNetAddress == 0xFFFF)
@@ -304,6 +306,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = ADD_MANUAL;
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
+
+        database->clearPartialUnassignedNodes();
 
         // Extraer el índice del UUID correspondiente al nodo que queremos añadir
         int uuidIndex = getUUIDIndexOfScanned(value);
@@ -857,6 +861,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
+        database->clearPartialUnassignedNodes();
         isClearingAllData = true;
 
         clearSystemData(webServer, database, uartPort);
@@ -872,6 +877,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = LINE_SCAN;
         cleanCdbTimer.stop();
         sendConfirmStartLineScanning(webServer);
+
+        database->clearPartialUnassignedNodes();
 
         uint16_t startAddr = value.split("_")[0].toUShort(nullptr, 10);
         uint16_t endAddr = value.split("_")[1].toUShort(nullptr, 10);
@@ -966,6 +973,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         failComCycles = cycles;
     }
     else if (type == WS_CHANGE_NODES) {
+        database->clearPartialUnassignedNodes();
+
         QStringList positions = value.split("_");
         uint16_t position1 = positions[0].toUInt();
         uint16_t position2 = positions[1].toUInt();
@@ -1018,6 +1027,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         sendConfirmStartReplace(webServer);
 
+        database->clearPartialUnassignedNodes();
         isReplacingDevices = true;
 
         QStringList elems = value.split("_");
@@ -2058,6 +2068,8 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
     if(newNextUnicastAddress > 0)
         database->updateNextUnicastAddress(newNextUnicastAddress);
     database->clearUnassignedNodes();
+
+    database->loadNodesFromDatabase();
 
     sendConfirmEndApplyAutoAssignment(webServer);
     cleanCdbTimer.start(TIME_TO_CLEAN_CDB);

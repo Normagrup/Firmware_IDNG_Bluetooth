@@ -292,10 +292,13 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         uint8_t devType = (uint8_t)data[19];
 
-                        QString serial = QString::number(uuid[12]) + "." + QString::number(uuid[13]) + "." + QString::number(uuid[14]) + "." + QString::number(uuid[15]);
+                        QString serial;
+                        for(uint8_t i = 0; i < 4; i++) {
+                            if(i > 0) { serial += "."; }
+                            serial += QString("%1").arg(uuid[i + 12], 2, 16, QChar('0')).toUpper();
+                        }
 
                         database->addNodeByAssignment(serial, uuid, devType);
-                        database->loadNodesFromDatabase();
                     }
                     break;
                     case CONFIRM_END_REMOVE_ONE_NODE:

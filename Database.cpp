@@ -1981,6 +1981,10 @@ void Database::addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8
 
     query.bindValue(":deviceType", devType);
     query.bindValue(":relayMode", true);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando INSERT query:" << query.lastError().text();
+    }
 }
 
 bool Database::doAutoAssignment()
