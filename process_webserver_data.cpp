@@ -957,10 +957,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         if (webServer != nullptr) { webServer->sendData(message); }
     }
-    else if (type == WS_GET_NET_KEY) {
-        QString netKey = database->getNetKey();
+    else if (type == WS_GET_INSTALL_KEY) {
+        QString installKey = database->getInstallKey();
 
-        QString message = QString(WS_SEND_NET_KEY_GET) + "@" + (netKey.size() == 32 ? "16" : netKey);
+        QString message = QString(WS_SEND_INSTALL_KEY_GET) + "@" + (installKey.size() == 32 ? "16" : installKey);
 
         if (webServer != nullptr) { webServer->sendData(message); }
     }
@@ -989,10 +989,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         else if(value == "2")
             forceStopLS2 = true;
     }
-    else if (type == WS_SET_MASTER_ADDR_AND_NETKEY) {
+    else if (type == WS_SET_MASTER_ADDR_AND_INSTALLKEY) {
         QStringList elems = value.split("_");
         QString antennaID = elems[0];
-        QString netKey = elems[1];
+        QString installKey = elems[1];
 
         // Si cambia la antennaID
         if(antennaID != "") {
@@ -1004,19 +1004,19 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             // antennaRealAddress = newAntennaRealAddress;
         }
 
-        // Si cambia la netKey
-        if(netKey != "") {
-            database->setNetKey(netKey);
+        // Si cambia la installKey
+        if(installKey != "") {
+            database->setInstallKey(installKey);
             database->clearAllData();
         }
 
         uint16_t mra = database->getMasterRealAddress();
-        QString nk = database->getNetKey();
-        saveNetKeyAndMasterAddress(getLocalDate(), getLocalTime(), nk, mra);
+        QString ik = database->getInstallKey();
+        saveInstallKeyAndMasterAddress(getLocalDate(), getLocalTime(), ik, mra);
 
         delay(100);
 
-        sendAntennaAddressAndNetKey(uartPort, antennaID != "", netKey != "");
+        sendAntennaAddressAndInstallKey(uartPort, antennaID != "", installKey != "");
 
         delay(400);
 
@@ -1870,10 +1870,10 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void reloadAntennaAddressAndNetKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString netKeyStr)
+void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString installKeyStr)
 {
     database->setMasterRealAddress(antennaAddress);
-    database->setNetKey(netKeyStr);
+    database->setInstallKey(installKeyStr);
 
     antennaRealAddress = antennaAddress;
 }
@@ -2056,21 +2056,21 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
 
     for(UnassignedNode unassignedNode : unassignedNodes)
     {
-        uint8_t appKey[16] = {0};
-        if(unassignedNode.appKey != "16")
+        uint8_t installKey[16] = {0};
+        if(unassignedNode.installKey != "16")
         {
-            memcpy(appKey, netKeys[unassignedNode.appKey.toInt() - 1], 16);
+            memcpy(installKey, installKeys[unassignedNode.installKey.toInt() - 1], 16);
         }
         else
         {
-            QString appKeyStr = database->getNetKey();
+            QString installKeyStr = database->getInstallKey();
 
             for (int i = 0; i < 16; ++i) {
-                appKey[i] = static_cast<uint8_t>(appKeyStr.mid(i * 2, 2).toUInt(nullptr, 16));
+                installKey[i] = static_cast<uint8_t>(installKeyStr.mid(i * 2, 2).toUInt(nullptr, 16));
             }
         }
 
-        sendUartInstallAppKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, appKey);
+        sendUartInstallKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
         delay(5000);
     }
 

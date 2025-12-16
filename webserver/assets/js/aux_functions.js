@@ -755,41 +755,41 @@ function closeSwap() {
     popup.style.visibility = "hidden";
 }
 
-function updateButtonsForNetKeySelected()
+function updateButtonsForInstallKeySelected()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var inputAntennaID = iframeDocument.getElementById('antennaID');
-    var netKeySelector = iframeDocument.getElementById("netKey");
+    var installKeySelector = iframeDocument.getElementById("installKey");
 
-    // BOTÓN DE EDIT NETKEY
-    var editNetKey = iframeDocument.getElementById("editNetKey");
+    // BOTÓN DE EDIT INSTALLKEY
+    var editInstallKey = iframeDocument.getElementById("editInstallKey");
 
-    if(netKeySelector.value == "16") { // si es la Custom NetKey
-        editNetKey.disabled = false;
+    if(installKeySelector.value == "16") { // si es la Custom InstallKey
+        editInstallKey.disabled = false;
     }
-    else { // si es una NetKey por defecto
-        editNetKey.disabled = true;
+    else { // si es una InstallKey por defecto
+        editInstallKey.disabled = true;
     }
 
     // BOTÓN DE SAVE CHANGES
-    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndInstallKey");
     var changed = false;
 
     if(inputAntennaID.value != antennaID) {
         changed = true;
     }
 
-    if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
+    if(installKeySelector.value != "16" && installKeySelector.value != installKey) {
         changed = true;
     }
-    else if(netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**")) {
+    else if(installKeySelector.value == "16" && (installKeySelector.value != installKey || iframeDocument.getElementById("installKeyByte0").value != "**")) {
         changed = true;
     }
     
-    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
-        changed = false; // forzamos desactivado por error de rango de ID o falta de netkey
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (installKeySelector.value == "16" && iframeDocument.getElementById("installKeyByte0").value == "")) {
+        changed = false; // forzamos desactivado por error de rango de ID o falta de installkey
     }
 
     if(changed) {
@@ -799,40 +799,40 @@ function updateButtonsForNetKeySelected()
     }
 }
 
-function editNetKey()
+function editInstallKey()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var popup = iframeDocument.getElementById("popupEditNetKey");
+    var popup = iframeDocument.getElementById("popupEditInstallKey");
     var popupOverlay = iframeDocument.getElementById("popupOverlay");
 
     popup.style.visibility = "visible";
     popupOverlay.style.visibility = "visible";
 }
 
-function clearCustomNetKey()
+function clearCustomInstallKey()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     for (var i = 0; i < 16; i++) {
-        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const input = iframeDocument.getElementById(`installKeyByte${i}`);
         if (input) {
-            if(netKey == "16")
+            if(installKey == "16")
                 input.value = "**";
             else
                 input.value = "";
         }
     }
 
-    var popup = iframeDocument.getElementById("popupEditNetKey");
+    var popup = iframeDocument.getElementById("popupEditInstallKey");
     var popupOverlay = iframeDocument.getElementById("popupOverlay");
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
 
-    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndInstallKey");
     var inputAntennaID = iframeDocument.getElementById('antennaID');
     if(inputAntennaID.value != antennaID) {   
         saveBtn.disabled = false;
@@ -842,7 +842,7 @@ function clearCustomNetKey()
 
 }
 
-function randomizeNetKey()
+function randomizeInstallKey()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -850,22 +850,22 @@ function randomizeNetKey()
     for (var i = 0; i < 16; i++) {
         const randByte = Math.floor(Math.random() * 256);
         const hex = randByte.toString(16).toUpperCase().padStart(2, '0');
-        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const input = iframeDocument.getElementById(`installKeyByte${i}`);
         if (input) input.value = hex;
     }
 }
 
-async function copyNetKey()
+async function copyInstallKey()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var newNetKey = "";
+    var newInstallKey = "";
 
     for(var i = 0; i < 16; i++) {
-        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const input = iframeDocument.getElementById(`installKeyByte${i}`);
         const value = input.value.trim().toUpperCase();
-        newNetKey += value;
+        newInstallKey += value;
 
         if (!/^[0-9A-F]{2}$/.test(value)) {
             alert(`Invalid hex value at byte ${i + 1}: "${value}". Enter two valid hex characters (00 to FF).`);
@@ -875,10 +875,10 @@ async function copyNetKey()
 
     try {
         if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(newNetKey);
+            await navigator.clipboard.writeText(newInstallKey);
         } else {
             const ta = document.createElement('textarea');
-            ta.value = newNetKey;
+            ta.value = newInstallKey;
             ta.setAttribute('readonly', '');
             ta.style.position = 'fixed';
             ta.style.left = '-9999px';
@@ -888,19 +888,19 @@ async function copyNetKey()
             document.execCommand('copy');
             document.body.removeChild(ta);
         }
-        alert('The netKey has been copied');
+        alert('The installKey has been copied');
     } catch (e) {
-        alert("The netKey couldn't be copied");
+        alert("The installKey couldn't be copied");
     }
 }
 
-function saveCustomNetKey()
+function saveCustomInstallKey()
 {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     for(var i = 0; i < 16; i++) {
-        const input = iframeDocument.getElementById(`netKeyByte${i}`);
+        const input = iframeDocument.getElementById(`installKeyByte${i}`);
         const value = input.value.trim().toUpperCase();
 
         if (!/^[0-9A-F]{2}$/.test(value)) {
@@ -909,13 +909,13 @@ function saveCustomNetKey()
         }
     }
 
-    var popup = iframeDocument.getElementById("popupEditNetKey");
+    var popup = iframeDocument.getElementById("popupEditInstallKey");
     var popupOverlay = iframeDocument.getElementById("popupOverlay");
 
     popup.style.visibility = "hidden";
     popupOverlay.style.visibility = "hidden";
 
-    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndInstallKey");
     saveBtn.disabled = false;
 }
 
@@ -925,25 +925,25 @@ function checkAntennaIDChange()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var inputAntennaID = iframeDocument.getElementById('antennaID');
-    var netKeySelector = iframeDocument.getElementById("netKey");
+    var installKeySelector = iframeDocument.getElementById("installKey");
 
     // BOTÓN DE SAVE CHANGES
-    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndNetKey");
+    var saveBtn = iframeDocument.getElementById("saveAntennaIDAndInstallKey");
     var changed = false;
 
     if(inputAntennaID.value != antennaID) {
         changed = true;
     }
 
-    if(netKeySelector.value != "16" && netKeySelector.value != netKey) {
+    if(installKeySelector.value != "16" && installKeySelector.value != installKey) {
         changed = true;
     }
-    else if(netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**")) {
+    else if(installKeySelector.value == "16" && (installKeySelector.value != installKey || iframeDocument.getElementById("installKeyByte0").value != "**")) {
         changed = true;
     }
     
-    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
-        changed = false; // forzamos desactivado por error de rango de ID o falta de netkey
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (installKeySelector.value == "16" && iframeDocument.getElementById("installKeyByte0").value == "")) {
+        changed = false; // forzamos desactivado por error de rango de ID o falta de installkey
     }
 
     if(changed) {

@@ -109,7 +109,7 @@ typedef struct {
     QString serial;
     uint16_t netAddress;
     uint16_t bluetoothAddress;
-    QString appKey;
+    QString installKey;
 } UnassignedNode;
 
 #endif // STRUCTURES_H

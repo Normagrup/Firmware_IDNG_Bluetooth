@@ -83,20 +83,20 @@
 #define RECOVERY_GROUPS                 0x85
 #define CHANGE_FATHER                   0x87
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
-#define SET_ANTENNA_ADDRESS_AND_NET_KEY 0xAA
-#define GET_ANTENNA_ADDRESS_AND_NET_KEY 0xAB
-#define ADDRESS_AND_NET_KEY_ANSWER      0xAC
+#define SET_ANTENNA_ADDRESS_AND_INSTALL_KEY 0xAA
+#define GET_ANTENNA_ADDRESS_AND_INSTALL_KEY 0xAB
+#define ADDRESS_AND_INSTALL_KEY_ANSWER  0xAC
 #define ASK_INIT_DATA                   0xAD
 #define START_LINE_SCANNING             0x91
 #define END_LINE_SCANNING               0x92
-#define ADDRESS_AND_NET_KEY             0x93
+#define ADDRESS_AND_INSTALL_KEY         0x93
 #define CONFIRM_REPLACE                 0x94
 #define CONFIRM_REPLACE_DONE            0x95
 #define CONFIRM_INYECT                  0x97
 #define CONFIRM_ACTION                  0x98
 #define CONFIRM_RESET_CDB               0x99
 #define MICRO_REBOOT                    0xAE
-#define SET_INSTALL_APPKEY              0x6B
+#define SET_INSTALL_KEY                 0x6B
 #define UUID_AND_DEVTYPE                0x6C
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -137,9 +137,9 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database, WebServer* we
 void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
-void sendSetAntennaAddressAndNetKey(UartPort* _uartPort, Database* _database);
-void sendGetAntennaAddressAndNetKey(UartPort* _uartPort);
-void sendAntennaAddressAndNetKey(UartPort* _uartPort, bool antennaIDHasChanged, bool netKeyHasChanged);
+void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* _database);
+void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort);
+void sendAntennaAddressAndInstallKey(UartPort* _uartPort, bool antennaIDHasChanged, bool installKeyHasChanged);
 void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
 void sendUartEndLineScanning(UartPort* _uartPort);
@@ -148,6 +148,6 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartMicroReboot(UartPort* _uartPort);
-void sendUartInstallAppKey(UartPort* _uartPort, QString serial, uint16_t bluetoothAddress, const uint8_t* appKey);
+void sendUartInstallKey(UartPort* _uartPort, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey);
 
 #endif // PROCESS_UART_DATA_H

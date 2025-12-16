@@ -50,34 +50,34 @@
             </div>
         </div>
     </div>
-    <div class="popup" id="popupEditNetKey" style="width: 50%; height: 40%;">
+    <div class="popup" id="popupEditInstallKey" style="width: 50%; height: 40%;">
         <div class="popup-container">
             <div class="popup-subcontainer">
-                <label id="editNetKeyLabel" style="margin-top: 10px; color: #4682b4;"> Set the NetKey you want to use for the Bluetooth network </label>
-                <div id="netKeyInputsContainer" style="display: flex; gap: 5px; margin-top: 15px;">
-                    <input type="text" id="netKeyByte0" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte1" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte2" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte3" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte4" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte5" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte6" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte7" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte8" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte9" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte10" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte11" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte12" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte13" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte14" maxlength="2" style="width: 50px; text-align: center;" />
-                    <input type="text" id="netKeyByte15" maxlength="2" style="width: 50px; text-align: center;" />
+                <label id="editInstallKeyLabel" style="margin-top: 10px; color: #4682b4;"> Set the Installation Key you want to use for the Bluetooth network </label>
+                <div id="installKeyInputsContainer" style="display: flex; gap: 5px; margin-top: 15px;">
+                    <input type="text" id="installKeyByte0" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte1" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte2" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte3" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte4" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte5" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte6" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte7" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte8" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte9" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte10" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte11" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte12" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte13" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte14" maxlength="2" style="width: 50px; text-align: center;" />
+                    <input type="text" id="installKeyByte15" maxlength="2" style="width: 50px; text-align: center;" />
                 </div>
-                <label id="editNetKeyAdv" style="margin-top: 10px; color: #C30101; font-size: 14px;"> Store the NetKey safely, once rebooted it cannot be recovered </label>
+                <label id="editInstallKeyAdv" style="margin-top: 10px; color: #C30101; font-size: 14px;"> Store the Installation Key safely, once rebooted it cannot be recovered </label>
                 <div style="display: flex; gap: 10px; margin-top: 0px; justify-content: center;">
-                    <button onclick="parent.clearCustomNetKey()">Clear</button>
-                    <button onclick="parent.randomizeNetKey()">Randomize</button>
-                    <button onclick="parent.copyNetKey()">Copy</button>
-                    <button onclick="parent.saveCustomNetKey()">Save</button>
+                    <button onclick="parent.clearCustomInstallKey()">Clear</button>
+                    <button onclick="parent.randomizeInstallKey()">Randomize</button>
+                    <button onclick="parent.copyInstallKey()">Copy</button>
+                    <button onclick="parent.saveCustomInstallKey()">Save</button>
                 </div>
             </div>
         </div>
@@ -88,16 +88,16 @@
             <div class="top-section">
                 <h2> General Configuration </h2>
 
-                <div class="antenna-netkey-container">
-                    <div class="antenna-netkey-inputs">
+                <div class="antenna-installkey-container">
+                    <div class="antenna-installkey-inputs">
                         <div class="input-group">
                             <label for="antennaID" style="color: #4682b4;"><b>Antenna ID</b></label>
                             <input type="number" id="antennaID" min="1" max="1000" oninput="parent.checkAntennaIDChange()">
                         </div>
                         <div class="input-group">
-                            <label for="netKey" style="color: #4682b4;"><b>NetKey</b></label>
+                            <label for="installKey" style="color: #4682b4;"><b>Installation Key</b></label>
                             <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                                <select id="netKey" class="selector" onchange="parent.updateButtonsForNetKeySelected()">
+                                <select id="installKey" class="selector" onchange="parent.updateButtonsForInstallKeySelected()">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>
@@ -115,18 +115,18 @@
                                     <option value="15">15</option>
                                     <option value="16">Custom</option>
                                 </select>
-                                <button id="editNetKey" onclick="parent.editNetKey()">
-                                    <img id="editNetKeyImg" src="images/edit.png" alt="Edit" style="width: 25px; height: 25px; padding-left: 1px;">
+                                <button id="editInstallKey" onclick="parent.editInstallKey()">
+                                    <img id="editInstallKeyImg" src="images/edit.png" alt="Edit" style="width: 25px; height: 25px; padding-left: 1px;">
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <button id="saveAntennaIDAndNetKey" onclick="parent.setAntennaNumberAndNetKey()" disabled>
+                    <button id="saveAntennaIDAndInstallKey" onclick="parent.setAntennaNumberAndInstallKey()" disabled>
                         <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
                     </button>
                 </div>
 
-                <div class="antenna-netkey-container" style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">                    
+                <div class="antenna-installkey-container" style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">                    
                     <div style="display: flex; align-items: center; gap: 5px;">
                         <span style="color: #4682b4;">FROM</span>
                         <input type="number" id="scanStart" value="1" class="input-scan" min="1" max="2048">
@@ -140,7 +140,7 @@
                     <button onclick="parent.lineScanning()" style="width: 40%; padding: 5px; margin-top: 0px;">Line Scan</button>
                 </div>
 
-                <div class="antenna-netkey-container" style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
+                <div class="antenna-installkey-container" style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
                     <label for="failComCycles" style="color: #4682b4;">FailCom Cycles:</label>
                     <input type="number" id="failComCycles" style="width: 80px; padding: 5px; padding-left: 10px;" min="1">
                     <button id="saveCycles" onclick="parent.saveCycles()">
@@ -173,7 +173,7 @@
 
             setTimeout(function () {
                 parent.sendData("GET_FAILCOM_CYCLES", "");
-                parent.sendData("GET_NET_KEY", "");
+                parent.sendData("GET_INSTALL_KEY", "");
                 parent.sendData("GET_MASTER_REAL_ADDRESS", "");
             }, 10);
         };

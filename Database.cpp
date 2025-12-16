@@ -56,7 +56,7 @@ void Database::initDatabase()
                "(Serial	TEXT, "
                "NetAddress INTEGER, "
                "BluetoothAddress INTEGER, "
-               "AppKey TEXT);");
+               "InstallKey TEXT);");
 
 
 
@@ -105,7 +105,7 @@ void Database::initDatabase()
                "BuildingName TEXT, "
                "LineName TEXT, "
                "MasterAddress TEXT, "
-               "NetKey TEXT, "
+               "InstallKey TEXT, "
                "FailComCycles INTEGER, "
                "NextUnicastAddress INTEGER);");
 
@@ -120,14 +120,14 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, NetKey, FailComCycles, NextUnicastAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :nk, :fcc, :nua)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, InstallKey, FailComCycles, NextUnicastAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :ik, :fcc, :nua)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
             query.bindValue(":buildingName", "NO_NAME");
             query.bindValue(":lineName", "NO_NAME");
             query.bindValue(":masterAddress", "7C18");
-            query.bindValue(":nk", "1");
+            query.bindValue(":ik", "1");
             query.bindValue(":fcc", 5);
             query.bindValue(":nua", 0);
 
@@ -1404,35 +1404,35 @@ void Database::setMasterRealAddress(uint16_t newAntennaAddress)
     }
 }
 
-QString Database::getNetKey()
+QString Database::getInstallKey()
 {
     QSqlQuery query;
 
-    query.prepare("SELECT NetKey FROM General");
+    query.prepare("SELECT InstallKey FROM General");
 
     if (!query.exec()) { return "0"; }
 
     if (query.next()) {
-        return query.value("NetKey").toString();
+        return query.value("InstallKey").toString();
     }
 
     return "0";
 }
 
-void Database::setNetKey(QString netKey)
+void Database::setInstallKey(QString installKey)
 {
     QSqlQuery query;
 
-    query.prepare("UPDATE General SET NetKey = :newNetKey");
-    query.bindValue(":newNetKey", netKey);
+    query.prepare("UPDATE General SET InstallKey = :newInstallKey");
+    query.bindValue(":newInstallKey", installKey);
 
     if (!query.exec()) {
-        qDebug() << "Failed to update NetKey:" << query.lastError().text();
+        qDebug() << "Failed to update InstallKey:" << query.lastError().text();
     } else {
         if (query.numRowsAffected() == 0) {
-            qDebug() << "No rows were updated. NetKey remains unchanged.";
+            qDebug() << "No rows were updated. InstallKey remains unchanged.";
         } else {
-            qDebug() << "NetKey updated to" << netKey;
+            qDebug() << "InstallKey updated to" << installKey;
         }
     }
 }
@@ -1866,8 +1866,8 @@ QStringList Database::getUnassignedNodesPaged(uint16_t page)
     while (query.next()) {
         QString netAddress = query.value("NetAddress").toString();
         QString bluetoothAddress = query.value("BluetoothAddress").toString();
-        QString appKey = query.value("AppKey").toString();
-        unassignedNodesGeneral.append(query.value("Serial").toString() + "_" + (netAddress == "" ? "-" : netAddress) + "_" + (bluetoothAddress == "" ? "-" : bluetoothAddress) + "_" + (appKey == "" ? "-" : appKey));
+        QString installKey = query.value("InstallKey").toString();
+        unassignedNodesGeneral.append(query.value("Serial").toString() + "_" + (netAddress == "" ? "-" : netAddress) + "_" + (bluetoothAddress == "" ? "-" : bluetoothAddress) + "_" + (installKey == "" ? "-" : installKey));
     }
 
     for(int i = page * 16 - 16; i < page * 16; i++) {
@@ -1893,8 +1893,8 @@ QList<UnassignedNode> Database::getUnassignedNodes()
         QString serial = query.value("Serial").toString();
         uint16_t netAddress = query.value("NetAddress").toUInt();
         uint16_t bluetoothAddress = query.value("BluetoothAddress").toUInt();
-        QString appKey = query.value("AppKey").toString();
-        unassignedNodes.append(UnassignedNode{serial, netAddress, bluetoothAddress, appKey});
+        QString installKey = query.value("InstallKey").toString();
+        unassignedNodes.append(UnassignedNode{serial, netAddress, bluetoothAddress, installKey});
     }
 
     return unassignedNodes;
@@ -1913,7 +1913,7 @@ void Database::clearPartialUnassignedNodes()
 {
     QSqlQuery query;
 
-    if (!query.exec("UPDATE UnassignedNodes SET NetAddress = NULL, BluetoothAddress = NULL, AppKey = NULL")) {
+    if (!query.exec("UPDATE UnassignedNodes SET NetAddress = NULL, BluetoothAddress = NULL, InstallKey = NULL")) {
         qDebug() << "Error clearing UnassignedNodes:" << query.lastError().text();
     }
 }
@@ -2050,9 +2050,9 @@ bool Database::doAutoAssignment()
     // Encontrar la primera dirección a usar (Bluetooth Address)
     uint16_t nextUnicastAddress = getNextUnicastAddress() + 1;
 
-    // Encontrar la appkey
-    QString appKey = getNetKey();
-    appKey = appKey.size() == 32 ? "16" : appKey;
+    // Encontrar la installkey
+    QString installKey = getInstallKey();
+    installKey = installKey.size() == 32 ? "16" : installKey;
 
     // Obtener seriales en orden
     QVector<QString> seriales;
@@ -2066,12 +2066,12 @@ bool Database::doAutoAssignment()
         seriales.append(q.value(0).toString());
 
     // Reescribir todas las NetAddress
-    q.prepare("UPDATE UnassignedNodes SET NetAddress = :na, BluetoothAddress = :ba, AppKey = :ak WHERE Serial = :serial");
+    q.prepare("UPDATE UnassignedNodes SET NetAddress = :na, BluetoothAddress = :ba, InstallKey = :ik WHERE Serial = :serial");
 
     for (int i = 0; i < seriales.size(); i++) {
         q.bindValue(":na", freeNetAddresses[i]);
         q.bindValue(":ba", nextUnicastAddress);
-        q.bindValue(":ak", appKey);
+        q.bindValue(":ik", installKey);
         q.bindValue(":serial", seriales[i]);
 
         if (!q.exec()) {
@@ -2093,7 +2093,7 @@ bool Database::allNodesHaveAutoAssignment()
     if (!q.exec("SELECT count(*) FROM UnassignedNodes WHERE "
             "NetAddress IS NULL OR NetAddress = '' "
             "OR BluetoothAddress IS NULL OR BluetoothAddress = '' "
-            "OR AppKey IS NULL OR AppKey = ''")) {
+            "OR InstallKey IS NULL OR InstallKey = ''")) {
         qDebug() << q.lastError().text();
         return false;
     }

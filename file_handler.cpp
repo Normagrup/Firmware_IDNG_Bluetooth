@@ -603,7 +603,7 @@ QString exportLogToCSV(Database *db, const QString &type, QString startDate, QSt
     return outputFileName;
 }
 
-void saveNetKeyAndMasterAddress(QString date, QString time, QString key, uint16_t masterRealAddress)
+void saveInstallKeyAndMasterAddress(QString date, QString time, QString key, uint16_t masterRealAddress)
 {
     QString fileName = "config_global.txt";
     QString filePath = QString(GENERAL_CONFIG_PATH) + fileName;
@@ -616,7 +616,7 @@ void saveNetKeyAndMasterAddress(QString date, QString time, QString key, uint16_
     out << " - ";
     out << "Antenna ID: " << (masterRealAddress - 31767) << " [" << masterRealAddress << "]";
     out << " - ";
-    out << (key.size() == 32 ? "Custom NetKey: " : "NetKey ") << key;
+    out << (key.size() == 32 ? "Custom InstallKey: " : "InstallKey ") << key;
     out << "\n";
 
     file.close();

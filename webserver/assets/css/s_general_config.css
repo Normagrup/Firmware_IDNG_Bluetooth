@@ -209,18 +209,18 @@ button.clicked {
     cursor: pointer;
 }
 
-#saveAntennaIDAndNetKey,
+#saveAntennaIDAndInstallKey,
 #saveCycles,
-#editNetKey {
+#editInstallKey {
     padding: 0;
     margin: 0;
     width: 32px;
     height: 32px;
 }
 
-#saveAntennaIDAndNetKey img,
+#saveAntennaIDAndInstallKey img,
 #saveCycles img,
-#editNetKey img {
+#editInstallKey img {
     margin-top: 3px;
 }
 
@@ -337,7 +337,7 @@ button:disabled:hover {
     transition: background-color 0.3s ease;
 }
 
-.antenna-netkey-container {
+.antenna-installkey-container {
     width: 100%;
     display: flex;
     align-items: center;
@@ -348,7 +348,7 @@ button:disabled:hover {
     margin-top: 15px;
 }
 
-.antenna-netkey-inputs {
+.antenna-installkey-inputs {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -379,7 +379,7 @@ button:disabled:hover {
     box-shadow: 0 0 3px #63e8f0;
 }
 
-#saveAntennaIDAndNetKey {
+#saveAntennaIDAndInstallKey {
   margin-left: auto;
   margin-right: 10px;
 }

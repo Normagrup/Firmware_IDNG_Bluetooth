@@ -51,12 +51,12 @@
 #define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
 #define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
 #define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
-#define WS_GET_NET_KEY                      "GET_NET_KEY"
-#define WS_SET_NET_KEY                      "SET_NET_KEY"
+#define WS_GET_INSTALL_KEY                  "GET_INSTALL_KEY"
+#define WS_SET_INSTALL_KEY                  "SET_INSTALL_KEY"
 #define WS_CHANGE_NODES                     "CHANGE_NODES"
 #define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
 #define WS_STOP_LS                          "STOP_LS"
-#define WS_SET_MASTER_ADDR_AND_NETKEY       "SET_MASTER_ADDR_AND_NETKEY"
+#define WS_SET_MASTER_ADDR_AND_INSTALLKEY   "SET_MASTER_ADDR_AND_INSTALLKEY"
 #define WS_REPLACE_NODES                    "REPLACE_NODES"
 #define WS_ADD_UNASSIGNED_NODE              "ADD_UNASSIGNED_NODE"
 #define WS_GET_UNASSIGNED_NODES_PAGED       "GET_UNASSIGNED_NODES_PAGED"
@@ -139,7 +139,7 @@
 #define WS_SEND_END_APPLY_ASSIGN            "END_APPLY_ASSIGN"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
-#define WS_SEND_NET_KEY_GET                 "NET_KEY_GET"
+#define WS_SEND_INSTALL_KEY_GET             "INSTALL_KEY_GET"
 
 #define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
 
@@ -195,7 +195,7 @@ void sendConfirmSetRelay(WebServer* webServer);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
-void reloadAntennaAddressAndNetKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString netKeyStr);
+void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString installKeyStr);
 void sendFailComCycles(WebServer* webServer);
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
 void sendConfirmStartLineScanning(WebServer* webServer);

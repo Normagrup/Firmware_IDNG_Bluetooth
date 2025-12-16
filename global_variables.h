@@ -83,7 +83,7 @@ extern QString reportType;
 extern QString startDate;
 extern QString endDate;
 
-extern uint8_t netKeys[15][16];
+extern uint8_t installKeys[15][16];
 extern QMap<uint16_t, POLQueryContext> powerOnQueryMap;
 extern QSet<QString> pendingGroupUpdatesEth;
 extern QList<writeGroupBitmap> pendingGroupBitmaps;

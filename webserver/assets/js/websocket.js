@@ -3,7 +3,7 @@ var addressClicked = 0;
 var nodesScanned = 0;
 var nodesAdded = 0;
 var isStoppingCommission = false;
-var netKey;
+var installKey;
 var antennaID;
 var estimatedTime;
 var isFactoryIDInProgress = false;
@@ -1079,9 +1079,6 @@ function processFactoryIDWrote(value)
                     errorContainer.style.display = 'flex';
                     labelContainer.style.display = 'flex';
 
-                    var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
-                    factoryNetKey.classList.remove('disabled');
-
                     isFactoryIDInProgress = false;
                 }, 1000);
             }, 500);
@@ -1121,9 +1118,6 @@ function processDaliTested(value)
                 errorContainer.style.display = 'flex';
                 labelContainer.style.display = 'flex';
 
-                var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
-                factoryNetKey.classList.remove('disabled');
-
                 isFactoryIDInProgress = false;
             }, 1000);
         }, 500);
@@ -1158,9 +1152,6 @@ function processRecordedDevice(value)
             errorContainer.style.display = 'flex';
             labelContainer.style.display = 'flex';
 
-            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
-            factoryNetKey.classList.remove('disabled');
-
             isFactoryIDInProgress = false;
         }, 1000);
     }
@@ -1188,9 +1179,6 @@ function processSerialClosure(value)
             labelContainer.style.display = 'flex';
 
             isFactoryIDInProgress = false;
-
-            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
-            factoryNetKey.classList.remove('disabled');
         }, 2000);
     }
     else
@@ -1202,9 +1190,6 @@ function processSerialClosure(value)
             labelContainer.style.display = 'flex';
 
             isFactoryIDInProgress = false;
-
-            var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
-            factoryNetKey.classList.remove('disabled');
         }, 2000);
     }
 }
@@ -1759,28 +1744,28 @@ function processConfirmEndClearAll(value)
     hideToast();
 }
 
-function processNetKeyGet(value)
+function processInstallKeyGet(value)
 {
-    netKey = value; // variable global
+    installKey = value; // variable global
 
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    var netKeySelector = iframeDocument.getElementById("netKey");
-    netKeySelector.value = value;
+    var installKeySelector = iframeDocument.getElementById("installKey");
+    installKeySelector.value = value;
 
-    var editNetKey = iframeDocument.getElementById("editNetKey");
+    var editInstallKey = iframeDocument.getElementById("editInstallKey");
 
-    if(value == "16") { // si es la Custom NetKey
-        editNetKey.disabled = false;
+    if(value == "16") { // si es la Custom InstallKey
+        editInstallKey.disabled = false;
 
         for(var i = 0; i < 16; i++) {
-            const input = iframeDocument.getElementById(`netKeyByte${i}`);
+            const input = iframeDocument.getElementById(`installKeyByte${i}`);
             input.value = "**";
         }
     }
-    else { // si es una NetKey por defecto
-        editNetKey.disabled = true;
+    else { // si es una InstallKey por defecto
+        editInstallKey.disabled = true;
     }
 }
 
@@ -1866,18 +1851,18 @@ function processUnassignedNodes(value)
         var serialNumber = parts[0];
         var netAddress = parts[1];
         var bluetoothAddress = parts[2];
-        var appKey = parts[3];
+        var installKey = parts[3];
 
         // Actualizar fila en la tabla
         var tableSerialNumber = iframeDocument.getElementById("sn" + i);
         var tableNetAddress = iframeDocument.getElementById("na" + i);
         var tableBluetoothAddress = iframeDocument.getElementById("ba" + i);
-        var tableAppKey = iframeDocument.getElementById("ak" + i);
+        var tableInstallKey = iframeDocument.getElementById("ik" + i);
 
         tableSerialNumber.textContent = serialNumber;
         tableNetAddress.textContent = netAddress;
         tableBluetoothAddress.textContent = bluetoothAddress;
-        tableAppKey.textContent = appKey;
+        tableInstallKey.textContent = installKey;
     }
 
     var pageLabel = iframeDocument.getElementById("page");
@@ -1966,7 +1951,7 @@ function processReceivedData(data)
     else if (type == "LS_INFO") { processLSInfo(value); }
     else if (type == "LS_FOUNDED") { processLSFounded(value); }
     else if (type == "CONFIRM_END_CLEAR_ALL") { processConfirmEndClearAll(value); }
-    else if (type == "NET_KEY_GET") { processNetKeyGet(value); }
+    else if (type == "INSTALL_KEY_GET") { processInstallKeyGet(value); }
     else if (type == "CONFIRM_START_REPLACE") { processReplacing(value, true); }
     else if (type == "CONFIRM_END_REPLACE") { processReplacing(value, false); }
     else if (type == "WRITE_ID_ERROR") { processWriteIdError(value); }
@@ -2789,9 +2774,6 @@ function codeReaderChanged()
     sendData("SET_READ_ID_CODE", label);
 
     codeReader.value = '';
-
-    var factoryNetKey = iframeDocument.getElementById('factoryNetKey');
-    factoryNetKey.classList.add('disabled');
 }
 
 function requestDevicesAndFailuresCount() {
@@ -2912,39 +2894,39 @@ function syncPOL()
     sendData("SET_SYNC_POL", "");
 }
 
-function setAntennaNumberAndNetKey() {
+function setAntennaNumberAndInstallKey() {
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var inputAntennaID = iframeDocument.getElementById('antennaID');
-    var netKeySelector = iframeDocument.getElementById("netKey");
+    var installKeySelector = iframeDocument.getElementById("installKey");
 
     var newAntennaID = "";
     if(inputAntennaID.value != antennaID) {
         newAntennaID = inputAntennaID.value;
     }
 
-    var newNetKey = "";
-    if((netKeySelector.value != "16" && netKeySelector.value != netKey) || (netKeySelector.value == "16" && (netKeySelector.value != netKey || iframeDocument.getElementById("netKeyByte0").value != "**"))) {
-        if(netKeySelector.value != "16") {
-            newNetKey = netKeySelector.value;
+    var newInstallKey = "";
+    if((installKeySelector.value != "16" && installKeySelector.value != installKey) || (installKeySelector.value == "16" && (installKeySelector.value != installKey || iframeDocument.getElementById("installKeyByte0").value != "**"))) {
+        if(installKeySelector.value != "16") {
+            newInstallKey = installKeySelector.value;
         }
         else {
             for(var i = 0; i < 16; i++) {
-                const input = iframeDocument.getElementById(`netKeyByte${i}`);
+                const input = iframeDocument.getElementById(`installKeyByte${i}`);
                 const value = input.value.trim().toUpperCase();
-                newNetKey += value;
+                newInstallKey += value;
             }
         }
     }
 
-    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (netKeySelector.value == "16" && iframeDocument.getElementById("netKeyByte0").value == "")) {
-        return; // forzamos stop por error de rango de ID o falta de netkey
+    if((inputAntennaID.value < 1 || inputAntennaID.value > 1000) || (installKeySelector.value == "16" && iframeDocument.getElementById("installKeyByte0").value == "")) {
+        return; // forzamos stop por error de rango de ID o falta de installkey
     }
 
     var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
     if (isTrue) {
-        sendData("SET_MASTER_ADDR_AND_NETKEY", newAntennaID + "_" + newNetKey);
+        sendData("SET_MASTER_ADDR_AND_INSTALLKEY", newAntennaID + "_" + newInstallKey);
 
         setTimeout(function () {
             logoutApp();
@@ -3053,21 +3035,6 @@ function replaceDevice()
         var oldNodeId = oldNodeText.trim().split("-")[0]; // Obtener ID del nodo
 
         sendData("REPLACE_NODES", newNodeUUID + "_" + oldNodeId);
-    }
-}
-
-function loadFactoryNetKey()
-{
-    var factoryNetKey = "0123456789ABCDEFEFCDAB8967452301";
-
-    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
-    if (isTrue) {
-        sendData("SET_MASTER_ADDR_AND_NETKEY", "" + "_" + factoryNetKey);
-
-        setTimeout(function () {
-            logoutApp();
-            window.location.href = "http://" + window.location.hostname;
-        }, 100);
     }
 }
 
