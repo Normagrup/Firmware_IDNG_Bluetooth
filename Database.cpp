@@ -1938,6 +1938,51 @@ uint16_t Database::getMayorUnicastAddressOfUnassignedNodes()
     return 0;
 }
 
+void Database::addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8_t devType)
+{
+    QSqlQuery query;
+    query.prepare("SELECT * FROM UnassignedNodes WHERE Serial = :serial");
+    query.bindValue(":serial", serial);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT query:" << query.lastError().text();
+        return;
+    }
+
+    uint16_t netAddress, bluetoothAddress;
+
+    if(query.next()) {
+        netAddress = query.value("NetAddress").toUInt();
+        bluetoothAddress = query.value("BluetoothAddress").toUInt();
+    }
+    else { return; }
+
+    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, DeviceType, RelayMode) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, :deviceType, :relayMode)");
+    query.bindValue(":subnetAddress", (netAddress - 1) / 64);
+    query.bindValue(":nodeSubnetAddress", (netAddress - 1) % 64);
+    query.bindValue(":realAddress", bluetoothAddress);
+
+    QString uuidStr;
+    for (int i = 0; i < 16; ++i)
+        uuidStr += QString("%1").arg(uuid[i], 2, 16, QChar('0')).toUpper();
+    query.bindValue(":uuid", uuidStr);
+
+    QString groupStr;
+    if (devType == 0x01) {
+        groupStr = QString("C001, ") + (netAddress % 2 == 0 ? "C002" : "C003");
+    }
+    else if (devType == 0x06) {
+        groupStr = "C000";
+    }
+    else {
+        groupStr = QString("C001, ") + (netAddress % 2 == 0 ? "C002" : "C003");
+    }
+    query.bindValue(":groupSub", groupStr);
+
+    query.bindValue(":deviceType", devType);
+    query.bindValue(":relayMode", true);
+}
+
 bool Database::doAutoAssignment()
 {
     QSqlQuery q;
