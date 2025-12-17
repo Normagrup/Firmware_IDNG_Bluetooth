@@ -39,7 +39,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
             case SEND_RECOVERY_NODE: return 38;
-            case FEATURES: return 47;
+            case FEATURES: return 44;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
             case NODE_DELETED: return 6;
@@ -62,7 +62,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case ASK_INIT_DATA: return 4;
             case CONFIRM_END_LINE_SCANNING: return 4;
             case CONFIRM_START_LINE_SCANNING: return 4;
-            case SEND_FEATURES_STATUS: return 13;
+            case SEND_FEATURES_STATUS: return 10;
             case CONFIRM_START_GROUPS_RECOVERY: return 4;
             case ANSWER_POWER_ON_LEVEL: return 7;
             case CONFIRM_END_GROUPS_RECOVERY: return 4;
@@ -426,8 +426,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     }
                     break;
                     case SEND_FEATURES_STATUS:
-                        qDebug() << "SEND_FEATURES_STATUS";
-                        //isLineScanning = true;
                         processRecoveryFeaturesFrame(data, database);
                     break;
 
@@ -557,7 +555,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 {
     sendLogCommissionEntry(webServer, "Start loading features...", "INFO");
 
-    uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl;
+    uint8_t deviceType;
     uint8_t nodeUUID[16];
     uint16_t address;
     uint16_t fatherAddress;
@@ -574,20 +572,17 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     }
 
     deviceType = (unsigned char)data[21] == 0 ? 1 : (unsigned char)data[21]; // Por defecto, tipo 1 (emergencia)
-    ratedDuration = (unsigned char)data[22];
-    emergencyFeatures = (unsigned char)data[23];
-    physicalMinLvl = (unsigned char)data[24];
-    fatherAddress = ((unsigned char)data[25] << 8) + (unsigned char)data[26];
+    fatherAddress = ((unsigned char)data[22] << 8) + (unsigned char)data[23];
 
-    net_idx = ((unsigned char)data[27] << 8) + (unsigned char)data[28];
-    num_elem = (unsigned char)data[29];
+    net_idx = ((unsigned char)data[24] << 8) + (unsigned char)data[25];
+    num_elem = (unsigned char)data[26];
     QString valueDK = "";
     for (uint8_t i = 0; i < 16; i++) {
-        dev_key[i] = (unsigned char)data[30 + i];
+        dev_key[i] = (unsigned char)data[27 + i];
         valueDK += QString::asprintf("%02X", dev_key[i]);
     }
 
-    qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+    qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << fatherAddress;
     //qDebug() << "Extra:" << dev_key << net_idx << num_elem;
 
     commissionData.numberOfNodesAdded++;
@@ -603,9 +598,6 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 meshDevice[i][j].setRealAddress(address);
                 meshDevice[i][j].setUUID(revertedNodeUUID);
                 meshDevice[i][j].setDeviceType(deviceType);
-                meshDevice[i][j].setRatedDuration(ratedDuration);
-                meshDevice[i][j].setEmergencyFeatures(emergencyFeatures);
-                meshDevice[i][j].setPhysicalMinLvl(physicalMinLvl);
                 meshDevice[i][j].setIsConfigured(true);
 
                 polling.setConfiguredSubnets(); // polling for eth send
@@ -635,7 +627,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                     }
                 }
 
-                database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, false);
+                database->setNodeFeatures(address, deviceType, false);
                 database->setExtraFeatures(address, net_idx, num_elem, dev_key);
 
                 /*
@@ -709,21 +701,18 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
 void processRecoveryFeaturesFrame(QByteArray data, Database* database)
 {
-    uint8_t deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode;
+    uint8_t deviceType, relayMode;
     uint16_t address;
     uint16_t fatherAddress;
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
 
     deviceType = (unsigned char)data[5] == 0 ? 1 : (unsigned char)data[5]; // Por defecto, tipo 1 (emergencia)
-    ratedDuration = (unsigned char)data[6];
-    emergencyFeatures = (unsigned char)data[7];
-    physicalMinLvl = (unsigned char)data[8];
-    relayMode = (unsigned char)data[9];
-    fatherAddress = ((unsigned char)data[10] << 8) + (unsigned char)data[11];
+    relayMode = (unsigned char)data[6];
+    fatherAddress = ((unsigned char)data[7] << 8) + (unsigned char)data[8];
 
-    qDebug() << "EXT FEATURES FRAME:" << address << deviceType << ratedDuration << emergencyFeatures << physicalMinLvl << fatherAddress;
+    qDebug() << "EXT FEATURES FRAME:" << address << deviceType << fatherAddress;
 
-    database->setNodeFeatures(address, deviceType, ratedDuration, emergencyFeatures, physicalMinLvl, relayMode);
+    database->setNodeFeatures(address, deviceType, relayMode);
     database->setFatherRealAddress(address, fatherAddress);
 
     qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
@@ -837,14 +826,8 @@ void processChangeFrame(QByteArray data, Database* database, WebServer* webServe
     for (uint8_t i = 0; i < MAX_SUBNET; i++) {
         for (uint8_t j = 0; j < MAX_NODES_SUBNET; j++) {
             if (meshDevice[i][j].getRealAddress() == address) {
-                if (daliCommandType == QUERY_EMERGENCY_FEATURES) {
-                    meshDevice[i][j].setEmergencyFeatures(daliRegisterValue);
-                    database->setNodeRegister("EmergencyFeatures", meshDevice[i][j].getRealAddress(), daliRegisterValue);
-                }
-                else if (daliCommandType == QUERY_PHYSICAL_MIN_LVL) {
-                    meshDevice[i][j].setPhysicalMinLvl(daliRegisterValue);
-                    database->setNodeRegister("PhysicalMinLvl", meshDevice[i][j].getRealAddress(), daliRegisterValue);
-                }
+                if (daliCommandType == QUERY_EMERGENCY_FEATURES) { }
+                else if (daliCommandType == QUERY_PHYSICAL_MIN_LVL) { }
                 else if (daliCommandType == QUERY_ACTUAL_LVL) { meshDevice[i][j].setActualLvl(daliRegisterValue); }
                 else if (daliCommandType == QUERY_STATUS) { meshDevice[i][j].setControlGearStatus(daliRegisterValue); }
                 else if (daliCommandType == QUERY_EMERGENCY_MODE) { meshDevice[i][j].setEmergencyMode(daliRegisterValue); }

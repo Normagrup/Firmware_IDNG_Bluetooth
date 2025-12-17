@@ -36,9 +36,6 @@ void Database::initDatabase()
                "UUID TEXT, "
                "GroupSub TEXT, "
                "DeviceType INTEGER, "
-               "RatedDuration INTEGER, "
-               "EmergencyFeatures INTEGER, "
-               "PhysicalMinLvl INTEGER, "
                "RelayMode INTEGER, "
                "FatherRealAddress INTEGER, "
                "NetIdx INTEGER, "
@@ -440,9 +437,6 @@ void Database::loadNodesFromDatabase()
         meshDevice[subnetAddress][nodeSubnetAddress].setIsConfigured(true);
         meshDevice[subnetAddress][nodeSubnetAddress].setRealAddress(query.value("RealAddress").toUInt());
         meshDevice[subnetAddress][nodeSubnetAddress].setDeviceType(query.value("DeviceType").toUInt());
-        meshDevice[subnetAddress][nodeSubnetAddress].setRatedDuration(query.value("RatedDuration").toUInt());
-        meshDevice[subnetAddress][nodeSubnetAddress].setEmergencyFeatures(query.value("EmergencyFeatures").toUInt());
-        meshDevice[subnetAddress][nodeSubnetAddress].setPhysicalMinLvl(query.value("PhysicalMinLvl").toUInt());
     }
     polling.setConfiguredSubnets(); // polling for eth send data
 }
@@ -556,16 +550,13 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
 
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, DeviceType, RatedDuration, EmergencyFeatures, PhysicalMinLvl, RelayMode, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :dt, :rd, :ef, :pml, :rm, :fra)");
+    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, DeviceType, RelayMode, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :dt, :rm, :fra)");
 
     query.bindValue(":subnetAddress", subnetAddress);
     query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
     query.bindValue(":realAddress", realAddress);
     query.bindValue(":uuid", nodeUUIDText);
     query.bindValue(":dt", 1);
-    query.bindValue(":rd", 60);
-    query.bindValue(":ef", 143);
-    query.bindValue(":pml", 254);
     query.bindValue(":rm", 0);
     query.bindValue(":fra", getMasterRealAddress());
 
@@ -636,14 +627,11 @@ void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
     if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
 }
 
-void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, uint8_t ratedDuration, uint8_t emergencyFeatures, uint8_t physicalMinLvl, bool relayMode)
+void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, bool relayMode)
 {
     QSqlQuery query;
-    query.prepare("UPDATE Nodes SET DeviceType = :deviceType, RatedDuration = :ratedDuration, EmergencyFeatures = :emergencyFeatures, PhysicalMinLvl = :physicalMinLvl, RelayMode = :relayMode WHERE RealAddress = :nodeAddress");
+    query.prepare("UPDATE Nodes SET DeviceType = :deviceType, RelayMode = :relayMode WHERE RealAddress = :nodeAddress");
     query.bindValue(":deviceType", deviceType);
-    query.bindValue(":ratedDuration", ratedDuration * 2);
-    query.bindValue(":emergencyFeatures", emergencyFeatures);
-    query.bindValue(":physicalMinLvl", physicalMinLvl);
     query.bindValue(":nodeAddress", nodeAddress);
     query.bindValue(":relayMode", relayMode);
 

@@ -106,7 +106,6 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
 void processChangeFrame(QByteArray data, Database* database, WebServer* webServer);
 void processPollingFrame(QByteArray data);
 void processConfirmGroupFrame(void);
-void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);

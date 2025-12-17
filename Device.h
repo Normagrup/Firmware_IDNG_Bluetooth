@@ -21,10 +21,7 @@ public:
     uint16_t* delAllGroups();
     void setCommunicationFailure(bool comunicationFailure);
     void setDeviceType(uint8_t deviceType);
-    void setRatedDuration(uint8_t ratedDuration);
     void setControlGearStatus(uint8_t controlGearStatus);
-    void setEmergencyFeatures(uint8_t emergencyFeatures);
-    void setPhysicalMinLvl(uint8_t physicalMinLvl);
     void setActualLvl(uint8_t actualLvl);
     void setEmergencyMode(uint8_t emergencyMode);
     void setEmergencyFailureStatus(uint8_t emergencyFailureStatus);
@@ -37,10 +34,7 @@ public:
     uint16_t getGroupSubAddress(uint8_t position);
     bool getComunicationFailure(void);
     uint8_t getDeviceType(void);
-    uint8_t getRatedDuration(void);
     uint8_t getControlGearStatus(void);
-    uint8_t getEmergencyFeatures(void);
-    uint8_t getPhysicalMinLvl(void);
     uint8_t getActualLvl(void);
     uint8_t getEmergencyMode(void);
     uint8_t getEmergencyFailureStatus(void);
@@ -77,10 +71,7 @@ private:
     bool _comunicationFailure = false;
     uint8_t _failureCycles = 0;
     uint8_t _deviceType;
-    uint8_t _ratedDuration;
     uint8_t _controlGearStatus;
-    uint8_t _emergencyFeatures;
-    uint8_t _physicalMinLvl;
     uint8_t _actualLvl;
     uint8_t _emergencyMode;
     uint8_t _emergencyFailureStatus;

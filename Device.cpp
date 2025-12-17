@@ -10,10 +10,7 @@ Device::Device(QObject *parent)
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) { this->_groupSubAddress[i] = 0; }
     this->_comunicationFailure = false;
     this->_deviceType = 0;
-    this->_ratedDuration = 0;
     this->_controlGearStatus = 0;
-    this->_emergencyFeatures = 0;
-    this->_physicalMinLvl = 0;
     this->_actualLvl = 0;
     this->_emergencyMode = 0;
     this->_emergencyFailureStatus = 0;
@@ -101,24 +98,9 @@ void Device::setDeviceType(uint8_t deviceType)
     _deviceType = deviceType;
 }
 
-void Device::setRatedDuration(uint8_t ratedDuration)
-{
-    _ratedDuration = ratedDuration;
-}
-
 void Device::setControlGearStatus(uint8_t controlGearStatus)
 {
     _controlGearStatus = controlGearStatus;
-}
-
-void Device::setEmergencyFeatures(uint8_t emergencyFeatures)
-{
-    _emergencyFeatures = emergencyFeatures;
-}
-
-void Device::setPhysicalMinLvl(uint8_t physicalMinLvl)
-{
-    _physicalMinLvl = physicalMinLvl;
 }
 
 void Device::setActualLvl(uint8_t actualLvl)
@@ -188,24 +170,9 @@ uint8_t Device::getDeviceType()
     return _deviceType;
 }
 
-uint8_t Device::getRatedDuration()
-{
-    return _ratedDuration;
-}
-
 uint8_t Device::getControlGearStatus()
 {
     return _controlGearStatus;
-}
-
-uint8_t Device::getEmergencyFeatures()
-{
-    return _emergencyFeatures;
-}
-
-uint8_t Device::getPhysicalMinLvl()
-{
-    return _physicalMinLvl;
 }
 
 uint8_t Device::getActualLvl()
@@ -281,10 +248,7 @@ void Device::deleteDevice()
     for (uint8_t i = 0; i < MESH_GROUP_COUNT; i++) { this->_groupSubAddress[i] = 0; }
     this->_comunicationFailure = false;
     this->_deviceType = 0;
-    this->_ratedDuration = 0;
     this->_controlGearStatus = 0;
-    this->_emergencyFeatures = 0;
-    this->_physicalMinLvl = 0;
     this->_actualLvl = 0;
     this->_emergencyMode = 0;
     this->_emergencyFailureStatus = 0;
@@ -319,10 +283,7 @@ void Device::copyFrom(const Device& other)
     _comunicationFailure = other._comunicationFailure;
     _failureCycles = other._failureCycles;
     _deviceType = other._deviceType;
-    _ratedDuration = other._ratedDuration;
     _controlGearStatus = other._controlGearStatus;
-    _emergencyFeatures = other._emergencyFeatures;
-    _physicalMinLvl = other._physicalMinLvl;
     _actualLvl = other._actualLvl;
     _emergencyMode = other._emergencyMode;
     _emergencyFailureStatus = other._emergencyFailureStatus;
