@@ -115,16 +115,6 @@ void convertUuidStringToByteArray(QString uuidString, uint8_t* UUID)
     }
 }
 
-void convertDevKeyStringToByteArray(QString devKeyString, uint8_t* devKey)
-{
-    for (uint8_t i = 0; i < 16; i++) {
-        QString byteString = devKeyString.mid(i * 2, 2);
-        bool ok;
-        uint8_t byte = byteString.toUInt(&ok, 16);
-        if (ok) { devKey[i] = byte; }
-    }
-}
-
 uint8_t convertGroupSubStringToArray(QString groupSubString, uint16_t* groupSubArray)
 {
     QStringList groupList = groupSubString.split(", ");

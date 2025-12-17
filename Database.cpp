@@ -37,10 +37,7 @@ void Database::initDatabase()
                "GroupSub TEXT, "
                "DeviceType INTEGER, "
                "RelayMode INTEGER, "
-               "FatherRealAddress INTEGER, "
-               "NetIdx INTEGER, "
-               "NumElem INTEGER, "
-               "DevKey TEXT);");
+               "FatherRealAddress INTEGER);");
 
 
 
@@ -563,37 +560,6 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setRecoveryNode:" << query.lastError().text(); }
 }
 
-void Database::setRecoveryDevKey(uint16_t addr, const uint8_t devKey[16])
-{
-
-    QString devKeyText;
-    if (devKey) {
-        for (int i = 0; i <= 15; i++) {
-            devKeyText += QString::asprintf("%02X", devKey[i]);
-        }
-    } else {
-        devKeyText = "";
-    }
-
-    /*qInfo() << "[DB] setRecoveryDevKey: addr="
-            << QString("0x%1").arg(addr, 4, 16, QLatin1Char('0')).toUpper()
-            << " devkey=" << devKeyText;*/
-
-    QSqlQuery query;
-    query.prepare("UPDATE Nodes SET DevKey = :devKey "
-                  "WHERE RealAddress = :addr");
-
-    query.bindValue(":devKey", devKeyText);
-    query.bindValue(":addr", addr);
-
-
-    if (!query.exec()) {
-        qDebug() <<"Error executing UPDATE query in setRecoveryDevKey:"
-                 << query.lastError().text();
-    }
-
-}
-
 void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
 {
     QSqlQuery query;
@@ -636,27 +602,6 @@ void Database::setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, bool re
     query.bindValue(":relayMode", relayMode);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in setNodeFeatures:" << query.lastError().text(); }
-}
-
-void Database::setExtraFeatures(uint16_t nodeAddress, uint16_t net_idx, uint8_t num_elem, uint8_t* dev_key)
-{
-    QString nodeDevKeyText;
-    if (dev_key) {
-        for (int i = 0; i < 16; i++) {
-            nodeDevKeyText += QString::asprintf("%02X", dev_key[i]);
-        }
-    } else {
-        nodeDevKeyText = "";
-    }
-
-    QSqlQuery query;
-    query.prepare("UPDATE Nodes SET NetIdx = :ni, NumElem = :ne, DevKey = :dk WHERE RealAddress = :nodeAddress");
-    query.bindValue(":ni", net_idx);
-    query.bindValue(":ne", num_elem);
-    query.bindValue(":dk", nodeDevKeyText);
-    query.bindValue(":nodeAddress", nodeAddress);
-
-    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setExtraFeatures:" << query.lastError().text(); }
 }
 
 void Database::setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value)
@@ -1700,31 +1645,6 @@ uint16_t Database::getNodeNetAddressForReplace(uint16_t realAddress)
     }
     else
         return 0;
-}
-
-QString Database::getDevKey(uint16_t nodeAddress)
-{
-    QSqlQuery query;
-
-    query.prepare("SELECT DevKey FROM Nodes WHERE RealAddress = :nodeAddress");
-    query.bindValue(":nodeAddress", nodeAddress);
-
-    if (!query.exec()) {
-        qDebug() << "Error ejecutando SELECT en getDevKey:" << query.lastError().text();
-        return QString();
-    }
-
-    if (query.next()) {
-        QString devKeyText = query.value(0).toString().trimmed();
-        if (devKeyText.length() != 32) {
-            qDebug() << "DevKey inválida (longitud incorrecta):" << devKeyText;
-            return QString();
-        }
-        return devKeyText;
-    } else {
-        qDebug() << "No se encontró DevKey para la dirección" << nodeAddress;
-        return QString();
-    }
 }
 
 uint16_t Database::getNextUnicastAddress()

@@ -38,8 +38,8 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case ADD_DEVICES: return 6;
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
-            case SEND_RECOVERY_NODE: return 38;
-            case FEATURES: return 44;
+            case SEND_RECOVERY_NODE: return 22;
+            case FEATURES: return 25;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
             case NODE_DELETED: return 6;
@@ -402,12 +402,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                                reinterpret_cast<const uint8_t*>(data.constData()) + 5,
                                sizeof(uuid));
 
-                        uint8_t dev_key[16];
-                        memcpy(dev_key,
-                               reinterpret_cast<const uint8_t*>(data.constData()) + 21,
-                               sizeof(dev_key));
-
-
                         while(configuredNodes.contains(lineScanningCounter + 1)) {
                             lineScanningCounter++;
                         }
@@ -421,8 +415,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         discovered_nodes[discovered_nodes_count++] = nodeAddress;
 
                         sendFoundNodes(webServer, scannedNodesCounter);
-
-                        database->setRecoveryDevKey(nodeAddress, dev_key);
                     }
                     break;
                     case SEND_FEATURES_STATUS:
@@ -559,9 +551,6 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     uint8_t nodeUUID[16];
     uint16_t address;
     uint16_t fatherAddress;
-    uint16_t net_idx;
-    uint8_t num_elem;
-    uint8_t dev_key[16];
 
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
     QString value = "";
@@ -574,16 +563,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     deviceType = (unsigned char)data[21] == 0 ? 1 : (unsigned char)data[21]; // Por defecto, tipo 1 (emergencia)
     fatherAddress = ((unsigned char)data[22] << 8) + (unsigned char)data[23];
 
-    net_idx = ((unsigned char)data[24] << 8) + (unsigned char)data[25];
-    num_elem = (unsigned char)data[26];
-    QString valueDK = "";
-    for (uint8_t i = 0; i < 16; i++) {
-        dev_key[i] = (unsigned char)data[27 + i];
-        valueDK += QString::asprintf("%02X", dev_key[i]);
-    }
-
     qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << fatherAddress;
-    //qDebug() << "Extra:" << dev_key << net_idx << num_elem;
 
     commissionData.numberOfNodesAdded++;
     numberOfIterations++;
@@ -628,7 +608,6 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
                 }
 
                 database->setNodeFeatures(address, deviceType, false);
-                database->setExtraFeatures(address, net_idx, num_elem, dev_key);
 
                 /*
                 QString message = QString(WS_SEND_ADDED_DEVICES) + "@" + QString::number(i * 64 + j + 1);
@@ -903,12 +882,8 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
-        uint8_t devKey[16] = {0};
-        QString devKeyStr = database->getDevKey(nodeAddress);
-        convertDevKeyStringToByteArray(devKeyStr, devKey);
-
         QByteArray frame;
-        unsigned char length = 21;
+        unsigned char length = 5;
 
         frame.append(UART_HEADER);
         frame.append(length);
@@ -916,9 +891,6 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
         frame.append(INYECT_NODE);
         frame.append((nodeAddress >> 8) & 0xFF);
         frame.append(nodeAddress & 0xFF);
-        for (uint8_t i = 0; i < 16; i++) {
-            frame.append(devKey[i]);
-        }
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
