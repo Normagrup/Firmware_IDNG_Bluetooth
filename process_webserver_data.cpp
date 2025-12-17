@@ -1870,11 +1870,9 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString installKeyStr)
+void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
 {
     database->setMasterRealAddress(antennaAddress);
-    database->setInstallKey(installKeyStr);
-
     antennaRealAddress = antennaAddress;
 }
 

@@ -195,7 +195,7 @@ void sendConfirmSetRelay(WebServer* webServer);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
 void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
-void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database, uint16_t antennaAddress, QString installKeyStr);
+void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void sendFailComCycles(WebServer* webServer);
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel);
 void sendConfirmStartLineScanning(WebServer* webServer);
