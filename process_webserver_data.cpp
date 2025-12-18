@@ -974,7 +974,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         delay(100);
 
-        sendAntennaAddressAndInstallKey(uartPort, antennaID != "", installKey != "");
+        sendAntennaAddressAndInstallKey(uartPort, database);
 
         delay(400);
 

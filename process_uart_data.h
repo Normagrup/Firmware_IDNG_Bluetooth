@@ -137,7 +137,7 @@ void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
 void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* _database);
 void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort);
-void sendAntennaAddressAndInstallKey(UartPort* _uartPort, bool antennaIDHasChanged, bool installKeyHasChanged);
+void sendAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database);
 void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);
 void sendUartEndLineScanning(UartPort* _uartPort);

@@ -1804,17 +1804,40 @@ void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort)
     }
 }
 
-void sendAntennaAddressAndInstallKey(UartPort* _uartPort, bool antennaIDHasChanged, bool installKeyHasChanged)
+void sendAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 {
+
+    uint16_t masterStoredAddress = database->getMasterRealAddress();
+
+    QString installKeyStr  = database->getInstallKey();
+    uint8_t installKeyBytes[16];
+    if(installKeyStr.size() == 32) {
+        for(uint8_t i = 0; i < 16; i++) {
+            QString byteString = installKeyStr.mid(i * 2, 2);
+            installKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
+        }
+        qDebug() << "InstallKey custom :" << installKeyStr;
+    } else {
+        int index = installKeyStr.toInt();
+        memcpy(installKeyBytes, installKeys[index - 1], 16);
+        qDebug() << "InstallKey from list:" << index;
+    }
+
     QByteArray frame;
-    unsigned char length = 5;
+    unsigned char length = 21;
 
     frame.append(UART_HEADER);
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(ADDRESS_AND_INSTALL_KEY);
-    frame.append(antennaIDHasChanged ? 0x01 : 0x00);
-    frame.append(installKeyHasChanged ? 0x01 : 0x00);
+
+    frame.append((masterStoredAddress >> 8) & 0xFF);
+    frame.append(masterStoredAddress & 0xFF);
+
+    for(uint8_t j = 0; j < 16; j++) {
+        frame.append(installKeyBytes[j]);
+    }
+
     frame.append(UART_END);
 
     _uartPort->sendData(frame);
