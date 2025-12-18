@@ -82,9 +82,9 @@
 #define COMMISSION_FAIL                 0x84
 #define RECOVERY_GROUPS                 0x85
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
-#define SET_ANTENNA_ADDRESS             0xAA
-#define GET_ANTENNA_ADDRESS             0xAB
-#define ADDRESS_ANSWER                  0xAC
+#define SET_ANTENNA_ADDRESS_AND_INSTKEY 0xAA
+#define GET_ANTENNA_ADDRESS_AND_INSTKEY 0xAB
+#define ADDRESS_AND_INSTKEY_ANSWER      0xAC
 #define ASK_INIT_DATA                   0xAD
 #define START_LINE_SCANNING             0x91
 #define END_LINE_SCANNING               0x92
@@ -135,8 +135,8 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database, WebServer* we
 void sendUartPOLForUpdateUnitary(UartPort* _uartPort, uint16_t realAddress);
 void sendUartSetRelay(UartPort* _uartPort, uint16_t nodeAddress, bool enable);
 void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress);
-void sendSetAntennaAddress(UartPort* _uartPort, Database* _database);
-void sendGetAntennaAddress(UartPort* _uartPort);
+void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* _database);
+void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort);
 void sendAntennaAddressAndInstallKey(UartPort* _uartPort, bool antennaIDHasChanged, bool installKeyHasChanged);
 void sendUartStartLineScanning(UartPort* _uartPort);
 void sendUartLineScanning(UartPort* _uartPort, uint8_t phase, uint16_t nodeAddress);

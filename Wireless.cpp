@@ -80,11 +80,11 @@ void Wireless::runNetwork()
     _database->loadFailComCycles();
 
     while(notRan) {
-        sendSetAntennaAddress(_uartPort, _database);
+        sendSetAntennaAddressAndInstallKey(_uartPort, _database);
         while(messageState == PENDING) {}
 
         if(messageState == RECEIVED) {
-            sendGetAntennaAddress(_uartPort);
+            sendGetAntennaAddressAndInstallKey(_uartPort);
             while(messageState == PENDING) {}
 
             if(messageState == RECEIVED) {
@@ -517,7 +517,7 @@ void Wireless::cleanCdbTimerHandler()
 
 void Wireless::askInitDataFromMicroTimerHandler()
 {
-    sendSetAntennaAddress(_uartPort, _database);
+    sendSetAntennaAddressAndInstallKey(_uartPort, _database);
     while(messageState == PENDING) {}
 
     embeddedState = FREE;

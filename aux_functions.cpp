@@ -96,7 +96,7 @@ void setFirstAddressAvailable(uint16_t nodeAddress, uint8_t* nodeUUID, Database*
                 //meshDevice[i][j].setIsConfigured(true);
                 meshDevice[i][j].setRealAddress(nodeAddress);
                 meshDevice[i][j].setUUID(nodeUUID);
-                database->setNewNode(i, j, nodeAddress, nodeUUID, 12345);
+                database->setNewNode(i, j, nodeAddress, nodeUUID);
                 netAddress[0] = i;
                 netAddress[1] = j;
                 return;

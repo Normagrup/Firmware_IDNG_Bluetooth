@@ -58,7 +58,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case QUERY_RESPONSE: return 7;
             case CONFIRM_SET_POWER_ON_LEVEL: return 7;
             case SCAN_NODE_NOT_FOUND: return 6;
-            case ADDRESS_ANSWER: return 6;
+            case ADDRESS_AND_INSTKEY_ANSWER: return 22;
             case ASK_INIT_DATA: return 4;
             case CONFIRM_END_LINE_SCANNING: return 4;
             case CONFIRM_START_LINE_SCANNING: return 4;
@@ -326,12 +326,23 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         messageState = RECEIVED;
                     }
                     break;
-                    case ADDRESS_ANSWER:
+                    case ADDRESS_AND_INSTKEY_ANSWER:
                     {
                         uint16_t antennaAddress = ((uint16_t)data[3] << 8) | data[4];
 
-                        if(antennaAddress != 0) {
-                            reloadAntennaAddress(webServer, database, antennaAddress);
+                        uint8_t installKey[16] = {0};
+                        for(uint8_t i = 0; i < 16; i++) { installKey[i] = data[5 + i]; }
+
+                        bool installKeyAllZeros = true;
+                        for(uint8_t j = 0; j < 16; j++) {
+                            if (installKey[j] != 0x00) {
+                                installKeyAllZeros = false;
+                                break;
+                            }
+                        }
+
+                        if(antennaAddress != 0 && !installKeyAllZeros) {
+                            reloadAntennaAddressAndInstallKey(webServer, database, antennaAddress, installKey);
                             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
                             messageState = RECEIVED;
                         } else {
@@ -1713,9 +1724,20 @@ void sendUartScanFromNode(UartPort* _uartPort, uint16_t nodeRealAddress)
     }
 }
 
-void sendSetAntennaAddress(UartPort* _uartPort, Database* database)
+void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 {
     uint16_t masterStoredAddress = database->getMasterRealAddress();
+
+    QString installKey = database->getInstallKey();
+    uint8_t installKeyBytes[16];
+    if(installKey.size() == 32) {
+        for(uint8_t i = 0; i < 16; i++) {
+            QString byteString = installKey.mid(i * 2, 2);
+            installKeyBytes[i] = static_cast<uint8_t>(byteString.toUInt(nullptr, 16));
+        }
+    } else {
+        memcpy(installKeyBytes, installKeys[installKey.toInt() - 1], 16);
+    }
 
     uint8_t att = 3;
     uint8_t actAtt = 0;
@@ -1724,21 +1746,24 @@ void sendSetAntennaAddress(UartPort* _uartPort, Database* database)
 
     while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
-        unsigned char length = 5;
+        unsigned char length = 21;
 
         frame.append(UART_HEADER);
         frame.append(length);
         frame.append(UART_CONFIG_FRAME_TYPE);
-        frame.append(SET_ANTENNA_ADDRESS);
+        frame.append(SET_ANTENNA_ADDRESS_AND_INSTKEY);
 
         frame.append((masterStoredAddress >> 8) & 0xFF);
         frame.append(masterStoredAddress & 0xFF);
+
+        for(uint8_t j = 0; j < 16; j++)
+            frame.append(installKeyBytes[j]);
 
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
 
-        qDebug() << "Intento" << (actAtt + 1) << "-> Address:" << masterStoredAddress;
+        qDebug() << "Intento" << (actAtt + 1) << "-> Address:" << masterStoredAddress << "- InstallKey:" << installKey;
 
         delay(ms[actAtt]);
         actAtt++;
@@ -1746,11 +1771,11 @@ void sendSetAntennaAddress(UartPort* _uartPort, Database* database)
 
     if(messageState == PENDING) {
         messageState = MISSED;
-        qDebug() << "No se recibió confirmación del SET_ANTENNA_ADDRESS";
+        qDebug() << "No se recibió confirmación del SET_ANTENNA_ADDRESS_AND_INSTKEY";
     }
 }
 
-void sendGetAntennaAddress(UartPort* _uartPort)
+void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort)
 {
     uint8_t att = 3;
     uint8_t actAtt = 0;
@@ -1764,7 +1789,7 @@ void sendGetAntennaAddress(UartPort* _uartPort)
         frame.append(UART_HEADER);
         frame.append(length);
         frame.append(UART_CONFIG_FRAME_TYPE);
-        frame.append(GET_ANTENNA_ADDRESS);
+        frame.append(GET_ANTENNA_ADDRESS_AND_INSTKEY);
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
@@ -1775,7 +1800,7 @@ void sendGetAntennaAddress(UartPort* _uartPort)
 
     if(messageState == PENDING) {
         messageState = MISSED;
-        qDebug() << "No se recibió confirmación del GET_ANTENNA_ADDRESS";
+        qDebug() << "No se recibió confirmación del GET_ANTENNA_ADDRESS_AND_INSTKEY";
     }
 }
 

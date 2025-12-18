@@ -1794,9 +1794,20 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress)
+void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database, uint16_t antennaAddress, const uint8_t* installKey)
 {
     database->setMasterRealAddress(antennaAddress);
+
+    QString installKeyStr = "";
+    for(int i = 0; i < 15; i++)
+        if(memcmp(installKeys[i], installKey, 16) == 0)
+            installKeyStr = QString::number(i + 1);
+
+    if(installKeyStr == "")
+        for(int j = 0; j < 16; j++)
+            installKeyStr += QString::asprintf("%02X", installKey[j]);
+
+    database->setInstallKey(installKeyStr);
     antennaRealAddress = antennaAddress;
 }
 
