@@ -47,6 +47,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         rebootDevice();
     }
     else if (type == WS_ASK_STATE_TO_EMBEDDED) {
+        // -------- Por si se cambia de página, que se detenga el identify que se esté haciendo
+        if (identifyTimer.isActive()) { identifyTimer.stop(); }
+        identifyNodeNetAddress = 0;
+        identifyIteration = 0;
+        // ------------------------------------------------------------------------------------
+
         QString st;
 
         switch (embeddedState) {

@@ -2694,6 +2694,8 @@ function openNodeControl(button)
 
 function closeNodeControl(buttonText)
 {
+    sendData("STOP_IDENTIFY", addressClicked); // detener el parpadeo en caso de que esté activo
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
