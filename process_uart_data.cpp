@@ -39,7 +39,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case DEVICE_ERROR: return 20;
             case COMMISSION_FAIL: return 7;
             case SEND_RECOVERY_NODE: return 22;
-            case FEATURES: return 25;
+            case FEATURES: return 23;
             case GROUP_ADDED: return 10;
             case DEBUG: return 5;
             case NODE_DELETED: return 6;
@@ -62,7 +62,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case ASK_INIT_DATA: return 4;
             case CONFIRM_END_LINE_SCANNING: return 4;
             case CONFIRM_START_LINE_SCANNING: return 4;
-            case SEND_FEATURES_STATUS: return 10;
+            case SEND_FEATURES_STATUS: return 8;
             case CONFIRM_START_GROUPS_RECOVERY: return 4;
             case ANSWER_POWER_ON_LEVEL: return 7;
             case CONFIRM_END_GROUPS_RECOVERY: return 4;
@@ -352,7 +352,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                     case CONFIRM_REPLACE_DONE:
                     {
                         replaceData = {"", 0x0000, "", 0x0000};
-                        replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
+                        replaceNode = {0x00, 0x00, "", 0x00};
 
                         isReplacingDevices = false;
                         sendUartClearInyectedNodes(uartPort, false, database);
@@ -550,7 +550,6 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     uint8_t deviceType;
     uint8_t nodeUUID[16];
     uint16_t address;
-    uint16_t fatherAddress;
 
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
     QString value = "";
@@ -561,9 +560,8 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
     }
 
     deviceType = (unsigned char)data[21] == 0 ? 1 : (unsigned char)data[21]; // Por defecto, tipo 1 (emergencia)
-    fatherAddress = ((unsigned char)data[22] << 8) + (unsigned char)data[23];
 
-    qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType << fatherAddress;
+    qDebug() << "FEATURES" << value << "FRAME:" << address << deviceType;
 
     commissionData.numberOfNodesAdded++;
     numberOfIterations++;
@@ -584,7 +582,7 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
                 netAddress = i * 64 + j + 1;
 
-                database->setNewNode(i, j, address, nodeUUID, fatherAddress);
+                database->setNewNode(i, j, address, nodeUUID);
                 database->updateNextUnicastAddress(address);
                 insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");
                 if(isReplacingDevices) { replaceData.newNodeRealAddress = address; }
@@ -682,17 +680,14 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database)
 {
     uint8_t deviceType, relayMode;
     uint16_t address;
-    uint16_t fatherAddress;
     address = ((unsigned char)data[3] << 8) + (unsigned char)data[4];
 
     deviceType = (unsigned char)data[5] == 0 ? 1 : (unsigned char)data[5]; // Por defecto, tipo 1 (emergencia)
     relayMode = (unsigned char)data[6];
-    fatherAddress = ((unsigned char)data[7] << 8) + (unsigned char)data[8];
 
-    qDebug() << "EXT FEATURES FRAME:" << address << deviceType << fatherAddress;
+    qDebug() << "EXT FEATURES FRAME:" << address << deviceType;
 
     database->setNodeFeatures(address, deviceType, relayMode);
-    database->setFatherRealAddress(address, fatherAddress);
 
     qDebug()  << "NODO RECOVERY AÑADIDO A BASE DE DATOS";
 
@@ -1413,39 +1408,6 @@ void sendUartEndLineScanning(UartPort* _uartPort)
     if(messageState == PENDING) {
         messageState = MISSED;
         qDebug() << "No se recibió confirmación del END_LINE_SCANNING";
-    }
-}
-
-void sendUartChangeFather(UartPort* _uartPort, uint16_t childRealAddress, uint16_t fatherRealAddress)
-{
-    uint8_t att = 3;
-    uint8_t actAtt = 0;
-    int ms[3] = {500, 1500, 2500};
-    messageState = PENDING;
-
-    while(actAtt < att && messageState == PENDING) {
-        QByteArray frame;
-        unsigned char length = 7;
-
-        frame.append(UART_HEADER);
-        frame.append(length);
-        frame.append(UART_CONFIG_FRAME_TYPE);
-        frame.append(CHANGE_FATHER);
-        frame.append((childRealAddress >> 8) & 0xFF);
-        frame.append(childRealAddress & 0xFF);
-        frame.append((fatherRealAddress >> 8) & 0xFF);
-        frame.append(fatherRealAddress & 0xFF);
-        frame.append(UART_END);
-
-        _uartPort->sendData(frame);
-
-        delay(ms[actAtt]);
-        actAtt++;
-    }
-
-    if(messageState == PENDING) {
-        messageState = MISSED;
-        qDebug() << "No se recibió confirmación del CHANGE_FATHER";
     }
 }
 

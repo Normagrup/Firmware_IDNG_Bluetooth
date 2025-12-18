@@ -47,7 +47,6 @@
 #define WS_GET_POWER_ON_LEVEL               "GET_POWER_ON_LVL"
 #define WS_SET_POWER_ON_LEVEL               "SET_POWER_ON_LVL"
 #define WS_SET_SYNC_POL                     "SET_SYNC_POL"
-#define WS_SET_RELOAD_TREE                  "SET_RELOAD_TREE"
 #define WS_GET_MASTER_REAL_ADDRESS          "GET_MASTER_REAL_ADDRESS"
 #define WS_GET_FAILCOM_CYCLES               "GET_FAILCOM_CYCLES"
 #define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
@@ -121,7 +120,6 @@
 #define WS_SEND_CONFIRM_END_DEL_ALL_DEV     "CONFIRM_END_DEL_ALL_DEV"
 #define WS_SEND_CONFIRM_START_DEL_ONE_DEV   "CONFIRM_START_DEL_ONE_DEV"
 #define WS_SEND_CONFIRM_END_DEL_ONE_DEV     "CONFIRM_END_DEL_ONE_DEV"
-#define WS_SEND_CONFIRM_SHOW_TREE           "CONFIRM_SHOW_TREE"
 #define WS_SEND_CONFIRM_SET_RELAY           "CONFIRM_SET_RELAY"
 #define WS_SEND_CONFIRM_START_LS            "CONFIRM_START_LS"
 #define WS_SEND_CONFIRM_END_LS              "CONFIRM_END_LS"
@@ -193,7 +191,6 @@ void sendConfirmDelNodeFromGroup(WebServer* webServer);
 void sendConfirmDelGroup(WebServer* webServer);
 void sendConfirmSetRelay(WebServer* webServer);
 void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_t groupAddress, Database* database);
-void buildTreeAndSendConfirm(WebServer* webServer, Database* database);
 void updateRelayStatus(WebServer* webServer, Database* database, uint16_t address, bool enabled);
 void reloadAntennaAddress(WebServer* webServer, Database* database, uint16_t antennaAddress);
 void sendFailComCycles(WebServer* webServer);

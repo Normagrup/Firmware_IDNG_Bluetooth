@@ -231,53 +231,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
             uint16_t nodeAddress = meshDevice[(nodeNetAddress - 1) / 64][(nodeNetAddress - 1) % 64].getRealAddress();
 
-            /** 
-            QList<QPair<uint16_t, uint16_t>> dependentNodes = database->getDependentNodesList(nodeAddress);
-
-            // Ordenar los nodos hijos por el realAddress (descendentemente) para ir borrando sin problemas
-            QVector<QPair<uint16_t, uint16_t>> temp = dependentNodes.toVector();
-            std::sort(temp.begin(), temp.end(), [](const QPair<uint16_t, uint16_t> &a, const QPair<uint16_t, uint16_t> &b) {
-                return a.second > b.second; // orden descendente
-            });
-            dependentNodes = temp.toList();
-
-            // Borrado de todos los nodos dependientes
-            for(const QPair<uint16_t, uint16_t> &par : dependentNodes) {
-                uint16_t dependentNodeNetAddress = par.first;
-                uint16_t dependentNodeAddress = par.second;
-
-                printf(" Net Address: %04X - RealAddress: %04X\n", dependentNodeNetAddress, dependentNodeAddress);
-
-                sendUartDelDevice(uartPort, dependentNodeAddress);
-                delay(800);
-
-                // Device to delete added to log
-                insertDevToLog(dependentNodeNetAddress, database, LOG_DEVICE_REMOVED);
-
-                // Eliminar el nodo de la estructura interna
-                meshDevice[(dependentNodeNetAddress - 1) / 64][(dependentNodeNetAddress - 1) % 64].deleteDevice();
-                database->deleteNode(dependentNodeAddress);
-            }
-            */
-
             // Borrado del dispositivo elegido
             printf(" Net Address: %04X - RealAddress: %04X\n", nodeNetAddress, nodeAddress);
-
-            uint16_t fatherNodeAddress = database->getFatherRealAddress(nodeAddress);
-            QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(nodeAddress);
-            for(uint16_t childRealAddress : childrenRealAddresses) {
-                sendUartInyectNode(uartPort, childRealAddress, database);
-                while(messageState == PENDING) {}
-
-                if(messageState == RECEIVED) {
-                    sendUartChangeFather(uartPort, childRealAddress, fatherNodeAddress);
-                    while(messageState == PENDING) {}
-
-                    if(messageState == RECEIVED) {
-                        database->setFatherRealAddress(childRealAddress, fatherNodeAddress);
-                    }
-                }
-            }
 
             sendUartInyectNode(uartPort, nodeAddress, database);
             while(messageState == PENDING) {}
@@ -949,9 +904,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
-    else if (type == WS_SET_RELOAD_TREE) {
-        buildTreeAndSendConfirm(webServer, database);
-    }
     else if (type == WS_GET_MASTER_REAL_ADDRESS) {
         QString message = QString(WS_SEND_CONFIRM_M_ADDRESS_GET) + "@" + QString::number(antennaRealAddress);
 
@@ -1180,24 +1132,6 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
     // Cargar los datos en el nodo (parte BBDD)
     database->setNodeDataForReplace(replaceNode, replaceData.newNodeRealAddress);
 
-    // Cargar los datos en los nodos (parte nodos, tanto el propio nodo como los hijos)
-    QList<uint16_t> childrenRealAddresses = database->getChildrenRealAddresses(replaceData.oldNodeRealAddress);
-    for(uint16_t childRealAddress : childrenRealAddresses) {
-        sendUartInyectNode(uartPort, childRealAddress, database); // es necesario?
-        while(messageState == PENDING) {} // es necesario?
-
-        if(messageState == RECEIVED) {
-            sendUartChangeFather(uartPort, childRealAddress, replaceData.newNodeRealAddress);
-            while(messageState == PENDING) {}
-
-            if(messageState == RECEIVED) {
-                database->setFatherRealAddress(childRealAddress, replaceData.newNodeRealAddress);
-            }
-        }
-    }
-
-    sendUartChangeFather(uartPort, replaceData.newNodeRealAddress, replaceNode.fatherRealAddress);
-    delay(250);
     sendUartSetRelay(uartPort, replaceData.newNodeRealAddress, replaceNode.relayMode);
     delay(250);
 
@@ -1825,16 +1759,6 @@ void sendConfirmPowerOnLevel(WebServer* webServer, uint8_t powerOnLevel, uint16_
     int eventCode = powerOnLevel == 0 ? POL_OFF : (powerOnLevel == 254 ? POL_MAX : POL_LAST_VALUE);
     QString eventType = "PowerOnLevel";
     insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, eventCode, eventType);
-}
-
-void buildTreeAndSendConfirm(WebServer* webServer, Database* database)
-{
-    database->readNodesForTree();
-    buildJsonTree();
-
-    QString message = QString(WS_SEND_CONFIRM_SHOW_TREE) + "@" + "";
-
-    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendFailComCycles(WebServer* webServer)

@@ -63,7 +63,6 @@ typedef struct {
     uint8_t subnetAddress;
     uint8_t nodeSubnetAddress;
     uint16_t realAddress;
-    uint16_t fatherRealAddress;
     QString serialNumber;
 } NodeInfo;
 
@@ -102,7 +101,6 @@ typedef struct {
     uint8_t nodeSubnetAddress;
     QString groupSubAddress;
     uint8_t relayMode;
-    uint16_t fatherRealAddress;
 } ReplaceNode;
 
 typedef struct {

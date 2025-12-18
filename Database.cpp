@@ -36,8 +36,7 @@ void Database::initDatabase()
                "UUID TEXT, "
                "GroupSub TEXT, "
                "DeviceType INTEGER, "
-               "RelayMode INTEGER, "
-               "FatherRealAddress INTEGER);");
+               "RelayMode INTEGER);");
 
 
 
@@ -492,7 +491,7 @@ void Database::loadTestsFromDatabase()
     }
 }
 
-void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID, uint16_t fatherRealAddress)
+void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID)
 {
 
     QString nodeUUIDText;
@@ -518,10 +517,10 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     if (query.next()) { count = query.value(0).toInt(); }
 
     if (count == 0) {
-        query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub, :fatherRealAddress)");
+        query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, GroupSub) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :groupSub)");
     }
     else {
-        query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress, RealAddress = :realAddress, GroupSub = :groupSub, FatherRealAddress = :fatherRealAddress WHERE UUID = :uuid");
+        query.prepare("UPDATE Nodes SET SubnetAddress = :subnetAddress, NodeSubnetAddress = :nodeSubnetAddress, RealAddress = :realAddress, GroupSub = :groupSub WHERE UUID = :uuid");
     }
 
     query.bindValue(":subnetAddress", subnetAddress);
@@ -529,7 +528,6 @@ void Database::setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint
     query.bindValue(":realAddress", realAddress);
     query.bindValue(":uuid", nodeUUIDText);
     query.bindValue(":groupSub", "");
-    query.bindValue(":fatherRealAddress", fatherRealAddress);
 
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setNewNode:" << query.lastError().text(); }
 }
@@ -547,7 +545,7 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
 
     QSqlQuery query;
 
-    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, DeviceType, RelayMode, FatherRealAddress) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :dt, :rm, :fra)");
+    query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, DeviceType, RelayMode) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :dt, :rm)");
 
     query.bindValue(":subnetAddress", subnetAddress);
     query.bindValue(":nodeSubnetAddress", nodeSubnetAddress);
@@ -555,19 +553,8 @@ void Database::setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress,
     query.bindValue(":uuid", nodeUUIDText);
     query.bindValue(":dt", 1);
     query.bindValue(":rm", 0);
-    query.bindValue(":fra", getMasterRealAddress());
 
     if (!query.exec()) { qDebug() << "Error executing INSERT query in setRecoveryNode:" << query.lastError().text(); }
-}
-
-void Database::setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress)
-{
-    QSqlQuery query;
-    query.prepare("UPDATE Nodes SET FatherRealAddress = :fra WHERE RealAddress = :nodeAddress");
-    query.bindValue(":fra", fatherRealAddress);
-    query.bindValue(":nodeAddress", nodeAddress);
-
-    if (!query.exec()) { qDebug() << "Error executing UPDATE query in setFatherRealAddress:" << query.lastError().text(); }
 }
 
 void Database::setGroup(uint16_t realAddress, uint16_t groupAddress)
@@ -831,33 +818,6 @@ QList<QString> Database::getConfiguredNodesAndSerialNumbers()
     }
 
     return nodeNetAddressAndSNList;
-}
-
-QList<QPair<uint16_t, uint16_t>> Database::getDependentNodesList(uint16_t realAddress)
-{
-    QList<QPair<uint16_t, uint16_t>> result;
-
-    // Obtener hijos directos de este padre
-    QSqlQuery query;
-    query.prepare("SELECT SubnetAddress, NodeSubnetAddress, RealAddress FROM Nodes WHERE FatherRealAddress = :realAddress");
-    query.bindValue(":realAddress", realAddress);
-
-    if (!query.exec()) { qWarning() << "Error ejecutando query:" << query.lastError().text(); return result; }
-
-    while (query.next()) {
-        int subnetAddress = query.value(0).toInt();
-        int nodeSubnetAddress = query.value(1).toInt();
-        uint16_t childNumber = subnetAddress * 64 + nodeSubnetAddress + 1;
-        uint16_t childRealAddress = static_cast<uint16_t>(query.value(2).toInt());
-
-        result.append(qMakePair(childNumber, childRealAddress));
-
-        // Recursión: obtener todos los descendientes de este hijo
-        QList<QPair<uint16_t, uint16_t>> childDescendants = getDependentNodesList(childRealAddress);
-        result.append(childDescendants);
-    }
-
-    return result;
 }
 
 QList<QPair<QString, QString>> Database::getGroups()
@@ -1188,28 +1148,6 @@ int Database::getLogSize()
     return 0;
 }
 
-void Database::readNodesForTree()
-{
-    nodesByRealAddress = {};
-    childrenMap = {};
-
-    QSqlQuery query("SELECT SubnetAddress, NodeSubnetAddress, RealAddress, UUID, FatherRealAddress FROM Nodes");
-
-    while (query.next()) {
-        NodeInfo node;
-        node.subnetAddress = static_cast<uint8_t>(query.value(0).toInt());
-        node.nodeSubnetAddress = static_cast<uint8_t>(query.value(1).toInt());
-        node.realAddress = static_cast<uint16_t>(query.value(2).toInt());
-        QString nums = query.value(3).toString().right(8);
-        node.serialNumber = nums.left(2) + "." + nums.mid(2,2) + "." + nums.mid(4,2) + "." + nums.mid(6,2);
-        uint16_t fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
-        node.fatherRealAddress = fatherRealAddress > 31767 ? 0xC00F : fatherRealAddress; // si el padre es la antena, seteamos la dirección del grupo de antenas
-
-        nodesByRealAddress[node.realAddress] = node;
-        childrenMap.insert(node.fatherRealAddress, node.realAddress);
-    }
-}
-
 void Database::updateRelayMode(uint16_t nodeAddress, bool enabled)
 {
     QSqlQuery query;
@@ -1218,51 +1156,6 @@ void Database::updateRelayMode(uint16_t nodeAddress, bool enabled)
     query.bindValue(":nodeAddress", nodeAddress);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in NODES" << query.lastError().text(); }
-}
-
-uint16_t Database::getFatherRealAddress(uint16_t nodeAddress)
-{
-    QSqlQuery query;
-    query.prepare("SELECT FatherRealAddress FROM Nodes WHERE RealAddress = :nodeAddress");
-    query.bindValue(":nodeAddress", nodeAddress);
-
-    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0xC00F; }
-
-    if(query.next())
-        return query.value("FatherRealAddress").toUInt();
-    else
-        return 0xC00F;
-}
-
-int Database::getCountOfDirectChildren(uint16_t nodeAddress)
-{
-    QSqlQuery query;
-    query.prepare("SELECT COUNT(*) FROM Nodes WHERE FatherRealAddress = :fatherNodeAddress");
-    query.bindValue(":fatherNodeAddress", nodeAddress);
-
-    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return 0; }
-
-    if (query.next())
-        return query.value(0).toInt();
-    else
-        return 0;
-}
-
-QList<uint16_t> Database::getChildrenRealAddresses(uint16_t nodeAddress)
-{
-    QList<uint16_t> childrenRealAddresses;
-
-    QSqlQuery query;
-    query.prepare("SELECT RealAddress FROM Nodes WHERE FatherRealAddress = :fra");
-    query.bindValue(":fra", nodeAddress);
-
-    if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return childrenRealAddresses; }
-
-    while (query.next()) {
-        childrenRealAddresses.append(static_cast<uint16_t>(query.value("RealAddress").toUInt(nullptr)));
-    }
-
-    return childrenRealAddresses;
 }
 
 QString Database::getNextNodeName(uint16_t doneIts)
@@ -1594,10 +1487,10 @@ bool Database::isExistingNode(uint16_t realAddress)
 
 ReplaceNode Database::getNodeDataForReplace(uint16_t realAddress)
 {
-    ReplaceNode rn = {0x00, 0x00, "", 0x00, 0x0000};
+    ReplaceNode rn = {0x00, 0x00, "", 0x00};
 
     QSqlQuery query;
-    query.prepare("SELECT SubnetAddress, NodeSubnetAddress, GroupSub, RelayMode, FatherRealAddress FROM Nodes WHERE RealAddress = :realAddress");
+    query.prepare("SELECT SubnetAddress, NodeSubnetAddress, GroupSub, RelayMode FROM Nodes WHERE RealAddress = :realAddress");
     query.bindValue(":realAddress", realAddress);
 
     if (!query.exec()) { qDebug() << "Error executing SELECT query:" << query.lastError().text(); return rn; }
@@ -1607,7 +1500,6 @@ ReplaceNode Database::getNodeDataForReplace(uint16_t realAddress)
         rn.nodeSubnetAddress = static_cast<uint8_t>(query.value(1).toInt());
         rn.groupSubAddress = query.value(2).toString();
         rn.relayMode = static_cast<uint8_t>(query.value(3).toInt());
-        rn.fatherRealAddress = static_cast<uint16_t>(query.value(4).toInt());
 
         return rn;
     }
@@ -1618,12 +1510,11 @@ ReplaceNode Database::getNodeDataForReplace(uint16_t realAddress)
 void Database::setNodeDataForReplace(ReplaceNode replaceNode, uint16_t realAddress)
 {
     QSqlQuery query;
-    query.prepare("UPDATE Nodes SET SubnetAddress = :sa, NodeSubnetAddress = :nsa, GroupSub = :gs, RelayMode = :rm, FatherRealAddress = :fra WHERE RealAddress = :realAddress");
+    query.prepare("UPDATE Nodes SET SubnetAddress = :sa, NodeSubnetAddress = :nsa, GroupSub = :gs, RelayMode = :rm WHERE RealAddress = :realAddress");
     query.bindValue(":sa", replaceNode.subnetAddress);
     query.bindValue(":nsa", replaceNode.nodeSubnetAddress);
     query.bindValue(":gs", ""); // groupSub se carga con la respuesta del micro
     query.bindValue(":rm", 0); // relayMode se carga con la respuesta del micro
-    query.bindValue(":fra", replaceNode.fatherRealAddress);
     query.bindValue(":realAddress", realAddress);
 
     if (!query.exec()) { qDebug() << "Error executing UPDATE query in Nodes:" << query.lastError().text(); }

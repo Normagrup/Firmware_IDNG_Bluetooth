@@ -622,56 +622,6 @@ void saveInstallKeyAndMasterAddress(QString date, QString time, QString key, uin
     file.close();
 }
 
-void buildJsonTree()
-{
-    QJsonObject root = buildJsonTreeRecursively(0xC00F);
-    QJsonDocument doc(root);
-
-    QFile file(TREE_DATA_PATH);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        file.write(doc.toJson(QJsonDocument::Indented));
-        file.close();
-    } else {
-        qWarning() << "No se pudo escribir el JSON:" << file.errorString();
-    }
-}
-
-QJsonObject buildJsonTreeRecursively(uint16_t realAddress)
-{
-    QString name;
-    if(realAddress != 0xC00F) // La raíz no tiene nombre (no es un nodo como tal, es la antena)
-    {
-        const NodeInfo &node = nodesByRealAddress[realAddress];
-        name = QString("Node %1 - %2")
-                           .arg(node.subnetAddress * 16 + node.nodeSubnetAddress + 1)
-                           .arg(node.serialNumber);
-    }
-    else
-    {
-        name = " ";
-    }
-
-    QJsonObject obj;
-    obj["name"] = name;
-
-    QList<uint16_t> children = childrenMap.values(realAddress);
-
-    if (!children.isEmpty()) {
-        obj["type"] = "folder";
-        QJsonArray childrenArray;
-
-        for (int childRealAddress : children) {
-            childrenArray.append(buildJsonTreeRecursively(childRealAddress));
-        }
-
-        obj["children"] = childrenArray;
-    } else {
-        obj["type"] = "url";
-    }
-
-    return obj;
-}
-
 void getBuildingNameDB(Database *database, uint8_t *data)
 {
     QString buildingName = database->getGeneralData("BuildingName").trimmed().left(16);

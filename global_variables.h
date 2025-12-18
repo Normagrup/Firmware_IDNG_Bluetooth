@@ -69,8 +69,6 @@ extern bool isReplacingDevices;
 extern uint16_t lineScanningCounter; // para calcular la posición del siguiente nodo escaneado
 extern uint16_t scannedNodesCounter; // para mostrar en el WS la cantidad de nodos encontrados
 extern QList<uint16_t> configuredNodes;
-extern QMap<uint16_t, NodeInfo> nodesByRealAddress;
-extern QMultiMap<uint16_t, uint16_t> childrenMap;
 
 extern bool isLineScanning;
 extern uint8_t failComCycles;

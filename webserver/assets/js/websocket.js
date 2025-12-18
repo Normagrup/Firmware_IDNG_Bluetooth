@@ -1534,20 +1534,6 @@ function processPowerOnLevelChange(value)
     }
 }
 
-function confirmShowTree(value)
-{
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var popup = iframeDocument.getElementById('popupTree');
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-
-    popup.style.visibility = "hidden";
-    popupOverlay.style.visibility = "hidden";
-
-    loadPage('arf.html');
-}
-
 function confirmSetRelay(value)
 {
     var iframe = document.getElementById('mainframe');
@@ -1940,7 +1926,6 @@ function processReceivedData(data)
     else if (type == 'CONFIRM_DEL_NODE_FROM_GROUP') { processDelNodeFromGroup(value); }
     else if (type == 'CONFIRM_DEL_GROUP') { processDelGroup(value); }
     else if (type == "CONFIRM_POWER_ON_LEVEL") { processPowerOnLevelChange(value); }
-    else if (type == "CONFIRM_SHOW_TREE") { confirmShowTree(value); }
     else if (type == "CONFIRM_SET_RELAY") { confirmSetRelay(value); } // confirma que ha sido capaz de cambiarlo
     else if (type == "CONFIRM_MANUAL_RELAY") { confirmManualRelay(value); } // confirma que ha llegado la orden de cambio
     else if (type == 'CONFIRM_M_ADDRESS_GET') { processMasterAddressGet(value); }
@@ -2803,19 +2788,6 @@ function updateAllDisplayedButtons() {
         const device = button.getAttribute('data-device');
         isAnExistingDevice(device);
     });
-}
-
-function showTree() {
-    sendData("SET_RELOAD_TREE", "");
-
-    var iframe = document.getElementById('mainframe');
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
-    var popupOverlay = iframeDocument.getElementById('popupOverlay');
-    var popup = iframeDocument.getElementById('popupTree');
-
-    popupOverlay.style.visibility = "visible";
-    popup.style.visibility = "visible";
 }
 
 function goToPreviousPage() {

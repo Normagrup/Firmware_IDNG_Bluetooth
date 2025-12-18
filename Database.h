@@ -26,7 +26,7 @@ public:
     void loadNodesFromDatabase(void);
     void loadTestsFromDatabase(void);
 
-    void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID, uint16_t fatherRealAddress);
+    void setNewNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t* nodeUUID);
     void setGroup(uint16_t realAddress, uint16_t groupAddress);
     void setNodeFeatures(uint16_t nodeAddress, uint8_t deviceType, bool relayMode);
     void setNodeRegister(QString nodeRegister, uint16_t nodeAddress, uint8_t value);
@@ -45,7 +45,6 @@ public:
 
     QList<uint16_t> getConfiguredNodes(void);
     QList<QString> getConfiguredNodesAndSerialNumbers(void);
-    QList<QPair<uint16_t, uint16_t>> getDependentNodesList(uint16_t realAddress);
 
     QList<QPair<QString, QString>> getGroups(void);
     void createGroup();
@@ -67,11 +66,7 @@ public:
     QList<QStringList> getLastNLogEvents(int count);
     int getLogSize();
 
-    void readNodesForTree();
     void updateRelayMode(uint16_t nodeAddress, bool enabled);
-    uint16_t getFatherRealAddress(uint16_t nodeAddress);
-    int getCountOfDirectChildren(uint16_t nodeAddress);
-    QList<uint16_t> getChildrenRealAddresses(uint16_t nodeAddress);
     QString getNextNodeName(uint16_t doneIts); // Node 1, Node 2, Node 521...
     uint16_t getNextNodeAddress(uint16_t doneIts);
 
@@ -81,7 +76,6 @@ public:
     void setInstallKey(QString installKey);
 
     void setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID);
-    void setFatherRealAddress(uint16_t nodeAddress, uint16_t fatherRealAddress);
     void loadFailComCycles(void);
     void updateFailComCycles(uint8_t cycles);
 

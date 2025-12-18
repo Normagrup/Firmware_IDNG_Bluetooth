@@ -48,7 +48,5 @@ void setAdminPasswordFile(QString adminPassword);
 void setMantenedorPasswordFile(QString mantenedorPassword);
 QString exportLogToCSV(Database *db, const QString &type, QString startDate, QString endDate);
 void saveInstallKeyAndMasterAddress(QString date, QString time, QString key, uint16_t masterRealAddress);
-void buildJsonTree();
-QJsonObject buildJsonTreeRecursively(uint16_t realAddress);
 
 #endif // FILE_HANDLER_H

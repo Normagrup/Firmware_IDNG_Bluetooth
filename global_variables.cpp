@@ -59,9 +59,6 @@ uint16_t scannedNodesCounter = 0;
 QList<uint16_t> configuredNodes;
 bool isLineScanning;
 
-QMap<uint16_t, NodeInfo> nodesByRealAddress;
-QMultiMap<uint16_t, uint16_t> childrenMap;
-
 uint8_t failComCycles;
 uint16_t discovered_nodes[2048] = {0};
 uint16_t discovered_nodes_count = -1;
@@ -99,7 +96,7 @@ int numDevicesToUpdate;
 QMap<QString, GroupActionType> groupActionTypeMap;
 
 ReplaceData replaceData = {"", 0x0000, "", 0x0000};
-ReplaceNode replaceNode = {0x00, 0x00, "", 0x00, 0x0000};
+ReplaceNode replaceNode = {0x00, 0x00, "", 0x00};
 
 bool isClearingAllData = false;
 
