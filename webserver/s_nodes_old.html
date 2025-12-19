@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_nodes_old.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popup"> <!-- popup for commissioning -->
+        <h2></h2>
+        <br>
+        <div class="loader"></div>
+        <label style="margin-top: 4%;" id="labelCommissionNodes"></label>
+        <button id="stopCommissionButton" onclick="parent.stopCommission()"> Stop commission </button>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logCommission"></ul>
+        </div>
+    </div>
+    <div class="popupManual" id="popupScanning">
+        <h2></h2>
+        <br>
+        <br>
+        <div class="loader"></div>
+    </div>
+    <div class="popupManageDevices1" id="popupAddDevice">
+        <h2> Adding node manually... </h2>
+        <br>
+        <div class="loader"></div>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logAddManual"></ul>
+        </div>
+    </div>
+    <div class="popupManageDevices2" id="popupDelDevice">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingDeviceLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete the node from the network? </label>
+                <span id="warningDeleting" style="text-align: center; color: #C30101;">WARN: It's possible that some nodes will become out of communication</span>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingDeviceButton" onclick="parent.delDevice()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span id="closeDelDevPopup" class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popupManageDevices2" id="popupDelAllDevices">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="deletingAllDevicesLabel" style="margin-top: 10px; color: #4682b4;"> Do you want to delete ALL the nodes from the network? </label>
+                <div class="popup-button-subcontainer">
+                    <button id="deletingAllDevicesButton" onclick="parent.delAllDevices()"> Confirm </button>
+                </div>
+            </div>
+            
+            <div class="popup-subcontainer-small">
+                <span id="closeDelAllPopup" class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popupManageDevices2" id="popupReplaceDevices">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label style="margin-top: 10px; color: #4682b4;">Select a scanned device to replace</label>
+                <select id="deviceToReplaceSelect" class="selector" style="width: 100%; margin-top: 10px;">
+                    
+                </select>
+                <div class="popup-button-subcontainer" style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">
+                    <button style="width: 100px;" onclick="parent.replaceDevice()">Replace</button>
+                </div>
+            </div>
+
+            <div class="popup-subcontainer-small">
+                <span class="closeWindow" onclick="parent.closeWirelessPopup()"> &times; </span>
+            </div>
+        </div>
+    </div>
+    <div class="popupManageDevices1" id="popupReplace">
+        <h2> Replacing nodes... </h2>
+        <br>
+        <div class="loader"></div>
+        <hr style="border: 1px solid #000; margin: 20px 0 10px; width: 100%; ">
+        <div class="list">
+            <ul id="logReplace"></ul>
+        </div>
+    </div>
+    <div class="popupManual" id="popupRelay">
+        <h2>Changing Relay...</h2>
+        <br>
+        <br>
+        <div class="loader"></div>
+    </div>
+
+    <div class="wrap-container">
+        <div class="wrap-list-container">
+            <div class="title-container">
+                <h2> Nodes Configuration </h2>
+                <div class="enable-container">
+                    <label style="font-size: 14px; margin-right: 10px;" id="automaticLabel"> Automatic </label>
+                    <div class="switch-container">
+                        <label class="switch">
+                            <input type="checkbox" onchange="parent.switchMode()" id="toggleMode">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <label style="font-size: 14px; margin-left: 10px;" id="manualLabel"> Manual </label>
+                </div>
+            </div>
+            <div class="list-container">
+                <div class="list">
+                    <label> Scanned devices</label>
+                    <ul id="scannedDevicesList"></ul>
+
+                    <div class="under-button-container" id="manualContainerScannedDevices">
+                        <button onclick="parent.getScannedDevices()"> Scan devices </button>
+                    </div>
+                </div>
+                <div class="list-button-container" id="manualContainer">
+                    <!-- <button onclick="parent.scanFromNode()"> Scan from network node </button> -->
+                    <!-- <button onclick="parent.addDevicePrev()"> Add scanned device </button> -->
+                    <label id="networkError" style="margin-top: 10px; color: #C30101; visibility: hidden;"></label>
+                </div>
+                <div class="list-button-container" id="automaticContainer">
+                    <button onclick="parent.startCommission()"> Start commission </button>
+                </div>
+                <div class="list">
+                    <label> Network Nodes </label>
+                    <ul id="networkNodesList"></ul>
+                    
+                    <div class="under-button-container" id="manualContainerNetworkNodes">
+                        <button onclick="parent.delDevicePrev()"> Remove device </button>
+                        <button onclick="parent.delAllDevicesPrev()"> Remove all devices </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getNodesFromDatabase() {
+			setTimeout(function() {
+				parent.sendData("SET_LOAD_NODES", "");
+			}, 10);
+		}
+
+        function getScannedNodes() {
+			setTimeout(function() {
+				parent.sendData("SET_STORED_SCANNED_DEVICES", "");
+			}, 10);
+		}
+		
+		window.onload = function() {
+            getNodesFromDatabase();
+            getScannedNodes();
+
+            var automaticLabel = document.getElementById("automaticLabel");
+            automaticLabel.style.color = "#4682b4";
+            automaticLabel.style.fontWeight = "bold";
+
+            var manualContainer = document.getElementById("manualContainer");
+            manualContainer.style.display = "none";
+            var manualContainerSD = document.getElementById("manualContainerScannedDevices");
+            manualContainerSD.style.display = "none";
+            var manualContainerNN = document.getElementById("manualContainerNetworkNodes");
+            manualContainerNN.style.display = "none";
+        };
+
+        document.addEventListener('click', function(event) {
+            var popupOverlay = document.getElementById('popupOverlay');
+
+            var scannedDevicesList = document.getElementById('scannedDevicesList');
+            var networkNodesList = document.getElementById('networkNodesList');
+
+            var scannedDevices = scannedDevicesList.getElementsByTagName('li');
+            var networkDevices = networkNodesList.getElementsByTagName('li');
+
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT' || event.target.tagName === 'LI' || popupOverlay.style.visibility == "visible") { return; }
+
+            for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
+            for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+        });
+    </script>
+</body>
+
+</html>

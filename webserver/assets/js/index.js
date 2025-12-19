@@ -29,25 +29,25 @@ function loadPageAfterAsk(page, answer)
 
 	if(answer === "FREE") { frame.src = page; }
 	else if(answer === "SCAN") {
-		frame.src = "s_nodes.html";
+		frame.src = "s_nodes_old.html";
 		setTimeout(function() {
 			confirmScan("", true);
 		}, 300);
 	}
 	else if(answer === "COMMISSION") {
-		frame.src = "s_nodes.html";
+		frame.src = "s_nodes_old.html";
 		setTimeout(function() {
 			processIsCommissionInProgress("");
 		}, 300);
 	}
 	else if(answer === "ADD_MANUAL") {
-		frame.src = "s_nodes.html";
+		frame.src = "s_nodes_old.html";
 		setTimeout(function() {
 			processIsAddingManualInProgress("");
 		}, 300);
 	}
 	else if(answer === "REPLACE") {
-		frame.src = "s_nodes.html";
+		frame.src = "s_nodes_old.html";
 		setTimeout(function() {
 			processIsReplacingInProgress("");
 		}, 300);
@@ -106,7 +106,7 @@ function loadPageAfterAsk(page, answer)
 		}, 300);
 	}
 	else if(answer === "SCAN_BY_NODE") {
-		frame.src = "s_nodes.html";
+		frame.src = "s_nodes_old.html";
 		setTimeout(function() {
 			confirmScan("", true);
 		}, 300);

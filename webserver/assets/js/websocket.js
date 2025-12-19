@@ -301,6 +301,8 @@ function addDeviceToNetworkList(value)
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
+    var extendButtons = iframe.contentWindow.location.pathname.split('/').pop() === "s_nodes_old.html";
+
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     if(scannedDevicesList) {
         var selectedNode = iframeDocument.querySelector('#scannedDevicesList li.selectedDevice');
@@ -332,27 +334,29 @@ function addDeviceToNetworkList(value)
         textNode.textContent = "Node " + nodeNetAddress + " - [" + serialNumber + "]";
         textNode.style.pointerEvents = 'none';
 
-        var replaceButton = iframeDocument.createElement('button');
-        replaceButton.textContent = "R";
-        replaceButton.setAttribute('class', 'deviceReplaceButton');
-        replaceButton.style.backgroundColor = "#4682b4";
-        replaceButton.onclick = function(e) {
-            e.stopPropagation();
+        if(extendButtons) {
+            var replaceButton = iframeDocument.createElement('button');
+            replaceButton.textContent = "R";
+            replaceButton.setAttribute('class', 'deviceReplaceButton');
+            replaceButton.style.backgroundColor = "#4682b4";
+            replaceButton.onclick = function(e) {
+                e.stopPropagation();
 
-            selectDevice(newNode);
-            showReplacePopup();
-        };
+                selectDevice(newNode);
+                showReplacePopup();
+            };
 
-        var scanButton = iframeDocument.createElement('button');
-        scanButton.textContent = "SCAN";
-        scanButton.setAttribute('class', 'deviceScanButton');
-        scanButton.style.backgroundColor = "#4682b4";
-        scanButton.onclick = function(e) {
-            e.stopPropagation();
+            var scanButton = iframeDocument.createElement('button');
+            scanButton.textContent = "SCAN";
+            scanButton.setAttribute('class', 'deviceScanButton');
+            scanButton.style.backgroundColor = "#4682b4";
+            scanButton.onclick = function(e) {
+                e.stopPropagation();
 
-            selectDevice(newNode);
-            scanFromNode(textNode.textContent);
-        };
+                selectDevice(newNode);
+                scanFromNode(textNode.textContent);
+            };
+        }
 
         var relayButton = iframeDocument.createElement('button');
         relayButton.textContent = "RELAY";
@@ -385,8 +389,10 @@ function addDeviceToNetworkList(value)
         buttonContainer.style.gap = '5px';
         buttonContainer.style.marginLeft = 'auto';
 
-        buttonContainer.appendChild(replaceButton);
-        buttonContainer.appendChild(scanButton);
+        if(extendButtons) {
+            buttonContainer.appendChild(replaceButton);
+            buttonContainer.appendChild(scanButton);
+        }
         buttonContainer.appendChild(relayButton);
 
         newNode.appendChild(textNode);
@@ -398,8 +404,8 @@ function addDeviceToNetworkList(value)
     if(counterIncrement) { nodesAdded++; }
 
     var popup = iframeDocument.getElementById('popup');
-    var labelCommissionNodes = popup.querySelector('label');
-    labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned;
+    if(popup) { var labelCommissionNodes = popup.querySelector('label'); }
+    if(popup && labelCommissionNodes) { labelCommissionNodes.textContent = nodesAdded + " / " + nodesScanned; }
 
     updateAddReplaceScanRelayButtons();
 }

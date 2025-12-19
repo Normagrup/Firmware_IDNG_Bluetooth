@@ -254,13 +254,16 @@ function selectDevice(device)
     var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
     var networkNodesList = iframeDocument.getElementById('networkNodesList');
 
-    // Botones de nodos en s_nodes.html
-    if(scannedDevicesList && networkNodesList) {
-        var scannedDevices = scannedDevicesList.getElementsByTagName('li');
-        var networkDevices = networkNodesList.getElementsByTagName('li');
-
-        for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
-        for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+    // Botones de nodos en s_nodes.html o s_nodes_old.html
+    if(scannedDevicesList || networkNodesList) {
+        if(scannedDevicesList) {
+            var scannedDevices = scannedDevicesList.getElementsByTagName('li');
+            for (var i = 0; i < scannedDevices.length; i++) { scannedDevices[i].classList.remove('selectedDevice'); }
+        }
+        if(networkNodesList) {
+            var networkDevices = networkNodesList.getElementsByTagName('li');
+            for (var i = 0; i < networkDevices.length; i++) { networkDevices[i].classList.remove('selectedDevice'); }
+        }
 
         device.classList.add('selectedDevice');
     }
@@ -456,17 +459,19 @@ function updateAddReplaceScanRelayButtons() {
 
     var allButtons = [...addButtons, ...replaceButtons, ...scanButtons, ...relayButtons];
 
-    if (toggleMode.checked) {
-        allButtons.forEach(function(button) {
-            button.style.display = "inline-block";
-            button.disabled = false;
-        });
-    }
-    else {
-        allButtons.forEach(function(button) {
-            button.style.display = "none";
-            button.disabled = true;
-        });
+    if(toggleMode) {
+        if (toggleMode.checked) {
+            allButtons.forEach(function(button) {
+                button.style.display = "inline-block";
+                button.disabled = false;
+            });
+        }
+        else {
+            allButtons.forEach(function(button) {
+                button.style.display = "none";
+                button.disabled = true;
+            });
+        }
     }
 }
 
@@ -610,7 +615,7 @@ function delDevicePrev()
     var selectedNode = iframeDocument.querySelector('#networkNodesList li.selectedDevice');
     
     if (selectedNode) {
-        networkErrorLabel.style.visibility = "hidden";
+        if(networkErrorLabel) { networkErrorLabel.style.visibility = "hidden"; }
 
         var popup = iframeDocument.getElementById('popupDelDevice');
         var popupOverlay = iframeDocument.getElementById('popupOverlay');
@@ -626,8 +631,10 @@ function delDevicePrev()
         closeDelDevPopup.style.opacity = "1";
 
     } else {
-        networkErrorLabel.style.visibility = "visible";
-        networkErrorLabel.innerText = "No network node selected";
+        if(networkErrorLabel) {
+            networkErrorLabel.style.visibility = "visible";
+            networkErrorLabel.innerText = "No network node selected";
+        }
     }
 }
 
@@ -637,7 +644,7 @@ function delAllDevicesPrev()
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     var networkErrorLabel = iframeDocument.getElementById('networkError');
 
-    networkErrorLabel.style.visibility = "hidden";
+    if(networkErrorLabel) { networkErrorLabel.style.visibility = "hidden"; }
 
     var popup = iframeDocument.getElementById('popupDelAllDevices');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
@@ -666,12 +673,18 @@ function closeWirelessPopup()
     var popupReplace = iframeDocument.getElementById('popupReplace');
     var popupOverlay = iframeDocument.getElementById('popupOverlay');
 
-    var loader1 = popup.querySelector('.loader');
-    loader1.style.animation = "spin 1.5s linear infinite";
-    var loader2 = popupAdd.querySelector('.loader');
-    loader2.style.animation = "spin 1.5s linear infinite";
-    var loader3 = popupReplace.querySelector('.loader');
-    loader3.style.animation = "spin 1.5s linear infinite";
+    if(popup) {
+        var loader1 = popup.querySelector('.loader');
+        loader1.style.animation = "spin 1.5s linear infinite";
+    }
+    if(popupAdd) {
+        var loader2 = popupAdd.querySelector('.loader');
+        loader2.style.animation = "spin 1.5s linear infinite";
+    }
+    if(popupReplace) {
+        var loader3 = popupReplace.querySelector('.loader');
+        loader3.style.animation = "spin 1.5s linear infinite";
+    }
     
     if(popup) { popup.style.visibility = "hidden"; }
     if(popupAdd) { popupAdd.style.visibility = "hidden"; }
