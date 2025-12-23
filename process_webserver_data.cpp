@@ -1803,6 +1803,7 @@ void updateRelayStatus(WebServer* webServer, Database* database, uint16_t addres
 void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database, uint16_t antennaAddress, const uint8_t* installKey)
 {
     database->setMasterRealAddress(antennaAddress);
+    antennaRealAddress = antennaAddress;
 
     QString installKeyStr = "";
     for(int i = 0; i < 15; i++)
@@ -1813,8 +1814,11 @@ void reloadAntennaAddressAndInstallKey(WebServer* webServer, Database* database,
         for(int j = 0; j < 16; j++)
             installKeyStr += QString::asprintf("%02X", installKey[j]);
 
-    database->setInstallKey(installKeyStr);
-    antennaRealAddress = antennaAddress;
+    QString currentInstallKey = database->getInstallKey();
+    if(currentInstallKey != installKeyStr) {
+        database->setInstallKey(installKeyStr);
+        database->clearAllData();
+    }
 }
 
 void updatePowerOnLevels(WebServer* webServer, Database* database, uint16_t nodeAddr, uint8_t powerOnLevel)

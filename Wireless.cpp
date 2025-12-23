@@ -90,16 +90,16 @@ void Wireless::runNetwork()
             if(messageState == RECEIVED) {
                 delay(300);
                 notRan = false;
-                qDebug() << "EXITO!!! La antena se inició correctamente";
+                qDebug() << "EXITO!!! La antena se inició correctamente.";
             }
             else {
-                qDebug() << "ERROR!!! El micro no respondió al segundo mensaje de inicio";
+                qDebug() << "ERROR!!! El micro no respondió [correctamente] al segundo mensaje de inicio [GET].";
                 sendInitAlert(_webServer);
                 delay(1000);
             }
         }
         else {
-            qDebug() << "ERROR!!! El micro no respondió al primer mensaje de inicio";
+            qDebug() << "ERROR!!! El micro no respondió [correctamente] al primer mensaje de inicio [SET].";
             sendInitAlert(_webServer);
             delay(1000);
         }
@@ -523,10 +523,10 @@ void Wireless::askInitDataFromMicroTimerHandler()
     embeddedState = FREE;
 
     if(messageState == RECEIVED) {
-        qDebug() << "Se han cargado los datos de inicio de la antena correctamente";
+        qDebug() << "Se han enviado los datos de inicio al micro correctamente";
     }
     else {
-        qDebug() << "Fallo al intentar recargar los datos de inicio de la antena";
+        qDebug() << "Fallo al intentar enviar los datos de inicio al micro";
     }
 }
 

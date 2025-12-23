@@ -58,7 +58,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case QUERY_RESPONSE: return 7;
             case CONFIRM_SET_POWER_ON_LEVEL: return 7;
             case SCAN_NODE_NOT_FOUND: return 6;
-            case ADDRESS_AND_INSTKEY_ANSWER: return 22;
+            case ADDRESS_AND_INSTKEY_ANSWER: return 23;
             case ASK_INIT_DATA: return 4;
             case CONFIRM_END_LINE_SCANNING: return 4;
             case CONFIRM_START_LINE_SCANNING: return 4;
@@ -333,20 +333,14 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         uint8_t installKey[16] = {0};
                         for(uint8_t i = 0; i < 16; i++) { installKey[i] = data[5 + i]; }
 
-                        bool installKeyAllZeros = true;
-                        for(uint8_t j = 0; j < 16; j++) {
-                            if (installKey[j] != 0x00) {
-                                installKeyAllZeros = false;
-                                break;
-                            }
-                        }
+                        bool readyAddressAndInstallKey = data[21];
 
-                        if(antennaAddress != 0 && !installKeyAllZeros) {
+                        if(readyAddressAndInstallKey) {
                             reloadAntennaAddressAndInstallKey(webServer, database, antennaAddress, installKey);
                             cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
                             messageState = RECEIVED;
                         } else {
-                            qDebug() << "NOTA: Antenna Address igual a 0 recibida";
+                            qDebug() << "NOTA: Micro en proceso de configuración...";
                         }
                     }
                     break;
@@ -1741,7 +1735,7 @@ void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 
     uint8_t att = 3;
     uint8_t actAtt = 0;
-    int ms[3] = {1000, 2000, 2000};
+    int ms[3] = {1500, 1500, 2000};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
@@ -1777,9 +1771,9 @@ void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 
 void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort)
 {
-    uint8_t att = 3;
+    uint8_t att = 5;
     uint8_t actAtt = 0;
-    int ms[3] = {500, 1000, 2000};
+    int ms[5] = {500, 1000, 2000, 2000, 2500};
     messageState = PENDING;
 
     while(actAtt < att && messageState == PENDING) {
@@ -1806,7 +1800,6 @@ void sendGetAntennaAddressAndInstallKey(UartPort* _uartPort)
 
 void sendAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 {
-
     uint16_t masterStoredAddress = database->getMasterRealAddress();
 
     QString installKeyStr  = database->getInstallKey();
