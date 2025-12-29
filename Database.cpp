@@ -100,7 +100,8 @@ void Database::initDatabase()
                "MasterAddress TEXT, "
                "InstallKey TEXT, "
                "FailComCycles INTEGER, "
-               "NextUnicastAddress INTEGER);");
+               "NextUnicastAddress INTEGER, "
+               "ActiveKey INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -113,7 +114,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, InstallKey, FailComCycles, NextUnicastAddress) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :ik, :fcc, :nua)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, InstallKey, FailComCycles, NextUnicastAddress, ActiveKey) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :ik, :fcc, :nua, :ak)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
@@ -123,6 +124,7 @@ void Database::initDatabase()
             query.bindValue(":ik", "1");
             query.bindValue(":fcc", 5);
             query.bindValue(":nua", 0);
+            query.bindValue(":ak", 1); // 0 -> appKey; 1 -> installKey
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
         }
@@ -1259,6 +1261,39 @@ void Database::setInstallKey(QString installKey)
             qDebug() << "No rows were updated. InstallKey remains unchanged.";
         } else {
             qDebug() << "InstallKey updated to" << installKey;
+        }
+    }
+}
+
+uint8_t Database::getActiveKey()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT ActiveKey FROM General");
+
+    if (!query.exec()) { return 0; }
+
+    if (query.next()) {
+        return query.value("ActiveKey").toUInt();
+    }
+
+    return 0;
+}
+
+void Database::setActiveKey(uint8_t activeKey)
+{
+    QSqlQuery query;
+
+    query.prepare("UPDATE General SET ActiveKey = :newActiveKey");
+    query.bindValue(":newActiveKey", activeKey);
+
+    if (!query.exec()) {
+        qDebug() << "Failed to update ActiveKey:" << query.lastError().text();
+    } else {
+        if (query.numRowsAffected() == 0) {
+            qDebug() << "No rows were updated. ActiveKey remains unchanged.";
+        } else {
+            qDebug() << "ActiveKey updated to" << activeKey;
         }
     }
 }

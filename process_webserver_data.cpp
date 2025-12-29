@@ -931,6 +931,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->updateFailComCycles(cycles);
         failComCycles = cycles;
     }
+    else if (type == WS_GET_ACTIVE_KEY) {
+        uint8_t activeKey = database->getActiveKey();
+        sendActiveKey(webServer, activeKey);
+    }
+    else if (type == WS_SET_ACTIVE_KEY) {
+        uint8_t activeKey = value.toUInt();
+        database->setActiveKey(activeKey);
+        sendUartChangedActiveKey(uartPort, activeKey);
+    }
     else if (type == WS_CHANGE_NODES) {
         database->clearPartialUnassignedNodes();
 
@@ -2159,6 +2168,13 @@ void sendConfirmEndGroupAutoAssignment(WebServer* webServer)
 void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes)
 {
     QString message = QString(WS_SEND_INFO_GROUP_AUTO_ASSIGN) + "@" + QString::number(counter) + "_" + QString::number(totalNodes);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendActiveKey(WebServer* webServer, uint8_t activeKey)
+{
+    QString message = QString(WS_SEND_ACTIVE_KEY) + "@" + QString::number(activeKey);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

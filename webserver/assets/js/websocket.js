@@ -1925,6 +1925,18 @@ function processInfoGroupAutoAssign(value)
     }
 }
 
+function processActiveKey(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var activeKeySelector = iframeDocument.getElementById("activeKey");
+
+    if(activeKeySelector) {
+        activeKeySelector.value = value;
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1994,6 +2006,7 @@ function processReceivedData(data)
     else if (type == "START_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, true); }
     else if (type == "INFO_GROUP_AUTO_ASSIGN") { processInfoGroupAutoAssign(value); }
     else if (type == "END_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, false); }
+    else if (type == "ACTIVE_KEY") { processActiveKey(value); }
 }
 
 function sendData(type, value) 
@@ -3176,4 +3189,14 @@ function deleteUnassignedNode(value)
 function groupAutoAssignment()
 {
     sendData("GROUP_AUTOASSIGNMENT", "");
+}
+
+function saveActiveKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var activeKeySelector = iframeDocument.getElementById("activeKey");
+
+    sendData("SET_ACTIVE_KEY", activeKeySelector.value);
 }

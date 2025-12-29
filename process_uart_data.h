@@ -98,6 +98,7 @@
 #define SET_INSTALL_KEY                 0x6B
 #define UUID_AND_DEVTYPE                0x6C
 #define ADD_GROUP_AUTO                  0x6D
+#define SET_ACTIVE_KEY                  0x6E
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -148,5 +149,6 @@ void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddres
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartMicroReboot(UartPort* _uartPort);
 void sendUartInstallKey(UartPort* _uartPort, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey);
+void sendUartChangedActiveKey(UartPort* _uartPort, uint8_t activeKey);
 
 #endif // PROCESS_UART_DATA_H

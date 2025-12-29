@@ -74,6 +74,8 @@ public:
     void setMasterRealAddress(uint16_t newAntennaAddress);
     QString getInstallKey(void);
     void setInstallKey(QString installKey);
+    uint8_t getActiveKey(void);
+    void setActiveKey(uint8_t activeKey);
 
     void setRecoveryNode(uint8_t subnetAddress, uint8_t nodeSubnetAddress, uint16_t realAddress, uint8_t *nodeUUID);
     void loadFailComCycles(void);

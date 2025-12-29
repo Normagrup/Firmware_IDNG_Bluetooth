@@ -52,6 +52,8 @@
 #define WS_SET_FAILCOM_CYCLES               "SET_FAILCOM_CYCLES"
 #define WS_GET_INSTALL_KEY                  "GET_INSTALL_KEY"
 #define WS_SET_INSTALL_KEY                  "SET_INSTALL_KEY"
+#define WS_GET_ACTIVE_KEY                   "GET_ACTIVE_KEY"
+#define WS_SET_ACTIVE_KEY                   "SET_ACTIVE_KEY"
 #define WS_CHANGE_NODES                     "CHANGE_NODES"
 #define WS_GET_LINE_SCANNED_NODES           "GET_LINE_SCANNED_NODES"
 #define WS_STOP_LS                          "STOP_LS"
@@ -139,6 +141,7 @@
 #define WS_SEND_START_GROUP_AUTO_ASSIGN     "START_GROUP_AUTO_ASSIGN"
 #define WS_SEND_INFO_GROUP_AUTO_ASSIGN      "INFO_GROUP_AUTO_ASSIGN"
 #define WS_SEND_END_GROUP_AUTO_ASSIGN       "END_GROUP_AUTO_ASSIGN"
+#define WS_SEND_ACTIVE_KEY                  "ACTIVE_KEY"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_INSTALL_KEY_GET             "INSTALL_KEY_GET"
@@ -220,6 +223,7 @@ void sendConfirmStartGroupAutoAssignment(WebServer* webServer);
 void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmEndGroupAutoAssignment(WebServer* webServer);
 void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
+void sendActiveKey(WebServer* webServer, uint8_t activeKey);
 
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 
