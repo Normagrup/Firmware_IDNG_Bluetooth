@@ -62,6 +62,7 @@
 #define WS_AUTOASSIGNMENT                   "AUTOASSIGNMENT"
 #define WS_APPLY_AUTOASSIGNMENT             "APPLY_AUTOASSIGNMENT"
 #define WS_DEL_UNASSIGNED_NODE              "DEL_UNASSIGNED_NODE"
+#define WS_GROUP_AUTOASSIGNMENT             "GROUP_AUTOASSIGNMENT"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -135,6 +136,9 @@
 #define WS_SEND_UNASSIGNED_NODES            "UNASSIGNED_NODES"
 #define WS_SEND_START_APPLY_ASSIGN          "START_APPLY_ASSIGN"
 #define WS_SEND_END_APPLY_ASSIGN            "END_APPLY_ASSIGN"
+#define WS_SEND_START_GROUP_AUTO_ASSIGN     "START_GROUP_AUTO_ASSIGN"
+#define WS_SEND_INFO_GROUP_AUTO_ASSIGN      "INFO_GROUP_AUTO_ASSIGN"
+#define WS_SEND_END_GROUP_AUTO_ASSIGN       "END_GROUP_AUTO_ASSIGN"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_INSTALL_KEY_GET             "INSTALL_KEY_GET"
@@ -212,6 +216,10 @@ void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t
 void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer);
 void sendConfirmEndApplyAutoAssignment(WebServer* webServer);
+void sendConfirmStartGroupAutoAssignment(WebServer* webServer);
+void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
+void sendConfirmEndGroupAutoAssignment(WebServer* webServer);
+void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
 
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 

@@ -97,6 +97,7 @@
 #define MICRO_REBOOT                    0xAE
 #define SET_INSTALL_KEY                 0x6B
 #define UUID_AND_DEVTYPE                0x6C
+#define ADD_GROUP_AUTO                  0x6D
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -121,6 +122,7 @@ void sendUartAddDevice(UartPort* _uartPort, ScannedUUID uuidScanned);
 void sendUartDelDevice(UartPort* _uartPort, uint16_t nodeAddress, bool isBroadcast);
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address);
 void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address);
+void sendUartAddGroupAuto(UartPort* _uartPort, uint16_t realAddress, uint16_t groupAddress);
 void sendUartDelGroup(UartPort* _uartPort, uint16_t* address, Database* database);
 void sendUartDelGroupSimple(UartPort* _uartPort, uint16_t* address); // no actualiza el modelo y la bbdd directamente
 void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Database* database);

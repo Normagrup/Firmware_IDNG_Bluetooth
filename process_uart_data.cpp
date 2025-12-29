@@ -1136,6 +1136,40 @@ void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
     }
 }
 
+void sendUartAddGroupAuto(UartPort* _uartPort, uint16_t realAddress, uint16_t groupAddress)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {3000, 4000, 5000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(ADD_GROUP_AUTO);
+        frame.append((realAddress >> 8) & 0xFF);
+        frame.append(realAddress & 0xFF);
+        frame.append((groupAddress >> 8) & 0xFF);
+        frame.append(groupAddress & 0xFF);
+
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del ADD_GROUP_AUTO";
+    }
+}
+
 void sendUartAddGroup(UartPort* _uartPort, uint16_t* address)
 {
     QByteArray frame;

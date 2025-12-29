@@ -65,11 +65,21 @@
             </div>
         </div>
     </div>
+    <div class="popup" id="popupGroupAutoAssignment">
+        <div class="popup-container">
+            <div class="popup-subcontainer">
+                <label id="groupAutoAssignmentLabel" style="margin-top: 10px; color: #4682b4;"> Group Auto Assignment... </label>
+                <div id="addLoader" class="loader"></div>
+                <span id="counterForGroupAssign" style="margin-top: 10px; color: #4682b4;"></span>
+            </div>
+        </div>
+    </div>
 
     <div class="wrap-container">
         <div class="wrap-list-container">
             <div class="title-container">
                 <h2> Groups Configuration </h2>
+                <button class="title-button" onclick="parent.groupAutoAssignment()">Group Auto Assignment</button>
             </div>
             <div class="group-container">
                 <select class="selector" id="groupList" onchange="parent.loadNodesLists()">

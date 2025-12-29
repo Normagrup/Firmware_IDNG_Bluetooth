@@ -120,7 +120,8 @@ enum EmbeddedState {
     SCAN_BY_NODE,
     LINE_SCAN,
     RECOVERING_MICRO,
-    APPLY_AUTOASSIGNMENT
+    APPLY_AUTOASSIGNMENT,
+    GROUP_AUTOASSIGNMENT
 };
 
 extern EmbeddedState embeddedState;
