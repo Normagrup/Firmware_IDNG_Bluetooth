@@ -1387,10 +1387,10 @@ void Database::clearAllData()
     // CONSTRUCCIÓN BASE DE TABLA GROUPS
     if (!query.exec("DELETE FROM Groups")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
 
-    QStringList groupAddresses1 = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+    QStringList groupAddresses1 = {"C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
     query.prepare("INSERT INTO Groups (GroupAddress, GroupName, PowerOnLevel) VALUES (:groupAddress, :groupName, :powerOnLevel)");
 
-    int groupNumber = 1;
+    int groupNumber = 4;
     foreach (const QString &groupAddress, groupAddresses1) {
         query.bindValue(":groupAddress", groupAddress);
         query.bindValue(":groupName", "Group " + QString::number(groupNumber));
@@ -1404,7 +1404,7 @@ void Database::clearAllData()
     // CONSTRUCCIÓN BASE DE TABLA TEST
     if (!query.exec("DELETE FROM Test")) { qDebug() << "Error executing DELETE query:" << query.lastError().text(); }
 
-    QStringList groupAddresses2 = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B", "C01C", "C01D", "C01E", "C01F"};
+    QStringList groupAddresses2 = {"FFFF", "C010", "C011", "C012", "C013", "C014", "C015", "C016", "C017", "C018", "C019", "C01A", "C01B"};
     query.prepare("INSERT INTO Test (GroupAddress, FunctionalEnable, DurationEnable, FunctionalDays, FunctionalTime, DurationPeriodicity, DurationDate, DurationTime) "
                   "VALUES (:groupAddress, :functionalEnable, :durationEnable, :functionalDays, :functionalTime, :durationPeriodicity, :durationDate, :durationTime)");
 
