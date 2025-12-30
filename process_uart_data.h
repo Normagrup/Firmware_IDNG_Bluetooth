@@ -110,7 +110,7 @@ void processConfirmGroupFrame(void);
 int getExpectedFrameSize(const QByteArray& buffer);
 
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database);
-void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Database* database);
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, Database* database);
 void sendUartClearOneInyectedNode(UartPort* _uartPort, uint16_t nodeAddress);
 
 void sendUartUpdateNextUnicast(UartPort* _uartPort, uint16_t nextUnicastAddress);

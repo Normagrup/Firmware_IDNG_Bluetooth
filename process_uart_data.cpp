@@ -905,7 +905,7 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
     }
 }
 
-void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Database* database)
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, Database* database)
 {
     uint16_t masterStoredAddress = database->getMasterRealAddress();
 
@@ -922,7 +922,7 @@ void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Datab
         frame.append(length);
         frame.append(UART_CONFIG_FRAME_TYPE);
         frame.append(CLEAR_INYECTED_NODES);
-        frame.append(isCommissioning ? 0x01 : 0x00);
+        frame.append(totalDelete ? 0x01 : 0x00);
         frame.append((masterStoredAddress >> 8) & 0xFF);
         frame.append(masterStoredAddress & 0xFF);
         frame.append(UART_END);
