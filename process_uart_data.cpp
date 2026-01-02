@@ -905,7 +905,7 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
     }
 }
 
-void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Database* database)
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, Database* database)
 {
     uint16_t masterStoredAddress = database->getMasterRealAddress();
 
@@ -922,7 +922,7 @@ void sendUartClearInyectedNodes(UartPort* _uartPort, bool isCommissioning, Datab
         frame.append(length);
         frame.append(UART_CONFIG_FRAME_TYPE);
         frame.append(CLEAR_INYECTED_NODES);
-        frame.append(isCommissioning ? 0x01 : 0x00);
+        frame.append(totalDelete ? 0x01 : 0x00);
         frame.append((masterStoredAddress >> 8) & 0xFF);
         frame.append(masterStoredAddress & 0xFF);
         frame.append(UART_END);
@@ -1133,6 +1133,40 @@ void sendUartAddGroupManual(UartPort* _uartPort, uint16_t* address)
     if(messageState == PENDING) {
         messageState = MISSED;
         qDebug() << "No se recibió confirmación del ADD_GROUP_MANUAL";
+    }
+}
+
+void sendUartAddGroupAuto(UartPort* _uartPort, uint16_t realAddress, uint16_t groupAddress)
+{
+    uint8_t att = 3;
+    uint8_t actAtt = 0;
+    int ms[3] = {3000, 4000, 5000};
+    messageState = PENDING;
+
+    while(actAtt < att && messageState == PENDING) {
+        QByteArray frame;
+        unsigned char length = 7;
+
+        frame.append(UART_HEADER);
+        frame.append(length);
+        frame.append(UART_CONFIG_FRAME_TYPE);
+        frame.append(ADD_GROUP_AUTO);
+        frame.append((realAddress >> 8) & 0xFF);
+        frame.append(realAddress & 0xFF);
+        frame.append((groupAddress >> 8) & 0xFF);
+        frame.append(groupAddress & 0xFF);
+
+        frame.append(UART_END);
+
+        _uartPort->sendData(frame);
+
+        delay(ms[actAtt]);
+        actAtt++;
+    }
+
+    if(messageState == PENDING) {
+        messageState = MISSED;
+        qDebug() << "No se recibió confirmación del ADD_GROUP_AUTO";
     }
 }
 
@@ -1733,6 +1767,8 @@ void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
         memcpy(installKeyBytes, installKeys[installKey.toInt() - 1], 16);
     }
 
+    uint8_t activeKey = database->getActiveKey();
+
     uint8_t att = 3;
     uint8_t actAtt = 0;
     int ms[3] = {1500, 1500, 2000};
@@ -1740,7 +1776,7 @@ void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 
     while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
-        unsigned char length = 21;
+        unsigned char length = 22;
 
         frame.append(UART_HEADER);
         frame.append(length);
@@ -1750,6 +1786,8 @@ void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
         frame.append((masterStoredAddress >> 8) & 0xFF);
         frame.append(masterStoredAddress & 0xFF);
 
+        frame.append(activeKey);
+
         for(uint8_t j = 0; j < 16; j++)
             frame.append(installKeyBytes[j]);
 
@@ -1757,7 +1795,7 @@ void sendSetAntennaAddressAndInstallKey(UartPort* _uartPort, Database* database)
 
         _uartPort->sendData(frame);
 
-        qDebug() << "Intento" << (actAtt + 1) << "-> Address:" << masterStoredAddress << "- InstallKey:" << installKey;
+        qDebug() << "Intento" << (actAtt + 1) << "-> Address:" << masterStoredAddress << "- InstallKey:" << installKey << "- Active:" << activeKey;
 
         delay(ms[actAtt]);
         actAtt++;
@@ -1900,6 +1938,22 @@ void sendUartInstallKey(UartPort* _uartPort, QString serial, uint16_t bluetoothA
     frame.append((bluetoothAddress >> 8) & 0xFF);
     frame.append(bluetoothAddress & 0xFF);
 
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendUartChangedActiveKey(UartPort* _uartPort, uint8_t activeKey)
+{
+    QByteArray frame;
+
+    unsigned char length = 4;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(SET_ACTIVE_KEY);
+    frame.append(activeKey);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);

@@ -123,7 +123,12 @@ function loadPageAfterAsk(page, answer)
 			processApplyAssign("", true);
 		}, 300);
 	}
-
+	else if(answer === "GROUP_AUTOASSIGNMENT") {
+		frame.src = "s_groups.html";
+		setTimeout(function() {
+			processGroupAutoAssign("", true);
+		}, 300);
+	}
 
 	requestDateTime();
 }

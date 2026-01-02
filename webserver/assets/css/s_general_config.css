@@ -55,7 +55,7 @@ label {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    height: 75%;
+    height: 85%;
     width: 30%;
     background-color: #fff;
     border-radius: 10px;
@@ -212,6 +212,7 @@ button.clicked {
 
 #saveAntennaIDAndInstallKey,
 #saveCycles,
+#saveKey,
 #editInstallKey {
     padding: 0;
     margin: 0;
@@ -221,6 +222,7 @@ button.clicked {
 
 #saveAntennaIDAndInstallKey img,
 #saveCycles img,
+#saveKey img,
 #editInstallKey img {
     margin-top: 3px;
 }
@@ -298,7 +300,20 @@ button:disabled:hover {
     cursor: pointer;
 }
 
-.selector:focus {
+.selector2 {
+    padding: 5px;
+    padding-left: 10px;
+    height: 35px;
+    width: 150px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4682b4;
+    cursor: pointer;
+}
+
+.selector:focus,
+.selector2:focus {
     outline: 2px solid #63e8f0;
 }
 

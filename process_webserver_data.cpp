@@ -72,6 +72,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             case SCAN_BY_NODE: st = "SCAN_BY_NODE"; break;
             case LINE_SCAN: st = "LINE_SCAN"; break;
             case APPLY_AUTOASSIGNMENT: st = "APPLY_AUTOASSIGNMENT"; break;
+            case GROUP_AUTOASSIGNMENT: st = "GROUP_AUTOASSIGNMENT"; break;
         }
 
         QString message = QString(WS_ASK_STATE_TO_EMBEDDED) + "@" + value + "#" + st;
@@ -930,6 +931,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->updateFailComCycles(cycles);
         failComCycles = cycles;
     }
+    else if (type == WS_GET_ACTIVE_KEY) {
+        uint8_t activeKey = database->getActiveKey();
+        sendActiveKey(webServer, activeKey);
+    }
+    else if (type == WS_SET_ACTIVE_KEY) {
+        uint8_t activeKey = value.toUInt();
+        database->setActiveKey(activeKey);
+        sendUartChangedActiveKey(uartPort, activeKey);
+    }
     else if (type == WS_CHANGE_NODES) {
         database->clearPartialUnassignedNodes();
 
@@ -1027,6 +1037,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         {
             sendUnassignedNodesPaged(webServer, database, page);
         }
+    }
+    else if (type == WS_GROUP_AUTOASSIGNMENT) {
+        embeddedState = GROUP_AUTOASSIGNMENT;
+        cleanCdbTimer.stop();
+        sendConfirmStartGroupAutoAssignment(webServer);
+
+        applyGroupAutoAssignment(webServer, uartPort, database);
+
+        sendConfirmEndGroupAutoAssignment(webServer);
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+        embeddedState = FREE;
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -1998,6 +2019,7 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
     QList<UnassignedNode> unassignedNodes = database->getUnassignedNodes();
 
     // Unos 7.5s por nodo --> 8 nodos/min
+
     for(UnassignedNode unassignedNode : unassignedNodes)
     {
         uint8_t installKey[16] = {0};
@@ -2040,6 +2062,120 @@ void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
 void sendConfirmEndApplyAutoAssignment(WebServer* webServer)
 {
     QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmStartGroupAutoAssignment(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_START_GROUP_AUTO_ASSIGN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database)
+{
+    int counter = 0;
+    int totalNodes = 0;
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured())
+                totalNodes++;
+        }
+    }
+    sendGroupAutoAssignInfo(webServer, counter, totalNodes);
+
+    for(int i = 0; i < MAX_SUBNET; i++){
+        for(int j = 0; j < MAX_NODES_SUBNET; j++) {
+            Device& device = meshDevice[i][j];
+            if(device.getIsConfigured()) {
+                counter++;
+                sendUartInyectNode(uartPort, device.getRealAddress(), database);
+                while(messageState == PENDING) {}
+
+                if(messageState == RECEIVED) {
+                    uint8_t devType = device.getDeviceType();
+                    if(devType == 0x01 || devType == 0x00) // EMERGENCY or DEFAULT
+                    {
+                        if(!device.isOnGroupSubAddress(0xC001)) {
+                            sendUartAddGroupAuto(uartPort, device.getRealAddress(), 0xC001);
+                            while(messageState == PENDING) {}
+
+                            if(messageState == RECEIVED) {
+                                meshDevice[i][j].setGroupSubAddress(0xC001); // Añadir al modelo
+                                database->setGroup(device.getRealAddress(), 0xC001); // Añadir grupo en la BBDD
+                            }
+                        }
+
+                        if((j + 1) % 2 == 0) { // PAR
+                            if(!device.isOnGroupSubAddress(0xC002)) {
+                                sendUartAddGroupAuto(uartPort, device.getRealAddress(), 0xC002);
+                                while(messageState == PENDING) {}
+
+                                if(messageState == RECEIVED) {
+                                    meshDevice[i][j].setGroupSubAddress(0xC002); // Añadir al modelo
+                                    database->setGroup(device.getRealAddress(), 0xC002); // Añadir grupo en la BBDD
+                                }
+                            }
+                        }
+                        else { // IMPAR
+                            if(!device.isOnGroupSubAddress(0xC003)) {
+                                sendUartAddGroupAuto(uartPort, device.getRealAddress(), 0xC003);
+                                while(messageState == PENDING) {}
+
+                                if(messageState == RECEIVED) {
+                                    meshDevice[i][j].setGroupSubAddress(0xC003); // Añadir al modelo
+                                    database->setGroup(device.getRealAddress(), 0xC003); // Añadir grupo en la BBDD
+                                }
+                            }
+                        }
+                    }
+                    else if (devType == 0x06) // LIGHTING
+                    {
+                        if(!device.isOnGroupSubAddress(0xC000)) {
+                            sendUartAddGroupAuto(uartPort, device.getRealAddress(), 0xC000);
+                            while(messageState == PENDING) {}
+
+                            if(messageState == RECEIVED) {
+                                meshDevice[i][j].setGroupSubAddress(0xC000); // Añadir al modelo
+                                database->setGroup(device.getRealAddress(), 0xC000); // Añadir grupo en la BBDD
+                            }
+                        }
+                    }
+                }
+
+                sendUartClearOneInyectedNode(uartPort, device.getRealAddress());
+                while(messageState == PENDING) {}
+
+                sendGroupAutoAssignInfo(webServer, counter, totalNodes);
+            }
+        }
+    }
+
+    sendUartClearInyectedNodes(uartPort, false, database);
+    while(messageState == PENDING) {}
+
+    delay(3000);
+}
+
+void sendConfirmEndGroupAutoAssignment(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_END_GROUP_AUTO_ASSIGN) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes)
+{
+    QString message = QString(WS_SEND_INFO_GROUP_AUTO_ASSIGN) + "@" + QString::number(counter) + "_" + QString::number(totalNodes);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendActiveKey(WebServer* webServer, uint8_t activeKey)
+{
+    QString message = QString(WS_SEND_ACTIVE_KEY) + "@" + QString::number(activeKey);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

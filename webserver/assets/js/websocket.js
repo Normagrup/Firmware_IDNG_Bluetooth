@@ -1885,6 +1885,58 @@ function processApplyAssign(value, init)
     }
 }
 
+function processGroupAutoAssign(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupGroupAutoAssignment");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    var counter = iframeDocument.getElementById("counterForGroupAssign");
+
+    if(init)
+    {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+
+        counter.textContent = "...";
+    }
+    else 
+    {
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }
+}
+
+function processInfoGroupAutoAssign(value)
+{
+    var parts = value.split("_");
+    var count = parts[0];
+    var total = parts[1];
+
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var counter = iframeDocument.getElementById("counterForGroupAssign");
+
+    if(counter) {
+        counter.textContent = count + "/" + total;
+    }
+}
+
+function processActiveKey(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var activeKeySelector = iframeDocument.getElementById("activeKey");
+
+    if(activeKeySelector) {
+        activeKeySelector.value = value;
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -1951,6 +2003,10 @@ function processReceivedData(data)
     else if (type == "UNASSIGNED_NODES") { processUnassignedNodes(value); }
     else if (type == "START_APPLY_ASSIGN") { processApplyAssign(value, true); }
     else if (type == "END_APPLY_ASSIGN") { processApplyAssign(value, false); }
+    else if (type == "START_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, true); }
+    else if (type == "INFO_GROUP_AUTO_ASSIGN") { processInfoGroupAutoAssign(value); }
+    else if (type == "END_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, false); }
+    else if (type == "ACTIVE_KEY") { processActiveKey(value); }
 }
 
 function sendData(type, value) 
@@ -3128,4 +3184,19 @@ function deleteUnassignedNode(value)
     if(value === "-") { return; }
     
     sendData("DEL_UNASSIGNED_NODE", value + "_" + currentPage);
+}
+
+function groupAutoAssignment()
+{
+    sendData("GROUP_AUTOASSIGNMENT", "");
+}
+
+function saveActiveKey()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var activeKeySelector = iframeDocument.getElementById("activeKey");
+
+    sendData("SET_ACTIVE_KEY", activeKeySelector.value);
 }
