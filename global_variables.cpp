@@ -110,3 +110,5 @@ bool notRan = true;
 QString factoryProgramSerial = "";
 bool isFactoryProgramOn = false;
 QString rcvAddressFactoryProgram = "";
+
+int lastAssignedAddress = 0;

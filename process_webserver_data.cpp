@@ -2031,8 +2031,11 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
             }
         }
 
+        lastAssignedAddress = unassignedNode.bluetoothAddress;
+        insertLogEvent(database, "Assign REQUEST [" + unassignedNode.installKey + "]", unassignedNode.serial, unassignedNode.bluetoothAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_REQUEST, "Assignment");
+
         sendUartInstallKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
-        delay(1000);
+        delay(10000);
     }
 
     uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
@@ -2085,6 +2088,14 @@ void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database
         for(int j = 0; j < MAX_NODES_SUBNET; j++) {
             Device& device = meshDevice[i][j];
             if(device.getIsConfigured()) {
+                // LOG INFO (General) ------------------------------------------------------------
+                QString devname = "A" + QString::number(i * 64 + j + 1).rightJustified(4, '0');
+                QString serialNum = meshDevice[i][j].serialNumberString();
+                int btAddress = meshDevice[i][j].getRealAddress();
+                AntennaInfo info = getAntennaInfo(database);
+                QString eventType = "Groups";
+                // -------------------------------------------------------------------------------
+
                 counter++;
                 sendUartInyectNode(uartPort, device.getRealAddress(), database);
                 while(messageState == PENDING) {}
@@ -2101,6 +2112,10 @@ void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database
                                 meshDevice[i][j].setGroupSubAddress(0xC001); // Añadir al modelo
                                 database->setGroup(device.getRealAddress(), 0xC001); // Añadir grupo en la BBDD
                             }
+
+                            QString groupAddressString = QString("%1").arg(0xC001, 4, 16, QLatin1Char('0')).toUpper();
+                            QString name = devname + " - " + database->getGroupName(groupAddressString);
+                            insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, messageState == RECEIVED ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
                         }
 
                         if((j + 1) % 2 == 0) { // PAR
@@ -2112,6 +2127,10 @@ void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database
                                     meshDevice[i][j].setGroupSubAddress(0xC002); // Añadir al modelo
                                     database->setGroup(device.getRealAddress(), 0xC002); // Añadir grupo en la BBDD
                                 }
+
+                                QString groupAddressString = QString("%1").arg(0xC002, 4, 16, QLatin1Char('0')).toUpper();
+                                QString name = devname + " - " + database->getGroupName(groupAddressString);
+                                insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, messageState == RECEIVED ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
                             }
                         }
                         else { // IMPAR
@@ -2123,6 +2142,10 @@ void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database
                                     meshDevice[i][j].setGroupSubAddress(0xC003); // Añadir al modelo
                                     database->setGroup(device.getRealAddress(), 0xC003); // Añadir grupo en la BBDD
                                 }
+
+                                QString groupAddressString = QString("%1").arg(0xC003, 4, 16, QLatin1Char('0')).toUpper();
+                                QString name = devname + " - " + database->getGroupName(groupAddressString);
+                                insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, messageState == RECEIVED ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
                             }
                         }
                     }
@@ -2136,8 +2159,21 @@ void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database
                                 meshDevice[i][j].setGroupSubAddress(0xC000); // Añadir al modelo
                                 database->setGroup(device.getRealAddress(), 0xC000); // Añadir grupo en la BBDD
                             }
+
+                            QString groupAddressString = QString("%1").arg(0xC000, 4, 16, QLatin1Char('0')).toUpper();
+                            QString name = devname + " - " + database->getGroupName(groupAddressString);
+                            insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, messageState == RECEIVED ? LOG_ADDED_TO_GROUP_OK : LOG_ADDED_TO_GROUP_FAIL, eventType);
                         }
                     }
+                    else
+                    {
+                        QString name = devname + " - " + "TYPE";
+                        insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_ADDED_TO_GROUP_FAIL, eventType);
+                    }
+                }
+                else {
+                    QString name = devname + " - " + "INJECTION";
+                    insertLogEvent(database, name, serialNum, btAddress, info.ip, info.timestamp, LOG_ADDED_TO_GROUP_FAIL, eventType);
                 }
 
                 sendUartClearOneInyectedNode(uartPort, device.getRealAddress());

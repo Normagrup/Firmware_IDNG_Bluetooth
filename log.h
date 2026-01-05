@@ -9,6 +9,9 @@
 #define LOG_COMMISSION_NET_ADDR_FAIL          0xD5
 #define LOG_DEVICE_REMOVED                    0xD6
 
+#define LOG_ASSIGNMENT_REQUEST                0xD7
+#define LOG_ASSIGNMENT_OK                     0xD8
+
 // Communication Failures
 #define LOG_COMMUNICATION_FAILURE             0x01
 #define LOG_COMMUNICATION_RECOVERED           0x10

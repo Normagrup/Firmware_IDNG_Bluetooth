@@ -299,6 +299,12 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
 
                         database->addNodeByAssignment(serial, uuid, devType);
+
+                        QString ik = database->getInstallKey();
+                        if(ik.size() == 32) { ik = "16"; }
+
+                        insertLogEvent(database, "Assign RESPONSE [" + ik + "]", serial, lastAssignedAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_OK, "Assignment");
+
                     }
                     break;
                     case CONFIRM_END_REMOVE_ONE_NODE:

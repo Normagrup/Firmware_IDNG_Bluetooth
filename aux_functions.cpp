@@ -223,6 +223,8 @@ void transformEventCodes(QList<QStringList>* logs)
         else if (event == "212") { event = "DEV TYPE FAIL"; }
         else if (event == "213") { event = "NET ADDR FAIL"; }
         else if (event == "214") { event = "DEVICE REMOVED"; }
+        else if (event == "215") { event = "ASSIGNMENT REQUEST"; }
+        else if (event == "216") { event = "ASSIGNMENT DONE"; }
 
         else if (event == "1") { event = "COMMUNICATION FAIL"; }
         else if (event == "16") { event = "COMMUNICATION RECOVERY"; }

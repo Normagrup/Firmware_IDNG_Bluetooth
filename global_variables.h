@@ -133,4 +133,6 @@ extern QString factoryProgramSerial;
 extern bool isFactoryProgramOn;
 extern QString rcvAddressFactoryProgram;
 
+extern int lastAssignedAddress;
+
 #endif // GLOBAL_VARIABLES_H
