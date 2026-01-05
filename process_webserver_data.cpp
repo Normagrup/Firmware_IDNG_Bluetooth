@@ -48,7 +48,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_ASK_STATE_TO_EMBEDDED) {
         // -------- Por si se cambia de página, que se detenga el identify que se esté haciendo
-        if (identifyTimer.isActive()) { identifyTimer.stop(); }
+        if (identifyTimer.isActive()) { identifyTimer.stop(); cleanCdbTimer.start(TIME_TO_CLEAN_CDB); }
         identifyNodeNetAddress = 0;
         identifyIteration = 0;
         // ------------------------------------------------------------------------------------
@@ -543,27 +543,22 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = FREE;
     }
     else if (type == WS_SET_IDENTIFY) {
-        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+        cleanCdbTimer.stop();
+
         uint16_t nodeNetAddress = value.toUInt();
 
-        // Si ya había un identify en marcha, lo paramos
-        if (identifyTimer.isActive()) {
-            identifyTimer.stop();
-        }
+        if (identifyTimer.isActive()) { identifyTimer.stop(); }
 
         identifyNodeNetAddress = nodeNetAddress;
         identifyIteration = 0;
 
         sendIdentify(uartPort, identifyNodeNetAddress);
 
-        // timer para hacer bucles de 5 seg hasta 15 min
         identifyTimer.start();
 
     }
     else if (type == WS_STOP_IDENTIFY) {
-        if (identifyTimer.isActive()) {
-            identifyTimer.stop();
-        }
+        if (identifyTimer.isActive()) { identifyTimer.stop(); cleanCdbTimer.start(TIME_TO_CLEAN_CDB); }
         identifyNodeNetAddress = 0;
         identifyIteration = 0;
     }

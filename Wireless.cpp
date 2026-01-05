@@ -591,11 +591,13 @@ void Wireless::identifyTimerHandler()
     if (identifyIteration >= IDENTIFY_MAX_ITERATIONS) {
         qDebug() << "[IDENTIFY] Tiempo máximo alcanzado, deteniendo identify";
         identifyTimer.stop();
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         return;
     }
 
     if (identifyNodeNetAddress == 0) {
         identifyTimer.stop();
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         return;
     }
 
