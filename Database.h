@@ -105,6 +105,7 @@ public:
 
     bool doAutoAssignment();
     bool allNodesHaveAutoAssignment();
+    uint8_t* getSerial(uint16_t realAddress);
 
 signals:
 

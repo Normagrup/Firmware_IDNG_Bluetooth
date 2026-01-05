@@ -1906,6 +1906,15 @@ function processGroupAutoAssign(value, init)
     {
         popup.style.visibility = "hidden";
         popupOverlay.style.visibility = "hidden";
+
+        var groupList = iframeDocument.getElementById("groupList");
+        groupList.selectedIndex = 0;
+
+        var notIncludedNodesList = iframeDocument.getElementById("notIncludedNodesList");
+        notIncludedNodesList.innerHTML = "";
+
+        var includedNodesList = iframeDocument.getElementById("includedNodesList");
+        includedNodesList.innerHTML = "";
     }
 }
 

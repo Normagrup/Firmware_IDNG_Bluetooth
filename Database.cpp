@@ -1926,3 +1926,32 @@ bool Database::allNodesHaveAutoAssignment()
 
     return (missing == 0);
 }
+
+uint8_t* Database::getSerial(uint16_t realAddress)
+{
+    uint8_t* serial = new uint8_t[4]{0, 0, 0, 0};
+    QSqlQuery query;
+
+    query.prepare("SELECT UUID FROM Nodes WHERE RealAddress = :realAddress");
+    query.bindValue(":realAddress", realAddress);
+
+    if (!query.exec()) {
+        qDebug() << "Error ejecutando SELECT en getSerial:" << query.lastError().text();
+        delete[] serial;
+        return nullptr;
+    }
+
+    if (query.next()) {
+        QString uuid = query.value(0).toString();
+        serial[0] = uuid.mid(24, 2).toUInt(nullptr, 16);
+        serial[1] = uuid.mid(26, 2).toUInt(nullptr, 16);
+        serial[2] = uuid.mid(28, 2).toUInt(nullptr, 16);
+        serial[3] = uuid.mid(30, 2).toUInt(nullptr, 16);
+        return serial;
+
+    } else {
+        qDebug() << "No se encontró serial";
+        delete[] serial;
+        return {};
+    }
+}

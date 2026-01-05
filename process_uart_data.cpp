@@ -876,6 +876,8 @@ void sendUartMicroReboot(UartPort* _uartPort)
 
 void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* database)
 {
+    uint8_t* serial = database->getSerial(nodeAddress); // Ejemplo: serial[0] = 0x11, serial[1] = 0x22, serial[2] = 0x33, serial[3] = 0x01
+
     uint8_t att = 3;
     uint8_t actAtt = 0;
     int ms[3] = {500, 2000, 4000};
@@ -883,7 +885,7 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
 
     while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
-        unsigned char length = 5;
+        unsigned char length = 9;
 
         frame.append(UART_HEADER);
         frame.append(length);
@@ -891,6 +893,10 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
         frame.append(INYECT_NODE);
         frame.append((nodeAddress >> 8) & 0xFF);
         frame.append(nodeAddress & 0xFF);
+        frame.append(serial[0]);
+        frame.append(serial[1]);
+        frame.append(serial[2]);
+        frame.append(serial[3]);
         frame.append(UART_END);
 
         _uartPort->sendData(frame);
