@@ -2013,7 +2013,7 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
 
     QList<UnassignedNode> unassignedNodes = database->getUnassignedNodes();
 
-    // Unos 7.5s por nodo --> 8 nodos/min
+    // Unos 10s por nodo --> 6 nodos/min
 
     for(UnassignedNode unassignedNode : unassignedNodes)
     {
@@ -2032,7 +2032,7 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
         }
 
         sendUartInstallKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
-        delay(7250);
+        delay(1000);
     }
 
     uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
