@@ -112,3 +112,5 @@ bool isFactoryProgramOn = false;
 QString rcvAddressFactoryProgram = "";
 
 int lastAssignedAddress = 0;
+
+QVector<CommissionedNode> commissionedNodes;

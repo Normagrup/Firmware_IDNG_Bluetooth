@@ -593,6 +593,16 @@ void processFeaturesFrame(QByteArray data, UartPort* uartPort, Database* databas
 
                 netAddress = i * 64 + j + 1;
 
+                // -----------------------
+                CommissionedNode node; node.i = i; node.j = j;
+                node.serial = QString("%1.%2.%3.%4")
+                                     .arg(revertedNodeUUID[12], 2, 16, QChar('0'))
+                                     .arg(revertedNodeUUID[13], 2, 16, QChar('0'))
+                                     .arg(revertedNodeUUID[14], 2, 16, QChar('0'))
+                                     .arg(revertedNodeUUID[15], 2, 16, QChar('0'));
+                commissionedNodes.append(node);
+                // -----------------------
+
                 database->setNewNode(i, j, address, nodeUUID);
                 database->updateNextUnicastAddress(address);
                 insertDevToLog(meshDevice[i][j].getRealAddress(), database, LOG_DEVICE_ADDED, "Device");

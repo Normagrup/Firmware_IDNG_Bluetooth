@@ -65,6 +65,7 @@
 #define WS_APPLY_AUTOASSIGNMENT             "APPLY_AUTOASSIGNMENT"
 #define WS_DEL_UNASSIGNED_NODE              "DEL_UNASSIGNED_NODE"
 #define WS_GROUP_AUTOASSIGNMENT             "GROUP_AUTOASSIGNMENT"
+#define WS_UPDATE_UNASSIGNED                "UPDATE_UNASSIGNED"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"

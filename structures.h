@@ -110,4 +110,10 @@ typedef struct {
     QString installKey;
 } UnassignedNode;
 
+typedef struct {
+    int i;
+    int j;
+    QString serial;
+} CommissionedNode;
+
 #endif // STRUCTURES_H

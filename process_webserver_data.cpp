@@ -1044,6 +1044,17 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
         embeddedState = FREE;
     }
+    else if (type == WS_UPDATE_UNASSIGNED) {
+        for(int n = 0; n < commissionedNodes.size(); n++) {
+            database->deleteNode(meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].getRealAddress());
+            meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].deleteDevice();
+
+            database->clearUnassignedNodes();
+            database->addUnassignedNode(commissionedNodes[n].serial);
+        }
+        database->loadNodesFromDatabase();
+        commissionedNodes.clear();
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
@@ -1132,7 +1143,58 @@ void deleteNodeForReplace(WebServer* webServer, UartPort* uartPort, Database* da
 }
 
 void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* database) {
+    // PARTE DE LA INSTALLKEY -----------------------
+    sendLogCommissionEntry(webServer, "The node is configuring the installKey...", "INFO");
+
+    for(int n = 0; n < commissionedNodes.size(); n++) {
+        database->deleteNode(meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].getRealAddress());
+        meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].deleteDevice();
+
+        database->clearUnassignedNodes();
+        database->addUnassignedNode(commissionedNodes[n].serial);
+    }
+    database->loadNodesFromDatabase();
+    commissionedNodes.clear();
+
+    database->doAutoAssignment();
+
+    QList<UnassignedNode> unassignedNodes = database->getUnassignedNodes();
+
+    // Unos 10s por nodo --> 6 nodos/min
+
+    for(UnassignedNode unassignedNode : unassignedNodes)
+    {
+        uint8_t installKey[16] = {0};
+        if(unassignedNode.installKey != "16")
+        {
+            memcpy(installKey, installKeys[unassignedNode.installKey.toInt() - 1], 16);
+        }
+        else
+        {
+            QString installKeyStr = database->getInstallKey();
+
+            for (int i = 0; i < 16; ++i) {
+                installKey[i] = static_cast<uint8_t>(installKeyStr.mid(i * 2, 2).toUInt(nullptr, 16));
+            }
+        }
+
+        lastAssignedAddress = unassignedNode.bluetoothAddress;
+        insertLogEvent(database, "Assign REQUEST [" + unassignedNode.installKey + "]", unassignedNode.serial, unassignedNode.bluetoothAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_REQUEST, "Assignment");
+
+        sendUartInstallKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
+        delay(10000);
+    }
+
+    uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
+    if(newNextUnicastAddress > 0)
+        database->updateNextUnicastAddress(newNextUnicastAddress);
+    database->clearUnassignedNodes();
+
+    database->loadNodesFromDatabase();
+    // PARTE DE LA INSTALLKEY -----------------------
+
     // PARTE 3 de 3: CARGAR DATOS AL NODO NUEVO
+    sendLogCommissionEntry(webServer, "The node is loading the data...", "INFO");
 
     // Cargar los datos en el nodo (parte modelo)
     uint16_t nodeNetAddress = database->getNodeNetAddressForReplace(replaceData.newNodeRealAddress);
@@ -1179,8 +1241,10 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
         delay(2000);
     }
 
+    sendLogCommissionEntry(webServer, "The node has loaded the data.", "INFO");
     delay(5000);
     sendUartConfirmReplacing(uartPort, replaceData.newNodeRealAddress);
+    database->loadNodesFromDatabase();
 }
 
 void sendRecoveringMicro(WebServer* webServer)

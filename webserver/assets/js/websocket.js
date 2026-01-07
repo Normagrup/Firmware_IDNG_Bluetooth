@@ -270,6 +270,8 @@ function confirmAddingDevice(value)
     var logAddManualList = iframeDocument.getElementById('logAddManual');
 
     if(logAddManualList) {
+        sendData("UPDATE_UNASSIGNED", "");
+
         var newEntry = iframeDocument.createElement('li');
 
         var closeButton = iframeDocument.createElement('button');
@@ -283,6 +285,9 @@ function confirmAddingDevice(value)
     }
 
     setTimeout(function() {
+        var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
+        scannedDevicesList.innerHTML = "";
+
         var networkNodesList = iframeDocument.getElementById("networkNodesList");
         networkNodesList.innerHTML = "";
 
@@ -291,9 +296,9 @@ function confirmAddingDevice(value)
 
             setTimeout(function() {
                 sendData("SET_STORED_SCANNED_DEVICES", "");
-            }, 200);
-        }, 200);
-    }, 200);
+            }, 300);
+        }, 600);
+    }, 100);
 }
 
 function addDeviceToNetworkList(value) 
@@ -443,6 +448,8 @@ function processDeviceError(value)
         var logAddManualList = iframeDocument.getElementById('logAddManual');
 
         if(logAddManualList) {
+            sendData("UPDATE_UNASSIGNED", "");
+
             var newEntry1 = iframeDocument.createElement('li');
 
             var closeButton = iframeDocument.createElement('button');
@@ -466,6 +473,8 @@ function processDeviceError(value)
         var logReplaceList = iframeDocument.getElementById('logReplace');
 
         if(logReplaceList) {
+            sendData("UPDATE_UNASSIGNED", "");
+
             var newEntry2 = iframeDocument.createElement('li');
 
             var closeButton = iframeDocument.createElement('button');
@@ -1025,6 +1034,8 @@ function processEndAutoCommission(value)
     var logCommissionList = iframeDocument.getElementById('logCommission');
 
     if(logCommissionList) {
+        sendData("UPDATE_UNASSIGNED", "");
+
         var newEntry = iframeDocument.createElement('li');
 
         var closeButton = iframeDocument.createElement('button');
@@ -1798,6 +1809,9 @@ function processReplacing(value, init)
         }
 
         setTimeout(function() {
+            var scannedDevicesList = iframeDocument.getElementById('scannedDevicesList');
+            scannedDevicesList.innerHTML = "";
+
             var networkNodesList = iframeDocument.getElementById("networkNodesList");
             networkNodesList.innerHTML = "";
 
@@ -1806,9 +1820,9 @@ function processReplacing(value, init)
 
                 setTimeout(function() {
                     sendData("SET_STORED_SCANNED_DEVICES", "");
-                }, 200);
-            }, 200);
-        }, 200);
+                }, 300);
+            }, 600);
+        }, 100);
     }
 }
 
