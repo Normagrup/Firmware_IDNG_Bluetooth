@@ -1045,11 +1045,11 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = FREE;
     }
     else if (type == WS_UPDATE_UNASSIGNED) {
+        database->clearUnassignedNodes();
         for(int n = 0; n < commissionedNodes.size(); n++) {
             database->deleteNode(meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].getRealAddress());
             meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].deleteDevice();
 
-            database->clearUnassignedNodes();
             database->addUnassignedNode(commissionedNodes[n].serial);
         }
         database->loadNodesFromDatabase();
@@ -1146,11 +1146,11 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
     // PARTE DE LA INSTALLKEY -----------------------
     sendLogCommissionEntry(webServer, "The node is configuring the installKey...", "INFO");
 
+    database->clearUnassignedNodes();
     for(int n = 0; n < commissionedNodes.size(); n++) {
         database->deleteNode(meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].getRealAddress());
         meshDevice[commissionedNodes[n].i][commissionedNodes[n].j].deleteDevice();
 
-        database->clearUnassignedNodes();
         database->addUnassignedNode(commissionedNodes[n].serial);
     }
     database->loadNodesFromDatabase();
