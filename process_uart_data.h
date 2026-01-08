@@ -148,7 +148,7 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartMicroReboot(UartPort* _uartPort);
-void sendUartInstallKey(UartPort* _uartPort, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey);
+void sendUartInstallKey(UartPort* _uartPort, Database* database, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey);
 void sendUartChangedActiveKey(UartPort* _uartPort, uint8_t activeKey);
 
 #endif // PROCESS_UART_DATA_H

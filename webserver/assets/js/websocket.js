@@ -1948,15 +1948,25 @@ function processInfoGroupAutoAssign(value)
     }
 }
 
-function processActiveKey(value)
+function processActiveKeyAndForce(value)
 {
+    var parts = value.split("_");
+    var activeKey = parts[0];
+    var force = (parts[1] === "forcing") ;
+
     var iframe = document.getElementById('mainframe');
     var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
     var activeKeySelector = iframeDocument.getElementById("activeKey");
 
     if(activeKeySelector) {
-        activeKeySelector.value = value;
+        activeKeySelector.value = activeKey;
+    }
+
+    var toggleForce = iframeDocument.getElementById("toggleForce");
+
+    if(toggleForce) {
+        toggleForce.checked = force;
     }
 }
 
@@ -2029,7 +2039,7 @@ function processReceivedData(data)
     else if (type == "START_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, true); }
     else if (type == "INFO_GROUP_AUTO_ASSIGN") { processInfoGroupAutoAssign(value); }
     else if (type == "END_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, false); }
-    else if (type == "ACTIVE_KEY") { processActiveKey(value); }
+    else if (type == "ACTIVE_KEY_AND_FORCE") { processActiveKeyAndForce(value); }
 }
 
 function sendData(type, value) 
@@ -3222,4 +3232,21 @@ function saveActiveKey()
     var activeKeySelector = iframeDocument.getElementById("activeKey");
 
     sendData("SET_ACTIVE_KEY", activeKeySelector.value);
+}
+
+function switchForce()
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var switchForce = iframeDocument.getElementById("toggleForce");
+
+    if(switchForce) {
+        switchForce.disabled = true;
+        sendData("SWITCH_FORCE", "");
+
+        setTimeout(function () {
+            switchForce.disabled = false;
+        }, 500);
+    }
 }

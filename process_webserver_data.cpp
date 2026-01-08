@@ -926,9 +926,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->updateFailComCycles(cycles);
         failComCycles = cycles;
     }
-    else if (type == WS_GET_ACTIVE_KEY) {
+    else if (type == WS_GET_ACTIVE_KEY_AND_FORCE) {
         uint8_t activeKey = database->getActiveKey();
-        sendActiveKey(webServer, activeKey);
+        bool forceInstallKey = database->isForcingInstallKey();
+        sendActiveKeyAndForcing(webServer, activeKey, forceInstallKey);
     }
     else if (type == WS_SET_ACTIVE_KEY) {
         uint8_t activeKey = value.toUInt();
@@ -1054,6 +1055,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         }
         database->loadNodesFromDatabase();
         commissionedNodes.clear();
+    }
+    else if (type == WS_SWITCH_FORCE) {
+        database->switchForcingInstallKey();
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -1181,7 +1185,7 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
         lastAssignedAddress = unassignedNode.bluetoothAddress;
         insertLogEvent(database, "Assign REQUEST [" + unassignedNode.installKey + "]", unassignedNode.serial, unassignedNode.bluetoothAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_REQUEST, "Assignment");
 
-        sendUartInstallKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
+        sendUartInstallKey(uartPort, database, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
         delay(10000);
     }
 
@@ -2098,7 +2102,7 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
         lastAssignedAddress = unassignedNode.bluetoothAddress;
         insertLogEvent(database, "Assign REQUEST [" + unassignedNode.installKey + "]", unassignedNode.serial, unassignedNode.bluetoothAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_REQUEST, "Assignment");
 
-        sendUartInstallKey(uartPort, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
+        sendUartInstallKey(uartPort, database, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
         delay(10000);
     }
 
@@ -2268,9 +2272,9 @@ void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendActiveKey(WebServer* webServer, uint8_t activeKey)
+void sendActiveKeyAndForcing(WebServer* webServer, uint8_t activeKey, bool forceInstallKey)
 {
-    QString message = QString(WS_SEND_ACTIVE_KEY) + "@" + QString::number(activeKey);
+    QString message = QString(WS_SEND_ACTIVE_KEY_AND_FORCE) + "@" + QString::number(activeKey) + "_" + (forceInstallKey ? "forcing" : "notForcing");
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

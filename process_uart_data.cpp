@@ -1938,11 +1938,11 @@ void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress)
     _uartPort->sendData(frame);
 }
 
-void sendUartInstallKey(UartPort* _uartPort, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey)
-{
+void sendUartInstallKey(UartPort* _uartPort, Database* database, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey)
+{    
     QByteArray frame;
 
-    unsigned char length = 3 + 4 + 16 + 2; // Se pasan los datos en este orden: serial, installKey y bluetoothAddress
+    unsigned char length = 3 + 4 + 16 + 2 + 1; // Se pasan los datos en este orden: serial, installKey y bluetoothAddress
 
     frame.append(UART_HEADER);
     frame.append(length);
@@ -1959,6 +1959,8 @@ void sendUartInstallKey(UartPort* _uartPort, QString serial, uint16_t bluetoothA
 
     frame.append((bluetoothAddress >> 8) & 0xFF);
     frame.append(bluetoothAddress & 0xFF);
+
+    frame.append(database->isForcingInstallKey());
 
     frame.append(UART_END);
 

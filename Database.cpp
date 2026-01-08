@@ -101,7 +101,8 @@ void Database::initDatabase()
                "InstallKey TEXT, "
                "FailComCycles INTEGER, "
                "NextUnicastAddress INTEGER, "
-               "ActiveKey INTEGER);");
+               "ActiveKey INTEGER, "
+               "ForceInstallKey INTEGER);");
 
     query.prepare("SELECT * FROM General");
 
@@ -114,7 +115,7 @@ void Database::initDatabase()
     else {
         if (!query.next()) {
 
-            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, InstallKey, FailComCycles, NextUnicastAddress, ActiveKey) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :ik, :fcc, :nua, :ak)");
+            query.prepare("INSERT INTO General (IP, Submask, Gateway, BuildingName, LineName, MasterAddress, InstallKey, FailComCycles, NextUnicastAddress, ActiveKey, ForceInstallKey) VALUES (:ip, :submask, :gateway, :buildingName, :lineName, :masterAddress, :ik, :fcc, :nua, :ak, :fik)");
             query.bindValue(":ip", ip);
             query.bindValue(":submask", submask);
             query.bindValue(":gateway", gateway);
@@ -125,6 +126,7 @@ void Database::initDatabase()
             query.bindValue(":fcc", 5);
             query.bindValue(":nua", 0);
             query.bindValue(":ak", 1); // 0 -> appKey; 1 -> installKey
+            query.bindValue(":fik", 0); // no force
 
             if (!query.exec()) { qDebug() << "Error executing INSERT query in General:" << query.lastError().text(); }
         }
@@ -1953,5 +1955,38 @@ uint8_t* Database::getSerial(uint16_t realAddress)
         qDebug() << "No se encontró serial";
         delete[] serial;
         return {};
+    }
+}
+
+bool Database::isForcingInstallKey()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT ForceInstallKey FROM General");
+
+    if (!query.exec()) { return false; }
+
+    if (query.next()) {
+        return query.value("ForceInstallKey").toUInt();
+    }
+
+    return false;
+}
+
+void Database::switchForcingInstallKey()
+{
+    QSqlQuery query;
+
+    query.prepare("SELECT ForceInstallKey FROM General");
+
+    if (!query.exec()) { return; }
+
+    if (query.next()) {
+        bool actual = query.value("ForceInstallKey").toUInt();
+
+        query.prepare("UPDATE General SET ForceInstallKey = :fik");
+        query.bindValue(":fik", actual ? 0 : 1);
+
+        if (!query.exec()) { qDebug() << "Error executing UPDATE query:" << query.lastError().text(); }
     }
 }

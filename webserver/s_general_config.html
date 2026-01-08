@@ -157,6 +157,16 @@
                     <button id="saveKey" onclick="parent.saveActiveKey()">
                         <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
                     </button>
+                    <div class="vertical-separator"></div>
+                    <div class="force-container">
+                        <label style="font-size: 14px;" id="forceLabel"> Force </label>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" onchange="parent.switchForce()" id="toggleForce">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="clear-bottom-button" onclick="parent.clearAllDataPrev()"> Clear All Data </button>
@@ -186,7 +196,7 @@
                 parent.sendData("GET_FAILCOM_CYCLES", "");
                 parent.sendData("GET_INSTALL_KEY", "");
                 parent.sendData("GET_MASTER_REAL_ADDRESS", "");
-                parent.sendData("GET_ACTIVE_KEY");
+                parent.sendData("GET_ACTIVE_KEY_AND_FORCE");
             }, 10);
         };
     </script>
