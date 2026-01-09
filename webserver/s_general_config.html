@@ -148,26 +148,7 @@
                     </button>
                 </div>
 
-                <div class="antenna-installkey-container" style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px; visibility: hidden;">
-                    <label for="activeKey" style="color: #4682b4;">Active Key:</label>
-                    <select id="activeKey" class="selector2">
-                        <option value="0">AppKey</option>
-                        <option value="1">InstallKey</option>
-                    </select>
-                    <button id="saveKey" onclick="parent.saveActiveKey()">
-                        <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
-                    </button>
-                    <div class="vertical-separator"></div>
-                    <div class="force-container">
-                        <label style="font-size: 14px;" id="forceLabel"> Force </label>
-                        <div class="switch-container">
-                            <label class="switch">
-                                <input type="checkbox" onchange="parent.switchForce()" id="toggleForce">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                <button style="visibility: hidden;" onclick="parent.loadPage('s_extended_config.html')">EXTENDED CONFIG</button>
             </div>
             <button class="clear-bottom-button" onclick="parent.clearAllDataPrev()"> Clear All Data </button>
         </div>

@@ -1,0 +1,487 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.background-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: auto;
+    z-index: -1;
+}
+
+.wrap-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 90%;
+    width: 90%;
+}
+
+h2 {
+    text-align: center;
+    border-bottom: 2px solid #4682b4;
+    padding-bottom: 10px;
+    margin-bottom: 0px;
+    color: #4682b4;
+}
+
+label {
+    color: #999;
+    font-size: 18px;
+    text-align: center;
+}
+
+.informer {
+    font-size: 15px;
+}
+
+.general-config-container {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 85%;
+    width: 30%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(70, 130, 180, 0.5);
+    padding: 25px;
+}
+
+.top-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 88%;
+}
+
+.general-config-container button {
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    text-transform: uppercase;
+    width: 50%;
+    border: 0;
+    padding: 10px 0;
+    border-radius: 5px;
+    background: #4682b4;
+}
+
+.general-config-container button:hover {
+    color: #63e8f0;
+}
+
+.clear-bottom-button {
+    background: #4682b4;
+    color: #fff;
+    font-size: 16px;
+    text-transform: uppercase;
+    width: 60%;
+    border: 0;
+    padding: 10px 0;
+    border-radius: 5px;
+    margin-top: auto;
+}
+
+.clear-bottom-button:hover {
+    color: #63e8f0;
+}
+
+button {
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    text-transform: uppercase;
+    width: 40%;
+    border: 0;
+    margin-top: 15px;
+    padding: 5px 0;
+    border-radius: 5px;
+    background: #4682b4;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+    color: #63e8f0;
+}
+
+button.clicked {
+    color: #4682b4;
+    background-color: #c2fcff;
+    transform: scale(0.95);
+}
+
+.popup-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    z-index: 9;
+}
+
+.popup {
+    position: fixed; 
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30%;
+    height: 33%;
+    background-color: #fff;  
+    border-radius: 8px; 
+    padding: 20px;
+    visibility: hidden;
+    z-index: 10;
+}
+
+.popup-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; 
+    height: 100%;
+}
+
+.popup-subcontainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 85%;
+    padding: 10px 0px;
+    gap: 10%;
+}
+
+.popup-subcontainer-small {
+    position: absolute;
+    right: 3%;
+    top: 0;
+}
+
+.popup-subcontainer button {
+    padding: 5px;
+    background-color: #4682b4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 5px;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.popup-subcontainer button:hover {
+    color: #4682b4;
+    background-color: #63e8f0;
+}
+
+.closeWindow {
+    color: black;
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+    height: 10%;
+    width: 10%;
+}
+
+.closeWindow:hover {
+    color: #C30101;
+    cursor: pointer;
+}
+
+#saveAntennaIDAndInstallKey,
+#saveCycles,
+#saveKey,
+#editInstallKey {
+    padding: 0;
+    margin: 0;
+    width: 32px;
+    height: 32px;
+}
+
+#saveAntennaIDAndInstallKey img,
+#saveCycles img,
+#saveKey img,
+#editInstallKey img {
+    margin-top: 3px;
+}
+
+#antennaID,
+#failComCycles {
+  padding: 8px 12px;
+  border: 2px solid #4682b4;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 300px;
+  outline: none;
+  color: #4682b4;
+}
+
+#antennaID:focus,
+#failComCycles:focus {
+  border-color: #63e8f0;
+  box-shadow: 0 0 3px #63e8f0;
+}
+
+input[type="text"] {
+    height: 50px;
+    width: 60%;
+    margin-top: 10px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 16px;
+    color: #4682b4;
+    background-color: #fff;
+}
+
+input[type="text"]:focus {
+    outline: 2px solid #63e8f0;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+button:disabled:hover {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+.loader {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #4682b4;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1.5s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.selector {
+    padding: 5px;
+    padding-left: 10px;
+    height: 35px;
+    width: 100px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4682b4;
+    cursor: pointer;
+}
+
+.selector2 {
+    padding: 5px;
+    padding-left: 10px;
+    height: 35px;
+    width: 150px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4682b4;
+    cursor: pointer;
+}
+
+.selector:focus,
+.selector2:focus {
+    outline: 2px solid #63e8f0;
+}
+
+.input-scan {
+    padding: 5px; 
+    padding-left: 10px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 70px;
+    outline: none;
+    color: #4682b4;
+}
+
+.input-scan:focus {
+    border-color: #63e8f0;
+    box-shadow: 0 0 3px #63e8f0;
+}
+
+#popupLineScanning .popup-subcontainer {
+    width: 95%;
+}
+
+#stopButton1,
+#stopButton2 {
+    padding: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    background-color: #4682b4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 0px;
+    width: 80px;
+    height: 35px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.antenna-installkey-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    padding: 15px;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.antenna-installkey-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    height: 32px;
+}
+
+#antennaID {
+    padding: 5px;
+    padding-left: 10px;
+    border: 2px solid #4682b4;
+    border-radius: 8px;
+    font-size: 14px;
+    height: 35px;
+    width: 106px;
+    outline: none;
+    color: #4682b4;
+}
+
+#antennaID:focus {
+    border-color: #63e8f0;
+    box-shadow: 0 0 3px #63e8f0;
+}
+
+#saveAntennaIDAndInstallKey {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+label[for="installKey"]{
+  white-space: nowrap;
+}
+
+.switch-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+  
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #666666;
+    transition: .4s;
+}
+  
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+}
+  
+.switch input:checked + .slider {
+    background-color: #4682b4;
+}
+  
+.switch input:focus + .slider {
+    box-shadow: 0 0 1px #4682b4;
+}
+  
+.switch input:checked + .slider:before {
+    transform: translateX(18px);
+}
+  
+.slider.round {
+    border-radius: 22px;
+}
+  
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.force-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+#forceLabel {
+    font-size: 14px;
+    margin: 0;
+}
+
+.vertical-separator {
+    width: 2px;
+    height: 30px;
+    background-color: #4682b4;
+    margin: 0 5px;
+}

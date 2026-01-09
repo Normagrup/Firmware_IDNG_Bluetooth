@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDNG-Nordic Network Configuration</title>
+    <link rel="stylesheet" href="assets/css/s_extended_config.css">
+</head>
+
+<body>
+	<div class="background-container">
+        <img src="images/background.png">
+    </div>
+
+    <div class="wrap-container">
+        <div class="general-config-container">
+            <div class="top-section">
+                <h2> Extended Configuration </h2>
+
+                <div class="antenna-installkey-container" style="display: flex; align-items: center; justify-content: center; margin-top: 15px; gap: 10px;">
+                    <label for="activeKey" style="color: #4682b4;">Active Key:</label>
+                    <select id="activeKey" class="selector2">
+                        <option value="0">AppKey</option>
+                        <option value="1">InstallKey</option>
+                    </select>
+                    <button id="saveKey" onclick="parent.saveActiveKey()">
+                        <img src="images/save.png" alt="Save" style="width: 25px; height: 25px;">
+                    </button>
+                    <div class="vertical-separator"></div>
+                    <div class="force-container">
+                        <label style="font-size: 14px;" id="forceLabel"> Force </label>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" onchange="parent.switchForce()" id="toggleForce">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="parent.loadPage('s_nodes_old.html')">OLD COMMISSIONING</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            const input = document.getElementById('deleteConfirmInput');
+            const button = document.getElementById('deletingDataButton');
+
+            const popupHeader = document.getElementById('confirmDeleteData');
+
+            if (input && button) {
+                input.addEventListener('input', function () {
+                    const text = input.value.trim().toUpperCase();
+                    const header = popupHeader.textContent;
+                    button.disabled = (text !== "DELETE") || (header !== "Do you want to delete ALL the data?");
+                });
+
+                // Reiniciar botón por si ya estaba abierto antes
+                input.value = "";
+                button.disabled = true;
+            }
+
+            setTimeout(function () {
+                parent.sendData("GET_FAILCOM_CYCLES", "");
+                parent.sendData("GET_INSTALL_KEY", "");
+                parent.sendData("GET_MASTER_REAL_ADDRESS", "");
+                parent.sendData("GET_ACTIVE_KEY_AND_FORCE");
+            }, 10);
+        };
+    </script>
+</body>
