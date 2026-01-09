@@ -1613,7 +1613,7 @@ function processMasterAddressGet(value)
     var id = decimalValue - 31767;
 
     var inputAntennaID = iframeDocument.getElementById('antennaID');
-    inputAntennaID.value = id;
+    inputAntennaID.value = (id == 0 ? "" : id);
 }
 
 function processFailComCycles(value)
@@ -3248,5 +3248,18 @@ function switchForce()
         setTimeout(function () {
             switchForce.disabled = false;
         }, 500);
+    }
+}
+
+function loadFactoryAddress()
+{
+    var isTrue = confirm("You are going to reboot the IDNG-Blue! Are you sure?")
+    if (isTrue) {
+        sendData("SET_MASTER_ADDR_AND_INSTALLKEY", "0" + "_" + "");
+
+        setTimeout(function () {
+            logoutApp();
+            window.location.href = "http://" + window.location.hostname;
+        }, 100);
     }
 }
