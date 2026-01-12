@@ -2096,10 +2096,16 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
     cleanCdbTimer.stop();
     sendConfirmStartApplyAutoAssignment(webServer);
 
+    // Se guarda la mayor direccion unicast de los nodos a asignar para que las acciones sucesivas no repitan dirección
+    uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
+
     QList<UnassignedNode> unassignedNodes = database->getUnassignedNodes();
 
-    // Unos 10s por nodo --> 6 nodos/min
+    int counter = 0;
+    int totalNodes = unassignedNodes.size();
+    sendNodeAutoAssignInfo(webServer, counter, totalNodes);
 
+    // Unos 10s por nodo --> 6 nodos/min
     for(UnassignedNode unassignedNode : unassignedNodes)
     {
         uint8_t installKey[16] = {0};
@@ -2120,17 +2126,16 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
         insertLogEvent(database, "Assign REQUEST [" + unassignedNode.installKey + "]", unassignedNode.serial, unassignedNode.bluetoothAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_REQUEST, "Assignment");
 
         sendUartInstallKey(uartPort, database, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
+        sendNodeAutoAssignInfo(webServer, ++counter, totalNodes);
         delay(10000);
     }
 
-    uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
-    if(newNextUnicastAddress > 0)
-        database->updateNextUnicastAddress(newNextUnicastAddress);
-    database->clearUnassignedNodes();
+    // Se vuelca la mayor dirección en el registro general de la BBDD
+    if(newNextUnicastAddress > 0) { database->updateNextUnicastAddress(newNextUnicastAddress); }
 
     database->loadNodesFromDatabase();
 
-    sendConfirmEndApplyAutoAssignment(webServer);
+    sendConfirmEndApplyAutoAssignment(webServer, database);
     cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     embeddedState = FREE;
 }
@@ -2142,9 +2147,9 @@ void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendConfirmEndApplyAutoAssignment(WebServer* webServer)
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer, Database* database)
 {
-    QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + " ";
+    QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + QString::number(database->getUnassignedNodesCount());
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }
@@ -2299,6 +2304,13 @@ void sendActiveKeyAndForcing(WebServer* webServer, uint8_t activeKey, bool force
 void sendAddUnassignedError(WebServer* webServer, uint8_t result)
 {
     QString message = QString(WS_SEND_ADD_UNASSIGNED_ERROR) + "@" + QString::number(result);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendNodeAutoAssignInfo(WebServer* webServer, int counter, int totalNodes)
+{
+    QString message = QString(WS_SEND_INFO_NODE_AUTO_ASSIGN) + "@" + QString::number(counter) + "_" + QString::number(totalNodes);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

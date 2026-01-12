@@ -1883,10 +1883,14 @@ function processApplyAssign(value, init)
     var popup = iframeDocument.getElementById("popup");
     var popupOverlay = iframeDocument.getElementById("popupOverlay");
 
+    var counter = iframeDocument.getElementById("counterForNodeAssign");
+
     if (init) 
     {
         popup.style.visibility = "visible";
         popupOverlay.style.visibility = "visible";
+
+        counter.textContent = "...";
     }
     else 
     {
@@ -1895,7 +1899,27 @@ function processApplyAssign(value, init)
         sendData("GET_UNASSIGNED_NODES_PAGED", "1");
 
         popup.style.visibility = "hidden";
-        popupOverlay.style.visibility = "hidden";
+
+        if(value > 0) {
+            var popupMissed = iframeDocument.getElementById("popupMissed");
+            popupMissed.style.visibility = "visible";
+        }
+    }
+}
+
+function processInfoNodeAutoAssign(value) 
+{
+    var parts = value.split("_");
+    var count = parts[0];
+    var total = parts[1];
+
+    var iframe = document.getElementById("mainframe");
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var counter = iframeDocument.getElementById("counterForNodeAssign");
+
+    if(counter) {
+        counter.textContent = count + "/" + total;
     }
 }
 
@@ -2056,6 +2080,7 @@ function processReceivedData(data)
     else if (type == "END_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, false); }
     else if (type == "ACTIVE_KEY_AND_FORCE") { processActiveKeyAndForce(value); }
     else if (type == "ADD_UNASSIGNED_ERROR") { processAddUnassignedError(value); }
+    else if (type == "INFO_NODE_AUTO_ASSIGN") { processInfoNodeAutoAssign(value); }
 }
 
 function sendData(type, value) 

@@ -1063,3 +1063,14 @@ function hideToast() {
     t.style.transform = 'translateY(8px)';
     t.addEventListener('transitionend', () => t.remove(), { once: true });
 }
+
+function closeWarn() {
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupMissed");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    popup.style.visibility = "hidden";
+    popupOverlay.style.visibility = "hidden";
+}

@@ -299,6 +299,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
 
                         database->addNodeByAssignment(serial, uuid, devType);
+                        database->delUnassignedNode(serial);
 
                         QString ik = database->getInstallKey();
                         if(ik.size() == 32) { ik = "16"; }

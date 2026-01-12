@@ -1913,7 +1913,16 @@ bool Database::allNodesHaveAutoAssignment()
 {
     QSqlQuery q;
 
-    // Conteo de nodos sin asignar
+    // Comprobación de que haya nodos sin asignar
+    if (!q.exec("SELECT count(*) FROM UnassignedNodes")) {
+        qDebug() << q.lastError().text();
+        return false;
+    }
+
+    if (!q.next() || q.value(0).toInt() == 0)
+        return false;
+
+    // Comprobación de que los nodos sin asignar tengan datos autoasignados
     if (!q.exec("SELECT count(*) FROM UnassignedNodes WHERE "
             "NetAddress IS NULL OR NetAddress = '' "
             "OR BluetoothAddress IS NULL OR BluetoothAddress = '' "

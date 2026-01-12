@@ -149,6 +149,7 @@
 #define WS_BLINK_UNASSIGNED                 "BLINK_UNASSIGNED"
 #define WS_BLINK_STOP                       "BLINK_STOP"
 #define WS_BLINK_UNASSIGNED_NODE            "BLINK_UNASSIGNED_NODE"
+#define WS_SEND_INFO_NODE_AUTO_ASSIGN       "INFO_NODE_AUTO_ASSIGN"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_INSTALL_KEY_GET             "INSTALL_KEY_GET"
@@ -225,13 +226,14 @@ void sendIdentify(UartPort* uartPort, uint16_t nodeNetAddress);
 void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t page);
 void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer);
-void sendConfirmEndApplyAutoAssignment(WebServer* webServer);
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer, Database* database);
 void sendConfirmStartGroupAutoAssignment(WebServer* webServer);
 void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmEndGroupAutoAssignment(WebServer* webServer);
 void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
 void sendActiveKeyAndForcing(WebServer* webServer, uint8_t activeKey, bool forceInstallKey);
 void sendAddUnassignedError(WebServer* webServer, uint8_t result);
+void sendNodeAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
 
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 
