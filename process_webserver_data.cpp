@@ -1003,7 +1003,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         addNodeForReplace(webServer, uartPort, database);
     }
     else if (type == WS_ADD_UNASSIGNED_NODE) {
-        if(database->addUnassignedNode(value))
+        uint8_t result = database->addUnassignedNode(value);
+
+        if(result == 3) // todo correcto
         {
             uint16_t unassignedNodesCount = database->getUnassignedNodesCount();
             uint16_t page;
@@ -1012,6 +1014,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             else { page = ((unassignedNodesCount - 1) / 16) + 1; }
 
             sendUnassignedNodesPaged(webServer, database, page);
+        }
+        else {
+            sendAddUnassignedError(webServer, result);
         }
     }
     else if (type == WS_GET_UNASSIGNED_NODES_PAGED) {
@@ -1068,6 +1073,10 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_BLINK_STOP) {
 
     }
+    else if (type == WS_BLINK_UNASSIGNED_NODE) {
+        // en "value" está el serial del nodo a blinkear
+    }
+
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
     }
@@ -2283,6 +2292,13 @@ void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes)
 void sendActiveKeyAndForcing(WebServer* webServer, uint8_t activeKey, bool forceInstallKey)
 {
     QString message = QString(WS_SEND_ACTIVE_KEY_AND_FORCE) + "@" + QString::number(activeKey) + "_" + (forceInstallKey ? "forcing" : "notForcing");
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendAddUnassignedError(WebServer* webServer, uint8_t result)
+{
+    QString message = QString(WS_SEND_ADD_UNASSIGNED_ERROR) + "@" + QString::number(result);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

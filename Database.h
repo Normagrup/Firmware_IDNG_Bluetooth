@@ -93,7 +93,7 @@ public:
     void updateNextUnicastAddress(uint16_t nextUnicastAddress);
     QList<uint16_t> getAddressesDescForGlobalRemove();
 
-    bool addUnassignedNode(QString serial);
+    uint8_t addUnassignedNode(QString serial);
     uint16_t getUnassignedNodesCount();
     QStringList getUnassignedNodesPaged(uint16_t page);
     QList<UnassignedNode> getUnassignedNodes();

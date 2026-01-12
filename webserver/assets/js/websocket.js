@@ -1970,6 +1970,21 @@ function processActiveKeyAndForce(value)
     }
 }
 
+function processAddUnassignedError(value)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var errorLabel = iframeDocument.getElementById("error-label");
+
+    if(value == 2)
+        errorLabel.textContent = "Unassigned node already added";
+    else if(value == 1)
+        errorLabel.textContent = "The node is already assigned";
+    else if(value == 0)
+        errorLabel.textContent = "Han error has ocurred";
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -2040,6 +2055,7 @@ function processReceivedData(data)
     else if (type == "INFO_GROUP_AUTO_ASSIGN") { processInfoGroupAutoAssign(value); }
     else if (type == "END_GROUP_AUTO_ASSIGN") { processGroupAutoAssign(value, false); }
     else if (type == "ACTIVE_KEY_AND_FORCE") { processActiveKeyAndForce(value); }
+    else if (type == "ADD_UNASSIGNED_ERROR") { processAddUnassignedError(value); }
 }
 
 function sendData(type, value) 
@@ -3122,6 +3138,12 @@ function addUnassignedNode()
         sendData("ADD_UNASSIGNED_NODE", serial);
         iframeDocument.getElementById("serialNumberInput").value = "";
     }
+    else {
+        setTimeout(function () {
+            var errorLabel = iframeDocument.getElementById("error-label");
+            errorLabel.textContent = "Serial Format: XX.XX.XX.XX";
+        }, 200);
+    }
 }
 
 function prevUnassigned() {
@@ -3277,4 +3299,9 @@ function blinkUnassigned()
 function blinkStop()
 {
     sendData("BLINK_STOP", "");
+}
+
+function blinkUnassignedNode(value)
+{
+    sendData("BLINK_UNASSIGNED_NODE", value);
 }
