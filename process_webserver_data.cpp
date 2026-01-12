@@ -1060,7 +1060,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         database->switchForcingInstallKey();
     }
     else if (type == WS_BLINK_ASSIGNED) {
-
+        sendUartBlinkAssigned(uartPort);
     }
     else if (type == WS_BLINK_UNASSIGNED) {
         sendUartBlinkUnassigned(uartPort);

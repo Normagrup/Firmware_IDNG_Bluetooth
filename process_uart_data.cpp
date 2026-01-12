@@ -1997,3 +1997,18 @@ void sendUartBlinkUnassigned(UartPort* _uartPort)
 
     _uartPort->sendData(frame);
 }
+
+void sendUartBlinkAssigned(UartPort* _uartPort)
+{
+    QByteArray frame;
+
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(BLINK_ASSIGNED);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
