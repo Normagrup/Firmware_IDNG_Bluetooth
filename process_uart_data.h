@@ -99,6 +99,7 @@
 #define UUID_AND_DEVTYPE                0x6C
 #define ADD_GROUP_AUTO                  0x6D
 #define SET_ACTIVE_KEY                  0x6E
+#define BLINK_UNASSIGNED                0xB1
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -150,5 +151,6 @@ void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartMicroReboot(UartPort* _uartPort);
 void sendUartInstallKey(UartPort* _uartPort, Database* database, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey);
 void sendUartChangedActiveKey(UartPort* _uartPort, uint8_t activeKey);
+void sendUartBlinkUnassigned(UartPort* _uartPort);
 
 #endif // PROCESS_UART_DATA_H
