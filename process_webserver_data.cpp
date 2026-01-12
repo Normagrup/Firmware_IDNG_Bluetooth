@@ -1071,7 +1071,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartBlinkUnassigned(uartPort);
     }
     else if (type == WS_BLINK_STOP) {
-
+        sendUartStopBlink(uartPort);
     }
     else if (type == WS_BLINK_UNASSIGNED_NODE) {
         // en "value" está el serial del nodo a blinkear
