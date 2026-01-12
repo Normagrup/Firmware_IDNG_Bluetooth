@@ -1059,6 +1059,15 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_SWITCH_FORCE) {
         database->switchForcingInstallKey();
     }
+    else if (type == WS_BLINK_ASSIGNED) {
+
+    }
+    else if (type == WS_BLINK_UNASSIGNED) {
+
+    }
+    else if (type == WS_BLINK_STOP) {
+
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);

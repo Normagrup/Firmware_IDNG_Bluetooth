@@ -3263,3 +3263,18 @@ function loadFactoryAddress()
         }, 100);
     }
 }
+
+function blinkAssigned()
+{
+    sendData("BLINK_ASSIGNED", "");
+}
+
+function blinkUnassigned()
+{
+    sendData("BLINK_UNASSIGNED", "");
+}
+
+function blinkStop()
+{
+    sendData("BLINK_STOP", "");
+}
