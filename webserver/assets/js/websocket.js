@@ -2161,6 +2161,7 @@ function rebootDevice()
         sendData("SET_REBOOT_DEVICE", " ");
         logoutApp();
         window.location.href = "http://" + window.location.hostname;
+        alert("The IDNG-Blue will take 1 minute to restart");
     }
 }
 
@@ -3041,6 +3042,7 @@ function setAntennaNumberAndInstallKey() {
         setTimeout(function () {
             logoutApp();
             window.location.href = "http://" + window.location.hostname;
+            alert("The IDNG-Blue will take 1 minute to restart");
         }, 100);
     }
 }
@@ -3307,6 +3309,7 @@ function loadFactoryAddress()
         setTimeout(function () {
             logoutApp();
             window.location.href = "http://" + window.location.hostname;
+            alert("The IDNG-Blue will take 1 minute to restart");
         }, 100);
     }
 }
