@@ -1625,7 +1625,7 @@ QList<uint16_t> Database::getAddressesDescForGlobalRemove() {
     return addresses;
 }
 
-bool Database::addUnassignedNode(QString serial)
+uint8_t Database::addUnassignedNode(QString serial)
 {
     QSqlQuery query;
 
@@ -1638,12 +1638,12 @@ bool Database::addUnassignedNode(QString serial)
 
     if (!query.exec()) {
         qDebug() << "Error ejecutando SELECT en addUnassignedNode (I):" << query.lastError().text();
-        return false;
+        return 0;
     }
 
     if (query.next()) {
         qDebug() << "Ya está registrado ese serial como nodo asignado";
-        return false;
+        return 1;
     }
 
     // --- Comprobar si ya existe en UnassignedNodes ---
@@ -1652,12 +1652,12 @@ bool Database::addUnassignedNode(QString serial)
 
     if (!query.exec()) {
         qDebug() << "Error ejecutando SELECT en addUnassignedNode (II):" << query.lastError().text();
-        return false;
+        return 0;
     }
 
     if (query.next()) {
         qDebug() << "Ya está registrado ese serial como nodo no asignado";
-        return false;
+        return 2;
     }
 
     // --- Insertar ---
@@ -1666,10 +1666,10 @@ bool Database::addUnassignedNode(QString serial)
 
     if (!query.exec()) {
         qDebug() << "Error ejecutando INSERT en addUnassignedNode:" << query.lastError().text();
-        return false;
+        return 0;
     }
 
-    return true;
+    return 3;
 }
 
 uint16_t Database::getUnassignedNodesCount()
