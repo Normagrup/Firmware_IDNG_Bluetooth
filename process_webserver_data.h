@@ -156,6 +156,8 @@
 
 #define WS_SEND_FAIL_COM_CYCLES             "FAIL_COM_CYCLES"
 
+#define WS_CLEAR_RPL                        "CLEAR_RPL"
+
 
 void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort, Database* database);
 

@@ -3333,3 +3333,8 @@ function blinkUnassignedNode(value)
 {
     sendData("BLINK_UNASSIGNED_NODE", value);
 }
+
+function clearRpl()
+{
+    sendData("CLEAR_RPL", "");
+}
