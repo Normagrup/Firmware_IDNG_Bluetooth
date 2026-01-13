@@ -1774,7 +1774,7 @@ uint16_t Database::getMayorUnicastAddressOfUnassignedNodes()
     return 0;
 }
 
-void Database::addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8_t devType)
+void Database::addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8_t devType, uint16_t bleId)
 {
     QSqlQuery query;
     query.prepare("SELECT * FROM UnassignedNodes WHERE Serial = :serial");
@@ -1785,18 +1785,17 @@ void Database::addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8
         return;
     }
 
-    uint16_t netAddress, bluetoothAddress;
+    uint16_t netAddress;
 
     if(query.next()) {
         netAddress = query.value("NetAddress").toUInt();
-        bluetoothAddress = query.value("BluetoothAddress").toUInt();
     }
     else { return; }
 
     query.prepare("INSERT INTO Nodes (SubnetAddress, NodeSubnetAddress, RealAddress, UUID, DeviceType, RelayMode) VALUES (:subnetAddress, :nodeSubnetAddress, :realAddress, :uuid, :deviceType, :relayMode)");
     query.bindValue(":subnetAddress", (netAddress - 1) / 64);
     query.bindValue(":nodeSubnetAddress", (netAddress - 1) % 64);
-    query.bindValue(":realAddress", bluetoothAddress);
+    query.bindValue(":realAddress", bleId);
 
     QString uuidStr;
     for (int i = 0; i < 16; ++i)

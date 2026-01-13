@@ -292,8 +292,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         uint8_t devType = (uint8_t)data[19];
 
-                        uint16_t bleId = ((uint16_t)((uint8_t)data[20]) << 8) |
-                                         (uint16_t)((uint8_t)data[21]);
+                        uint16_t bleId = ((unsigned char)data[20] << 8) | (unsigned char)data[21];
 
                         QString serial;
                         for(uint8_t i = 0; i < 4; i++) {
@@ -301,7 +300,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                             serial += QString("%1").arg(uuid[i + 12], 2, 16, QChar('0')).toUpper();
                         }
 
-                        database->addNodeByAssignment(serial, uuid, devType);
+                        database->addNodeByAssignment(serial, uuid, devType, bleId);
                         database->delUnassignedNode(serial);
 
                         QString ik = database->getInstallKey();
