@@ -102,6 +102,7 @@
 #define BLINK_UNASSIGNED                0xB1
 #define BLINK_ASSIGNED                  0xB2
 #define STOP_BLINK                      0xB3
+#define BLINK_UNASSIGNED_NODE           0xB4
 
 void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, Database* database);
 void extractAndProcessFrames(const QByteArray& rawData, WebServer* webServer, UartPort* uartPort, Database* database);
@@ -156,5 +157,5 @@ void sendUartChangedActiveKey(UartPort* _uartPort, uint8_t activeKey);
 void sendUartBlinkUnassigned(UartPort* _uartPort);
 void sendUartBlinkAssigned(UartPort* _uartPort);
 void sendUartStopBlink(UartPort* _uartPort);
-
+void sendUartBlinkUnassignedNode(UartPort* _uartPort, QString serial);
 #endif // PROCESS_UART_DATA_H

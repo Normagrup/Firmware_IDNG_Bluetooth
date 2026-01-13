@@ -2028,3 +2028,28 @@ void sendUartStopBlink(UartPort* _uartPort)
 
     _uartPort->sendData(frame);
 }
+
+void sendUartBlinkUnassignedNode(UartPort* _uartPort, QString serial)
+{
+    QByteArray frame;
+    QByteArray serialBytes = serial.trimmed().toUtf8();
+
+    unsigned char length = 7;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(BLINK_UNASSIGNED_NODE);
+    QStringList parsedSerial = serial.split(".");
+    frame.append(static_cast<uint8_t>(parsedSerial[0].toUInt(nullptr, 16)));
+    frame.append(static_cast<uint8_t>(parsedSerial[1].toUInt(nullptr, 16)));
+    frame.append(static_cast<uint8_t>(parsedSerial[2].toUInt(nullptr, 16)));
+    frame.append(static_cast<uint8_t>(parsedSerial[3].toUInt(nullptr, 16)));
+
+    frame.append(UART_END);
+
+    qDebug() << "ENVIANDO BLINKING " << parsedSerial;
+
+    _uartPort->sendData(frame);
+}
+
