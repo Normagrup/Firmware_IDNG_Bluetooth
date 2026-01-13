@@ -1904,6 +1904,9 @@ function processApplyAssign(value, init)
             var popupMissed = iframeDocument.getElementById("popupMissed");
             popupMissed.style.visibility = "visible";
         }
+        else {
+            popupOverlay.style.visibility = "hidden";
+        }
     }
 }
 
