@@ -69,7 +69,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
-            case UUID_AND_DEVTYPE: return 21;
+            case UUID_DEVTYPE_AND_BLEID: return 23;
             default: return -1;
         }
 
@@ -284,13 +284,16 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
-                    case UUID_AND_DEVTYPE:
+                    case UUID_DEVTYPE_AND_BLEID:
                     {
                         uint8_t uuid[16];
                         for(uint8_t i = 0; i < 16; i++)
                             uuid[i] = (uint8_t)data[i + 3];
 
                         uint8_t devType = (uint8_t)data[19];
+
+                        uint16_t bleId = ((uint16_t)((uint8_t)data[20]) << 8) |
+                                         (uint16_t)((uint8_t)data[21]);
 
                         QString serial;
                         for(uint8_t i = 0; i < 4; i++) {
