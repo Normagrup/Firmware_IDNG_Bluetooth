@@ -151,6 +151,9 @@
 #define WS_BLINK_UNASSIGNED_NODE            "BLINK_UNASSIGNED_NODE"
 #define WS_SEND_INFO_NODE_AUTO_ASSIGN       "INFO_NODE_AUTO_ASSIGN"
 #define WS_BLINK_ALL                        "BLINK_ALL"
+#define WS_SCAN_SERIAL                      "SCAN_SERIAL"
+#define WS_SEND_START_SCAN_SERIAL           "START_SCAN_SERIAL"
+#define WS_SEND_END_SCAN_SERIAL             "END_SCAN_SERIAL"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_INSTALL_KEY_GET             "INSTALL_KEY_GET"
@@ -235,6 +238,8 @@ void sendGroupAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
 void sendActiveKeyAndForcing(WebServer* webServer, uint8_t activeKey, bool forceInstallKey);
 void sendAddUnassignedError(WebServer* webServer, uint8_t result);
 void sendNodeAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
+void sendConfirmStartScanSerial(WebServer* webServer);
+void sendConfirmEndScanSerial(WebServer* webServer);
 
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 

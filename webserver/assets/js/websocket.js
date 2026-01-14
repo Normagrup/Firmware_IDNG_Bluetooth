@@ -2012,6 +2012,30 @@ function processAddUnassignedError(value)
         errorLabel.textContent = "Han error has ocurred";
 }
 
+function processScanSerial(value, init)
+{
+    var iframe = document.getElementById('mainframe');
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+    var popup = iframeDocument.getElementById("popupScanSerial");
+    var popupOverlay = iframeDocument.getElementById("popupOverlay");
+
+    if(init)
+    {
+        popup.style.visibility = "visible";
+        popupOverlay.style.visibility = "visible";
+    }
+    else 
+    {
+        var pageLabel = iframeDocument.getElementById("page");
+        pageLabel.textContent = "Page: 1";
+        sendData("GET_UNASSIGNED_NODES_PAGED", "1");
+
+        popup.style.visibility = "hidden";
+        popupOverlay.style.visibility = "hidden";
+    }
+}
+
 function processReceivedData(data) 
 {
     var dataArray = data.split('@');
@@ -2084,6 +2108,8 @@ function processReceivedData(data)
     else if (type == "ACTIVE_KEY_AND_FORCE") { processActiveKeyAndForce(value); }
     else if (type == "ADD_UNASSIGNED_ERROR") { processAddUnassignedError(value); }
     else if (type == "INFO_NODE_AUTO_ASSIGN") { processInfoNodeAutoAssign(value); }
+    else if (type == "START_SCAN_SERIAL") { processScanSerial(value, true); }
+    else if (type == "END_SCAN_SERIAL") { processScanSerial(value, false); }
 }
 
 function sendData(type, value) 
@@ -3340,4 +3366,9 @@ function blinkUnassignedNode(value)
 function blinkAll()
 {
     sendData("BLINK_ALL", "");
+}
+
+function scanSerial()
+{
+    sendData("SCAN_SERIAL", "");
 }

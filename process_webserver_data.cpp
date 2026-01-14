@@ -73,6 +73,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             case LINE_SCAN: st = "LINE_SCAN"; break;
             case APPLY_AUTOASSIGNMENT: st = "APPLY_AUTOASSIGNMENT"; break;
             case GROUP_AUTOASSIGNMENT: st = "GROUP_AUTOASSIGNMENT"; break;
+            case SCAN_SERIAL: st = "SCAN_SERIAL"; break;
         }
 
         QString message = QString(WS_ASK_STATE_TO_EMBEDDED) + "@" + value + "#" + st;
@@ -1078,6 +1079,18 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     }
     else if (type == WS_BLINK_ALL) {
         sendUartBlinkAll(uartPort);
+    }
+    else if (type == WS_SCAN_SERIAL) {
+        embeddedState = SCAN_SERIAL;
+        cleanCdbTimer.stop();
+        sendConfirmStartScanSerial(webServer);
+
+        sendUartScanSerial(uartPort);
+        delay(15000);
+
+        sendConfirmEndScanSerial(webServer);
+        cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+        embeddedState = FREE;
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
@@ -2314,6 +2327,20 @@ void sendAddUnassignedError(WebServer* webServer, uint8_t result)
 void sendNodeAutoAssignInfo(WebServer* webServer, int counter, int totalNodes)
 {
     QString message = QString(WS_SEND_INFO_NODE_AUTO_ASSIGN) + "@" + QString::number(counter) + "_" + QString::number(totalNodes);
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmStartScanSerial(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_START_SCAN_SERIAL) + "@" + " ";
+
+    if (webServer != nullptr) { webServer->sendData(message); }
+}
+
+void sendConfirmEndScanSerial(WebServer* webServer)
+{
+    QString message = QString(WS_SEND_END_SCAN_SERIAL) + "@" + " ";
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

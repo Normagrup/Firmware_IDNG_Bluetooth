@@ -121,7 +121,8 @@ enum EmbeddedState {
     LINE_SCAN,
     RECOVERING_MICRO,
     APPLY_AUTOASSIGNMENT,
-    GROUP_AUTOASSIGNMENT
+    GROUP_AUTOASSIGNMENT,
+    SCAN_SERIAL
 };
 
 extern EmbeddedState embeddedState;

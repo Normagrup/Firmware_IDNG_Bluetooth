@@ -24,6 +24,11 @@
         <span style="margin-top: 10px; color: #c0392b; text-align: center;">It seems that some serial numbers have not responded. <br> It may be necessary to repeat the process for these nodes.</span>
         <button style="margin-top: 0px; width: 20%; height: auto;" onclick="parent.closeWarn()">OK</button>
     </div>
+    <div class="popup" id="popupScanSerial">
+        <h2> Scanning node serials... </h2>
+        <div class="loader"></div>
+        <span style="margin-top: 10px; color: #4682b4;">This will take 1 minute</span>
+    </div>
 
     <div class="wrap-container">
         <div class="wrap-table-container">
@@ -251,6 +256,7 @@
                 <input id="serialNumberInput" type="text" placeholder="00.00.00.00" autocomplete="off"/>
                 <button onclick="parent.addUnassignedNode()">Add</button>
                 <button onclick="parent.loadUnassignedNodesFromFile()">Load from file</button>
+                <button onclick="parent.scanSerial()">Scan node serials</button>
 
                 <div class="error-div">
                     <span id="error-label"> ‎ </span>
