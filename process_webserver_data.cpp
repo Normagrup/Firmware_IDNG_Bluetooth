@@ -1077,7 +1077,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartBlinkUnassignedNode(uartPort, value);
     }
     else if (type == WS_BLINK_ALL) {
-
+        sendUartBlinkAll(uartPort);
     }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
