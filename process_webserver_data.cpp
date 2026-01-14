@@ -1076,6 +1076,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_BLINK_UNASSIGNED_NODE) {
         sendUartBlinkUnassignedNode(uartPort, value);
     }
+    else if (type == WS_BLINK_ALL) {
+
+    }
     else if (type == WS_CLEAR_RPL) {
         sendUartClearRpl(uartPort);
     }

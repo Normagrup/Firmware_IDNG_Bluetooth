@@ -1904,6 +1904,9 @@ function processApplyAssign(value, init)
             var popupMissed = iframeDocument.getElementById("popupMissed");
             popupMissed.style.visibility = "visible";
         }
+        else {
+            popupOverlay.style.visibility = "hidden";
+        }
     }
 }
 
@@ -3332,6 +3335,11 @@ function blinkStop()
 function blinkUnassignedNode(value)
 {
     sendData("BLINK_UNASSIGNED_NODE", value);
+}
+
+function blinkAll()
+{
+    sendData("BLINK_ALL", "");
 }
 
 function clearRpl()

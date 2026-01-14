@@ -96,7 +96,7 @@
 #define CONFIRM_RESET_CDB               0x99
 #define MICRO_REBOOT                    0xAE
 #define SET_INSTALL_KEY                 0x6B
-#define UUID_AND_DEVTYPE                0x6C
+#define UUID_DEVTYPE_AND_BLEID          0x6C
 #define ADD_GROUP_AUTO                  0x6D
 #define SET_ACTIVE_KEY                  0x6E
 #define BLINK_UNASSIGNED                0xB1

@@ -69,7 +69,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case RECOVERY_GROUPS: return 80;
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
-            case UUID_AND_DEVTYPE: return 21;
+            case UUID_DEVTYPE_AND_BLEID: return 23;
             default: return -1;
         }
 
@@ -284,7 +284,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
                     }
                     break;
-                    case UUID_AND_DEVTYPE:
+                    case UUID_DEVTYPE_AND_BLEID:
                     {
                         uint8_t uuid[16];
                         for(uint8_t i = 0; i < 16; i++)
@@ -292,13 +292,15 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
 
                         uint8_t devType = (uint8_t)data[19];
 
+                        uint16_t bleId = ((unsigned char)data[20] << 8) | (unsigned char)data[21];
+
                         QString serial;
                         for(uint8_t i = 0; i < 4; i++) {
                             if(i > 0) { serial += "."; }
                             serial += QString("%1").arg(uuid[i + 12], 2, 16, QChar('0')).toUpper();
                         }
 
-                        database->addNodeByAssignment(serial, uuid, devType);
+                        database->addNodeByAssignment(serial, uuid, devType, bleId);
                         database->delUnassignedNode(serial);
 
                         QString ik = database->getInstallKey();
