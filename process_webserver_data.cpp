@@ -1087,6 +1087,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
         sendUartScanSerial(uartPort);
         delay(15000);
+        sendUartMicroReboot(uartPort);
+        delay(3000);
+        sendUartRplReset(uartPort);
 
         sendConfirmEndScanSerial(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);

@@ -70,6 +70,7 @@ int getExpectedFrameSize(const QByteArray& buffer)
             case CONFIRM_END_CLEAR_ALL_DATA: return 4;
             case CONFIRM_REPLACE_DONE: return 4;
             case UUID_DEVTYPE_AND_BLEID: return 23;
+            case SERIAL_FOUND: return 8;
             default: return -1;
         }
 
@@ -509,6 +510,17 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         sendConfirmEndClearAllData(webServer); // no se usa ya que no devuelve confirmación al terminar
                     }
                     break;
+
+                    case SERIAL_FOUND:
+                    {
+                        QString serial;
+                        for(uint8_t i = 0; i < 4; i++) {
+                            if(i > 0) { serial += "."; }
+                            serial += QString("%1").arg(data[3 + i], 2, 16, QChar('0')).toUpper();
+                        }
+                        database->addUnassignedNode(serial);
+                    }
+                    break;
                 }
             case UART_RSP_CHANGE_FRAME_TYPE:
                 processChangeFrame(data, database, webServer);
@@ -888,6 +900,20 @@ void sendUartMicroReboot(UartPort* _uartPort)
     frame.append(length);
     frame.append(UART_CONFIG_FRAME_TYPE);
     frame.append(MICRO_REBOOT);
+    frame.append(UART_END);
+
+    _uartPort->sendData(frame);
+}
+
+void sendUartRplReset(UartPort* _uartPort)
+{
+    QByteArray frame;
+    unsigned char length = 3;
+
+    frame.append(UART_HEADER);
+    frame.append(length);
+    frame.append(UART_CONFIG_FRAME_TYPE);
+    frame.append(RPL_RESET);
     frame.append(UART_END);
 
     _uartPort->sendData(frame);

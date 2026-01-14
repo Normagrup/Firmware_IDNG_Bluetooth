@@ -82,6 +82,7 @@
 #define COMMISSION_FAIL                 0x84
 #define RECOVERY_GROUPS                 0x85
 #define CONFIRM_END_CLEAR_ALL_DATA      0x88
+#define SERIAL_FOUND                    0x8F
 #define SET_ANTENNA_ADDRESS_AND_INSTKEY 0xAA
 #define GET_ANTENNA_ADDRESS_AND_INSTKEY 0xAB
 #define ADDRESS_AND_INSTKEY_ANSWER      0xAC
@@ -95,6 +96,7 @@
 #define CONFIRM_ACTION                  0x98
 #define CONFIRM_RESET_CDB               0x99
 #define MICRO_REBOOT                    0xAE
+#define RPL_RESET                       0xBE
 #define SET_INSTALL_KEY                 0x6B
 #define UUID_DEVTYPE_AND_BLEID          0x6C
 #define ADD_GROUP_AUTO                  0x6D
@@ -154,6 +156,7 @@ void processRecoveryFeaturesFrame(QByteArray data, Database* database);
 void sendPowerOnLeveltoEth(uint16_t pid, uint8_t powerOnLevel, QString rcvAddress, UdpSocket* _udpSocket);
 void sendUartConfirmReplacing(UartPort* _uartPort, uint16_t realAddress);
 void sendUartMicroReboot(UartPort* _uartPort);
+void sendUartRplReset(UartPort* _uartPort);
 void sendUartInstallKey(UartPort* _uartPort, Database* database, QString serial, uint16_t bluetoothAddress, const uint8_t* installKey);
 void sendUartChangedActiveKey(UartPort* _uartPort, uint8_t activeKey);
 void sendUartBlinkUnassigned(UartPort* _uartPort);
