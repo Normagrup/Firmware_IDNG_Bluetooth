@@ -3336,3 +3336,8 @@ function blinkUnassignedNode(value)
 {
     sendData("BLINK_UNASSIGNED_NODE", value);
 }
+
+function blinkAll()
+{
+    sendData("BLINK_ALL", "");
+}

@@ -150,6 +150,7 @@
 #define WS_BLINK_STOP                       "BLINK_STOP"
 #define WS_BLINK_UNASSIGNED_NODE            "BLINK_UNASSIGNED_NODE"
 #define WS_SEND_INFO_NODE_AUTO_ASSIGN       "INFO_NODE_AUTO_ASSIGN"
+#define WS_BLINK_ALL                        "BLINK_ALL"
 
 #define WS_SEND_CONFIRM_M_ADDRESS_GET       "CONFIRM_M_ADDRESS_GET"
 #define WS_SEND_INSTALL_KEY_GET             "INSTALL_KEY_GET"

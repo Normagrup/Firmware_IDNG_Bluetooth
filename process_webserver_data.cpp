@@ -1076,6 +1076,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_BLINK_UNASSIGNED_NODE) {
         sendUartBlinkUnassignedNode(uartPort, value);
     }
+    else if (type == WS_BLINK_ALL) {
+
+    }
 
     if (type != WS_SET_START_ACTION && type != WS_SET_ADD_GROUP && type != WS_SET_DEL_GROUP && type != WS_SET_NEW_COMMISSION_ITERATION) {
         pollingTimer.start(POLLING_TIMER_MS);
