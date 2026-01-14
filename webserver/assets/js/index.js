@@ -129,7 +129,7 @@ function loadPageAfterAsk(page, answer)
 			processGroupAutoAssign("", true);
 		}, 300);
 	}
-	else if(answer === "SCAN_SERIAL") {
+	else if(answer === "SCANNING_SERIAL") {
 		frame.src = "s_assignment.html";
 		setTimeout(function() {
 			processScanSerial("", true);

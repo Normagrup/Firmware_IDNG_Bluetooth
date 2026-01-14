@@ -73,7 +73,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             case LINE_SCAN: st = "LINE_SCAN"; break;
             case APPLY_AUTOASSIGNMENT: st = "APPLY_AUTOASSIGNMENT"; break;
             case GROUP_AUTOASSIGNMENT: st = "GROUP_AUTOASSIGNMENT"; break;
-            case SCAN_SERIAL: st = "SCAN_SERIAL"; break;
+            case SCANNING_SERIAL: st = "SCANNING_SERIAL"; break;
         }
 
         QString message = QString(WS_ASK_STATE_TO_EMBEDDED) + "@" + value + "#" + st;
@@ -1081,7 +1081,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartBlinkAll(uartPort);
     }
     else if (type == WS_SCAN_SERIAL) {
-        embeddedState = SCAN_SERIAL;
+        embeddedState = SCANNING_SERIAL;
         cleanCdbTimer.stop();
         sendConfirmStartScanSerial(webServer);
 
