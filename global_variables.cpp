@@ -114,3 +114,4 @@ QString rcvAddressFactoryProgram = "";
 int lastAssignedAddress = 0;
 
 QVector<CommissionedNode> commissionedNodes;
+bool correctlyRecorded;

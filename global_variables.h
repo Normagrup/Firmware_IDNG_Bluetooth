@@ -137,5 +137,6 @@ extern QString rcvAddressFactoryProgram;
 extern int lastAssignedAddress;
 
 extern QVector<CommissionedNode> commissionedNodes;
+extern bool correctlyRecorded;
 
 #endif // GLOBAL_VARIABLES_H

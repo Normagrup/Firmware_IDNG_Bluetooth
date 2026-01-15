@@ -734,6 +734,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         cleanCdbTimer.stop();
         // no tiene confirmación de inicio, el webserver lo muestra automáticamente
 
+        correctlyRecorded = false;
+
         QString deviceID = value;
         qDebug() << "[ID_CODE] deviceID =" << deviceID;
 
@@ -752,12 +754,27 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 sendEndRecordDevice(uartPort, deviceID);
                 while(messageState == PENDING) {}
                 sendRecordedDevice(webServer, messageState == RECEIVED);
+
+                if(messageState == RECEIVED) {
+                    delay(3000);
+                    sendUartRplReset(uartPort);
+                }
             }
         }
 
-        // confirmación en la respuesta al finalizar el escaneo
-        // start del cleanCdbTimer en la respuesta al finalizar el escaneo
-        // no se pone embeddedState porque es una funcionalidad a parte (factory)
+        delay(2000);
+
+        if(!isFactoryProgramOn) {
+            sendSerialClosure(webServer, correctlyRecorded);
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+            // no se pone embeddedState porque es una funcionalidad a parte (factory)
+        }
+        else {
+            cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+
+            isFactoryProgramOn = correctlyRecorded; // pasamos a esa variable el valor del done (si se ha grabado bien o no) para usarlo en el handler
+            answerFactoryProgramTimer.start(50);
+        }
     }
     else if (type == WS_GET_DEVICES_COUNT) {
         int count = 0;
