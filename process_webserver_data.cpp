@@ -756,7 +756,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 sendRecordedDevice(webServer, messageState == RECEIVED);
 
                 if(messageState == RECEIVED) {
-                    delay(3000);
+                    delay(3500);
                     sendUartRplReset(uartPort);
                 }
             }
