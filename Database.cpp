@@ -124,7 +124,7 @@ void Database::initDatabase()
             query.bindValue(":masterAddress", "7C18");
             query.bindValue(":ik", "1");
             query.bindValue(":fcc", 5);
-            query.bindValue(":nua", 0);
+            query.bindValue(":nua", 2048);
             query.bindValue(":ak", 1); // 0 -> appKey; 1 -> installKey
             query.bindValue(":fik", 0); // no force
 
@@ -1870,8 +1870,10 @@ bool Database::doAutoAssignment()
         buscado++;
     }
 
-    // Encontrar la primera dirección a usar (Bluetooth Address)
-    uint16_t nextUnicastAddress = getNextUnicastAddress() + 1;
+    // Preparar la query que compruebe si la dirección a asignar está libre
+    QSqlQuery addressQuery;
+    addressQuery.prepare("SELECT 1 FROM Nodes WHERE RealAddress = :realAddress LIMIT 1");
+    uint16_t actualAddress = 0x0000;
 
     // Encontrar la installkey
     QString installKey = getInstallKey();
@@ -1888,20 +1890,26 @@ bool Database::doAutoAssignment()
     while (q.next())
         seriales.append(q.value(0).toString());
 
-    // Reescribir todas las NetAddress
+    // Reescribir todas las NetAddress, BluetoothAddress, InstallKey
     q.prepare("UPDATE UnassignedNodes SET NetAddress = :na, BluetoothAddress = :ba, InstallKey = :ik WHERE Serial = :serial");
 
     for (int i = 0; i < seriales.size(); i++) {
+        while(true) {
+            actualAddress++;
+            addressQuery.bindValue(":realAddress", actualAddress);
+
+            bool exists = addressQuery.exec() && addressQuery.next();
+            if(!exists) { break; }
+        }
+
         q.bindValue(":na", freeNetAddresses[i]);
-        q.bindValue(":ba", nextUnicastAddress);
+        q.bindValue(":ba", actualAddress);
         q.bindValue(":ik", installKey);
         q.bindValue(":serial", seriales[i]);
 
         if (!q.exec()) {
             qDebug() << q.lastError().text();
             return false;
-        } else {
-            nextUnicastAddress++;
         }
     }
 

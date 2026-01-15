@@ -835,6 +835,12 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = LINE_SCAN;
         cleanCdbTimer.stop();
         sendConfirmStartLineScanning(webServer);
+        
+        // En teoría no sería necesario esto
+        //sendUartMicroReboot(uartPort);
+        //delay(3000);
+        //sendUartRplReset(uartPort);
+        //delay(1000);
 
         database->clearPartialUnassignedNodes();
 
@@ -1089,7 +1095,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         delay(15000);
         sendUartMicroReboot(uartPort);
         delay(3000);
-        sendUartRplReset(uartPort);
+        sendUartRplReset(uartPort); // para el rango de SCAN ADDRESS [0x6000 a 0x7999]
 
         sendConfirmEndScanSerial(webServer);
         cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
@@ -1225,9 +1231,6 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
         delay(10000);
     }
 
-    uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
-    if(newNextUnicastAddress > 0)
-        database->updateNextUnicastAddress(newNextUnicastAddress);
     database->clearUnassignedNodes();
 
     database->loadNodesFromDatabase();
@@ -2115,8 +2118,10 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
     cleanCdbTimer.stop();
     sendConfirmStartApplyAutoAssignment(webServer);
 
-    // Se guarda la mayor direccion unicast de los nodos a asignar para que las acciones sucesivas no repitan dirección
-    uint16_t newNextUnicastAddress = database->getMayorUnicastAddressOfUnassignedNodes();
+    sendUartMicroReboot(uartPort);
+    delay(3000);
+    sendUartRplReset(uartPort);
+    delay(1000);
 
     QList<UnassignedNode> unassignedNodes = database->getUnassignedNodes();
 
@@ -2148,9 +2153,6 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
         sendNodeAutoAssignInfo(webServer, ++counter, totalNodes);
         delay(10000);
     }
-
-    // Se vuelca la mayor dirección en el registro general de la BBDD
-    if(newNextUnicastAddress > 0) { database->updateNextUnicastAddress(newNextUnicastAddress); }
 
     database->loadNodesFromDatabase();
 

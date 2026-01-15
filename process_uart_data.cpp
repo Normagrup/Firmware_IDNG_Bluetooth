@@ -422,7 +422,6 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         }
 
                         database->setRecoveryNode(lineScanningCounter / 64, lineScanningCounter % 64, nodeAddress, uuid);
-                        database->updateNextUnicastAddress(nodeAddress);
 
                         lineScanningCounter++;
                         scannedNodesCounter++;
