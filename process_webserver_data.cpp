@@ -1092,7 +1092,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendConfirmStartScanSerial(webServer);
 
         sendUartScanSerial(uartPort);
-        delay(295000);
+        for (int i = 0; i < 10; i++) {
+            delay(30000);
+        }
         sendUartMicroReboot(uartPort);
         delay(3000);
         sendUartRplReset(uartPort); // para el rango de SCAN ADDRESS [0x6000 a 0x7999]
