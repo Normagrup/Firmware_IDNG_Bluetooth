@@ -520,8 +520,6 @@ void Wireless::askInitDataFromMicroTimerHandler()
     sendSetAntennaAddressAndInstallKey(_uartPort, _database);
     while(messageState == PENDING) {}
 
-    embeddedState = FREE;
-
     if(messageState == RECEIVED) {
         qDebug() << "Se han enviado los datos de inicio al micro correctamente";
     }

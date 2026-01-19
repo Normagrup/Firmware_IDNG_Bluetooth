@@ -30,11 +30,6 @@ function processAskStateToEmbedded(value)
     loadPageAfterAsk(page, answer);
 }
 
-function processRecoveringMicro(value)
-{
-    console.log("Recovering communication with microcontroller.");
-}
-
 function processLoginInfo(value) 
 {
     var signErrorLabel = document.getElementById('signError');
@@ -2043,7 +2038,6 @@ function processReceivedData(data)
     var value = dataArray[1];
     
     if (type == 'ASK_STATE_TO_EMBEDDED') { processAskStateToEmbedded(value); }
-    else if(type == "IS_RECOVERING_MICRO") { processRecoveringMicro(value); }
     else if (type == 'LOG_IN_INFO') { processLoginInfo(value); }
     else if (type == 'INTERFACES_INFO') { processInterfacesInfo(value); }
     else if (type == 'IPCONFIG_INFO') { processIPConfigInfo(value); }

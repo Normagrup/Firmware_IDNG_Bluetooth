@@ -31,11 +31,6 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
 
     qDebug() << "WEBSERVER FRAME RECEIVED: " << type;
 
-    if(embeddedState == RECOVERING_MICRO) {
-        sendRecoveringMicro(webServer);
-        return;
-    }
-
     pollingTimer.stop();
 
     if (type == WS_SET_LOG_IN) {
@@ -1311,13 +1306,6 @@ void restoreDataForReplace(WebServer* webServer, UartPort* uartPort, Database* d
     delay(5000);
     sendUartConfirmReplacing(uartPort, replaceData.newNodeRealAddress);
     database->loadNodesFromDatabase();
-}
-
-void sendRecoveringMicro(WebServer* webServer)
-{
-    QString message = QString(WS_SEND_RECOVERING_MICRO) + "@" + " ";
-
-    if (webServer != nullptr) { webServer->sendData(message); }
 }
 
 void sendLoginInfo(WebServer* webServer, uint8_t loginInfo)
