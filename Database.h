@@ -102,6 +102,8 @@ public:
     uint16_t getMayorUnicastAddressOfUnassignedNodes();
     void addNodeByAssignment(QString serial, const uint8_t uuid[16], uint8_t devType, uint16_t bleId);
     bool delUnassignedNode(QString serial);
+    bool unassignedNodeHasAutoAssignment(const QString& serial);
+    UnassignedNode getUnassignedNodeBySerial(const QString& serial);
 
     bool doAutoAssignment();
     bool allNodesHaveAutoAssignment();
@@ -109,8 +111,6 @@ public:
     bool isForcingInstallKey();
     void switchForcingInstallKey();
 
-    bool getUnassignedNodeBySerial(const QString& serial, UnassignedNode* outNode);
-    bool unassignedNodeHasAutoAssignment(const QString& serial);
 signals:
 
 private:

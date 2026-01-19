@@ -1736,25 +1736,6 @@ QList<UnassignedNode> Database::getUnassignedNodes()
     return unassignedNodes;
 }
 
-bool Database::getUnassignedNodeBySerial(const QString& serial, UnassignedNode* outNode)
-{
-    if(outNode == nullptr) { return false; }
-
-    QSqlQuery query;
-
-    query.prepare("SELECT * FROM UnassignedNodes WHERE Serial = :serial LIMIT 1");
-    query.bindValue(":serial", serial);
-
-    if(!query.exec()) { return false; }
-    if(!query.next()) { return false; }
-
-    outNode->serial = query.value("Serial").toString();
-    outNode->netAddress = query.value("NetAddress").toUInt();
-    outNode->bluetoothAddress = query.value("BluetoothAddress").toUInt();
-    outNode->installKey = query.value("InstallKey").toString();
-    return true;
-}
-
 bool Database::unassignedNodeHasAutoAssignment(const QString& serial)
 {
     QSqlQuery q;
@@ -1767,6 +1748,27 @@ bool Database::unassignedNodeHasAutoAssignment(const QString& serial)
     int missing = 0;
     if(q.next()) { missing = q.value(0).toInt(); }
     return (missing == 0);
+}
+
+UnassignedNode Database::getUnassignedNodeBySerial(const QString& serial)
+{
+    UnassignedNode unassignedNode;
+
+    QSqlQuery query;
+
+    query.prepare("SELECT * FROM UnassignedNodes WHERE Serial = :serial");
+    query.bindValue(":serial", serial);
+
+    if(!query.exec()) { return unassignedNode; }
+
+    if(query.next()) {
+        unassignedNode.serial = query.value("Serial").toString();
+        unassignedNode.netAddress = query.value("NetAddress").toUInt();
+        unassignedNode.bluetoothAddress = query.value("BluetoothAddress").toUInt();
+        unassignedNode.installKey = query.value("InstallKey").toString();
+    }
+
+    return unassignedNode;
 }
 
 void Database::clearUnassignedNodes()

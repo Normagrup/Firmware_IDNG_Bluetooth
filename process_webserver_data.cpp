@@ -1051,7 +1051,8 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             sendUnassignedNodesPaged(webServer, database, value.toInt());
     }
     else if (type == WS_APPLY_AUTOASSIGNMENT_SINGLE) {
-        applyAutoAssignmentSingle(webServer, uartPort, database, value);
+        if(value != "-")
+            applyAutoAssignmentSingle(webServer, uartPort, database, value);
     }
     else if (type == WS_APPLY_AUTOASSIGNMENT) {
         applyAutoAssignment(webServer, uartPort, database);
@@ -2178,16 +2179,16 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
 
     database->loadNodesFromDatabase();
 
-    sendConfirmEndApplyAutoAssignment(webServer, database);
+    sendConfirmEndApplyAutoAssignment(webServer, database, database->getUnassignedNodesCount());
     cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     embeddedState = FREE;
 }
 
 void applyAutoAssignmentSingle(WebServer* webServer, UartPort* uartPort, Database* database, const QString& serial)
 {
-    UnassignedNode unassignedNode;
-    if(!database->getUnassignedNodeBySerial(serial, &unassignedNode)) { return; }
     if(!database->unassignedNodeHasAutoAssignment(serial)) { return; }
+
+    int initUnassignedNodes = database->getUnassignedNodesCount();
 
     embeddedState = APPLY_AUTOASSIGNMENT;
     cleanCdbTimer.stop();
@@ -2198,40 +2199,39 @@ void applyAutoAssignmentSingle(WebServer* webServer, UartPort* uartPort, Databas
     sendUartRplReset(uartPort);
     delay(1000);
 
-    uint8_t installKey[16] = {0};
+    UnassignedNode unassignedNode = database->getUnassignedNodeBySerial(serial);
 
-    if(unassignedNode.installKey != "16") {
+    sendNodeAutoAssignInfo(webServer, 0, 1);
+
+    uint8_t installKey[16] = {0};
+    if(unassignedNode.installKey != "16")
+    {
         memcpy(installKey, installKeys[unassignedNode.installKey.toInt() - 1], 16);
-    } else {
+    }
+    else
+    {
         QString installKeyStr = database->getInstallKey();
+
         for (int i = 0; i < 16; ++i) {
             installKey[i] = static_cast<uint8_t>(installKeyStr.mid(i * 2, 2).toUInt(nullptr, 16));
         }
     }
 
     lastAssignedAddress = unassignedNode.bluetoothAddress;
+    insertLogEvent(database, "Assign REQUEST [" + unassignedNode.installKey + "]", unassignedNode.serial, unassignedNode.bluetoothAddress, getAntennaInfo(database).ip, getAntennaInfo(database).timestamp, LOG_ASSIGNMENT_REQUEST, "Assignment");
 
-    insertLogEvent(database,
-                   "Assign REQUEST [" + unassignedNode.installKey + "]",
-                   unassignedNode.serial,
-                   unassignedNode.bluetoothAddress,
-                   getAntennaInfo(database).ip,
-                   getAntennaInfo(database).timestamp,
-                   LOG_ASSIGNMENT_REQUEST,
-                   "Assignment");
-
-    sendNodeAutoAssignInfo(webServer, 0, 1);
     sendUartInstallKey(uartPort, database, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
     sendNodeAutoAssignInfo(webServer, 1, 1);
     delay(10000);
 
     database->loadNodesFromDatabase();
-    sendConfirmEndApplyAutoAssignment(webServer, database);
 
+    int endUnassignedNodes = database->getUnassignedNodesCount();
+
+    sendConfirmEndApplyAutoAssignment(webServer, database, (endUnassignedNodes < initUnassignedNodes ? 0 : 1));
     cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     embeddedState = FREE;
 }
-
 
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
 {
@@ -2240,9 +2240,9 @@ void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
     if (webServer != nullptr) { webServer->sendData(message); }
 }
 
-void sendConfirmEndApplyAutoAssignment(WebServer* webServer, Database* database)
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer, Database* database, int remainingUnassigned)
 {
-    QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + QString::number(database->getUnassignedNodesCount());
+    QString message = QString(WS_SEND_END_APPLY_ASSIGN) + "@" + QString::number(remainingUnassigned);
 
     if (webServer != nullptr) { webServer->sendData(message); }
 }

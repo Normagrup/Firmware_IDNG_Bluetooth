@@ -231,7 +231,7 @@ void sendIdentify(UartPort* uartPort, uint16_t nodeNetAddress);
 void sendUnassignedNodesPaged(WebServer* webServer, Database* database, uint16_t page);
 void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer);
-void sendConfirmEndApplyAutoAssignment(WebServer* webServer, Database* database);
+void sendConfirmEndApplyAutoAssignment(WebServer* webServer, Database* database, int remainingUnassigned);
 void sendConfirmStartGroupAutoAssignment(WebServer* webServer);
 void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* database);
 void sendConfirmEndGroupAutoAssignment(WebServer* webServer);
