@@ -317,7 +317,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         sendUartAddDevice(uartPort, scannedUUID[0]);
         sendLogCommissionEntry(webServer, "Start adding node " + getUUIDAsString(scannedUUID[0].UUID), "INFO");
         confirmAddDeviceTimer.start(CONFIRM_ADD_DEVICE_TIMER_MS);
-    }  
+    }
     else if (type == WS_SET_ADD_GROUP) {
         embeddedState = ADD_NODE_TO_GROUP;
         cleanCdbTimer.stop();
@@ -852,7 +852,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
         embeddedState = LINE_SCAN;
         cleanCdbTimer.stop();
         sendConfirmStartLineScanning(webServer);
-        
+
         // En teoría no sería necesario esto
         //sendUartMicroReboot(uartPort);
         //delay(3000);
@@ -1049,6 +1049,9 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
     else if (type == WS_AUTOASSIGNMENT) {
         if(database->doAutoAssignment())
             sendUnassignedNodesPaged(webServer, database, value.toInt());
+    }
+    else if (type == WS_APPLY_AUTOASSIGNMENT_SINGLE) {
+        applyAutoAssignmentSingle(webServer, uartPort, database, value);
     }
     else if (type == WS_APPLY_AUTOASSIGNMENT) {
         applyAutoAssignment(webServer, uartPort, database);
@@ -2179,6 +2182,56 @@ void applyAutoAssignment(WebServer* webServer, UartPort* uartPort, Database* dat
     cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
     embeddedState = FREE;
 }
+
+void applyAutoAssignmentSingle(WebServer* webServer, UartPort* uartPort, Database* database, const QString& serial)
+{
+    UnassignedNode unassignedNode;
+    if(!database->getUnassignedNodeBySerial(serial, &unassignedNode)) { return; }
+    if(!database->unassignedNodeHasAutoAssignment(serial)) { return; }
+
+    embeddedState = APPLY_AUTOASSIGNMENT;
+    cleanCdbTimer.stop();
+    sendConfirmStartApplyAutoAssignment(webServer);
+
+    sendUartMicroReboot(uartPort);
+    delay(3000);
+    sendUartRplReset(uartPort);
+    delay(1000);
+
+    uint8_t installKey[16] = {0};
+
+    if(unassignedNode.installKey != "16") {
+        memcpy(installKey, installKeys[unassignedNode.installKey.toInt() - 1], 16);
+    } else {
+        QString installKeyStr = database->getInstallKey();
+        for (int i = 0; i < 16; ++i) {
+            installKey[i] = static_cast<uint8_t>(installKeyStr.mid(i * 2, 2).toUInt(nullptr, 16));
+        }
+    }
+
+    lastAssignedAddress = unassignedNode.bluetoothAddress;
+
+    insertLogEvent(database,
+                   "Assign REQUEST [" + unassignedNode.installKey + "]",
+                   unassignedNode.serial,
+                   unassignedNode.bluetoothAddress,
+                   getAntennaInfo(database).ip,
+                   getAntennaInfo(database).timestamp,
+                   LOG_ASSIGNMENT_REQUEST,
+                   "Assignment");
+
+    sendNodeAutoAssignInfo(webServer, 0, 1);
+    sendUartInstallKey(uartPort, database, unassignedNode.serial, unassignedNode.bluetoothAddress, installKey);
+    sendNodeAutoAssignInfo(webServer, 1, 1);
+    delay(10000);
+
+    database->loadNodesFromDatabase();
+    sendConfirmEndApplyAutoAssignment(webServer, database);
+
+    cleanCdbTimer.start(TIME_TO_CLEAN_CDB);
+    embeddedState = FREE;
+}
+
 
 void sendConfirmStartApplyAutoAssignment(WebServer* webServer)
 {

@@ -109,6 +109,8 @@ public:
     bool isForcingInstallKey();
     void switchForcingInstallKey();
 
+    bool getUnassignedNodeBySerial(const QString& serial, UnassignedNode* outNode);
+    bool unassignedNodeHasAutoAssignment(const QString& serial);
 signals:
 
 private:

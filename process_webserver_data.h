@@ -66,6 +66,7 @@
 #define WS_DEL_UNASSIGNED_NODE              "DEL_UNASSIGNED_NODE"
 #define WS_GROUP_AUTOASSIGNMENT             "GROUP_AUTOASSIGNMENT"
 #define WS_UPDATE_UNASSIGNED                "UPDATE_UNASSIGNED"
+#define WS_APPLY_AUTOASSIGNMENT_SINGLE      "APPLY_AUTOASSIGNMENT_SINGLE"
 
 #define WS_SET_MAX                          "SET_MAX"
 #define WS_SET_OFF                          "SET_OFF"
@@ -240,7 +241,7 @@ void sendAddUnassignedError(WebServer* webServer, uint8_t result);
 void sendNodeAutoAssignInfo(WebServer* webServer, int counter, int totalNodes);
 void sendConfirmStartScanSerial(WebServer* webServer);
 void sendConfirmEndScanSerial(WebServer* webServer);
-
+void applyAutoAssignmentSingle(WebServer* webServer, UartPort* uartPort, Database* database, const QString& serial);
 void processFactoryProgramSerial(UartPort* uartPort, QByteArray dataBuffer);
 
 #endif // PROCESS_WEBSERVER_DATA_H
