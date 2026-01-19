@@ -3372,3 +3372,8 @@ function scanSerial()
 {
     sendData("SCAN_SERIAL", "");
 }
+
+function applyUnassignedNode(value)
+{
+    sendData("APPLY_AUTOASSIGNMENT_SINGLE", value);
+}
