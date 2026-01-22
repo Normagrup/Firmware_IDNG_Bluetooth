@@ -342,4 +342,16 @@
     });
 </script>
 
+<script>
+    const serialInput = document.getElementById("serialNumberInput");
+
+    serialInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();          // evita submit / blur
+            parent.addUnassignedNode();  // mismo efecto que botón Add
+            serialInput.focus();         // mantiene foco
+        }
+    });
+</script>
+
 </html>
