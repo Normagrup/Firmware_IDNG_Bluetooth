@@ -953,7 +953,7 @@ void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, bool with
 
     while(actAtt < att && messageState == PENDING) {
         QByteArray frame;
-        unsigned char length = 6;
+        unsigned char length = 7;
 
         frame.append(UART_HEADER);
         frame.append(length);
