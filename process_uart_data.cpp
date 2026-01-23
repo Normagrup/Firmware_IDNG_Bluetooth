@@ -369,7 +369,7 @@ void processUartData(QByteArray data, WebServer* webServer, UartPort* uartPort, 
                         replaceNode = {0x00, 0x00, "", 0x00};
 
                         isReplacingDevices = false;
-                        sendUartClearInyectedNodes(uartPort, false, database);
+                        sendUartClearInyectedNodes(uartPort, false, false, database);
                         while(messageState == PENDING) {}
 
                         sendConfirmEndReplace(webServer);
@@ -768,7 +768,7 @@ void processGroupAddedFrame(QByteArray data, UartPort* uartPort, Database* datab
         isManualAddingDevice = false;
 
         if(!isReplacingDevices) {
-            sendUartClearInyectedNodes(uartPort, false, database);
+            sendUartClearInyectedNodes(uartPort, false, false, database);
             while(messageState == PENDING) {}
 
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device (SOLO para el adding manual)
@@ -942,7 +942,7 @@ void sendUartInyectNode(UartPort* _uartPort, uint16_t nodeAddress, Database* dat
     }
 }
 
-void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, Database* database)
+void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, bool withReboot, Database* database)
 {
     uint16_t masterStoredAddress = database->getMasterRealAddress();
 
@@ -960,6 +960,7 @@ void sendUartClearInyectedNodes(UartPort* _uartPort, bool totalDelete, Database*
         frame.append(UART_CONFIG_FRAME_TYPE);
         frame.append(CLEAR_INYECTED_NODES);
         frame.append(totalDelete ? 0x01 : 0x00);
+        frame.append(withReboot ? 0x01 : 0x00);
         frame.append((masterStoredAddress >> 8) & 0xFF);
         frame.append(masterStoredAddress & 0xFF);
         frame.append(UART_END);
@@ -1336,7 +1337,7 @@ void sendUartDelGroupForAllNodes(UartPort* _uartPort, uint16_t groupAddress, Dat
         }
 
         if(hasEnteredInSubnet) {
-            sendUartClearInyectedNodes(_uartPort, false, database);
+            sendUartClearInyectedNodes(_uartPort, false, false, database);
             while(messageState == PENDING) {}
         }
     }
@@ -1690,7 +1691,7 @@ void sendUartPOLForUpdate(UartPort* _uartPort, Database* database, WebServer* we
     }
 
     delay(1250);
-    sendUartClearInyectedNodes(_uartPort, false, database);
+    sendUartClearInyectedNodes(_uartPort, false, false, database);
     while(messageState == PENDING) {}
 }
 

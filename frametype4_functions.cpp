@@ -587,7 +587,7 @@ void processGroupBitmap(const writeGroupBitmap &gb, WebServer * webserver, Datab
                 if(messageState == RECEIVED) { added = true; }
             }
 
-            sendUartClearInyectedNodes(_uartPort, false, _database);
+            sendUartClearInyectedNodes(_uartPort, false, false, _database);
             while(messageState == PENDING) {
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
                 QThread::msleep(10);
@@ -626,7 +626,7 @@ void processGroupBitmap(const writeGroupBitmap &gb, WebServer * webserver, Datab
                 }
             }
 
-            sendUartClearInyectedNodes(_uartPort, false, _database);
+            sendUartClearInyectedNodes(_uartPort, false, false, _database);
             while(messageState == PENDING) {
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
                 QThread::msleep(10);

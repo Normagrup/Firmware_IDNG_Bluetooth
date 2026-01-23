@@ -110,7 +110,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             delay(10300);
         }
 
-        sendUartClearInyectedNodes(uartPort, false, database);
+        sendUartClearInyectedNodes(uartPort, false, false, database);
         while(messageState == PENDING) {}
 
         sendConfirmEndScan(webServer);
@@ -245,7 +245,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
                 while(messageState == PENDING) {}
             }
 
-            sendUartClearInyectedNodes(uartPort, false, database);
+            sendUartClearInyectedNodes(uartPort, false, false, database);
             while(messageState == PENDING) {}
 
             // Device to delete added to log
@@ -347,7 +347,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             if(messageState == RECEIVED) { added = true; }
         }
 
-        sendUartClearInyectedNodes(uartPort, false, database);
+        sendUartClearInyectedNodes(uartPort, false, false, database);
         while(messageState == PENDING) {}
 
         sendConfirmAddNodeToGroup(webServer, address[0], address[1], added, database);
@@ -374,7 +374,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             while(messageState == PENDING) {}
         }
 
-        sendUartClearInyectedNodes(uartPort, false, database);
+        sendUartClearInyectedNodes(uartPort, false, false, database);
         while(messageState == PENDING) {}
 
         sendConfirmDelNodeFromGroup(webServer);
@@ -530,7 +530,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             while(messageState == PENDING) {}
         }
 
-        sendUartClearInyectedNodes(uartPort, false, database);
+        sendUartClearInyectedNodes(uartPort, false, false, database);
         while(messageState == PENDING) {}
 
         delay(1000);
@@ -890,7 +890,7 @@ void processWebServerData(QString data, WebServer* webServer, UartPort* uartPort
             delay(5000);
         }
 
-        sendUartClearInyectedNodes(uartPort, false, database);
+        sendUartClearInyectedNodes(uartPort, false, false, database);
         while(messageState == PENDING) {}
 
         sendUartEndLineScanning(uartPort);
@@ -1515,7 +1515,7 @@ void sendDeviceError(QByteArray data, UartPort* uartPort, WebServer* webServer, 
         isManualAddingDevice = false;
 
         if(!isReplacingDevices) {
-            sendUartClearInyectedNodes(uartPort, false, database);
+            sendUartClearInyectedNodes(uartPort, false, false, database);
             while(messageState == PENDING) {}
 
             sendConfirmAddingDevice(webServer); // mensaje de confirmación de añadir device (SOLO para el adding manual)
@@ -2355,7 +2355,7 @@ void applyGroupAutoAssignment(WebServer* webServer, UartPort* uartPort, Database
         }
     }
 
-    sendUartClearInyectedNodes(uartPort, false, database);
+    sendUartClearInyectedNodes(uartPort, false, false, database);
     while(messageState == PENDING) {}
 
     delay(3000);

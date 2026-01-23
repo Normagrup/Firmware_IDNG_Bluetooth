@@ -458,7 +458,7 @@ void Wireless::addDeviceTimerHandler()
                 scannedUUID[i].nodeAddressReport = 0;
             }
 
-            sendUartClearInyectedNodes(_uartPort, true, _database);
+            sendUartClearInyectedNodes(_uartPort, true, false, _database);
             while(messageState == PENDING) {}
 
             pollingTimer.start(POLLING_TIMER_MS);
@@ -508,11 +508,8 @@ void Wireless::replaceP3TimerHandler()
 
 void Wireless::cleanCdbTimerHandler()
 {
-    sendUartClearInyectedNodes(_uartPort, true, _database);
+    sendUartClearInyectedNodes(_uartPort, true, true, _database);
     while(messageState == PENDING) {}
-    delay(300);
-    sendUartMicroReboot(_uartPort);
-
 }
 
 void Wireless::askInitDataFromMicroTimerHandler()
